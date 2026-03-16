@@ -3,7 +3,6 @@ let MEMBER = null
 
 async function api(action, params = {}) {
 
-let url = API_URL + "?action=" + action
 
 for (const key in params) {
 url += "&" + key + "=" + encodeURIComponent(params[key])
