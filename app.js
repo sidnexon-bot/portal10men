@@ -1,101 +1,69 @@
+// ====== základní stav aplikace ======
+
 let MEMBER = localStorage.getItem("member") || null
 
 
-async function init(){
 
-  if(!MEMBER){
-    await selectMember()
-  }
-
-  showPage("overview")
-
-}
-
-
-async function selectMember(){
-
-  const members = await api("members")
-
-  if(!Array.isArray(members)){
-    alert("Nelze načíst členy")
-    return
-  }
-
-  let html = "<div class='card'><h2>Vyber člena</h2>"
-
-  members.forEach(m => {
-
-    html += `
-    <button onclick="setMember('${m.ID}')">
-    ${m.NAME}
-    </button><br><br>
-    `
-
-  })
-
-  html += "</div>"
-
-  document.getElementById("content").innerHTML = html
-
-}
-
-
-function setMember(id){
-
-  MEMBER = id
-  localStorage.setItem("member",id)
-
-  showPage("overview")
-
-}
-
+// ====== navigace ======
 
 function showPage(page){
 
   if(page === "overview") loadEvents()
-  if(page === "repertoire") loadRepertoire()
-  if(page === "energy") loadEnergy()
-  if(page === "payments") loadPayments()
+  if(page === "repertoire") loadTable("repertoire","Repertoár")
+  if(page === "energy") loadTable("energy","Energie")
+  if(page === "payments") loadTable("payments","Platby")
 
 }
 
 
+
+// ====== AKCE (speciální renderer kvůli docházce) ======
+
 async function loadEvents(){
 
-  const events = await api("events")
+  const data = await api("events")
 
-  if(!Array.isArray(events)){
-    console.error(events)
+  if(!Array.isArray(data)){
+    console.error("API error:",data)
+    document.getElementById("content").innerHTML = "<p>Chyba načítání akcí</p>"
     return
   }
 
   let html = "<div class='card'><h2>Akce</h2>"
 
-  for(const e of events){
+  data.forEach(e=>{
+
+    const id = e.ID || e.id || ""
+    const name = e.NAZEV || e.name || ""
+    const date = e.DATUM || e.date || ""
+    const place = e.MISTO || e.place || ""
 
     html += `
-    <div class="event">
+      <div class="event">
 
-    <b>${e.NAME}</b><br>
-    ${formatDate(e.DATE)}<br>
-    ${e.PLACE || ""}
+        <b>${name}</b><br>
+        ${formatDate(date)}<br>
+        ${place}
 
-    <div class="attendance">
+        <div class="attendance">
 
-    <button onclick="setAttendance('${e.ID}','yes')">Přijdu</button>
-    <button onclick="setAttendance('${e.ID}','maybe')">Možná</button>
-    <button onclick="setAttendance('${e.ID}','no')">Nepřijdu</button>
+          <button onclick="setAttendance('${id}','yes')">
+            Přijdu
+          </button>
 
-    </div>
+          <button onclick="setAttendance('${id}','maybe')">
+            Možná
+          </button>
 
-    <button onclick="showProgram('${e.ID}')">
-    Program
-    </button>
+          <button onclick="setAttendance('${id}','no')">
+            Nepřijdu
+          </button>
 
-    </div>
+        </div>
+
+      </div>
     `
-
-  }
+  })
 
   html += "</div>"
 
@@ -104,119 +72,64 @@ async function loadEvents(){
 }
 
 
-async function showProgram(eventId){
 
-  const program = await api("program",{event:eventId})
-  const repertoire = await api("repertoire")
+// ====== univerzální renderer tabulek ======
 
-  if(!Array.isArray(program)){
-    alert("Program nenalezen")
+async function loadTable(action,title){
+
+  const data = await api(action)
+
+  if(!Array.isArray(data)){
+    console.error("API error:",data)
+    document.getElementById("content").innerHTML = "<p>Chyba načítání dat</p>"
     return
   }
 
-  let html = "<div class='card'><h2>Program</h2>"
+  if(data.length === 0){
+    document.getElementById("content").innerHTML = "<p>Žádná data</p>"
+    return
+  }
 
-  program.sort((a,b)=>a.ORDER-b.ORDER)
+  const headers = Object.keys(data[0])
 
-  program.forEach(p => {
+  let html = `<div class="card"><h2>${title}</h2><table>`
 
-    const song = repertoire.find(r => r.ID === p.SONG_ID)
+  html += "<thead><tr>"
 
-    html += `
-    <div class="song">
-    ${song ? song.NAME : p.SONG_ID}
-    </div>
-    `
+  headers.forEach(h=>{
+    html += `<th>${h}</th>`
+  })
+
+  html += "</tr></thead><tbody>"
+
+  data.forEach(row=>{
+
+    html += "<tr>"
+
+    headers.forEach(h=>{
+      html += `<td>${row[h] ?? ""}</td>`
+    })
+
+    html += "</tr>"
 
   })
 
-  html += "<br><button onclick='showPage(\"overview\")'>Zpět</button>"
-  html += "</div>"
+  html += "</tbody></table></div>"
 
   document.getElementById("content").innerHTML = html
 
 }
 
 
-async function loadRepertoire(){
 
-  const data = await api("repertoire")
-
-  if(!Array.isArray(data)) return
-
-  let html = "<div class='card'><h2>Repertoár</h2>"
-
-  data.forEach(s => {
-
-    html += `
-    <div class="song">
-    ${s.NAME}
-    </div>
-    `
-
-  })
-
-  html += "</div>"
-
-  document.getElementById("content").innerHTML = html
-
-}
-
-
-async function loadEnergy(){
-
-  const data = await api("energy")
-
-  if(!Array.isArray(data)) return
-
-  let html = "<div class='card'><h2>Energie</h2>"
-
-  data.forEach(e => {
-
-    html += `
-    <div class="energy">
-    ${e.DATE || ""}
-    </div>
-    `
-
-  })
-
-  html += "</div>"
-
-  document.getElementById("content").innerHTML = html
-
-}
-
-
-async function loadPayments(){
-
-  const data = await api("payments")
-
-  if(!Array.isArray(data)) return
-
-  let html = "<div class='card'><h2>Platby</h2>"
-
-  data.forEach(p => {
-
-    html += `
-    <div class="payment">
-    ${p.ID_VYBERU || ""} – ${p.PAID || ""}
-    </div>
-    `
-
-  })
-
-  html += "</div>"
-
-  document.getElementById("content").innerHTML = html
-
-}
-
+// ====== docházka ======
 
 async function setAttendance(eventId,status){
 
   if(!MEMBER){
+
     alert("Nejprve vyber člena")
+
     return
   }
 
@@ -231,6 +144,9 @@ async function setAttendance(eventId,status){
 }
 
 
+
+// ====== pomocné funkce ======
+
 function formatDate(d){
 
   if(!d) return ""
@@ -240,8 +156,10 @@ function formatDate(d){
   if(isNaN(date)) return d
 
   return date.toLocaleDateString("cs-CZ")
-
 }
 
 
-init()
+
+// ====== start aplikace ======
+
+showPage("overview")
