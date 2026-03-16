@@ -139,9 +139,9 @@ function formatDate(d){
 function showPage(page){
 
   if(page === "overview") loadEvents()
-  if(page === "repertoar") loadRepertoar()
-  if(page === "energie") loadEnergie()
-  if(page === "platby") loadPlatby()
+  if(page === "repertoire") loadRepertoar()
+  if(page === "energy") loadEnergie()
+  if(page === "payments") loadPlatby()
 
 }
 
