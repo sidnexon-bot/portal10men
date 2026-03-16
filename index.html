@@ -1,37 +1,48 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="utf-8">
-  <title>10men Portal</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="style.css">
+
+<meta charset="UTF-8">
+<title>10men Portál</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
+
 <body>
-  <header class="topbar">
-    <div class="brand">10men Portál</div>
-    <div class="memberRow">
-      <label>Jsem:</label>
-      <select id="memberSelect"></select>
-    </div>
-  </header>
 
-  <main id="main">
-    <section class="panel">
-      <h2>Akce</h2>
-      <div id="eventsList"></div>
-    </section>
-  </main>
+<header>
 
-  <footer class="bottomBar">
-    <nav>
-      <span>Přehled</span>
-      <span>Repertoár</span>
-      <span>Energie</span>
-      <span>Platby</span>
-    </nav>
-  </footer>
+<h1>10men Portál</h1>
 
-  <script src="api.js"></script>
-  <script src="app.js"></script>
+<div class="member">
+
+Jsem:
+
+<select id="memberSelect"></select>
+
+</div>
+
+</header>
+
+
+<main id="content"></main>
+
+
+<nav class="bottom">
+
+<button onclick="showDashboard()">Přehled</button>
+<button onclick="showEvents()">Akce</button>
+<button onclick="showPayments()">Platby</button>
+<button onclick="showEnergy()">Energie</button>
+
+</nav>
+
+
+<script src="api.js"></script>
+<script src="app.js"></script>
+
 </body>
+
 </html>
