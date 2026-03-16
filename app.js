@@ -1,24 +1,80 @@
-async function loadEvents(){
+const API_URL = "https://script.google.com/macros/s/AKfycby4EOosB3W72SdGpqdkue3nY0zGdti1pMT9mi9IM6hbj6kQu3wr-96KySw7CHAmF2TU1A/exec"
 
-const container=document.getElementById("events")
+let MEMBER = null
 
-try{
 
-const events=await api("events")
+async function api(action, params = {}) {
 
-container.innerHTML=""
+let url = API_URL + "?action=" + action
 
-events.forEach(e=>{
+for (const key in params) {
+url += "&" + key + "=" + encodeURIComponent(params[key])
+}
 
-const div=document.createElement("div")
+const res = await fetch(url)
+return res.json()
 
-div.className="event"
+}
 
-div.innerHTML=`
 
-<strong>${e.name||"Akce"}</strong><br>
+async function selectMember() {
+
+const stored = localStorage.getItem("member")
+
+if (stored) {
+MEMBER = stored
+return
+}
+
+const members = await api("members")
+
+let html = "<div class='card'><h3>Kdo jsi?</h3>"
+
+members.forEach(m => {
+
+html += `<button onclick="setMember('${m.id}')">${m.name}</button><br><br>`
+
+})
+
+html += "</div>"
+
+document.getElementById("content").innerHTML = html
+
+}
+
+
+function setMember(id) {
+
+localStorage.setItem("member", id)
+
+location.reload()
+
+}
+
+
+async function loadEvents() {
+
+const container = document.getElementById("events")
+
+container.innerHTML = "Načítám..."
+
+try {
+
+const events = await api("events")
+
+container.innerHTML = ""
+
+events.forEach(e => {
+
+const div = document.createElement("div")
+
+div.className = "event"
+
+div.innerHTML = `
+
+<strong>${e.name || "Akce"}</strong><br>
 ${formatDate(e.date)}<br>
-${e.place||""}
+${e.place || ""}
 
 <br><br>
 
@@ -32,43 +88,62 @@ container.appendChild(div)
 
 })
 
-}
-catch(e){
+} catch (e) {
 
-container.innerHTML="Chyba načítání akcí"
-
-}
+container.innerHTML = "Chyba načítání akcí"
 
 }
 
-function formatDate(d){
+}
 
-if(!d) return ""
 
-const date=new Date(d)
+function formatDate(d) {
 
-if(isNaN(date)) return ""
+if (!d) return ""
+
+const date = new Date(d)
+
+if (isNaN(date)) return ""
 
 return date.toLocaleDateString("cs-CZ")
 
 }
 
-async function attendance(eventId,status){
 
-await api("setAttendance",{
-event:eventId,
-member:"zdenda",
-status:status
+async function attendance(eventId, status) {
+
+if (!MEMBER) {
+alert("Nejprve vyber člena.")
+return
+}
+
+await api("setAttendance", {
+event: eventId,
+member: MEMBER,
+status: status
 })
 
-alert("Uloženo")
+alert("Docházka uložena")
 
 }
 
-function showPage(page){
 
-alert("Stránka "+page+" zatím není hotová")
+function showPage(page) {
+
+alert("Stránka " + page + " zatím není hotová")
 
 }
+
+
+async function start() {
+
+await selectMember()
+
+MEMBER = localStorage.getItem("member")
 
 loadEvents()
+
+}
+
+
+start()
