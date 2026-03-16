@@ -1,164 +1,165 @@
-let MEMBER = null
+let MEMBER_ID = null
 
-
-function setMain(html){
-  document.getElementById("main").innerHTML = html
+function currentMember(){
+  return MEMBER_ID
 }
 
+function escapeHtml(str){
+  if(!str) return ""
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+}
+
+function formatDate(d){
+  if(!d) return ""
+  const date = new Date(d)
+
+  return date.toLocaleDateString("cs-CZ",{
+    weekday:"short",
+    day:"numeric",
+    month:"numeric",
+    year:"numeric"
+  }) + " " +
+  date.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})
+}
+
+function container(){
+  return document.getElementById("main")
+}
+
+function setLoading(){
+  container().innerHTML = "Načítám..."
+}
 
 async function start(){
 
   try{
+
+    setLoading()
 
     const members = await api("members")
 
     const select = document.getElementById("memberSelect")
 
     members.forEach(m=>{
-
       const opt = document.createElement("option")
-
       opt.value = m.ID
-      opt.textContent = m.NAME
-
+      opt.textContent = m.NAME || m.JMENO
       select.appendChild(opt)
-
     })
 
-    select.onchange = ()=>{
-      MEMBER = select.value
-      showDashboard()
+    select.onchange = () => {
+      MEMBER_ID = select.value
+      renderOverview()
     }
+
+    renderOverview()
 
   }catch(err){
 
-    setMain("Chyba při načítání dat: "+err)
+    container().innerText = "Chyba při načítání dat: " + (err?.message || err)
 
   }
 
 }
 
+async function renderOverview(){
 
-window.onload = start
-
-
-
-/* =======================
-   DASHBOARD
-======================= */
-
-async function showDashboard(){
-
-  if(!MEMBER){
-    setMain("Vyber člena")
-    return
-  }
+  setLoading()
 
   const events = await api("events")
 
-  if(!events || !events.length){
-    setMain("Žádné akce")
+  if(!Array.isArray(events)){
+    container().innerText = "Nepodařilo se načíst akce"
     return
   }
 
-  const event = events[0]
+  const upcoming = events
+    .filter(e => new Date(e.DATE) >= new Date())
+    .sort((a,b)=> new Date(a.DATE) - new Date(b.DATE))[0]
 
-  const program = await api("program",{event:event.ID})
+  let html = ""
 
-  let html = `
-  <h2>Nejbližší akce</h2>
+  html += `<h2>Nejbližší akce</h2>`
 
-  <div class="card">
-  <b>${event.NAME}</b><br>
-  ${event.DATE}<br>
-  ${event.PLACE}
-  </div>
+  if(!upcoming){
 
-  <h3>Program</h3>
-  `
-
-  if(program && program.length){
-
-    program.forEach(p=>{
-      html += `<div>${p.NAME || p.SKLADBA}</div>`
-    })
+    html += `<div>Žádná akce</div>`
 
   }else{
 
-    html += `<div class="small">Program není k dispozici</div>`
+    html += `
+    <div class="card" onclick="openEvent('${upcoming.ID}')">
+      <b>${escapeHtml(upcoming.NAME || upcoming.NAZEV)}</b><br>
+      ${formatDate(upcoming.DATE)}<br>
+      ${escapeHtml(upcoming.PLACE)}
+    </div>
+    `
 
   }
 
-
-  html += `
-
-  <h3>Docházka</h3>
-
-  <button onclick="attendance('${event.ID}','yes')">Přijdu</button>
-  <button onclick="attendance('${event.ID}','maybe')">Možná</button>
-  <button onclick="attendance('${event.ID}','no')">Nepřijdu</button>
-  `
-
-  setMain(html)
+  container().innerHTML = html
 
 }
 
+async function renderEvents(){
 
-
-/* =======================
-   EVENTS
-======================= */
-
-async function showEvents(){
+  setLoading()
 
   const events = await api("events")
+
+  if(!Array.isArray(events)){
+    container().innerText = "Nepodařilo se načíst akce"
+    return
+  }
+
+  events.sort((a,b)=> new Date(a.DATE) - new Date(b.DATE))
 
   let html = "<h2>Akce</h2>"
 
-  if(events && events.length){
+  events.forEach(e=>{
 
-    events.forEach(e=>{
+    html += `
+    <div class="card" onclick="openEvent('${e.ID}')">
+      <b>${escapeHtml(e.NAME || e.NAZEV)}</b><br>
+      ${formatDate(e.DATE)}<br>
+      ${escapeHtml(e.PLACE)}
+    </div>
+    `
 
-      html += `
-      <div class="event" onclick="eventDetail('${e.ID}')">
-        <b>${e.NAME}</b><br>
-        ${e.DATE}
-      </div>
-      `
+  })
 
-    })
-
-  }else{
-
-    html += `<div class="small">Žádné akce</div>`
-
-  }
-
-  setMain(html)
+  container().innerHTML = html
 
 }
 
+async function openEvent(id){
 
+  setLoading()
 
-async function eventDetail(id){
+  const events = await api("events")
+  const event = events.find(e => String(e.ID) === String(id))
 
-  const data = await api("eventDetail",{id})
+  if(!event){
+    container().innerText = "Akce nenalezena"
+    return
+  }
 
-  const e = data.event
+  const program = await api("program",{event:id})
 
-  let html = `
-  <h2>${e.NAME}</h2>
+  let html = ""
 
-  ${e.DATE}<br>
-  ${e.PLACE}
+  html += `<h2>${escapeHtml(event.NAME || event.NAZEV)}</h2>`
+  html += `<div class="small">${formatDate(event.DATE)} – ${escapeHtml(event.PLACE)}</div>`
 
-  <h3>Program</h3>
-  `
+  html += `<hr><h3>Program</h3>`
 
-  if(data.program && data.program.length){
+  if(Array.isArray(program) && program.length){
 
-    data.program.forEach(p=>{
-      html += `<div>${p.NAME || p.SKLADBA}</div>`
+    program.forEach(p=>{
+      html += `<div>${escapeHtml(p.NAME || p.SKLADBA)}</div>`
     })
 
   }else{
@@ -167,128 +168,118 @@ async function eventDetail(id){
 
   }
 
+  html += `<hr><h3>Docházka</h3>`
 
   html += `
-  <h3>Docházka</h3>
-
-  <button onclick="attendance('${e.ID}','yes')">Přijdu</button>
-  <button onclick="attendance('${e.ID}','maybe')">Možná</button>
-  <button onclick="attendance('${e.ID}','no')">Nepřijdu</button>
+  <div style="margin-top:10px">
+    <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+    <button onclick="doAttendance('${id}','Možná')">Možná</button>
+    <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+  </div>
   `
 
-  setMain(html)
+  container().innerHTML = html
 
 }
 
+async function doAttendance(eventId,status){
 
+  const member = currentMember()
 
-/* =======================
-   ATTENDANCE
-======================= */
-
-async function attendance(eventId,status){
-
-  if(!MEMBER){
+  if(!member){
     alert("Vyber člena")
     return
   }
 
-  let reason = ""
-
-  if(status==="no"){
-
-    reason = prompt("Důvod nepřítomnosti")
-
-    if(!reason) return
-
-  }
-
   await api("setAttendance",{
-
     event:eventId,
-    member:MEMBER,
-    status:status,
-    reason:reason
-
+    member:member,
+    status:status
   })
 
-  alert("Uloženo")
+  alert("Docházka uložena")
 
 }
 
+async function doAttendanceWithReason(eventId,status){
 
+  const reason = prompt("Důvod nepřítomnosti")
 
-/* =======================
-   PAYMENTS
-======================= */
+  if(!reason) return
 
-async function showPayments(){
+  const member = currentMember()
 
-  const collections = await api("collections")
-  const payments = await api("payments")
+  await api("setAttendance",{
+    event:eventId,
+    member:member,
+    status:status,
+    reason:reason
+  })
+
+  alert("Docházka uložena")
+
+}
+
+async function renderPayments(){
+
+  setLoading()
+
+  const data = await api("payments")
 
   let html = "<h2>Platby</h2>"
 
-  if(collections && collections.length){
+  if(!Array.isArray(data) || !data.length){
 
-    collections.forEach(c=>{
-
-      html += `<h3>${c.NAME}</h3>`
-
-      payments
-        .filter(p=>p.ID_VYBER===c.ID)
-        .forEach(p=>{
-          html += `<div>${p.ID_MEMBER}: ${p.PAID}</div>`
-        })
-
-    })
+    html += "<div>Žádné platby</div>"
 
   }else{
 
-    html += `<div class="small">Žádné aktivní výběry</div>`
+    data.forEach(p=>{
+      html += `<div class="card">${escapeHtml(p.NAME)} – ${escapeHtml(p.STATUS)}</div>`
+    })
 
   }
 
-  setMain(html)
+  container().innerHTML = html
 
 }
 
+async function renderEnergy(){
 
+  setLoading()
 
-/* =======================
-   ENERGY
-======================= */
+  const data = await api("energy")
 
-function showEnergy(){
+  let html = "<h2>Energie</h2>"
 
-  setMain(`
-
-  <h2>Energie</h2>
-
-  Start:<br>
-  <input id="start"><br>
-
-  End:<br>
-  <input id="end"><br>
-
+  html += `
+  <div class="card">
+  Stav elektroměru na začátku:<br>
+  <input id="energyStart"><br><br>
+  Stav elektroměru na konci:<br>
+  <input id="energyEnd"><br><br>
   <button onclick="saveEnergy()">Uložit</button>
+  </div>
+  `
 
-  `)
+  container().innerHTML = html
 
 }
-
-
 
 async function saveEnergy(){
 
-  const start = document.getElementById("start").value
-  const end = document.getElementById("end").value
+  const start = document.getElementById("energyStart").value
+  const end = document.getElementById("energyEnd").value
 
-  await api("setEnergy",{
-    start:start,
-    end:end
-  })
-
-  alert("Uloženo")
+  alert("Energie zapsána (zatím pouze UI)")
 
 }
+
+window.start = start
+window.renderOverview = renderOverview
+window.renderEvents = renderEvents
+window.renderPayments = renderPayments
+window.renderEnergy = renderEnergy
+window.openEvent = openEvent
+window.doAttendance = doAttendance
+window.doAttendanceWithReason = doAttendanceWithReason
