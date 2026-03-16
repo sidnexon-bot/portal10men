@@ -1,6 +1,6 @@
 // api.js - robustní wrapper, který překryje staré api a nezničí existující metody
 (function(){
-  const API_URL = "https://script.google.com/macros/s/AKfycbzPxtiBJ3cK2-xgpYRRjD_PHzb8KNR1lwFqDyU7B_07BWjEW2AyOoCLCVDLVu8jyuvTlA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec";
 
   // Pomocná funkce: postaví URL s parametry
   function buildUrl(action, params){
