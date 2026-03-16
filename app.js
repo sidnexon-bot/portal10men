@@ -1,89 +1,263 @@
-let MEMBERS = [];
-let EVENTS = [];
-let CURRENT_MEMBER = null;
+let member = null
 
-async function start(){
-  try{
-    MEMBERS = await api.members();
-    EVENTS = await api.events();
-    renderMemberSelect();
-    renderEvents();
-  }catch(err){
-    console.error("Start error", err);
-    document.getElementById("main").innerText = "Chyba při načítání dat: " + (err && err.message || err);
+
+async function init(){
+
+  const members = await api("members")
+
+  const select = document.getElementById("memberSelect")
+
+  members.forEach(m=>{
+
+    const opt = document.createElement("option")
+
+    opt.value = m.ID
+    opt.textContent = m.NAME
+
+    select.appendChild(opt)
+
+  })
+
+  select.onchange = ()=>{
+
+    member = select.value
+
+    showDashboard()
+
   }
+
 }
 
-function renderMemberSelect(){
-  const sel = document.getElementById("memberSelect");
-  sel.innerHTML = "";
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = "Vyber člena";
-  sel.appendChild(opt);
-  MEMBERS.forEach(m => {
-    const o = document.createElement("option");
-    o.value = m.ID || m.id || m.Id || "";
-    o.textContent = m.NAME || m.Name || m.NAME_CLENA || (m.EMAIL || m.EMAIL_ADDRESS) || ("#" + o.value);
-    sel.appendChild(o);
-  });
-  sel.addEventListener("change", e => {
-    CURRENT_MEMBER = e.target.value || null;
-  });
+window.onload = init
+
+
+
+/* ======================
+   DASHBOARD
+====================== */
+
+async function showDashboard(){
+
+  if(!member) return
+
+  const data = await api("dashboard",{member})
+
+  const c = document.getElementById("content")
+
+  let html = ""
+
+  const ev = data.nextEvent
+
+  html += `
+  <h2>Nejbližší akce</h2>
+
+  <div class="card">
+
+  <b>${ev.NAME}</b><br>
+  ${ev.DATE}<br>
+  ${ev.PLACE}
+
+  </div>
+  `
+
+  html += `<h3>Program</h3>`
+
+  data.program.forEach(p=>{
+
+    html += `<div>${p.SKLADBA}</div>`
+
+  })
+
+
+  html += `<h3>Docházka</h3>`
+
+  html += `
+  <button onclick="attendance('${ev.ID}','yes')">Přijdu</button>
+  <button onclick="attendance('${ev.ID}','maybe')">Možná</button>
+  <button onclick="attendance('${ev.ID}','no')">Nepřijdu</button>
+  `
+
+  c.innerHTML = html
+
 }
 
-function renderEvents(){
-  const container = document.getElementById("eventsList");
-  container.innerHTML = "";
-  if(!EVENTS || !Array.isArray(EVENTS)){
-    container.textContent = "Žádné akce";
-    return;
-  }
-  EVENTS.forEach(ev => {
-    const card = document.createElement("div");
-    card.className = "card eventCard";
 
-    const title = document.createElement("h3");
-    title.textContent = ev.NAME || ev.name || ev.NAZEV || "undefined";
-    card.appendChild(title);
 
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = (ev.DATE || ev.date || ev.DATUM || "");
-    card.appendChild(meta);
+/* ======================
+   EVENTS
+====================== */
 
-    const btns = document.createElement("div");
-    btns.className = "buttons";
+async function showEvents(){
 
-    ["Přijdu","Možná","Nepřijdu"].forEach(statusLabel => {
-      const b = document.createElement("button");
-      b.textContent = statusLabel;
-      b.className = "small";
-      b.addEventListener("click", () => handleAttendance(ev, statusLabel));
-      btns.appendChild(b);
-    });
+  const events = await api("events")
 
-    card.appendChild(btns);
-    container.appendChild(card);
-  });
+  const c = document.getElementById("content")
+
+  let html = `<h2>Akce</h2>`
+
+  events.forEach(ev=>{
+
+    html += `
+
+    <div class="event" onclick="eventDetail('${ev.ID}')">
+
+      <b>${ev.NAME}</b><br>
+      ${ev.DATE}<br>
+      ${ev.PLACE}
+
+    </div>
+
+    `
+
+  })
+
+  c.innerHTML = html
+
 }
 
-async function handleAttendance(ev, statusLabel){
-  if(!CURRENT_MEMBER){
-    alert("Vyber člena v horním menu (Jsem:).");
-    return;
-  }
-  // map label to internal status (simple)
-  const map = {"Přijdu":"yes","Možná":"maybe","Nepřijdu":"no"};
-  const status = map[statusLabel] || statusLabel;
-  try{
-    const res = await api.setAttendance(ev.ID || ev.id || ev.Id, CURRENT_MEMBER, status, "");
-    console.log("saveAttendance", res);
-    alert("Uloženo: " + (res.status || JSON.stringify(res)));
-  }catch(err){
-    console.error("Attendance save error", err);
-    alert("Chyba při ukládání docházky: " + err);
-  }
+
+
+async function eventDetail(id){
+
+  const data = await api("eventDetail",{id})
+
+  const c = document.getElementById("content")
+
+  const ev = data.event
+
+  let html = `
+  <h2>${ev.NAME}</h2>
+
+  ${ev.DATE}<br>
+  ${ev.PLACE}
+  `
+
+  html += `<h3>Program</h3>`
+
+  data.program.forEach(p=>{
+
+    html += `<div>${p.SKLADBA}</div>`
+
+  })
+
+
+  html += `<h3>Docházka</h3>`
+
+  html += `
+  <button onclick="attendance('${ev.ID}','yes')">Přijdu</button>
+  <button onclick="attendance('${ev.ID}','maybe')">Možná</button>
+  <button onclick="attendance('${ev.ID}','no')">Nepřijdu</button>
+  `
+
+  c.innerHTML = html
+
 }
 
-window.addEventListener("load", start);
+
+
+/* ======================
+   ATTENDANCE
+====================== */
+
+async function attendance(eventId,status){
+
+  let reason=""
+
+  if(status==="no"){
+
+    reason = prompt("Důvod neúčasti")
+
+    if(!reason) return
+
+  }
+
+  await api("setAttendance",{
+
+    event:eventId,
+    member:member,
+    status,
+    reason
+
+  })
+
+  alert("Uloženo")
+
+}
+
+
+
+/* ======================
+   PAYMENTS
+====================== */
+
+async function showPayments(){
+
+  const collections = await api("collections")
+
+  const payments = await api("payments")
+
+  const c = document.getElementById("content")
+
+  let html = `<h2>Platby</h2>`
+
+  collections.forEach(col=>{
+
+    html += `<h3>${col.NAME}</h3>`
+
+    payments
+      .filter(p=>p.ID_VYBER===col.ID)
+      .forEach(p=>{
+
+        html += `<div>${p.ID_MEMBER} : ${p.PAID}</div>`
+
+      })
+
+  })
+
+  c.innerHTML = html
+
+}
+
+
+
+/* ======================
+   ENERGY
+====================== */
+
+function showEnergy(){
+
+  const c = document.getElementById("content")
+
+  c.innerHTML = `
+
+  <h2>Energie</h2>
+
+  Začátek:<br>
+  <input id="start"><br>
+
+  Konec:<br>
+  <input id="end"><br>
+
+  <button onclick="saveEnergy()">Uložit</button>
+
+  `
+
+}
+
+
+
+async function saveEnergy(){
+
+  const start = document.getElementById("start").value
+  const end = document.getElementById("end").value
+
+  await api("setEnergy",{
+
+    start,
+    end
+
+  })
+
+  alert("Uloženo")
+
+}
