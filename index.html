@@ -1,116 +1,37 @@
-<!DOCTYPE html>
-<html lang="cs">
-
+<!doctype html>
+<html>
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>10men Portál</title>
-
-<link rel="stylesheet" href="style.css">
-
+  <meta charset="utf-8">
+  <title>10men Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <header class="topbar">
+    <div class="brand">10men Portál</div>
+    <div class="memberRow">
+      <label>Jsem:</label>
+      <select id="memberSelect"></select>
+    </div>
+  </header>
 
-<header>
-  <h1>10men Portál</h1>
-</header>
+  <main id="main">
+    <section class="panel">
+      <h2>Akce</h2>
+      <div id="eventsList"></div>
+    </section>
+  </main>
 
+  <footer class="bottomBar">
+    <nav>
+      <span>Přehled</span>
+      <span>Repertoár</span>
+      <span>Energie</span>
+      <span>Platby</span>
+    </nav>
+  </footer>
 
-
-<!-- výběr člena -->
-
-<div class="member-select">
-
-  <label>Jsem:</label>
-
-  <select id="memberSelect" onchange="setMember(this.value)">
-    <option value="">Vyber člena</option>
-  </select>
-
-</div>
-
-
-
-<!-- hlavní obsah -->
-
-<div id="content"></div>
-
-
-
-<!-- spodní navigace -->
-
-<nav class="bottom-nav">
-
-<button onclick="showPage('overview')">
-Přehled
-</button>
-
-<button onclick="showPage('repertoire')">
-Repertoár
-</button>
-
-<button onclick="showPage('energy')">
-Energie
-</button>
-
-<button onclick="showPage('payments')">
-Platby
-</button>
-
-</nav>
-
-
-
-<script src="api.js"></script>
-<script src="app.js"></script>
-
-
-
-<script>
-
-// načtení členů do dropdownu
-
-async function loadMembers(){
-
-  const members = await api("members")
-
-  if(!Array.isArray(members)) return
-
-  const select = document.getElementById("memberSelect")
-
-  members.forEach(m=>{
-
-    const option = document.createElement("option")
-
-    option.value = m.ID || m.id
-    option.textContent = m.JMENO || m.name
-
-    select.appendChild(option)
-
-  })
-
-}
-
-
-// uložení člena
-
-function setMember(id){
-
-  localStorage.setItem("member",id)
-
-}
-
-
-// inicializace
-
-loadMembers()
-
-</script>
-
-
-
+  <script src="api.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
