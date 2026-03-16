@@ -1,68 +1,16 @@
 <!DOCTYPE html>
 <html lang="cs">
-
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>10men Portal</title>
 
-<style>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
 
-body{
-margin:0;
-font-family:system-ui;
-background:#f3f3f3;
-}
-
-header{
-background:#000;
-color:white;
-padding:16px;
-font-size:20px;
-}
-
-.container{
-padding:16px;
-padding-bottom:80px;
-}
-
-.card{
-background:white;
-padding:16px;
-border-radius:12px;
-margin-bottom:12px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-button{
-border:none;
-padding:10px 14px;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-margin-right:6px;
-}
-
-.yes{background:#27ae60;color:white;}
-.maybe{background:#f1c40f;}
-.no{background:#e74c3c;color:white;}
-
-.bottom{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:#000;
-color:white;
-display:flex;
-justify-content:space-around;
-padding:14px;
-font-size:14px;
-}
-
-</style>
 </head>
-
 
 <body>
 
@@ -70,126 +18,32 @@ font-size:14px;
 10men Portal
 </header>
 
+<main id="content">
 
-<div class="container">
+<div class="card">
 
-<div id="events">Načítám…</div>
+<h2>Akce</h2>
+
+<div id="events">
+Načítám...
+</div>
 
 </div>
 
+</main>
 
-<div class="bottom">
-<div onclick="showEvents()">Přehled</div>
-<div onclick="showRepertoire()">Repertoár</div>
-<div onclick="showEnergy()">Energie</div>
-<div onclick="showPayments()">Platby</div>
-<div onclick="showFeedback()">Feedback</div>
-</div>
+<nav>
 
+<button onclick="showPage('overview')">Přehled</button>
+<button onclick="showPage('repertoire')">Repertoár</button>
+<button onclick="showPage('energy')">Energie</button>
+<button onclick="showPage('payments')">Platby</button>
+<button onclick="showPage('feedback')">Feedback</button>
 
+</nav>
 
-<script>
-
-const API="https://script.google.com/macros/s/AKfycby4EOosB3W72SdGpqdkue3nY0zGdti1pMT9mi9IM6hbj6kQu3wr-96KySw7CHAmF2TU1A/exec"
-
-
-
-async function loadEvents(){
-
-const container=document.getElementById("events")
-
-container.innerHTML="Načítám…"
-
-try{
-
-const response=await fetch(API+"?action=events")
-const text=await response.text()
-
-const events=JSON.parse(text)
-
-container.innerHTML=""
-
-events.reverse().forEach(ev=>{
-
-const date=new Date(ev.date).toLocaleDateString("cs-CZ")
-
-const div=document.createElement("div")
-div.className="card"
-
-div.innerHTML=`
-<b>${ev.name}</b><br>
-${date}<br>
-${ev.place}
-<br><br>
-
-<button class="yes" onclick="attendance('${ev.id}','yes')">Přijdu</button>
-<button class="maybe" onclick="attendance('${ev.id}','maybe')">Možná</button>
-<button class="no" onclick="attendance('${ev.id}','no')">Nepřijdu</button>
-`
-
-container.appendChild(div)
-
-})
-
-}catch(e){
-
-container.innerHTML="Chyba načítání akcí"
-
-console.log(e)
-
-}
-
-}
-
-
-
-async function attendance(event,status){
-
-try{
-
-await fetch(API+
-"?action=setAttendance"+
-"&event="+event+
-"&status="+status)
-
-alert("Docházka uložena")
-
-}catch(e){
-
-alert("Chyba komunikace se serverem")
-
-}
-
-}
-
-
-
-function showEvents(){
-loadEvents()
-}
-
-function showRepertoire(){
-alert("Repertoár zatím není implementován")
-}
-
-function showEnergy(){
-alert("Energie zatím není implementována")
-}
-
-function showPayments(){
-alert("Platby zatím nejsou implementovány")
-}
-
-function showFeedback(){
-alert("Feedback zatím není implementován")
-}
-
-
-
-loadEvents()
-
-</script>
-
+<script src="api.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
