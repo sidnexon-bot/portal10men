@@ -1,61 +1,91 @@
-// ====== základní stav aplikace ======
-
-let MEMBER = localStorage.getItem("member") || null
+let currentMember = null
 
 
 
-// ====== navigace ======
+async function start(){
 
-function showPage(page){
+  await loadMembers()
 
-  if(page === "overview") loadEvents()
-  if(page === "repertoire") loadTable("repertoire","Repertoár")
-  if(page === "energy") loadTable("energy","Energie")
-  if(page === "payments") loadTable("payments","Platby")
+  showPage("events")
 
 }
 
 
 
-// ====== AKCE (speciální renderer kvůli docházce) ======
+async function loadMembers(){
+
+  const members = await api("members")
+
+  const select = document.getElementById("memberSelect")
+
+  select.innerHTML = '<option value="">Vyber člena</option>'
+
+  members.forEach(m => {
+
+    const opt = document.createElement("option")
+
+    opt.value = m.ID
+    opt.textContent = m.NAME
+
+    select.appendChild(opt)
+
+  })
+
+
+
+  select.addEventListener("change", e => {
+
+    currentMember = e.target.value
+
+  })
+
+}
+
+
+
+function showPage(page){
+
+  if(page === "events") loadEvents()
+  if(page === "repertoire") loadRepertoire()
+  if(page === "energy") loadEnergy()
+  if(page === "payments") loadPayments()
+
+}
+
+
 
 async function loadEvents(){
 
   const data = await api("events")
 
-  if(!Array.isArray(data)){
-    console.error("API error:",data)
-    document.getElementById("content").innerHTML = "<p>Chyba načítání akcí</p>"
-    return
-  }
+  const container = document.getElementById("content")
 
-  let html = "<div class='card'><h2>Akce</h2>"
+  let html = "<h2>Akce</h2>"
 
-  data.forEach(e=>{
-
-    const id = e.ID || e.id || ""
-    const name = e.NAZEV || e.name || ""
-    const date = e.DATUM || e.date || ""
-    const place = e.MISTO || e.place || ""
+  data.forEach(e => {
 
     html += `
       <div class="event">
 
-        <b>${name}</b><br>
-        ${formatDate(date)}<br>
-        ${place}
+        <div class="event-title">
+          ${e.NAME || ""}
+        </div>
 
-        <div class="attendance">
+        <div class="event-meta">
+          ${e.DATE || ""} ${e.START || ""} — ${e.PLACE || ""}
+        </div>
 
-          <button onclick="setAttendance('${id}','yes')">
+        <div class="attendance-buttons">
+
+          <button onclick="setAttendance('${e.ID}','yes')">
             Přijdu
           </button>
 
-          <button onclick="setAttendance('${id}','maybe')">
+          <button onclick="setAttendance('${e.ID}','maybe')">
             Možná
           </button>
 
-          <button onclick="setAttendance('${id}','no')">
+          <button onclick="setAttendance('${e.ID}','no')">
             Nepřijdu
           </button>
 
@@ -63,79 +93,28 @@ async function loadEvents(){
 
       </div>
     `
+
   })
 
-  html += "</div>"
-
-  document.getElementById("content").innerHTML = html
+  container.innerHTML = html
 
 }
 
 
-
-// ====== univerzální renderer tabulek ======
-
-async function loadTable(action,title){
-
-  const data = await api(action)
-
-  if(!Array.isArray(data)){
-    console.error("API error:",data)
-    document.getElementById("content").innerHTML = "<p>Chyba načítání dat</p>"
-    return
-  }
-
-  if(data.length === 0){
-    document.getElementById("content").innerHTML = "<p>Žádná data</p>"
-    return
-  }
-
-  const headers = Object.keys(data[0])
-
-  let html = `<div class="card"><h2>${title}</h2><table>`
-
-  html += "<thead><tr>"
-
-  headers.forEach(h=>{
-    html += `<th>${h}</th>`
-  })
-
-  html += "</tr></thead><tbody>"
-
-  data.forEach(row=>{
-
-    html += "<tr>"
-
-    headers.forEach(h=>{
-      html += `<td>${row[h] ?? ""}</td>`
-    })
-
-    html += "</tr>"
-
-  })
-
-  html += "</tbody></table></div>"
-
-  document.getElementById("content").innerHTML = html
-
-}
-
-
-
-// ====== docházka ======
 
 async function setAttendance(eventId,status){
 
-  if(!MEMBER){
+  if(!currentMember){
 
-    alert("Nejprve vyber člena")
+    alert("Vyber nejdřív člena")
 
     return
+
   }
 
   await api("setAttendance",{
     event:eventId,
-    member:MEMBER,
+    member:currentMember,
     status:status
   })
 
@@ -145,21 +124,119 @@ async function setAttendance(eventId,status){
 
 
 
-// ====== pomocné funkce ======
+async function loadRepertoire(){
 
-function formatDate(d){
+  const data = await api("repertoire")
 
-  if(!d) return ""
+  const container = document.getElementById("content")
 
-  const date = new Date(d)
+  let html = "<h2>Repertoár</h2>"
 
-  if(isNaN(date)) return d
+  html += "<table class='table'>"
 
-  return date.toLocaleDateString("cs-CZ")
+  html += `
+    <tr>
+      <th>ID</th>
+      <th>NÁZEV</th>
+      <th>AUTOR</th>
+      <th>ARRANGE</th>
+      <th>TEXT</th>
+      <th>STATUS</th>
+      <th>PDF</th>
+    </tr>
+  `
+
+  data.forEach(r => {
+
+    html += `
+      <tr>
+        <td>${r.ID || ""}</td>
+        <td>${r.NAME || ""}</td>
+        <td>${r.AUTHOR || ""}</td>
+        <td>${r.ARRANGED_BY || ""}</td>
+        <td>${r.TEXT_BY || ""}</td>
+        <td>${r.STATUS || ""}</td>
+        <td>${r.PDF || ""}</td>
+      </tr>
+    `
+
+  })
+
+  html += "</table>"
+
+  container.innerHTML = html
+
 }
 
 
 
-// ====== start aplikace ======
+async function loadEnergy(){
 
-showPage("overview")
+  const data = await api("energy")
+
+  const container = document.getElementById("content")
+
+  let html = "<h2>Energie</h2>"
+
+  html += "<table class='table'>"
+
+  html += `
+    <tr>
+      <th>ID</th>
+      <th>AKCE</th>
+      <th>START</th>
+      <th>END</th>
+      <th>DATE</th>
+    </tr>
+  `
+
+  data.forEach(r => {
+
+    html += `
+      <tr>
+        <td>${r.ID || ""}</td>
+        <td>${r.ID_AKCE || ""}</td>
+        <td>${r.START || ""}</td>
+        <td>${r.END || ""}</td>
+        <td>${r.DATE || ""}</td>
+      </tr>
+    `
+
+  })
+
+  html += "</table>"
+
+  container.innerHTML = html
+
+}
+
+
+
+async function loadPayments(){
+
+  const data = await api("payments")
+
+  const container = document.getElementById("content")
+
+  let html = "<h2>Platby</h2>"
+
+  html += "<table class='table'>"
+
+  data.forEach(p => {
+
+    html += `
+      <tr>
+        <td>${p.ID || ""}</td>
+        <td>${p.MEMBER || ""}</td>
+        <td>${p.AMOUNT || ""}</td>
+        <td>${p.DATE || ""}</td>
+      </tr>
+    `
+
+  })
+
+  html += "</table>"
+
+  container.innerHTML = html
+
+}
