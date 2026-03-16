@@ -1,39 +1,30 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+<meta charset="utf-8">
+<title>10men Portal</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>10men Portál</title>
-
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-<div id="app">
-
-<header>
-<h1>10men</h1>
-</header>
+<header>10men Portal</header>
 
 <div id="content"></div>
 
-<nav class="bottom-nav">
-
-<button onclick="showPage('overview')">Přehled</button>
+<div class="bottom-nav">
+<button onclick="showPage('overview')">Akce</button>
 <button onclick="showPage('repertoire')">Repertoár</button>
 <button onclick="showPage('energy')">Energie</button>
 <button onclick="showPage('payments')">Platby</button>
-
-</nav>
-
 </div>
 
-<script src="api.js"></script>
-<script src="app.js"></script>
+<script src="Api.js"></script>
+<script src="App.js"></script>
 
 </body>
 </html>
