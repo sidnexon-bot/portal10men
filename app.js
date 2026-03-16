@@ -50,7 +50,7 @@ async function loadEvents(){
 
 async function loadRepertoar(){
 
-  const data = await api("repertoar")
+  const data = await api("repertoire")
 
   const container = document.getElementById("content")
 
@@ -75,7 +75,7 @@ async function loadRepertoar(){
 
 async function loadEnergie(){
 
-  const data = await api("energie")
+  const data = await api("energy")
 
   const container = document.getElementById("content")
 
@@ -100,7 +100,7 @@ async function loadEnergie(){
 
 async function loadPlatby(){
 
-  const data = await api("platby")
+  const data = await api("payments")
 
   const container = document.getElementById("content")
 
