@@ -1,39 +1,19 @@
 let MEMBER = null
 
 
+async function api(action, params = {}){
 
-async function selectMember(){
+  const url = new URL(API_URL)
 
-const stored = localStorage.getItem("member")
+  url.searchParams.set("action", action)
 
-if(stored){
-MEMBER = stored
-return
-}
+  Object.keys(params).forEach(k=>{
+    url.searchParams.set(k, params[k])
+  })
 
-const members = await api("members")
+  const res = await fetch(url)
 
-let html = "<div class='card'><h3>Kdo jsi?</h3>"
-
-members.forEach(m => {
-
-html += `<button onclick="setMember('${m.id}')">${m.name}</button><br><br>`
-
-})
-
-html += "</div>"
-
-document.getElementById("content").innerHTML = html
-
-}
-
-
-
-function setMember(id){
-
-localStorage.setItem("member", id)
-
-location.reload()
+  return res.json()
 
 }
 
@@ -41,98 +21,135 @@ location.reload()
 
 async function loadEvents(){
 
-const container = document.getElementById("events")
+  const container = document.getElementById("content")
 
-container.innerHTML = "Načítám..."
+  container.innerHTML = "Načítám akce..."
 
-try{
+  const events = await api("events")
 
-const events = await api("events")
+  let html = "<div class='card'><h2>Akce</h2>"
 
-container.innerHTML = ""
+  events.forEach(e=>{
 
-events.forEach(e => {
+    html += `
+      <div class="event">
+        <strong>${e.name}</strong><br>
+        ${formatDate(e.date)}<br>
+        ${e.place || ""}
+      </div>
+    `
 
-const div = document.createElement("div")
+  })
 
-div.className = "event"
+  html += "</div>"
 
-div.innerHTML = `
-
-<strong>${e.name || "Akce"}</strong><br>
-${formatDate(e.date)}<br>
-${e.place || ""}
-
-<br><br>
-
-<button class="green" onclick="attendance('${e.id}','yes')">Přijdu</button>
-<button class="yellow" onclick="attendance('${e.id}','maybe')">Možná</button>
-<button class="red" onclick="attendance('${e.id}','no')">Nepřijdu</button>
-
-`
-
-container.appendChild(div)
-
-})
-
-}catch(e){
-
-container.innerHTML = "Chyba načítání akcí"
-
+  container.innerHTML = html
 }
 
+
+
+async function loadRepertoar(){
+
+  const data = await api("repertoar")
+
+  const container = document.getElementById("content")
+
+  let html = "<div class='card'><h2>Repertoár</h2>"
+
+  data.forEach(r=>{
+
+    html += `
+      <div class="event">
+        <strong>${r.NAZEV || r.name}</strong>
+      </div>
+    `
+
+  })
+
+  html += "</div>"
+
+  container.innerHTML = html
+}
+
+
+
+async function loadEnergie(){
+
+  const data = await api("energie")
+
+  const container = document.getElementById("content")
+
+  let html = "<div class='card'><h2>Energie</h2>"
+
+  data.forEach(e=>{
+
+    html += `
+      <div class="event">
+        ${e.DATUM || e.date} : ${e.STAV || e.value}
+      </div>
+    `
+
+  })
+
+  html += "</div>"
+
+  container.innerHTML = html
+}
+
+
+
+async function loadPlatby(){
+
+  const data = await api("platby")
+
+  const container = document.getElementById("content")
+
+  let html = "<div class='card'><h2>Platby</h2>"
+
+  data.forEach(p=>{
+
+    html += `
+      <div class="event">
+        ${p.NAME || p.name} – ${p.AMOUNT || p.amount}
+      </div>
+    `
+
+  })
+
+  html += "</div>"
+
+  container.innerHTML = html
 }
 
 
 
 function formatDate(d){
 
-if(!d) return ""
+  if(!d) return ""
 
-const date = new Date(d)
+  const date = new Date(d)
 
-if(isNaN(date)) return ""
+  if(isNaN(date)) return ""
 
-return date.toLocaleDateString("cs-CZ")
-
-}
-
-
-
-async function attendance(eventId,status){
-
-if(!MEMBER){
-alert("Vyber člena.")
-return
-}
-
-await api("setAttendance",{
-event:eventId,
-member:MEMBER,
-status:status
-})
-
-alert("Docházka uložena")
-
+  return date.toLocaleDateString("cs-CZ")
 }
 
 
 
 function showPage(page){
 
-alert("Stránka "+page+" zatím není hotová")
+  if(page === "overview") loadEvents()
+  if(page === "repertoire") loadRepertoar()
+  if(page === "energy") loadEnergie()
+  if(page === "payments") loadPlatby()
 
 }
 
 
 
-async function start(){
+function start(){
 
-await selectMember()
-
-MEMBER = localStorage.getItem("member")
-
-loadEvents()
+  loadEvents()
 
 }
 
