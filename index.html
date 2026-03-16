@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="cs">
-
+<html>
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>10men Portal</title>
+<title>10men Portál</title>
 
 <link rel="stylesheet" href="style.css">
 
@@ -14,33 +13,24 @@
 
 <body>
 
+<div id="app">
+
 <header>
-10men Portal
+<h1>10men</h1>
 </header>
 
-<main id="content">
+<div id="content"></div>
 
-<div class="card">
-
-<h2>Akce</h2>
-
-<div id="events">
-Načítám...
-</div>
-
-</div>
-
-</main>
-
-<nav>
+<nav class="bottom-nav">
 
 <button onclick="showPage('overview')">Přehled</button>
 <button onclick="showPage('repertoire')">Repertoár</button>
 <button onclick="showPage('energy')">Energie</button>
 <button onclick="showPage('payments')">Platby</button>
-<button onclick="showPage('feedback')">Feedback</button>
 
 </nav>
+
+</div>
 
 <script src="api.js"></script>
 <script src="app.js"></script>
