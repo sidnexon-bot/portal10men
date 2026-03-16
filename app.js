@@ -1,19 +1,12 @@
-let MEMBER = null
+let MEMBER = localStorage.getItem("member") || null
 
 
-async function api(action, params = {}){
+function showPage(page){
 
-  const url = new URL(API_URL)
-
-  url.searchParams.set("action", action)
-
-  Object.keys(params).forEach(k=>{
-    url.searchParams.set(k, params[k])
-  })
-
-  const res = await fetch(url)
-
-  return res.json()
+if(page === "overview") loadEvents()
+if(page === "repertoire") loadRepertoire()
+if(page === "energy") loadEnergy()
+if(page === "payments") loadPayments()
 
 }
 
@@ -21,136 +14,162 @@ async function api(action, params = {}){
 
 async function loadEvents(){
 
-  const container = document.getElementById("content")
+const data = await api("events")
 
-  container.innerHTML = "Načítám akce..."
+if(!Array.isArray(data)){
+console.error(data)
+return
+}
 
-  const events = await api("events")
+let html = "<div class='card'><h2>Akce</h2>"
 
-  let html = "<div class='card'><h2>Akce</h2>"
+data.forEach(e => {
 
-  events.forEach(e=>{
+html += `
+<div class="event">
 
-  html += `
-    <div class="event">
-      <strong>${e.NAME || e.name}</strong><br>
-      ${formatDate(e.DATE || e.date)}<br>
-      ${e.PLACE || e.place || ""}
-    </div>
-  `
+<b>${e.name}</b><br>
+${formatDate(e.date)}<br>
+${e.place || ""}
+
+<div class="attendance">
+
+<button onclick="setAttendance('${e.id}','yes')">Přijdu</button>
+<button onclick="setAttendance('${e.id}','maybe')">Možná</button>
+<button onclick="setAttendance('${e.id}','no')">Nepřijdu</button>
+
+</div>
+
+</div>
+`
 
 })
 
-  html += "</div>"
+html += "</div>"
 
-  container.innerHTML = html
+document.getElementById("content").innerHTML = html
+
 }
 
 
 
-async function loadRepertoar(){
+async function loadRepertoire(){
 
-  const data = await api("repertoire")
+const data = await api("repertoire")
 
-  const container = document.getElementById("content")
+if(!Array.isArray(data)) return
 
-  let html = "<div class='card'><h2>Repertoár</h2>"
+let html = "<div class='card'><h2>Repertoár</h2>"
 
-  data.forEach(r=>{
+data.forEach(s => {
 
-    html += `
-      <div class="event">
-        <strong>${r.NAZEV || r.name}</strong>
-      </div>
-    `
+html += `
+<div class="song">
 
-  })
+${s.NAME || s.name}
 
-  html += "</div>"
+</div>
+`
 
-  container.innerHTML = html
+})
+
+html += "</div>"
+
+document.getElementById("content").innerHTML = html
+
 }
 
 
 
-async function loadEnergie(){
+async function loadEnergy(){
 
-  const data = await api("energy")
+const data = await api("energy")
 
-  const container = document.getElementById("content")
+if(!Array.isArray(data)) return
 
-  let html = "<div class='card'><h2>Energie</h2>"
+let html = "<div class='card'><h2>Energie</h2>"
 
-  data.forEach(e=>{
+data.forEach(e => {
 
-    html += `
-      <div class="event">
-        ${e.DATUM || e.date} : ${e.STAV || e.value}
-      </div>
-    `
+html += `
+<div class="energy">
 
-  })
+${e.DATE || ""} : ${e.VALUE || ""}
 
-  html += "</div>"
+</div>
+`
 
-  container.innerHTML = html
+})
+
+html += "</div>"
+
+document.getElementById("content").innerHTML = html
+
 }
 
 
 
-async function loadPlatby(){
+async function loadPayments(){
 
-  const data = await api("payments")
+const data = await api("payments")
 
-  const container = document.getElementById("content")
+if(!Array.isArray(data)) return
 
-  let html = "<div class='card'><h2>Platby</h2>"
+let html = "<div class='card'><h2>Platby</h2>"
 
-  data.forEach(p=>{
+data.forEach(p => {
 
-    html += `
-      <div class="event">
-        ${p.NAME || p.name} – ${p.AMOUNT || p.amount}
-      </div>
-    `
+html += `
+<div class="payment">
 
-  })
+${p.NAME || ""} – ${p.AMOUNT || ""}
 
-  html += "</div>"
+</div>
+`
 
-  container.innerHTML = html
+})
+
+html += "</div>"
+
+document.getElementById("content").innerHTML = html
+
+}
+
+
+
+async function setAttendance(eventId,status){
+
+if(!MEMBER){
+
+alert("Nejprve vyber člena")
+
+return
+}
+
+await api("attendance",{
+event:eventId,
+member:MEMBER,
+status:status
+})
+
+alert("Docházka uložena")
+
 }
 
 
 
 function formatDate(d){
 
-  if(!d) return ""
+if(!d) return ""
 
-  const date = new Date(d)
+const date = new Date(d)
 
-  if(isNaN(date)) return ""
+if(isNaN(date)) return d
 
-  return date.toLocaleDateString("cs-CZ")
-}
-
-
-
-function showPage(page){
-
-  if(page === "overview") loadEvents()
-  if(page === "repertoire") loadRepertoar()
-  if(page === "energy") loadEnergie()
-  if(page === "payments") loadPlatby()
+return date.toLocaleDateString("cs-CZ")
 
 }
 
 
 
-function start(){
-
-  loadEvents()
-
-}
-
-start()
+showPage("overview")
