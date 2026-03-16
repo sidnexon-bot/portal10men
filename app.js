@@ -31,15 +31,15 @@ async function loadEvents(){
 
   events.forEach(e=>{
 
-    html += `
-      <div class="event">
-        <strong>${e.name}</strong><br>
-        ${formatDate(e.date)}<br>
-        ${e.place || ""}
-      </div>
-    `
+  html += `
+    <div class="event">
+      <strong>${e.NAME || e.name}</strong><br>
+      ${formatDate(e.DATE || e.date)}<br>
+      ${e.PLACE || e.place || ""}
+    </div>
+  `
 
-  })
+})
 
   html += "</div>"
 
