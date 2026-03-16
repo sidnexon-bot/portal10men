@@ -56,7 +56,7 @@ async function showDashboard(){
 
   const events = await api("events")
 
-  if(!events.length){
+  if(!events || !events.length){
     setMain("Žádné akce")
     return
   }
@@ -77,9 +77,18 @@ async function showDashboard(){
   <h3>Program</h3>
   `
 
-  program.forEach(p=>{
-    html += `<div>${p.NAME || p.SKLADBA}</div>`
-  })
+  if(program && program.length){
+
+    program.forEach(p=>{
+      html += `<div>${p.NAME || p.SKLADBA}</div>`
+    })
+
+  }else{
+
+    html += `<div class="small">Program není k dispozici</div>`
+
+  }
+
 
   html += `
 
@@ -106,16 +115,24 @@ async function showEvents(){
 
   let html = "<h2>Akce</h2>"
 
-  events.forEach(e=>{
+  if(events && events.length){
 
-    html += `
-    <div class="event" onclick="eventDetail('${e.ID}')">
-      <b>${e.NAME}</b><br>
-      ${e.DATE}
-    </div>
-    `
+    events.forEach(e=>{
 
-  })
+      html += `
+      <div class="event" onclick="eventDetail('${e.ID}')">
+        <b>${e.NAME}</b><br>
+        ${e.DATE}
+      </div>
+      `
+
+    })
+
+  }else{
+
+    html += `<div class="small">Žádné akce</div>`
+
+  }
 
   setMain(html)
 
@@ -138,9 +155,18 @@ async function eventDetail(id){
   <h3>Program</h3>
   `
 
-  data.program.forEach(p=>{
-    html += `<div>${p.NAME || p.SKLADBA}</div>`
-  })
+  if(data.program && data.program.length){
+
+    data.program.forEach(p=>{
+      html += `<div>${p.NAME || p.SKLADBA}</div>`
+    })
+
+  }else{
+
+    html += `<div class="small">Program není k dispozici</div>`
+
+  }
+
 
   html += `
   <h3>Docházka</h3>
@@ -170,8 +196,11 @@ async function attendance(eventId,status){
   let reason = ""
 
   if(status==="no"){
+
     reason = prompt("Důvod nepřítomnosti")
+
     if(!reason) return
+
   }
 
   await api("setAttendance",{
@@ -200,17 +229,25 @@ async function showPayments(){
 
   let html = "<h2>Platby</h2>"
 
-  collections.forEach(c=>{
+  if(collections && collections.length){
 
-    html += `<h3>${c.NAME}</h3>`
+    collections.forEach(c=>{
 
-    payments
-      .filter(p=>p.ID_VYBER===c.ID)
-      .forEach(p=>{
-        html += `<div>${p.ID_MEMBER}: ${p.PAID}</div>`
-      })
+      html += `<h3>${c.NAME}</h3>`
 
-  })
+      payments
+        .filter(p=>p.ID_VYBER===c.ID)
+        .forEach(p=>{
+          html += `<div>${p.ID_MEMBER}: ${p.PAID}</div>`
+        })
+
+    })
+
+  }else{
+
+    html += `<div class="small">Žádné aktivní výběry</div>`
+
+  }
 
   setMain(html)
 
