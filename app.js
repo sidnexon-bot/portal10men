@@ -1,242 +1,89 @@
-let currentMember = null
-
-
+let MEMBERS = [];
+let EVENTS = [];
+let CURRENT_MEMBER = null;
 
 async function start(){
-
-  await loadMembers()
-
-  showPage("events")
-
-}
-
-
-
-async function loadMembers(){
-
-  const members = await api("members")
-
-  const select = document.getElementById("memberSelect")
-
-  select.innerHTML = '<option value="">Vyber člena</option>'
-
-  members.forEach(m => {
-
-    const opt = document.createElement("option")
-
-    opt.value = m.ID
-    opt.textContent = m.NAME
-
-    select.appendChild(opt)
-
-  })
-
-
-
-  select.addEventListener("change", e => {
-
-    currentMember = e.target.value
-
-  })
-
-}
-
-
-
-function showPage(page){
-
-  if(page === "events") loadEvents()
-  if(page === "repertoire") loadRepertoire()
-  if(page === "energy") loadEnergy()
-  if(page === "payments") loadPayments()
-
-}
-
-
-
-async function loadEvents(){
-
-  const data = await api("events")
-
-  const container = document.getElementById("content")
-
-  let html = "<h2>Akce</h2>"
-
-  data.forEach(e => {
-
-    html += `
-      <div class="event">
-
-        <div class="event-title">
-          ${e.NAME || ""}
-        </div>
-
-        <div class="event-meta">
-          ${e.DATE || ""} ${e.START || ""} — ${e.PLACE || ""}
-        </div>
-
-        <div class="attendance-buttons">
-
-          <button onclick="setAttendance('${e.ID}','yes')">
-            Přijdu
-          </button>
-
-          <button onclick="setAttendance('${e.ID}','maybe')">
-            Možná
-          </button>
-
-          <button onclick="setAttendance('${e.ID}','no')">
-            Nepřijdu
-          </button>
-
-        </div>
-
-      </div>
-    `
-
-  })
-
-  container.innerHTML = html
-
-}
-
-
-
-async function setAttendance(eventId,status){
-
-  if(!currentMember){
-
-    alert("Vyber nejdřív člena")
-
-    return
-
+  try{
+    MEMBERS = await api.members();
+    EVENTS = await api.events();
+    renderMemberSelect();
+    renderEvents();
+  }catch(err){
+    console.error("Start error", err);
+    document.getElementById("main").innerText = "Chyba při načítání dat: " + (err && err.message || err);
   }
-
-  await api("setAttendance",{
-    event:eventId,
-    member:currentMember,
-    status:status
-  })
-
-  alert("Docházka uložena")
-
 }
 
-
-
-async function loadRepertoire(){
-
-  const data = await api("repertoire")
-
-  const container = document.getElementById("content")
-
-  let html = "<h2>Repertoár</h2>"
-
-  html += "<table class='table'>"
-
-  html += `
-    <tr>
-      <th>ID</th>
-      <th>NÁZEV</th>
-      <th>AUTOR</th>
-      <th>ARRANGE</th>
-      <th>TEXT</th>
-      <th>STATUS</th>
-      <th>PDF</th>
-    </tr>
-  `
-
-  data.forEach(r => {
-
-    html += `
-      <tr>
-        <td>${r.ID || ""}</td>
-        <td>${r.NAME || ""}</td>
-        <td>${r.AUTHOR || ""}</td>
-        <td>${r.ARRANGED_BY || ""}</td>
-        <td>${r.TEXT_BY || ""}</td>
-        <td>${r.STATUS || ""}</td>
-        <td>${r.PDF || ""}</td>
-      </tr>
-    `
-
-  })
-
-  html += "</table>"
-
-  container.innerHTML = html
-
+function renderMemberSelect(){
+  const sel = document.getElementById("memberSelect");
+  sel.innerHTML = "";
+  const opt = document.createElement("option");
+  opt.value = "";
+  opt.textContent = "Vyber člena";
+  sel.appendChild(opt);
+  MEMBERS.forEach(m => {
+    const o = document.createElement("option");
+    o.value = m.ID || m.id || m.Id || "";
+    o.textContent = m.NAME || m.Name || m.NAME_CLENA || (m.EMAIL || m.EMAIL_ADDRESS) || ("#" + o.value);
+    sel.appendChild(o);
+  });
+  sel.addEventListener("change", e => {
+    CURRENT_MEMBER = e.target.value || null;
+  });
 }
 
+function renderEvents(){
+  const container = document.getElementById("eventsList");
+  container.innerHTML = "";
+  if(!EVENTS || !Array.isArray(EVENTS)){
+    container.textContent = "Žádné akce";
+    return;
+  }
+  EVENTS.forEach(ev => {
+    const card = document.createElement("div");
+    card.className = "card eventCard";
 
+    const title = document.createElement("h3");
+    title.textContent = ev.NAME || ev.name || ev.NAZEV || "undefined";
+    card.appendChild(title);
 
-async function loadEnergy(){
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = (ev.DATE || ev.date || ev.DATUM || "");
+    card.appendChild(meta);
 
-  const data = await api("energy")
+    const btns = document.createElement("div");
+    btns.className = "buttons";
 
-  const container = document.getElementById("content")
+    ["Přijdu","Možná","Nepřijdu"].forEach(statusLabel => {
+      const b = document.createElement("button");
+      b.textContent = statusLabel;
+      b.className = "small";
+      b.addEventListener("click", () => handleAttendance(ev, statusLabel));
+      btns.appendChild(b);
+    });
 
-  let html = "<h2>Energie</h2>"
-
-  html += "<table class='table'>"
-
-  html += `
-    <tr>
-      <th>ID</th>
-      <th>AKCE</th>
-      <th>START</th>
-      <th>END</th>
-      <th>DATE</th>
-    </tr>
-  `
-
-  data.forEach(r => {
-
-    html += `
-      <tr>
-        <td>${r.ID || ""}</td>
-        <td>${r.ID_AKCE || ""}</td>
-        <td>${r.START || ""}</td>
-        <td>${r.END || ""}</td>
-        <td>${r.DATE || ""}</td>
-      </tr>
-    `
-
-  })
-
-  html += "</table>"
-
-  container.innerHTML = html
-
+    card.appendChild(btns);
+    container.appendChild(card);
+  });
 }
 
-
-
-async function loadPayments(){
-
-  const data = await api("payments")
-
-  const container = document.getElementById("content")
-
-  let html = "<h2>Platby</h2>"
-
-  html += "<table class='table'>"
-
-  data.forEach(p => {
-
-    html += `
-      <tr>
-        <td>${p.ID || ""}</td>
-        <td>${p.MEMBER || ""}</td>
-        <td>${p.AMOUNT || ""}</td>
-        <td>${p.DATE || ""}</td>
-      </tr>
-    `
-
-  })
-
-  html += "</table>"
-
-  container.innerHTML = html
-
+async function handleAttendance(ev, statusLabel){
+  if(!CURRENT_MEMBER){
+    alert("Vyber člena v horním menu (Jsem:).");
+    return;
+  }
+  // map label to internal status (simple)
+  const map = {"Přijdu":"yes","Možná":"maybe","Nepřijdu":"no"};
+  const status = map[statusLabel] || statusLabel;
+  try{
+    const res = await api.setAttendance(ev.ID || ev.id || ev.Id, CURRENT_MEMBER, status, "");
+    console.log("saveAttendance", res);
+    alert("Uloženo: " + (res.status || JSON.stringify(res)));
+  }catch(err){
+    console.error("Attendance save error", err);
+    alert("Chyba při ukládání docházky: " + err);
+  }
 }
+
+window.addEventListener("load", start);
