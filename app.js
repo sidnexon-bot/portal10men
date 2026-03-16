@@ -1,5 +1,3 @@
-const API_URL = "https://script.google.com/macros/s/AKfycby4EOosB3W72SdGpqdkue3nY0zGdti1pMT9mi9IM6hbj6kQu3wr-96KySw7CHAmF2TU1A/exec"
-
 let MEMBER = null
 
 
