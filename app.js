@@ -1,24 +1,12 @@
 let MEMBER = null
 
 
-async function api(action, params = {}) {
 
-
-for (const key in params) {
-url += "&" + key + "=" + encodeURIComponent(params[key])
-}
-
-const res = await fetch(url)
-return res.json()
-
-}
-
-
-async function selectMember() {
+async function selectMember(){
 
 const stored = localStorage.getItem("member")
 
-if (stored) {
+if(stored){
 MEMBER = stored
 return
 }
@@ -40,7 +28,8 @@ document.getElementById("content").innerHTML = html
 }
 
 
-function setMember(id) {
+
+function setMember(id){
 
 localStorage.setItem("member", id)
 
@@ -49,13 +38,14 @@ location.reload()
 }
 
 
-async function loadEvents() {
+
+async function loadEvents(){
 
 const container = document.getElementById("events")
 
 container.innerHTML = "Načítám..."
 
-try {
+try{
 
 const events = await api("events")
 
@@ -85,7 +75,7 @@ container.appendChild(div)
 
 })
 
-} catch (e) {
+}catch(e){
 
 container.innerHTML = "Chyba načítání akcí"
 
@@ -94,30 +84,32 @@ container.innerHTML = "Chyba načítání akcí"
 }
 
 
-function formatDate(d) {
 
-if (!d) return ""
+function formatDate(d){
+
+if(!d) return ""
 
 const date = new Date(d)
 
-if (isNaN(date)) return ""
+if(isNaN(date)) return ""
 
 return date.toLocaleDateString("cs-CZ")
 
 }
 
 
-async function attendance(eventId, status) {
 
-if (!MEMBER) {
-alert("Nejprve vyber člena.")
+async function attendance(eventId,status){
+
+if(!MEMBER){
+alert("Vyber člena.")
 return
 }
 
-await api("setAttendance", {
-event: eventId,
-member: MEMBER,
-status: status
+await api("setAttendance",{
+event:eventId,
+member:MEMBER,
+status:status
 })
 
 alert("Docházka uložena")
@@ -125,14 +117,16 @@ alert("Docházka uložena")
 }
 
 
-function showPage(page) {
 
-alert("Stránka " + page + " zatím není hotová")
+function showPage(page){
+
+alert("Stránka "+page+" zatím není hotová")
 
 }
 
 
-async function start() {
+
+async function start(){
 
 await selectMember()
 
@@ -141,6 +135,5 @@ MEMBER = localStorage.getItem("member")
 loadEvents()
 
 }
-
 
 start()
