@@ -1,5 +1,55 @@
 let MEMBER = localStorage.getItem("member") || null
 
+
+async function init(){
+
+  if(!MEMBER){
+    await selectMember()
+  }
+
+  showPage("overview")
+
+}
+
+
+async function selectMember(){
+
+  const members = await api("members")
+
+  if(!Array.isArray(members)){
+    alert("Nelze načíst členy")
+    return
+  }
+
+  let html = "<div class='card'><h2>Vyber člena</h2>"
+
+  members.forEach(m => {
+
+    html += `
+    <button onclick="setMember('${m.ID}')">
+    ${m.NAME}
+    </button><br><br>
+    `
+
+  })
+
+  html += "</div>"
+
+  document.getElementById("content").innerHTML = html
+
+}
+
+
+function setMember(id){
+
+  MEMBER = id
+  localStorage.setItem("member",id)
+
+  showPage("overview")
+
+}
+
+
 function showPage(page){
 
   if(page === "overview") loadEvents()
@@ -9,18 +59,19 @@ function showPage(page){
 
 }
 
+
 async function loadEvents(){
 
-  const data = await api("events")
+  const events = await api("events")
 
-  if(!Array.isArray(data)){
-    console.error(data)
+  if(!Array.isArray(events)){
+    console.error(events)
     return
   }
 
   let html = "<div class='card'><h2>Akce</h2>"
 
-  data.forEach(e => {
+  for(const e of events){
 
     html += `
     <div class="event">
@@ -37,16 +88,55 @@ async function loadEvents(){
 
     </div>
 
+    <button onclick="showProgram('${e.ID}')">
+    Program
+    </button>
+
     </div>
     `
 
-  })
+  }
 
   html += "</div>"
 
   document.getElementById("content").innerHTML = html
 
 }
+
+
+async function showProgram(eventId){
+
+  const program = await api("program",{event:eventId})
+  const repertoire = await api("repertoire")
+
+  if(!Array.isArray(program)){
+    alert("Program nenalezen")
+    return
+  }
+
+  let html = "<div class='card'><h2>Program</h2>"
+
+  program.sort((a,b)=>a.ORDER-b.ORDER)
+
+  program.forEach(p => {
+
+    const song = repertoire.find(r => r.ID === p.SONG_ID)
+
+    html += `
+    <div class="song">
+    ${song ? song.NAME : p.SONG_ID}
+    </div>
+    `
+
+  })
+
+  html += "<br><button onclick='showPage(\"overview\")'>Zpět</button>"
+  html += "</div>"
+
+  document.getElementById("content").innerHTML = html
+
+}
+
 
 async function loadRepertoire(){
 
@@ -72,6 +162,7 @@ async function loadRepertoire(){
 
 }
 
+
 async function loadEnergy(){
 
   const data = await api("energy")
@@ -95,6 +186,7 @@ async function loadEnergy(){
   document.getElementById("content").innerHTML = html
 
 }
+
 
 async function loadPayments(){
 
@@ -120,6 +212,7 @@ async function loadPayments(){
 
 }
 
+
 async function setAttendance(eventId,status){
 
   if(!MEMBER){
@@ -137,6 +230,7 @@ async function setAttendance(eventId,status){
 
 }
 
+
 function formatDate(d){
 
   if(!d) return ""
@@ -149,4 +243,5 @@ function formatDate(d){
 
 }
 
-showPage("overview")
+
+init()
