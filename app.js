@@ -207,23 +207,7 @@ async function renderDashboard(){
       .filter(e => new Date(e.DATE) >= now)
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
-    let html = `
-<button onclick="renderEvents()" class="back-btn">← Zpět</button>
-
-<div class="event-card main">
-
-  <div class="event-title">${escapeHtml(event.NAME)}</div>
-
-  <div class="event-meta">
-    ${formatDate(event.DATE)}
-    ${event.START ? " · " + formatTime(event.START) : ""}
-    ${event.END   ? " – " + formatTime(event.END)   : ""}
-  </div>
-
-  ${event.PLACE ? `<div class="event-place">${escapeHtml(event.PLACE)}</div>` : ""}
-
-</div>
-`
+    let html = ""
 
     // --- NEJBLIŽŠÍ AKCE ---
     if(upcoming){
@@ -371,66 +355,46 @@ async function openEvent(id){
     `
 
     // program
-  if(program.length){
-  html += `
-  <div class="event-card">
-    <div class="event-label">Program</div>
-
-    ${program.map(p => `
-      <div class="event-row">
-        <div>
-          <b>${escapeHtml(p.NAME)}</b>
-          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-        </div>
-        ${p.LENGTH ? `<div class="small">${escapeHtml(p.LENGTH)}</div>` : ""}
-      </div>
-    `).join("")}
-
-  </div>
-  `
-}else{
-  html += "<p class='notice'>Program není k dispozici</p>"
-}
+    if(program.length){
+      html += `<div class="event-card">
+        <div class="event-label">Program</div>
+        ${program.map(p => `
+          <div class="event-row">
+            <div>
+              <b>${escapeHtml(p.NAME)}</b>
+              ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+            </div>
+            ${p.LENGTH ? `<div class="small">${escapeHtml(p.LENGTH)}</div>` : ""}
+          </div>
+        `).join("")}
+      </div>`
+    }else{
+      html += "<p class='notice'>Program není k dispozici</p>"
+    }
 
     // poznámka
-    html += `
-    <div class="card">
+    html += `<div class="card">
       <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
       <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
     </div>`
 
     // docházka
+    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
+    const myStatus = myRow?.STATUS || ""
 
-  const myRow = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-const myStatus = myRow?.STATUS || ""
-
-html += `
-<div class="event-card">
-
-  <div class="event-label">Docházka</div>
-
-  ${MEMBER_EMAIL ? `
-    <div class="attendance-status">
-      ${renderAttendanceStatus(myStatus)}
-    </div>
-
-    <div class="attendance-buttons">
-      <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-      <button onclick="doAttendance('${id}','Možná')">Možná</button>
-      <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-    </div>
-  ` : `
-    <div class="muted">Vyber člena</div>
-  `}
-
-</div>
-`
-
-</div>
-`
+    html += `<div class="event-card">
+      <div class="event-label">Docházka</div>
+      ${MEMBER_EMAIL ? `
+        <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
+        <div class="attendance-buttons">
+          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+          <button onclick="doAttendance('${id}','Možná')">Možná</button>
+          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+        </div>
+      ` : `<div class="muted">Vyber člena</div>`}
+    </div>`
 
     // přehled skupiny
-    html += "<h3>Přehled skupiny</h3>"
     const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
     const maybe = attendance.filter(a => a.STATUS === "Možná").length
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
