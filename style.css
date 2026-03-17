@@ -353,7 +353,12 @@ button[onclick*="'Nepřijdu'"]{
   background:rgba(0,122,255,0.15);
   color:#007aff;
 
-  transform:scale(1.05);
+  transform:scale(1.03);
+}
+
+.bottom button.active .icon svg{
+  stroke:#007aff;
+  transform:scale(1.1);
 }
 
 .bottom button span{
@@ -408,11 +413,16 @@ select:focus{
 }
 
 .icon svg{
-  width:20px;
-  height:20px;
-  fill:#8e8e93;
+  width:22px;
+  height:22px;
+
+  fill:none;
+  stroke:#8e8e93;
+  stroke-width:2;
+
+  transition:all 0.2s ease;
 }
 
 .bottom button.active .icon svg{
-  fill:#007aff;
+  stroke:#007aff;
 }
