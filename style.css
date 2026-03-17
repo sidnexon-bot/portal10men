@@ -49,6 +49,12 @@ header .subtitle{
   margin-top:4px;
 }
 
+.header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+
 .topbar{
   margin-top:14px;
   display:flex;
@@ -194,6 +200,25 @@ button[onclick*="'Nepřijdu'"]{
   background:#fdecec;
 }
 
+.profile-btn{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+
+  background:#d1d1d6;
+  color:#000;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-weight:600;
+  font-size:14px;
+
+  cursor:pointer;
+
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
 /* NAV */
 
 .bottom-wrap{
