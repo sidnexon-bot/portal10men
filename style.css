@@ -298,50 +298,62 @@ button[onclick*="'Nepřijdu'"]{
 
   display:flex;
   justify-content:center;
+
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
   pointer-events:none;
-  padding-bottom:env(safe-area-inset-bottom);
 }
 
 .bottom{
   display:flex;
-  gap:8px;
+  justify-content:space-between; /* 🔥 klíčové */
 
+  width:100%;           /* 👉 roztáhne */
+  max-width:420px;      /* 👉 iPhone šířka */
+  
   margin:12px;
-  padding:8px;
+  padding:10px;
 
-  background:rgba(255,255,255,0.7);
+  background:linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.9),
+    rgba(255,255,255,0.6)
+  );
   backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);
-
-  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.4);
+  border-radius:28px;
   box-shadow:0 8px 30px rgba(0,0,0,0.12);
 
   pointer-events:auto;
 }
 
 .bottom button{
+  flex:1; /* 🔥 rovnoměrná šířka */
+
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
 
+  gap:4px;
+
   border:none;
   background:transparent;
 
-  padding:8px 12px;
-  border-radius:12px;
+  padding:10px 6px;
+  border-radius:18px;
 
   font-size:12px;
-  color:#888;
+  color:#8e8e93;
 
   transition:all 0.2s ease;
 }
 
 .bottom button.active{
-  background:rgba(0,122,255,0.12);
+  background:rgba(0,122,255,0.15);
   color:#007aff;
 
-  transform:translateY(-2px) scale(1.05);
+  transform:scale(1.05);
 }
 
 .bottom button span{
@@ -396,14 +408,11 @@ select:focus{
 }
 
 .icon svg{
-  width:22px;
-  height:22px;
-  fill:#888;
-
-  transition:all 0.2s ease;
+  width:20px;
+  height:20px;
+  fill:#8e8e93;
 }
 
 .bottom button.active .icon svg{
   fill:#007aff;
-  transform:scale(0.95);
 }
