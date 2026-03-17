@@ -84,6 +84,12 @@ function setStatus(msg){
   if(el) el.textContent = msg || "—"
 }
 
+function isToday(date){
+  const d = new Date(date)
+  const t = new Date()
+  return d.toDateString() === t.toDateString()
+}
+
 /* ===============================
    START
 ================================ */
@@ -244,7 +250,7 @@ async function renderDashboard(){
 function concertRow(e, now){
   const past = new Date(e.DATE) < now
   return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
-    <b>${escapeHtml(e.NAME)}</b>
+    <b>${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
     <span class="small concert-date">${formatDate(e.DATE)}${e.PLACE ? " · " + escapeHtml(e.PLACE) : ""}</span>
   </div>`
 }
