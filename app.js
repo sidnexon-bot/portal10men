@@ -34,12 +34,19 @@ function formatDate(d){
 }
 
 function formatTime(t){
-  if(!t) return ""
-  // Google Sheets vrací čas jako "1899-12-30T18:35:00.000Z"
+  if(!t && t !== 0) return ""
+  // celé číslo = hodina (18 → "18:00")
+  if(typeof t === "number"){
+    return String(Math.floor(t)).padStart(2,"0") + ":00"
+  }
+  // string s T = ISO datum
   if(typeof t === "string" && t.includes("T")){
     const d = new Date(t)
     return d.toLocaleTimeString("cs-CZ", {hour:"2-digit", minute:"2-digit", timeZone:"UTC"})
   }
+  return String(t).substring(0,5)
+}
+
   // číslo (zlomek dne)
   if(typeof t === "number"){
     const totalMinutes = Math.round(t * 24 * 60)
