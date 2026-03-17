@@ -5,9 +5,6 @@
 let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
 let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
-let PIN_INPUT    = ""
-let PIN_TARGET   = null
-let PIN_CHECKING = false
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
@@ -150,9 +147,10 @@ function openMemberModal(){
     if(m.EMAIL === MEMBER_EMAIL){
       div.classList.add("active-member")
     }
-    div.onclick = () => openPinModal(m)
-}
-
+    div.onclick = () => {
+      selectMember(m)
+      closeMemberModal()
+    }
     list.appendChild(div)
   })
 
@@ -175,46 +173,6 @@ function selectMember(m){
   setStatus(MEMBER_NAME)
 
   renderDashboard()
-}
-
-/* ===============================
-   PIN MODAL
-================================ */
-
-function openPinModal(member){
-  PIN_INPUT  = ""
-  PIN_TARGET = member
-  closeMemberModal()
-  const input = document.getElementById("pinInput")
-  if(input) input.value = ""
-  document.getElementById("pinModal").classList.remove("hidden")
-  setTimeout(() => input && input.focus(), 100)
-}
-
-function closePinModal(){
-  document.getElementById("pinModal").classList.add("hidden")
-  PIN_INPUT  = ""
-  PIN_TARGET = null
-}
-
-async function submitPin(){
-  if(!PIN_TARGET){ alert("Chyba: žádný člen nevybrán"); return }
-  const input = document.getElementById("pinInput")
-  const pin   = input ? input.value.trim() : ""
-  if(pin.length !== 4){ alert("PIN musí mít 4 číslice"); return }
-  try{
-    const result = await api("verifypin", {email: PIN_TARGET.EMAIL, pin})
-    if(result.ok){
-      closePinModal()
-      selectMember(PIN_TARGET)
-    }else{
-      input.value = ""
-      input.focus()
-      alert("Špatný PIN")
-    }
-  }catch(err){
-    alert("Chyba při ověřování: " + (err?.message || err))
-  }
 }
 
 /* ===============================
