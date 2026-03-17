@@ -90,3 +90,52 @@ kbd{ background:#eee; padding:2px 6px; border-radius:4px; font-size:12px; }
 .card.next{
 border:2px solid #000;
 }
+/* Přidat k tvému style.css */
+.event { 
+  border: 1px solid #eee; 
+  transition: all 0.2s ease;
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-details {
+  display: none; /* Schované v základu */
+  padding-top: 15px;
+  margin-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Třída pro rozbalenou akci */
+.event.open .event-details {
+  display: block;
+}
+
+.event.open {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.btn-group button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-yes { background: #2ecc71; color: white; }
+.btn-maybe { background: #f1c40f; color: #000; }
+.btn-no { background: #e74c3c; color: white; }
+
+.arrow { transition: transform 0.2s; color: var(--muted); }
+.event.open .arrow { transform: rotate(180deg); }
