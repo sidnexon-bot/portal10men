@@ -22,12 +22,13 @@ header h1{ margin:0; font-size:20px; }
 
 main{ padding:18px; flex:1; }
 
-.card{
-  background:var(--card);
-  border-radius:8px;
-  padding:14px;
-  box-shadow:0 1px 0 rgba(0,0,0,0.06);
-  margin-bottom:12px;
+.card {
+  background: #fff;
+  border-radius: 16px;
+  margin: 10px 0;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Jemnější stín */
+  border: 1px solid #eee;
 }
 
 .event{ background:var(--card); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer; }
@@ -36,33 +37,16 @@ main{ padding:18px; flex:1; }
 .notice{ color:var(--muted) }
 
 .bottom {
-  display: flex;
-  gap: 0;
+  height: 85px; 
+  padding-bottom: 15px; /* Místo pro palec */
   background: #111;
-  /* padding: 6px;  <- tohle nahradíme pevnou výškou */
-  position: fixed; /* sticky je fajn, ale fixed na spodku je pro appky jistota */
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 75px; /* Pevná komfortní výška */
   border-top: 1px solid #333;
-  z-index: 9999;
-  padding-bottom: env(safe-area-inset-bottom); /* Ochrana pro iPhony s lištou */
 }
 
 .bottom button {
-  flex: 1;
-  background: transparent;
-  color: #999; /* Neaktivní tlačítka trochu ztlumíme */
-  border: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px; /* Větší písmo pro čitelnost */
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent; /* Odstraní modrý záblesk při tapnutí na mobilu */
+  font-size: 11px; /* Popisky pod ikonami */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Styl pro ikony (pokud je v budoucnu přidáš nebo použiješ emoji) */
@@ -74,7 +58,11 @@ main{ padding:18px; flex:1; }
 .bottom button:active { 
   background: rgba(255,255,255,0.05); 
 }
-
+.bottom button::before {
+  content: attr(data-icon); /* Pokud ikony dáváš přes data-icon */
+  font-size: 26px;
+  margin-bottom: 4px;
+}
 .bottom button.active {
   background: rgba(255,255,255,0.1);
   color: #fff; /* Aktivní svítí bíle */
