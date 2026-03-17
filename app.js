@@ -5,6 +5,8 @@
 let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
 let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
+const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
+Proces obměny členů výboru probíhá, více info na zkoušce.`
 
 function currentMember(){
   return MEMBER_EMAIL
@@ -146,46 +148,89 @@ async function renderDashboard(){
   try{
 
     const events = await api("events")
+    const now    = new Date()
 
-    const now      = new Date()
+    // filtr koncertů — vynechat zkoušky a plánování
+    const keywords = ["zkouška", "zkoušky", "plánování"]
+    const concerts = events.filter(e => {
+      const name = (e.NAME || "").toLowerCase()
+      return !keywords.some(k => name.includes(k))
+    })
+
+    // sezóny
+    const spring = concerts.filter(e => {
+      const m = new Date(e.DATE).getMonth() + 1
+      return m >= 1 && m <= 6
+    })
+    const autumn = concerts.filter(e => {
+      const m = new Date(e.DATE).getMonth() + 1
+      return m >= 7 && m <= 12
+    })
+
+    // nejbližší akce (včetně zkoušek)
     const upcoming = events
       .filter(e => new Date(e.DATE) >= now)
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
-    let html = "<h2>Přehled</h2>"
+    let html = ""
 
-    if(!upcoming){
-      html += "<div class='card'>Žádná nadcházející akce</div>"
-      container().innerHTML = html
-      return
+    // --- AKTUALITY ---
+    html += `
+    <div class="card bulletin">
+      <b>📋 Aktuality</b>
+      <p>${escapeHtml(BULLETIN).replaceAll("\n","<br>")}</p>
+    </div>`
+
+    // --- KONCERTY JARO/LÉTO ---
+    html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
+    if(spring.length){
+      spring.forEach(e => {
+        html += concertRow(e, now)
+      })
+    }else{
+      html += "<p class='notice'>Žádné koncerty</p>"
     }
 
-    html += `
-    <div class="card" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
-      <b>${escapeHtml(upcoming.NAME)}</b><br>
-      <span class="small">${formatDate(upcoming.DATE)}
-        ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
-        ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
-      </span><br>
-      <span class="small">${escapeHtml(upcoming.PLACE)}</span>
-    </div>
-    `
-
-    // docházka na nejbližší akci
-    if(MEMBER_EMAIL){
-      const detail     = await api("eventdetail", {id: upcoming.ID})
-      const myRow      = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
-      const myStatus   = myRow?.STATUS || ""
-
-      html += `<div class="card"><b>Tvoje docházka na nejbližší akci:</b><br>`
-      html += renderAttendanceStatus(myStatus)
-      html += `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
-        <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
-        <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
-      </div></div>`
+    // --- KONCERTY PODZIM/ZIMA ---
+    html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
+    if(autumn.length){
+      autumn.forEach(e => {
+        html += concertRow(e, now)
+      })
     }else{
-      html += "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
+      html += "<p class='notice'>Žádné koncerty</p>"
+    }
+
+    // --- NEJBLIŽŠÍ AKCE + DOCHÁZKA ---
+    if(upcoming){
+      html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
+      html += `<div class="card" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
+        <b>${escapeHtml(upcoming.NAME)}</b><br>
+        <span class="small">
+          ${formatDate(upcoming.DATE)}
+          ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
+          ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
+        </span><br>
+        <span class="small">${escapeHtml(upcoming.PLACE)}</span>
+      </div>`
+
+      if(MEMBER_EMAIL){
+        const detail   = await api("eventdetail", {id: upcoming.ID})
+        const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
+        const myStatus = myRow?.STATUS || ""
+
+        html += `<div class="card">
+          <b>Tvoje docházka:</b><br>
+          ${renderAttendanceStatus(myStatus)}
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
+            <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
+            <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
+          </div>
+        </div>`
+      }else{
+        html += "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
+      }
     }
 
     container().innerHTML = html
@@ -194,6 +239,14 @@ async function renderDashboard(){
     setError("Chyba při načítání přehledu: " + (err?.message || err))
   }
 
+}
+
+function concertRow(e, now){
+  const past = new Date(e.DATE) < now
+  return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
+    <b>${escapeHtml(e.NAME)}</b>
+    <span class="small concert-date">${formatDate(e.DATE)}${e.PLACE ? " · " + escapeHtml(e.PLACE) : ""}</span>
+  </div>`
 }
 
 /* ===============================
@@ -280,7 +333,13 @@ async function openEvent(id){
     }else{
       html += "<p class='notice'>Program není k dispozici</p>"
     }
-
+    // poznámka k akci
+    html += `<hr><h3>Poznámka</h3>`
+    html += `<div class="card">
+      <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+      <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
+    </div>`
+     
     // docházka — tlačítka
     html += "<hr><h3>Docházka</h3>"
 
@@ -496,6 +555,16 @@ async function saveEnergy(){
     alert("Chyba při ukládání: " + (err?.message || err))
   }
 
+}
+
+async function saveNote(eventId){
+  const note = document.getElementById("eventNote")?.value ?? ""
+  try{
+    await api("updatenote", {id: eventId, note})
+    alert("Poznámka uložena")
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 /* ===============================
