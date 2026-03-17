@@ -151,9 +151,10 @@ function openMemberModal(){
       div.classList.add("active-member")
     }
     div.onclick = () => {
-      closeMemberModal()
-      openPinModal(m)
-    }
+  openPinModal(m)
+  closeMemberModal()
+}
+
     list.appendChild(div)
   })
 
