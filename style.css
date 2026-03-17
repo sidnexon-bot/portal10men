@@ -230,11 +230,13 @@ h3{
 /* BUTTONS */
 
 button{
-  background:#f2f2f7;
-  border:none;
+  padding:14px 20px;
   border-radius:12px;
-  padding:12px;
-  font-size:15px;
+  border:none;
+  background:#007aff;
+  color:white;
+  font-size:17px;
+  font-weight:600;
 }
 
 button:active{
@@ -338,6 +340,36 @@ button[onclick*="'Nepřijdu'"]{
 
 .bottom button small{
   margin-top:2px;
+}
+
+select{
+  width:100%;
+  padding:14px 16px;        /* 🔥 větší */
+  font-size:17px;           /* iOS standard */
+  border-radius:12px;
+  border:none;
+  background:#f2f2f7;
+}
+
+input{
+  width:100%;
+  padding:14px 16px;        /* 🔥 větší */
+  font-size:17px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  background:#fff;
+}
+
+input:focus,
+select:focus{
+  outline:none;
+  border:1px solid #007aff;
+  box-shadow:0 0 0 2px rgba(0,122,255,0.15);
+}
+
+.card label{
+  display:block;
+  margin-top:16px;
 }
 
 /* NOTICE */
