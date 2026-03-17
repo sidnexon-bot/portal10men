@@ -20,7 +20,11 @@ header h1{ margin:0; font-size:20px; }
 .topbar select{ padding:6px; }
 .status{ margin-left:12px; color:#ffd; font-size:13px; }
 
-main{ padding:18px; flex:1; }
+main {
+  max-width: 500px; /* Tohle udrží karty v úhledném sloupci */
+  margin: 0 auto;   /* Vycentrování celého bloku main */
+  padding-bottom: 120px; /* Dostatek místa nad lištou */
+}
 
 .card {
   background: #fff;
