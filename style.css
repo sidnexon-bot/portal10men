@@ -72,7 +72,7 @@ header .subtitle{
 
 main{
   padding:16px;
-  padding-bottom:100px;
+  padding-bottom:120px;
   max-width:500px;
   margin:0 auto;
 }
@@ -214,36 +214,35 @@ button[onclick*="'Nepřijdu'"]{
 }
 
 .bottom button{
-  flex:1;
-  background:none;
-  border:none;
-
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
 
+  padding:10px 14px;
+  border:none;
+  background:transparent;
+  border-radius:20px;
+
   font-size:11px;
   color:#8e8e93;
 
-  padding:10px 0;
+  transition:all 0.2s ease;
 }
 
 .bottom button.active{
-  transform:scale(0.9);
+  background:#fff;
   color:#000;
-  font-weight:600;
+
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
 }
 
 .bottom button span{
-  font-size:20px;
-  line-height:1;
-  margin-bottom:2px;
+  font-size:18px;
 }
 
 .bottom button small{
-  font-size:11px;
-  line-height:1;
+  margin-top:2px;
 }
 
 /* NOTICE */
