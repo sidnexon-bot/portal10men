@@ -78,7 +78,15 @@ main{
 /* HERO CARD */
 
 .card.next{
-  background:linear-gradient(135deg,#ffffff,#f7f7f7);
+  padding:20px;
+  border-radius:22px;
+
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.08),
+    0 20px 40px rgba(0,0,0,0.10);
+}
+.card.next b{
+  font-size:18px;
 }
 
 /* TEXT */
@@ -111,9 +119,15 @@ h3{
 /* CONCERT LIST */
 
 .concert-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#fff;
+  margin-bottom:8px;
+
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+.concert-row b{
+  font-size:15px;
 }
 
 .concert-row.muted{
@@ -180,4 +194,7 @@ button[onclick*="'Nepřijdu'"]{
 
 .notice{
   color:var(--muted);
+}
+.season-title{
+  margin:28px 0 10px;
 }
