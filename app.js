@@ -393,7 +393,7 @@ async function openEvent(id){
     }
 
     // poznámka
-    html += `<hr><h3>Poznámka</h3>
+    html += `
     <div class="card">
       <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
       <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
@@ -430,7 +430,7 @@ html += `
 `
 
     // přehled skupiny
-    html += "<hr><h3>Přehled skupiny</h3>"
+    html += "<h3>Přehled skupiny</h3>"
     const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
     const maybe = attendance.filter(a => a.STATUS === "Možná").length
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
