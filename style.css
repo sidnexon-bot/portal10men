@@ -62,4 +62,28 @@ kbd{ background:#eee; padding:2px 6px; border-radius:4px; font-size:12px; }
 .card.muted {
   opacity: 0.5;
 }
+.bulletin p {
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+
+.season-title {
+  margin: 20px 0 8px;
+  font-size: 15px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.concert-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.concert-date {
+  text-align: right;
+  flex-shrink: 0;
+}
 
