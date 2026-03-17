@@ -186,8 +186,10 @@ function selectMember(m){
 function openPinModal(member){
   PIN_INPUT  = ""
   PIN_TARGET = member
-  updatePinDots()
+  const input = document.getElementById("pinInput")
+  if(input) input.value = ""
   document.getElementById("pinModal").classList.remove("hidden")
+  setTimeout(() => input && input.focus(), 100)
 }
 
 function closePinModal(){
@@ -196,55 +198,22 @@ function closePinModal(){
   PIN_TARGET = null
 }
 
-function pressPin(num){
-  if(PIN_INPUT.length >= 4) return
-  if(PIN_CHECKING) return
-  PIN_INPUT += String(num)
-  updatePinDots()
-  if(PIN_INPUT.length === 4){
-    PIN_CHECKING = true
-    checkPin().finally(() => { PIN_CHECKING = false })
-  }
-}
-
-function clearPin(){
-  PIN_INPUT = PIN_INPUT.slice(0, -1)
-  updatePinDots()
-}
-
-function updatePinDots(){
-  const dots = document.querySelectorAll(".pin-dot")
-  dots.forEach((dot, i) => {
-    dot.classList.toggle("filled", i < PIN_INPUT.length)
-  })
-}
-
-async function checkPin(){
-  if(!PIN_TARGET){
-    alert("Chyba: žádný člen nevybrán")
-    return
-  }
+async function submitPin(){
+  if(!PIN_TARGET){ alert("Chyba: žádný člen nevybrán"); return }
+  const input = document.getElementById("pinInput")
+  const pin   = input ? input.value.trim() : ""
+  if(pin.length !== 4){ alert("PIN musí mít 4 číslice"); return }
   try{
-    const result = await api("verifypin", {
-      email: PIN_TARGET.EMAIL,
-      pin:   PIN_INPUT
-    })
+    const result = await api("verifypin", {email: PIN_TARGET.EMAIL, pin})
     if(result.ok){
       closePinModal()
       selectMember(PIN_TARGET)
     }else{
-      PIN_INPUT = ""
-      updatePinDots()
-      const display = document.getElementById("pinDots")
-      if(display){
-        display.classList.add("shake")
-        setTimeout(() => display.classList.remove("shake"), 400)
-      }
+      input.value = ""
+      input.focus()
       alert("Špatný PIN")
     }
   }catch(err){
-    PIN_INPUT = ""
-    updatePinDots()
     alert("Chyba při ověřování: " + (err?.message || err))
   }
 }
