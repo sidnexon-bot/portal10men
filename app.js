@@ -118,38 +118,46 @@ if(profileBtn && MEMBER_NAME){
   return
 }
 
-    function getInitials(name){
-      if(!name) return "?"
-      return name.split(" ").map(n => n[0]).join("").toUpperCase()
-    }
-
     // obnov uloženého člena
     if(MEMBER_EMAIL){
       profileBtn.textContent = getInitials(MEMBER_NAME)
       setStatus(MEMBER_NAME)
     }
 
-    // klik na profil
-    profileBtn.onclick = () => {
+     profileBtn.onclick = () => {
 
-      const names = members.map(m => m.NAME).join("\n")
+  const modal = document.getElementById("memberModal")
+  const list  = document.getElementById("memberList")
 
-      const chosen = prompt("Vyber člena:\n" + names)
+  if(!modal || !list){
+    console.error("Modal nenalezen")
+    return
+  }
 
-      const found = members.find(m => m.NAME === chosen)
+  list.innerHTML = ""
 
-      if(found){
-        MEMBER_EMAIL = found.EMAIL
-        MEMBER_NAME  = found.NAME
+  window.MEMBERS.forEach(m => {
 
-        localStorage.setItem("memberEmail", MEMBER_EMAIL)
-        localStorage.setItem("memberName", MEMBER_NAME)
+  const div = document.createElement("div")
+  div.className = "member-row"
+  div.textContent = m.NAME
 
-        profileBtn.textContent = getInitials(MEMBER_NAME)
+  // 🔥 zvýraznění aktuálního člena
+  if(m.EMAIL === MEMBER_EMAIL){
+  div.style.background = "#f2f2f7"
+  div.style.borderRadius = "8px"
+}
 
-        renderDashboard()
-      }
-    }
+  div.onclick = () => {
+    selectMember(m)
+    closeMemberModal()
+  }
+
+  list.appendChild(div)
+})
+
+  modal.classList.remove("hidden")
+}
 
     // navigace
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
@@ -164,6 +172,29 @@ if(profileBtn && MEMBER_NAME){
     setError("Chyba při načítání: " + (err?.message || err))
   }
 
+}
+
+function selectMember(m){
+
+  MEMBER_EMAIL = m.EMAIL
+  MEMBER_NAME  = m.NAME
+
+  localStorage.setItem("memberEmail", MEMBER_EMAIL)
+  localStorage.setItem("memberName", MEMBER_NAME)
+
+  const profileBtn = document.getElementById("profileBtn")
+  if(profileBtn){
+    profileBtn.textContent = getInitials(MEMBER_NAME)
+  }
+
+  renderDashboard()
+}
+
+function closeMemberModal(){
+  const modal = document.getElementById("memberModal")
+  if(modal){
+    modal.classList.add("hidden")
+  }
 }
 
 /* ===============================
