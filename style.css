@@ -139,3 +139,63 @@ border:2px solid #000;
 
 .arrow { transition: transform 0.2s; color: var(--muted); }
 .event.open .arrow { transform: rotate(180deg); }
+/* Vycentrování celého hlavního obsahu */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Vycentruje karty horizontálně */
+  padding: 18px;
+  padding-bottom: 100px; /* Aby navigace nepřekrývala obsah */
+}
+
+/* Úprava karet akcí */
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 450px; /* Maximální šířka karty */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #eee;
+  box-sizing: border-box; /* Důležité pro správné centrování */
+}
+
+/* Efekt při kliknutí na kartu v seznamu */
+.card[onclick] {
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.2s;
+}
+
+.card[onclick]:active {
+  transform: scale(0.98);
+  background-color: #f9f9f9;
+}
+
+/* Styl pro tlačítka v detailu akce */
+button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Tlačítko zpět a hlavní akce */
+button[onclick*="renderEvents"] {
+  background: #f0f0f0;
+  border: none;
+  width: 100%;
+  max-width: 450px;
+}
+
+/* Speciální styly pro barvy statusů (volitelné) */
+button[onclick*="'Přijdu'"] { border-left: 4px solid #2ecc71; }
+button[onclick*="'Možná'"] { border-left: 4px solid #f1c40f; }
+button[onclick*="'Nepřijdu'"] { border-left: 4px solid #e74c3c; }
+
+/* Responzivita pro velmi malé telefony */
+@media (max-width: 360px) {
+  .card { padding: 12px; }
+}
