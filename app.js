@@ -213,22 +213,32 @@ function updatePinDots(){
   })
 }
 
-function checkPin(){
-  if(String(PIN_INPUT) === String(PIN_TARGET.PIN)){
-    closePinModal()
-    selectMember(PIN_TARGET)
-  }else{
+async function checkPin(){
+  try{
+    const result = await api("verifypin", {
+      email: PIN_TARGET.EMAIL,
+      pin:   PIN_INPUT
+    })
+    if(result.ok){
+      closePinModal()
+      selectMember(PIN_TARGET)
+    }else{
+      PIN_INPUT = ""
+      updatePinDots()
+      const display = document.getElementById("pinDots")
+      if(display){
+        display.classList.add("shake")
+        setTimeout(() => display.classList.remove("shake"), 400)
+      }
+      alert("Špatný PIN")
+    }
+  }catch(err){
     PIN_INPUT = ""
     updatePinDots()
-    // krátký shake efekt
-    const display = document.getElementById("pinDots")
-    if(display){
-      display.classList.add("shake")
-      setTimeout(() => display.classList.remove("shake"), 400)
-    }
-    alert("Špatný PIN")
+    alert("Chyba při ověřování: " + (err?.message || err))
   }
 }
+
 
 /* ===============================
    DASHBOARD
