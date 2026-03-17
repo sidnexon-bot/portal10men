@@ -219,12 +219,11 @@ function updatePinDots(){
 }
 
 async function checkPin(){
-  try{
-     async function checkPin(){
-  if(!PIN_TARGET){ 
+  if(!PIN_TARGET){
     alert("Chyba: žádný člen nevybrán")
-    return 
+    return
   }
+  try{
     const result = await api("verifypin", {
       email: PIN_TARGET.EMAIL,
       pin:   PIN_INPUT
@@ -248,7 +247,6 @@ async function checkPin(){
     alert("Chyba při ověřování: " + (err?.message || err))
   }
 }
-
 
 /* ===============================
    DASHBOARD
