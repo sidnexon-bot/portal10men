@@ -47,15 +47,6 @@ function formatTime(t){
   return String(t).substring(0,5)
 }
 
-  // číslo (zlomek dne)
-  if(typeof t === "number"){
-    const totalMinutes = Math.round(t * 24 * 60)
-    const h = Math.floor(totalMinutes / 60).toString().padStart(2,"0")
-    const m = (totalMinutes % 60).toString().padStart(2,"0")
-    return h + ":" + m
-  }
-
-
 function container(){
   return document.getElementById("main")
 }
