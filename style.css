@@ -230,12 +230,12 @@ h3{
 /* BUTTONS */
 
 button{
-  padding:14px 20px;
-  border-radius:12px;
+  padding:10px 16px;
+  border-radius:10px;
   border:none;
-  background:#007aff;
-  color:white;
-  font-size:17px;
+  background:#f2f2f7;
+  color:#007aff;
+  font-size:15px;
   font-weight:600;
 }
 
@@ -344,18 +344,18 @@ button[onclick*="'Nepřijdu'"]{
 
 select{
   width:100%;
-  padding:14px 16px;        /* 🔥 větší */
-  font-size:17px;           /* iOS standard */
-  border-radius:12px;
+  padding:12px 14px;        /* 🔥 větší */
+  font-size:15px;           /* iOS standard */
+  border-radius:10px;
   border:none;
   background:#f2f2f7;
 }
 
 input{
   width:100%;
-  padding:14px 16px;        /* 🔥 větší */
-  font-size:17px;
-  border-radius:12px;
+  padding:12px 14px;        /* 🔥 větší */
+  font-size:15px;
+  border-radius:10px;
   border:1px solid #ddd;
   background:#fff;
 }
