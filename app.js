@@ -376,19 +376,34 @@ async function openEvent(id){
     </div>`
 
     // docházka
-    html += "<hr><h3>Docházka</h3>"
-    if(MEMBER_EMAIL){
-      const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-      const myStatus = myRow?.STATUS || ""
-      html += renderAttendanceStatus(myStatus)
-      html += `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+
+   const myRow = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
+   const myStatus = myRow?.STATUS || ""
+     
+    html += `
+<div class="event-card">
+
+  <div class="event-row">
+    <div class="event-label">Docházka</div>
+
+    ${MEMBER_EMAIL ? `
+      <div class="attendance-status">
+  ${renderAttendanceStatus(myStatus)}
+</div>
+
+      <div class="attendance-buttons">
         <button onclick="doAttendance('${id}','Přijdu')">✅ Přijdu</button>
         <button onclick="doAttendance('${id}','Možná')">🤔 Možná</button>
         <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">❌ Nepřijdu</button>
-      </div>`
-    }else{
-      html += "<p class='notice'>Vyber člena pro zapsání docházky.</p>"
-    }
+      </div>
+    ` : `
+      <div class="muted">Vyber člena pro zapsání docházky.</div>
+    `}
+    
+  </div>
+
+</div>
+`
 
     // přehled skupiny
     html += "<hr><h3>Přehled skupiny</h3>"
