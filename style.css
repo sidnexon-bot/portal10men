@@ -384,3 +384,40 @@ select:focus{
   text-transform:uppercase;
   letter-spacing:0.08em;
 }
+
+/* PIN */
+.pin-dots{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:20px 0;
+}
+
+.pin-dots span{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#ddd;
+}
+
+.pin-dots span.active{
+  background:#111;
+}
+
+.pin-pad{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.pin-pad button{
+  padding:16px;
+  font-size:18px;
+  border-radius:12px;
+  border:none;
+  background:#f2f2f7;
+}
+
+.pin-pad button:active{
+  background:#e5e5ea;
+}
