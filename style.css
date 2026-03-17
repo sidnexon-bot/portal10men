@@ -445,6 +445,50 @@ select:focus{
   letter-spacing:0.08em;
 }
 
+/* EVENTS */
+
+.event-card{
+  background:#fff;
+  border-radius:20px;
+  padding:16px;
+  margin-top:16px;
+
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 8px 20px rgba(0,0,0,0.06);
+}
+
+.event-row{
+  padding:14px 0;
+}
+
+.event-row + .event-row{
+  border-top:1px solid #f0f0f3; /* 🔥 jemný divider */
+}
+
+.event-label{
+  font-size:13px;
+  color:#8e8e93;
+  margin-bottom:4px;
+}
+
+.event-value{
+  font-size:16px;
+}
+
+.attendance-buttons{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+  flex-wrap:wrap;
+}
+
+.event-meta{
+  font-size:15px;
+  color:#8e8e93;
+  margin-top:6px;
+}
+
 .icon svg{
   width:22px;
   height:22px;
