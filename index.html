@@ -7,97 +7,87 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <header>
-  <div class="header-inner">
-
-    <div class="header-row">
-      <div>
-        <h1>10men Portál</h1>
-        <div class="subtitle">Powered by 10menogram</div>
+    <div class="header-inner">
+      <div class="header-row">
+        <div>
+          <h1>10men Portál</h1>
+          <div class="subtitle">Powered by 10menogram</div>
+        </div>
+        <div id="profileBtn" class="profile-btn">ZV</div>
       </div>
-
-      <div id="profileBtn" class="profile-btn">ZV</div>
     </div>
-
-  </div>
-</header>
+  </header>
 
   <main id="main">
     <p class="notice">Načítám…</p>
   </main>
 
   <nav class="bottom-wrap">
-  <div class="bottom">
-    
-    <button id="btnDashboard" class="active">
-      <span>🏠</span>
-      <small>Přehled</small>
-    </button>
+    <div class="bottom">
+      <button id="btnDashboard" class="active">
+        <span>🏠</span>
+        <small>Přehled</small>
+      </button>
+      <button id="btnEvents">
+        <span>📅</span>
+        <small>Akce</small>
+      </button>
+      <button id="btnPayments">
+        <span>💳</span>
+        <small>Platby</small>
+      </button>
+      <button id="btnEnergy">
+        <span>⚡</span>
+        <small>Energie</small>
+      </button>
+    </div>
+  </nav>
 
-    <button id="btnEvents">
-      <span>📅</span>
-      <small>Akce</small>
-    </button>
-
-    <button id="btnPayments">
-      <span>💳</span>
-      <small>Platby</small>
-    </button>
-
-    <button id="btnEnergy">
-      <span>⚡</span>
-      <small>Energie</small>
-    </button>
-
+  <!-- MEMBER MODAL -->
+  <div id="memberModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeMemberModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <b>Vyber člena</b>
+      </div>
+      <div id="memberList"></div>
+    </div>
   </div>
-</nav>
+
+  <!-- PIN MODAL -->
+  <div id="pinModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <b>Zadej PIN</b>
+      </div>
+      <div id="pinDots" class="pin-dots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <div class="pin-pad">
+        <button onclick="pressPin(1)">1</button>
+        <button onclick="pressPin(2)">2</button>
+        <button onclick="pressPin(3)">3</button>
+        <button onclick="pressPin(4)">4</button>
+        <button onclick="pressPin(5)">5</button>
+        <button onclick="pressPin(6)">6</button>
+        <button onclick="pressPin(7)">7</button>
+        <button onclick="pressPin(8)">8</button>
+        <button onclick="pressPin(9)">9</button>
+        <button onclick="clearPin()">⌫</button>
+        <button onclick="pressPin(0)">0</button>
+        <button onclick="closePinModal()">✕</button>
+      </div>
+    </div>
+  </div>
 
   <script src="api.js"></script>
   <script src="app.js" defer></script>
 
-  <div id="memberModal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closeMemberModal()"></div>
-
-    <div id="pinModal" class="modal hidden">
-  <div class="modal-backdrop"></div>
-
-  <div class="modal-content">
-    <div class="modal-header">
-      <b>Zadej PIN</b>
-    </div>
-
-    <div id="pinDots" class="pin-dots">
-      <span></span><span></span><span></span><span></span>
-    </div>
-
-    <div class="pin-pad">
-      <button onclick="pressPin(1)">1</button>
-      <button onclick="pressPin(2)">2</button>
-      <button onclick="pressPin(3)">3</button>
-
-      <button onclick="pressPin(4)">4</button>
-      <button onclick="pressPin(5)">5</button>
-      <button onclick="pressPin(6)">6</button>
-
-      <button onclick="pressPin(7)">7</button>
-      <button onclick="pressPin(8)">8</button>
-      <button onclick="pressPin(9)">9</button>
-
-      <button onclick="clearPin()">⌫</button>
-      <button onclick="pressPin(0)">0</button>
-      <button onclick="closePinModal()">✕</button>
-    </div>
-  </div>
-</div>
-
-  <div class="modal-content">
-    <div class="modal-header">
-      <b>Vyber člena</b>
-    </div>
-
-    <div id="memberList"></div>
-  </div>
-</div>
-  
 </body>
 </html>
