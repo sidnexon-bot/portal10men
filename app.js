@@ -284,6 +284,9 @@ async function renderDashboard(){
       html += "<p class='notice'>Žádné koncerty</p>"
     }
 
+     const heatmapHtml = await renderHeatmap()
+html += heatmapHtml
+
     container().innerHTML = html
 
   }catch(err){
@@ -579,6 +582,70 @@ async function saveEnergy(){
     alert("Chyba při ukládání: " + (err?.message || err))
   }
 }
+
+/* ===============================
+   HEATMAPA
+================================ */
+
+async function renderHeatmap(){
+
+  try{
+
+    const data    = await api("heatmap")
+    const events  = data.events  || []
+    const members = data.members || []
+    const rows    = data.rows    || []
+
+    if(!events.length || !members.length) return ""
+
+    // sestavit lookup: "eventId_email" -> status
+    const lookup = {}
+    rows.forEach(r => {
+      lookup[r.ID_AKCE + "_" + r.EMAIL] = r.STATUS || ""
+    })
+
+    // hlavička — jména členů (zkrácená)
+    let html = `<h3 class="season-title">📊 Docházka skupiny</h3>`
+    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
+    html += `<table class="heatmap">`
+    html += `<thead><tr><th class="heatmap-event-col"></th>`
+
+    members.forEach(m => {
+      const initials = m.NAME.split(" ").map(n => n[0]).join("")
+      html += `<th class="heatmap-th" title="${escapeHtml(m.NAME)}">${escapeHtml(initials)}</th>`
+    })
+    html += `</tr></thead><tbody>`
+
+    // řádky — akce
+    events.forEach(e => {
+      const past = new Date(e.DATE) < new Date()
+      html += `<tr>`
+      html += `<td class="heatmap-label${past ? " muted" : ""}">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
+
+      members.forEach(m => {
+        const status = lookup[e.ID + "_" + m.EMAIL] || ""
+        const color  = status === "Přijdu"   ? "#d4f5e2" :
+                       status === "Možná"    ? "#fff4dc" :
+                       status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
+        const icon   = status === "Přijdu"   ? "✓" :
+                       status === "Možná"    ? "?" :
+                       status === "Nepřijdu" ? "✗" : ""
+        html += `<td class="heatmap-cell" style="background:${color}" title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}">${icon}</td>`
+      })
+
+      html += `</tr>`
+    })
+
+    html += `</tbody></table></div>`
+    return html
+
+  }catch(err){
+    console.error("Heatmap error:", err)
+    return ""
+  }
+
+}
+
 
 /* ===============================
    INIT
