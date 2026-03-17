@@ -7,6 +7,7 @@ let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
 let PIN_INPUT    = ""
 let PIN_TARGET   = null
+let PIN_CHECKING = false
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
@@ -196,9 +197,13 @@ function closePinModal(){
 
 function pressPin(num){
   if(PIN_INPUT.length >= 4) return
+  if(PIN_CHECKING) return
   PIN_INPUT += String(num)
   updatePinDots()
-  if(PIN_INPUT.length === 4) checkPin()
+  if(PIN_INPUT.length === 4){
+    PIN_CHECKING = true
+    checkPin().finally(() => { PIN_CHECKING = false })
+  }
 }
 
 function clearPin(){
@@ -215,6 +220,11 @@ function updatePinDots(){
 
 async function checkPin(){
   try{
+     async function checkPin(){
+  if(!PIN_TARGET){ 
+    alert("Chyba: žádný člen nevybrán")
+    return 
+  }
     const result = await api("verifypin", {
       email: PIN_TARGET.EMAIL,
       pin:   PIN_INPUT
