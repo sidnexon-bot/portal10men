@@ -119,11 +119,15 @@ h3{
 /* CONCERT LIST */
 
 .concert-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
   padding:12px 14px;
   border-radius:14px;
-  background:#fff;
   margin-bottom:8px;
 
+  background:#fff;
   box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 .concert-row b{
@@ -197,4 +201,8 @@ button[onclick*="'Nepřijdu'"]{
 }
 .season-title{
   margin:28px 0 10px;
+  font-size:13px;
+  color:#8e8e93;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
 }
