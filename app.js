@@ -285,7 +285,7 @@ async function renderDashboard(){
     }
 
      const heatmapHtml = await renderHeatmap()
-html += heatmapHtml
+html += `<div id="heatmap-container">${heatmapHtml}</div>`
 
     container().innerHTML = html
 
@@ -321,10 +321,17 @@ async function renderEvents(){
     }
 
     events.sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+     const now = new Date()
+const filtered = events.filter(e => new Date(e.DATE) >= now)
+
+if(!filtered.length){
+  container().innerHTML = "<h2>Akce</h2><p class='notice'>Žádné nadcházející akce</p>"
+  return
+}
 
     let html = "<h2>Akce</h2>"
 
-    events.forEach(e => {
+    filtered.forEach(e => {
       const probehlá = new Date(e.DATE) < new Date()
       html += `<div class="card${probehlá ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
         <b>${escapeHtml(e.NAME)}</b><br>
@@ -587,6 +594,8 @@ async function saveEnergy(){
    HEATMAPA
 ================================ */
 
+let HEATMAP_MONTH = null // null = aktuální měsíc
+
 async function renderHeatmap(){
 
   try{
@@ -598,14 +607,42 @@ async function renderHeatmap(){
 
     if(!events.length || !members.length) return ""
 
-    // sestavit lookup: "eventId_email" -> status
+    // inicializuj měsíc na aktuální
+    if(!HEATMAP_MONTH){
+      const now = new Date()
+      HEATMAP_MONTH = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2,"0")
+    }
+
+    // filtr akcí podle vybraného měsíce
+    const [year, month] = HEATMAP_MONTH.split("-").map(Number)
+    const filtered = events.filter(e => {
+      const d = new Date(e.DATE)
+      return d.getFullYear() === year && d.getMonth() + 1 === month
+    })
+
+    // název měsíce
+    const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
+
+    // lookup
     const lookup = {}
     rows.forEach(r => {
       lookup[r.ID_AKCE + "_" + r.EMAIL] = r.STATUS || ""
     })
 
-    // hlavička — jména členů (zkrácená)
     let html = `<h3 class="season-title">📊 Docházka skupiny</h3>`
+
+    // navigace měsíců
+    html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <button onclick="heatmapPrev()" style="padding:6px 12px">‹</button>
+      <span style="flex:1;text-align:center;font-weight:600">${escapeHtml(monthName)}</span>
+      <button onclick="heatmapNext()" style="padding:6px 12px">›</button>
+    </div>`
+
+    if(!filtered.length){
+      html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
+      return html
+    }
+
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
     html += `<table class="heatmap">`
     html += `<thead><tr><th class="heatmap-event-col"></th>`
@@ -616,11 +653,9 @@ async function renderHeatmap(){
     })
     html += `</tr></thead><tbody>`
 
-    // řádky — akce
-    events.forEach(e => {
-      const past = new Date(e.DATE) < new Date()
+    filtered.forEach(e => {
       html += `<tr>`
-      html += `<td class="heatmap-label${past ? " muted" : ""}">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
+      html += `<td class="heatmap-label">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
 
       members.forEach(m => {
         const status = lookup[e.ID + "_" + m.EMAIL] || ""
@@ -646,6 +681,26 @@ async function renderHeatmap(){
 
 }
 
+function heatmapPrev(){
+  const [year, month] = HEATMAP_MONTH.split("-").map(Number)
+  const d = new Date(year, month - 2, 1)
+  HEATMAP_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  refreshHeatmap()
+}
+
+function heatmapNext(){
+  const [year, month] = HEATMAP_MONTH.split("-").map(Number)
+  const d = new Date(year, month, 1)
+  HEATMAP_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  refreshHeatmap()
+}
+
+async function refreshHeatmap(){
+  const el = document.getElementById("heatmap-container")
+  if(!el) return
+  el.innerHTML = "<p class='notice'>Načítám…</p>"
+  el.innerHTML = await renderHeatmap()
+}
 
 /* ===============================
    INIT
