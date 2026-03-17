@@ -208,19 +208,6 @@ h3{
   color:var(--muted);
 }
 
-textarea{
-  width:100%;
-  min-height:80px;
-
-  border:none;
-  border-radius:12px;
-
-  background:#f2f2f7;
-  padding:12px;
-
-  font-size:15px;
-}
-
 .section-title{
   font-size:13px;
   color:var(--muted);
@@ -449,50 +436,90 @@ select:focus{
 
 .event-card{
   background:#fff;
-  border-radius:20px;
+  border-radius:18px;
   padding:16px;
-  margin-top:16px;
+  margin-bottom:14px;
 
   box-shadow:
-    0 1px 3px rgba(0,0,0,0.04),
-    0 8px 20px rgba(0,0,0,0.06);
+    0 2px 6px rgba(0,0,0,0.04),
+    0 10px 25px rgba(0,0,0,0.06);
 }
 
-.event-row{
-  padding:14px 0;
+.event-card.main{
+  padding:20px;
 }
 
-.event-row + .event-row{
-  border-top:1px solid #f0f0f3; /* 🔥 jemný divider */
+.event-title{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.event-meta{
+  font-size:14px;
+  color:#6b6b70;
+}
+
+.event-place{
+  margin-top:4px;
+  font-size:14px;
+  color:#8e8e93;
 }
 
 .event-label{
-  font-size:13px;
+  font-size:12px;
+  text-transform:uppercase;
   color:#8e8e93;
-  margin-bottom:4px;
+  margin-bottom:10px;
+  letter-spacing:0.05em;
 }
 
-.event-value{
-  font-size:16px;
+.event-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #eee;
+}
+
+.event-row:last-child{
+  border-bottom:none;
+}
+
+.ios-textarea{
+  width:100%;
+  border-radius:12px;
+  border:1px solid #ddd;
+  padding:12px;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+.primary-btn{
+  background:#007aff;
+  color:#fff;
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
 }
 
 .attendance-buttons{
   display:flex;
   gap:8px;
   margin-top:8px;
-  flex-wrap:wrap;
+}
+
+.back-btn{
+  margin-bottom:10px;
+  background:none;
+  color:#007aff;
+  font-weight:500;
 }
 
 .attendance-status{
   margin:6px 0 10px;
   font-size:14px;
   color:#6b6b70;
-}
-
-.event-meta{
-  font-size:15px;
-  color:#8e8e93;
-  margin-top:6px;
 }
 
 .icon svg{
