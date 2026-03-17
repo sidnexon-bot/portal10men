@@ -483,6 +483,12 @@ select:focus{
   flex-wrap:wrap;
 }
 
+.attendance-status{
+  margin:6px 0 10px;
+  font-size:14px;
+  color:#6b6b70;
+}
+
 .event-meta{
   font-size:15px;
   color:#8e8e93;
