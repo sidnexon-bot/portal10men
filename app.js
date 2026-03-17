@@ -1,4 +1,39 @@
+/* ===============================
+   STAV APLIKACE
+================================ */
 
+let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
+let MEMBER_NAME  = localStorage.getItem("memberName")  || null
+let ACTIVE_TAB   = "dashboard"
+const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
+Proces obměny členů výboru probíhá, více info na zkoušce.`
+
+function currentMember(){
+  return MEMBER_EMAIL
+}
+
+/* ===============================
+   HELPERS
+================================ */
+
+function escapeHtml(str){
+  if(!str) return ""
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+}
+
+function formatDate(d){
+  if(!d) return ""
+  const date = new Date(d)
+  return date.toLocaleDateString("cs-CZ",{
+    weekday: "short",
+    day:     "numeric",
+    month:   "numeric",
+    year:    "numeric"
+  })
+}
 
 function formatTime(t){
   if(!t && t !== 0) return ""
@@ -62,11 +97,6 @@ async function start(){
     const members = await api("members")
 
     const select = document.getElementById("memberSelect")
-
-     const TODO = [
-  {text:"Zkrátit zkoušky na max. 2 hodiny", done:true},
-  {text:"Vybrat nový repertoár 2026", done:false}
-]
 
     members.forEach(m => {
       const opt = document.createElement("option")
@@ -151,17 +181,6 @@ async function renderDashboard(){
       <p>${escapeHtml(BULLETIN).replaceAll("\n","<br>")}</p>
     </div>`
 
-     // --- TODO ---
-html += `<div class="card">
-  <b>✅ To do</b>`
-
-TODO.forEach(t=>{
-  html += `<div class="small" style="margin-top:6px">
-    ${t.done ? "✅" : "⬜"} ${escapeHtml(t.text)}
-  </div>`
-})
-
-html += `</div>`
     // --- KONCERTY JARO/LÉTO ---
     html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
     if(spring.length){
@@ -182,64 +201,38 @@ html += `</div>`
       html += "<p class='notice'>Žádné koncerty</p>"
     }
 
-   // --- NEJBLIŽŠÍ AKCE (DETAIL) ---
-if(upcoming){
+    // --- NEJBLIŽŠÍ AKCE + DOCHÁZKA ---
+    if(upcoming){
+      html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
+      html += `<div class="card" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
+        <b>${escapeHtml(upcoming.NAME)}</b><br>
+        <span class="small">
+          ${formatDate(upcoming.DATE)}
+          ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
+          ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
+        </span><br>
+        <span class="small">${escapeHtml(upcoming.PLACE)}</span>
+      </div>`
 
-  const detail = await api("eventdetail", {id: upcoming.ID})
-  const program = detail.program || []
-  const attendance = detail.attendance || []
+      if(MEMBER_EMAIL){
+        const detail   = await api("eventdetail", {id: upcoming.ID})
+        const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
+        const myStatus = myRow?.STATUS || ""
 
-  html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
+        html += `<div class="card">
+          <b>Tvoje docházka:</b><br>
+          ${renderAttendanceStatus(myStatus)}
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
+            <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
+            <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
+          </div>
+        </div>`
+      }else{
+        html += "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
+      }
+    }
 
-  html += `<div class="card next">
-    <b>${escapeHtml(upcoming.NAME)}</b><br>
-
-    <span class="small">
-      ${formatDate(upcoming.DATE)}
-      ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
-      ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
-    </span><br>
-
-    <span class="small">${escapeHtml(upcoming.PLACE)}</span>
-  `
-
-  // 📝 poznámky
-  if(upcoming.NOTE){
-    html += `<div style="margin-top:10px">
-      <b>📝 Poznámky:</b><br>
-      <span class="small">${escapeHtml(upcoming.NOTE)}</span>
-    </div>`
-  }
-
-  // 🎼 program
-  if(program.length){
-    html += `<div style="margin-top:10px">
-      <b>🎼 Program:</b>`
-    program.forEach(p=>{
-      html += `<div class="small">• ${escapeHtml(p.NAME)}</div>`
-    })
-    html += `</div>`
-  }
-
-  html += `</div>`
-
-  // --- DOCHÁZKA ---
-  if(MEMBER_EMAIL){
-    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-    const myStatus = myRow?.STATUS || ""
-
-    html += `<div class="card">
-      <b>Tvoje docházka:</b><br>
-      ${renderAttendanceStatus(myStatus)}
-
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
-        <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
-        <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
-      </div>
-    </div>`
-  }
-}
     container().innerHTML = html
 
   }catch(err){
