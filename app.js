@@ -5,6 +5,8 @@
 let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
 let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
+let PIN_INPUT = ""
+let PIN_TARGET = null
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
 
@@ -149,10 +151,67 @@ if(profileBtn && MEMBER_NAME){
 }
 
   div.onclick = () => {
-    selectMember(m)
-    closeMemberModal()
+  openPinModal(m)
+}
+
+     function closeMemberModal(){
+  const modal = document.getElementById("memberModal")
+  if(modal){
+    modal.classList.add("hidden")
+  }
+}
+
+/* ===============================
+   PIN MODAL
+================================ */
+
+     function openPinModal(member){
+  PIN_INPUT = ""
+  PIN_TARGET = member
+
+  updatePinDots()
+
+  document.getElementById("pinModal").classList.remove("hidden")
+}
+     
+     function pressPin(num){
+  if(PIN_INPUT.length >= 4) return
+
+  PIN_INPUT += num
+  updatePinDots()
+
+  if(PIN_INPUT.length === 4){
+    checkPin()
+  }
+}
+     
+     function clearPin(){
+  PIN_INPUT = PIN_INPUT.slice(0, -1)
+  updatePinDots()
+}
+
+     function clearPin(){
+  PIN_INPUT = PIN_INPUT.slice(0, -1)
+  updatePinDots()
+}
+
+     function checkPin(){
+
+  if(String(PIN_INPUT) === String(PIN_TARGET.PIN)){
+    closePinModal()
+    selectMember(PIN_TARGET)
+  }else{
+    PIN_INPUT = ""
+    updatePinDots()
+    alert("Špatný PIN")
   }
 
+}
+
+     function closePinModal(){
+  document.getElementById("pinModal").classList.add("hidden")
+}
+     
   list.appendChild(div)
 })
 
