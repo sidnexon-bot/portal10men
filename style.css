@@ -82,6 +82,41 @@ header .subtitle{
   color:var(--muted);
 }
 
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
+}
+
+.hidden{
+  display:none;
+}
+
+.modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.3);
+}
+
+.modal-content{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+
+  background:#fff;
+  border-radius:20px 20px 0 0;
+
+  padding:16px;
+  max-height:70%;
+  overflow:auto;
+}
+
+.modal-header{
+  text-align:center;
+  margin-bottom:10px;
+  font-size:16px;
+}
 /* MAIN */
 
 main{
