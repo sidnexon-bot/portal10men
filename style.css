@@ -210,6 +210,9 @@ button[onclick*="'Nepřijdu'"]{
   display:flex;
   gap:6px;
 
+  width:calc(100% - 24px);   /* 🔥 KLÍČOVÉ */
+  max-width:500px;           /* drží mobil feel na větších displejích */
+
   background:rgba(255,255,255,0.85);
   backdrop-filter:blur(20px);
 
@@ -226,6 +229,8 @@ button[onclick*="'Nepřijdu'"]{
   flex-direction:column;
   align-items:center;
   justify-content:center;
+
+  flex:1; 
 
   padding:10px 14px;
   border:none;
