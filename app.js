@@ -40,10 +40,15 @@ function formatTime(t){
     return String(Math.floor(t)).padStart(2,"0") + ":00"
   }
   // string s T = ISO datum
-  if(typeof t === "string" && t.includes("T")){
-    const d = new Date(t)
-    return d.toLocaleTimeString("cs-CZ", {hour:"2-digit", minute:"2-digit", timeZone:"UTC"})
-  }
+if(typeof t === "string" && t.includes("T")){
+  const d = new Date(t)
+  return d.toLocaleTimeString("cs-CZ", {hour:"2-digit", minute:"2-digit", timeZone:"UTC"})
+}
+// string ve formátu HH:MM:SS
+if(typeof t === "string" && t.includes(":")){
+  return t.substring(0, 5)
+}
+
   return String(t).substring(0,5)
 }
 
