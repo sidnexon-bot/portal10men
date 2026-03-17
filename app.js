@@ -8,17 +8,11 @@ let ACTIVE_TAB   = "dashboard"
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
 
-const profileBtn = document.getElementById("profileBtn")
-
 function getInitials(name){
   if(!name) return "?"
   return name.split(" ").map(n => n[0]).join("").toUpperCase()
 }
 
-// nastavení iniciál
-if(MEMBER_NAME){
-  profileBtn.textContent = getInitials(MEMBER_NAME)
-}
 function currentMember(){
   return MEMBER_EMAIL
 }
@@ -115,6 +109,14 @@ async function start(){
     window.MEMBERS = members // 🔥 uložíme globálně
 
     const profileBtn = document.getElementById("profileBtn")
+
+if(profileBtn && MEMBER_NAME){
+  profileBtn.textContent = getInitials(MEMBER_NAME)
+}
+     if(!profileBtn){
+  console.error("profileBtn nenalezen")
+  return
+}
 
     function getInitials(name){
       if(!name) return "?"
