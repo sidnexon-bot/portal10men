@@ -371,7 +371,7 @@ async function openEvent(id){
     `
 
     // program
-    if(program.length){
+  if(program.length){
   html += `
   <div class="event-card">
     <div class="event-label">Program</div>
@@ -386,11 +386,11 @@ async function openEvent(id){
       </div>
     `).join("")}
 
-  </div>`
-      })
-    }else{
-      html += "<p class='notice'>Program není k dispozici</p>"
-    }
+  </div>
+  `
+}else{
+  html += "<p class='notice'>Program není k dispozici</p>"
+}
 
     // poznámka
     html += `
