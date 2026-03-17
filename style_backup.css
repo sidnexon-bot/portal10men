@@ -1,0 +1,36 @@
+/* jednoduchý, čitelný styl */
+:root{ --bg:#f3f3f3; --card:#fff; --accent:#111; --muted:#666; }
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background:var(--bg);
+  color:#111;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+header{
+  background:var(--accent);
+  color:#fff;
+  padding:18px 16px;
+}
+header h1{ margin:0; font-size:20px; }
+.topbar{ margin-top:10px; display:flex; align-items:center; gap:10px; }
+.topbar select{ padding:6px; }
+.status{ margin-left:12px; color:#ffd; font-size:13px; }
+
+main{ padding:18px; flex:1; }
+
+.card{
+  background:var(--card);
+  border-radius:8px;
+  padding:14px;
+  box-shadow:0 1px 0 rgba(0,0,0,0.06);
+  margin-bottom:12px;
+}
+
+.event{ background:var(--card); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer; }
+.event b{ display:block; margin-bottom:6px; }
+
+.notice{ color:var(--muted) }
