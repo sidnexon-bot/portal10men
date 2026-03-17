@@ -54,11 +54,7 @@ function formatTime(t){
     const m = (totalMinutes % 60).toString().padStart(2,"0")
     return h + ":" + m
   }
-  return String(t).substring(0,5)
-}
 
-  return String(t).substring(0,5)
-}
 
 function container(){
   return document.getElementById("main")
