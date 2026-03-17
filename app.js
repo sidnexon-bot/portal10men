@@ -35,13 +35,21 @@ function formatDate(d){
 
 function formatTime(t){
   if(!t) return ""
-  // Apps Script vrací čas jako zlomek dne (0.5 = poledne) nebo string
+  // Google Sheets vrací čas jako "1899-12-30T18:35:00.000Z"
+  if(typeof t === "string" && t.includes("T")){
+    const d = new Date(t)
+    return d.toLocaleTimeString("cs-CZ", {hour:"2-digit", minute:"2-digit", timeZone:"UTC"})
+  }
+  // číslo (zlomek dne)
   if(typeof t === "number"){
     const totalMinutes = Math.round(t * 24 * 60)
     const h = Math.floor(totalMinutes / 60).toString().padStart(2,"0")
     const m = (totalMinutes % 60).toString().padStart(2,"0")
     return h + ":" + m
   }
+  return String(t).substring(0,5)
+}
+
   return String(t).substring(0,5)
 }
 
