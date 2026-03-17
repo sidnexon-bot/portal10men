@@ -193,7 +193,7 @@ button[onclick*="'Nepřijdu'"]{
   backdrop-filter:blur(12px);
 
   border-top:1px solid #e5e5ea;
-  padding:6px 0;
+  padding:8px 0;
 }
 
 .bottom button{
@@ -209,7 +209,7 @@ button[onclick*="'Nepřijdu'"]{
   font-size:11px;
   color:#8e8e93;
 
-  padding:6px 0;
+  padding:8px 0;
 }
 
 .bottom button.active{
@@ -219,7 +219,7 @@ button[onclick*="'Nepřijdu'"]{
 }
 
 .bottom button span{
-  font-size:18px;
+  font-size:20px;
   line-height:1;
   margin-bottom:2px;
 }
