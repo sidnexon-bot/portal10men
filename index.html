@@ -57,34 +57,29 @@
   </div>
 
   <!-- PIN MODAL -->
-  <div id="pinModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <b>Zadej PIN</b>
-      </div>
-      <div id="pinDots" class="pin-dots">
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
-        <span class="pin-dot"></span>
-      </div>
-      <div class="pin-pad">
-        <button onclick="pressPin(1)">1</button>
-        <button onclick="pressPin(2)">2</button>
-        <button onclick="pressPin(3)">3</button>
-        <button onclick="pressPin(4)">4</button>
-        <button onclick="pressPin(5)">5</button>
-        <button onclick="pressPin(6)">6</button>
-        <button onclick="pressPin(7)">7</button>
-        <button onclick="pressPin(8)">8</button>
-        <button onclick="pressPin(9)">9</button>
-        <button onclick="clearPin()">⌫</button>
-        <button onclick="pressPin(0)">0</button>
-        <button onclick="closePinModal()">✕</button>
+<div id="pinModal" class="modal hidden">
+  <div class="modal-backdrop" onclick="closePinModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <b>Zadej PIN</b>
+    </div>
+    <div style="padding:16px">
+      <input
+        id="pinInput"
+        type="password"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="4"
+        placeholder="••••"
+        style="text-align:center;font-size:24px;letter-spacing:8px"
+      >
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button onclick="closePinModal()" style="flex:1">Zrušit</button>
+        <button onclick="submitPin()" style="flex:1;background:#007aff;color:#fff">OK</button>
       </div>
     </div>
   </div>
+</div>
 
   <script src="api.js"></script>
   <script src="app.js" defer></script>
