@@ -178,6 +178,16 @@ main{
   margin-top:12px;
 }
 
+.card button{
+  background:#007aff;
+  color:#fff;
+
+  border-radius:12px;
+  padding:10px 16px;
+
+  font-weight:600;
+}
+
 /* TEXT */
 
 h2{
@@ -196,6 +206,26 @@ h3{
 .small{
   font-size:14px;
   color:var(--muted);
+}
+
+textarea{
+  width:100%;
+  min-height:80px;
+
+  border:none;
+  border-radius:12px;
+
+  background:#f2f2f7;
+  padding:12px;
+
+  font-size:15px;
+}
+
+.section-title{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:600;
+  margin:20px 0 6px;
 }
 
 /* BULLETIN */
@@ -246,15 +276,18 @@ button:active{
 /* STATUS BUTTON COLORS */
 
 button[onclick*="'Přijdu'"]{
-  background:#eaf7ef;
+  background:#e6f4ea;
+  color:#1e7e34;
 }
 
 button[onclick*="'Možná'"]{
-  background:#fff4dc;
+  background:#fff3cd;
+  color:#856404;
 }
 
 button[onclick*="'Nepřijdu'"]{
-  background:#fdecec;
+  background:#fdecea;
+  color:#b02a37;
 }
 
 .profile-btn{
