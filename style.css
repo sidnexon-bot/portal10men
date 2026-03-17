@@ -20,19 +20,14 @@ header h1{ margin:0; font-size:20px; }
 .topbar select{ padding:6px; }
 .status{ margin-left:12px; color:#ffd; font-size:13px; }
 
-main {
-  max-width: 500px; /* Tohle udrží karty v úhledném sloupci */
-  margin: 0 auto;   /* Vycentrování celého bloku main */
-  padding-bottom: 120px; /* Dostatek místa nad lištou */
-}
+main{ padding:18px; flex:1; }
 
-.card {
-  background: #fff;
-  border-radius: 16px;
-  margin: 10px 0;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Jemnější stín */
-  border: 1px solid #eee;
+.card{
+  background:var(--card);
+  border-radius:8px;
+  padding:14px;
+  box-shadow:0 1px 0 rgba(0,0,0,0.06);
+  margin-bottom:12px;
 }
 
 .event{ background:var(--card); padding:12px; border-radius:8px; margin:8px 0; cursor:pointer; }
@@ -41,16 +36,33 @@ main {
 .notice{ color:var(--muted) }
 
 .bottom {
-  height: 85px; 
-  padding-bottom: 15px; /* Místo pro palec */
+  display: flex;
+  gap: 0;
   background: #111;
+  /* padding: 6px;  <- tohle nahradíme pevnou výškou */
+  position: fixed; /* sticky je fajn, ale fixed na spodku je pro appky jistota */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 75px; /* Pevná komfortní výška */
   border-top: 1px solid #333;
+  z-index: 9999;
+  padding-bottom: env(safe-area-inset-bottom); /* Ochrana pro iPhony s lištou */
 }
 
 .bottom button {
-  font-size: 11px; /* Popisky pod ikonami */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  flex: 1;
+  background: transparent;
+  color: #999; /* Neaktivní tlačítka trochu ztlumíme */
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px; /* Větší písmo pro čitelnost */
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent; /* Odstraní modrý záblesk při tapnutí na mobilu */
 }
 
 /* Styl pro ikony (pokud je v budoucnu přidáš nebo použiješ emoji) */
@@ -62,11 +74,7 @@ main {
 .bottom button:active { 
   background: rgba(255,255,255,0.05); 
 }
-.bottom button::before {
-  content: attr(data-icon); /* Pokud ikony dáváš přes data-icon */
-  font-size: 26px;
-  margin-bottom: 4px;
-}
+
 .bottom button.active {
   background: rgba(255,255,255,0.1);
   color: #fff; /* Aktivní svítí bíle */
