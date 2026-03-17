@@ -290,22 +290,33 @@ button[onclick*="'Nepřijdu'"]{
   z-index:20;
 }
 
+.bottom-wrap{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+
+  display:flex;
+  justify-content:center;
+  pointer-events:none;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
 .bottom{
   display:flex;
-  gap:6px;
+  gap:8px;
 
-  width:calc(100% - 24px);   /* 🔥 KLÍČOVÉ */
-  max-width:500px;           /* drží mobil feel na větších displejích */
+  margin:12px;
+  padding:8px;
 
-  background:rgba(255,255,255,0.85);
+  background:rgba(255,255,255,0.7);
   backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
 
-  padding:6px;
-  border-radius:28px;
+  border-radius:20px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.12);
 
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.12),
-    0 2px 8px rgba(0,0,0,0.06);
+  pointer-events:auto;
 }
 
 .bottom button{
@@ -314,24 +325,23 @@ button[onclick*="'Nepřijdu'"]{
   align-items:center;
   justify-content:center;
 
-  flex:1; 
-
-  padding:10px 14px;
   border:none;
   background:transparent;
-  border-radius:20px;
 
-  font-size:11px;
-  color:#8e8e93;
+  padding:8px 12px;
+  border-radius:12px;
+
+  font-size:12px;
+  color:#888;
 
   transition:all 0.2s ease;
 }
 
 .bottom button.active{
-  background:#fff;
-  color:#000;
+  background:rgba(0,122,255,0.12);
+  color:#007aff;
 
-  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  transform:translateY(-2px) scale(1.05);
 }
 
 .bottom button span{
@@ -385,51 +395,15 @@ select:focus{
   letter-spacing:0.08em;
 }
 
-/* PIN */
-.pin-dots{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:20px 0;
+.icon svg{
+  width:22px;
+  height:22px;
+  fill:#888;
+
+  transition:all 0.2s ease;
 }
 
-.pin-dots span{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:#ddd;
-}
-
-.pin-dots span.filled{
-  background:#111;
-}
-
-.pin-pad{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.pin-pad button{
-  padding:16px;
-  font-size:18px;
-  border-radius:12px;
-  border:none;
-  background:#f2f2f7;
-}
-
-.pin-pad button:active{
-  background:#e5e5ea;
-}
-
-@keyframes shake {
-  0%,100%{ transform:translateX(0) }
-  20%     { transform:translateX(-6px) }
-  40%     { transform:translateX(6px) }
-  60%     { transform:translateX(-4px) }
-  80%     { transform:translateX(4px) }
-}
-
-.shake{
-  animation:shake 0.4s ease;
+.bottom button.active .icon svg{
+  fill:#007aff;
+  transform:scale(0.95);
 }
