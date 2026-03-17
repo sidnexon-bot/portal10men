@@ -230,12 +230,12 @@ h3{
 /* BUTTONS */
 
 button{
-  padding:10px 16px;
+  padding:10px 14px;
   border-radius:10px;
   border:none;
   background:#f2f2f7;
   color:#007aff;
-  font-size:15px;
+  font-size:13px;
   font-weight:600;
 }
 
