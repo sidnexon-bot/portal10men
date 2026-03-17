@@ -45,8 +45,8 @@ header h1{
 
 header .subtitle{
   font-size:13px;
-  color:#8e8e93;
-  margin-top:4px;
+  color:var(--muted);
+  margin-top:6px;
 }
 
 .header-row{
@@ -256,11 +256,11 @@ button[onclick*="'Nepřijdu'"]{
 }
 
 .profile-btn{
-  width:42px;
-  height:42px;
+  width:44px;
+  height:44px;
   border-radius:50%;
 
-  background:#d1d1d6;
+  background:#e5e5ea;
   color:#000;
 
   display:flex;
@@ -269,6 +269,8 @@ button[onclick*="'Nepřijdu'"]{
 
   font-weight:600;
   font-size:14px;
+
+  margin-top:4px
 
   cursor:pointer;
 
