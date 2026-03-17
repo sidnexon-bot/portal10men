@@ -180,6 +180,48 @@ async function renderDashboard(){
 
     let html = ""
 
+     // --- NEJBLIŽŠÍ AKCE (HERO) ---
+if(upcoming){
+
+  html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
+
+  html += `<div class="card next" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
+    <b>${escapeHtml(upcoming.NAME)}</b><br>
+    <span class="small">
+      ${formatDate(upcoming.DATE)}
+      ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
+      ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
+    </span><br>
+    <span class="small">${escapeHtml(upcoming.PLACE)}</span>
+  </div>`
+
+  if(MEMBER_EMAIL){
+
+    let detail = {attendance:[]}
+
+    try{
+      detail = await api("eventdetail", {id: upcoming.ID})
+    }catch(e){
+      console.error("eventdetail fail", e)
+    }
+
+    const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
+    const myStatus = myRow?.STATUS || ""
+
+    html += `<div class="card">
+      <b>Tvoje docházka:</b><br>
+      ${renderAttendanceStatus(myStatus)}
+
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
+        <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
+        <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
+      </div>
+    </div>`
+  }
+
+}
+     
     // --- AKTUALITY ---
     html += `
     <div class="card bulletin">
@@ -207,38 +249,6 @@ async function renderDashboard(){
       html += "<p class='notice'>Žádné koncerty</p>"
     }
 
-    // --- NEJBLIŽŠÍ AKCE + DOCHÁZKA ---
-    if(upcoming){
-      html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
-      html += `<div class="card" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
-        <b>${escapeHtml(upcoming.NAME)}</b><br>
-        <span class="small">
-          ${formatDate(upcoming.DATE)}
-          ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
-          ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
-        </span><br>
-        <span class="small">${escapeHtml(upcoming.PLACE)}</span>
-      </div>`
-
-      if(MEMBER_EMAIL){
-        const detail   = await api("eventdetail", {id: upcoming.ID})
-        const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
-        const myStatus = myRow?.STATUS || ""
-
-        html += `<div class="card">
-          <b>Tvoje docházka:</b><br>
-          ${renderAttendanceStatus(myStatus)}
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
-            <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
-            <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
-          </div>
-        </div>`
-      }else{
-        html += "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
-      }
-    }
-
     container().innerHTML = html
 
   }catch(err){
@@ -249,7 +259,7 @@ async function renderDashboard(){
 
 function concertRow(e, now){
   const past = new Date(e.DATE) < now
-  return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
+  return `<div class="concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
     <b>${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
     <span class="small concert-date">${formatDate(e.DATE)}${e.PLACE ? " · " + escapeHtml(e.PLACE) : ""}</span>
   </div>`
