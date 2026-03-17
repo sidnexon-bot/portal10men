@@ -150,9 +150,7 @@ function openMemberModal(){
     if(m.EMAIL === MEMBER_EMAIL){
       div.classList.add("active-member")
     }
-    div.onclick = () => {
-  openPinModal(m)
-  closeMemberModal()
+    div.onclick = () => openPinModal(m)
 }
 
     list.appendChild(div)
@@ -186,6 +184,7 @@ function selectMember(m){
 function openPinModal(member){
   PIN_INPUT  = ""
   PIN_TARGET = member
+  closeMemberModal()
   const input = document.getElementById("pinInput")
   if(input) input.value = ""
   document.getElementById("pinModal").classList.remove("hidden")
