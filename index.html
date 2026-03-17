@@ -56,31 +56,7 @@
     </div>
   </div>
 
-  <!-- PIN MODAL -->
-<div id="pinModal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closePinModal()"></div>
-  <div class="modal-content">
-    <div class="modal-header">
-      <b>Zadej PIN</b>
-    </div>
-    <div style="padding:16px">
-      <input
-  id="pinInput"
-  type="password"
-  inputmode="numeric"
-  pattern="[0-9]*"
-  maxlength="4"
-  placeholder="••••"
-  style="text-align:center;font-size:24px;letter-spacing:8px"
-  onkeydown="if(event.key==='Enter') submitPin()"
->
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <button onclick="closePinModal()" style="flex:1">Zrušit</button>
-        <button onclick="submitPin()" style="flex:1;background:#007aff;color:#fff">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- PIN zatím vypnut -->
 
   <script src="api.js"></script>
   <script src="app.js" defer></script>
