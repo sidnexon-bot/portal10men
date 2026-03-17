@@ -58,6 +58,38 @@
   <div id="memberModal" class="modal hidden">
   <div class="modal-backdrop" onclick="closeMemberModal()"></div>
 
+    <div id="pinModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+
+  <div class="modal-content">
+    <div class="modal-header">
+      <b>Zadej PIN</b>
+    </div>
+
+    <div id="pinDots" class="pin-dots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="pin-pad">
+      <button onclick="pressPin(1)">1</button>
+      <button onclick="pressPin(2)">2</button>
+      <button onclick="pressPin(3)">3</button>
+
+      <button onclick="pressPin(4)">4</button>
+      <button onclick="pressPin(5)">5</button>
+      <button onclick="pressPin(6)">6</button>
+
+      <button onclick="pressPin(7)">7</button>
+      <button onclick="pressPin(8)">8</button>
+      <button onclick="pressPin(9)">9</button>
+
+      <button onclick="clearPin()">⌫</button>
+      <button onclick="pressPin(0)">0</button>
+      <button onclick="closePinModal()">✕</button>
+    </div>
+  </div>
+</div>
+
   <div class="modal-content">
     <div class="modal-header">
       <b>Vyber člena</b>
