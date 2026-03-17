@@ -311,17 +311,17 @@ button[onclick*="'Nepřijdu'"]{
   max-width:420px;      /* 👉 iPhone šířka */
   
   margin:12px;
-  padding:10px;
+  padding:6px;
 
   background:linear-gradient(
     to bottom,
     rgba(255,255,255,0.9),
     rgba(255,255,255,0.6)
   );
-  backdrop-filter:blur(20px);
+  backdrop-filter:blur(30px);
   -webkit-backdrop-filter:blur(20px);
   border:1px solid rgba(255,255,255,0.4);
-  border-radius:28px;
+  border-radius:24px;
   box-shadow:0 8px 30px rgba(0,0,0,0.12);
 
   pointer-events:auto;
@@ -340,20 +340,20 @@ button[onclick*="'Nepřijdu'"]{
   border:none;
   background:transparent;
 
-  padding:10px 6px;
+  padding:8px 4px;
   border-radius:18px;
 
   font-size:12px;
-  color:#8e8e93;
+  color:#6b6b70;
 
   transition:all 0.2s ease;
 }
 
 .bottom button.active{
-  background:rgba(0,122,255,0.15);
+  background:rgba(0,122,255,0.08); /* jemnější */
   color:#007aff;
 
-  transform:scale(1.03);
+  transform:none; /* 🔥 vypnout scale */
 }
 
 .bottom button.active .icon svg{
