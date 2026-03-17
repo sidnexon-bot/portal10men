@@ -272,7 +272,7 @@ button[onclick*="'Nepřijdu'"]{
   font-weight:600;
   font-size:14px;
 
-  margin-top:4px
+  margin-top:4px;
 
   cursor:pointer;
 
@@ -400,7 +400,7 @@ select:focus{
   background:#ddd;
 }
 
-.pin-dots span.active{
+.pin-dots span.filled{
   background:#111;
 }
 
@@ -420,4 +420,16 @@ select:focus{
 
 .pin-pad button:active{
   background:#e5e5ea;
+}
+
+@keyframes shake {
+  0%,100%{ transform:translateX(0) }
+  20%     { transform:translateX(-6px) }
+  40%     { transform:translateX(6px) }
+  60%     { transform:translateX(-4px) }
+  80%     { transform:translateX(4px) }
+}
+
+.shake{
+  animation:shake 0.4s ease;
 }
