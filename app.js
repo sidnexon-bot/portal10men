@@ -144,16 +144,21 @@ if(profileBtn && MEMBER_NAME){
   div.className = "member-row"
   div.textContent = m.NAME
 
-  // 🔥 zvýraznění aktuálního člena
   if(m.EMAIL === MEMBER_EMAIL){
-  div.style.background = "#f2f2f7"
-  div.style.borderRadius = "8px"
-}
+    div.style.background = "#f2f2f7"
+    div.style.borderRadius = "8px"
+  }
 
   div.onclick = () => {
-  openPinModal(m)
-}
+    openPinModal(m) // ✅ jen volání
+  }
 
+  list.appendChild(div)
+})
+
+        modal.classList.remove("hidden")
+}
+        
      function closeMemberModal(){
   const modal = document.getElementById("memberModal")
   if(modal){
