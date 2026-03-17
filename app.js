@@ -92,6 +92,22 @@ function setStatus(msg){
   if(el) el.textContent = msg || "—"
 }
 
+function iconCheck(){
+  return `<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+}
+
+function iconMaybe(){
+  return `<svg viewBox="0 0 24 24"><path d="M12 18h.01M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/></svg>`
+}
+
+function iconClose(){
+  return `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12"/></svg>`
+}
+
+function iconQuestion(){
+  return `<svg viewBox="0 0 24 24"><path d="M12 18h.01M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/></svg>`
+}
+
 /* ===============================
    START
 ================================ */
