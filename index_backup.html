@@ -3,33 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>10men Portál</title>
+  <title>10men Portal</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
+  <div class="header-inner">
     <h1>10men Portál</h1>
+    <div class="subtitle">Powered by 10menogram</div>
+
     <div class="topbar">
-      <label>Jsem:</label>
-      <select id="memberSelect">
-        <option value="">Vyber člena</option>
-      </select>
-      <span id="status" class="status">—</span>
+      <span>Jsem:</span>
+      <select id="memberSelect"></select>
+      <span id="status"></span>
     </div>
-  </header>
+
+  </div>
+</header>
 
   <main id="main">
     <p class="notice">Načítám…</p>
   </main>
 
-  <nav class="bottom">
-    <button id="btnDashboard">Přehled</button>
-    <button id="btnEvents">Akce</button>
-    <button id="btnPayments">Platby</button>
-    <button id="btnEnergy">Energie</button>
-  </nav>
+  <nav class="bottom-wrap">
+  <div class="bottom">
+    
+    <button id="btnDashboard" class="active">
+      <span>🏠</span>
+      <small>Přehled</small>
+    </button>
 
-  <script src="api.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+    <button id="btnEvents">
