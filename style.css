@@ -543,3 +543,39 @@ select:focus{
 .bottom button.active .icon svg{
   stroke:#007aff;
 }
+
+/* HEATMAPA */
+.heatmap{
+  border-collapse: collapse;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.heatmap-event-col{
+  min-width: 120px;
+}
+.heatmap-th{
+  padding: 4px 6px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--muted);
+}
+.heatmap-label{
+  padding: 6px 8px 6px 0;
+  font-size: 12px;
+  color: var(--text);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.heatmap-date{
+  color: var(--muted);
+  font-size: 11px;
+}
+.heatmap-cell{
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #555;
+}
