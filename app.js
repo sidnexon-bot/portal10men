@@ -112,34 +112,44 @@ async function start(){
     setLoading()
 
     const members = await api("members")
+    window.MEMBERS = members // 🔥 uložíme globálně
 
-    const select = document.getElementById("memberSelect")
+    const profileBtn = document.getElementById("profileBtn")
 
-    members.forEach(m => {
-      const opt = document.createElement("option")
-      opt.value = m.EMAIL
-      opt.textContent = m.NAME
-      opt.dataset.name = m.NAME
-      select.appendChild(opt)
-    })
+    function getInitials(name){
+      if(!name) return "?"
+      return name.split(" ").map(n => n[0]).join("").toUpperCase()
+    }
 
-    // obnov uložený výběr
+    // obnov uloženého člena
     if(MEMBER_EMAIL){
-      select.value = MEMBER_EMAIL
+      profileBtn.textContent = getInitials(MEMBER_NAME)
       setStatus(MEMBER_NAME)
     }
 
-    select.onchange = () => {
-      const opt = select.options[select.selectedIndex]
-      MEMBER_EMAIL = select.value
-      MEMBER_NAME  = opt.dataset.name || ""
-      localStorage.setItem("memberEmail", MEMBER_EMAIL)
-      localStorage.setItem("memberName",  MEMBER_NAME)
-      setStatus(MEMBER_NAME)
-      renderDashboard()
+    // klik na profil
+    profileBtn.onclick = () => {
+
+      const names = members.map(m => m.NAME).join("\n")
+
+      const chosen = prompt("Vyber člena:\n" + names)
+
+      const found = members.find(m => m.NAME === chosen)
+
+      if(found){
+        MEMBER_EMAIL = found.EMAIL
+        MEMBER_NAME  = found.NAME
+
+        localStorage.setItem("memberEmail", MEMBER_EMAIL)
+        localStorage.setItem("memberName", MEMBER_NAME)
+
+        profileBtn.textContent = getInitials(MEMBER_NAME)
+
+        renderDashboard()
+      }
     }
 
-    // zapoj navigaci
+    // navigace
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
     document.getElementById("btnEvents").onclick    = () => { setActiveTab("events");    renderEvents() }
     document.getElementById("btnPayments").onclick  = () => { setActiveTab("payments");  renderPayments() }
