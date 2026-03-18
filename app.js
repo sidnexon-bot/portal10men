@@ -5,6 +5,7 @@
 let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
 let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
+let MEMBER_ROLE = localStorage.getItem("memberRole") || "MEMBER"
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
