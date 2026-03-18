@@ -325,19 +325,22 @@ async function renderEvents(){
     }
 
     events.sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-     const now = new Date()
-const filtered = events.filter(e => new Date(e.DATE) >= now)
+    const now      = new Date()
+    const filtered = events.filter(e => new Date(e.DATE) >= now)
 
-if(!filtered.length){
-  container().innerHTML = "<h2>Akce</h2><p class='notice'>Žádné nadcházející akce</p>"
-  return
-}
+    let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0">Akce</h2>
+      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="openEventForm()">+ Přidat akci</button>` : ""}
+    </div>`
 
-    let html = "<h2>Akce</h2>"
+    if(!filtered.length){
+      html += "<p class='notice'>Žádné nadcházející akce</p>"
+      container().innerHTML = html
+      return
+    }
 
     filtered.forEach(e => {
-      const probehlá = new Date(e.DATE) < new Date()
-      html += `<div class="card${probehlá ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
+      html += `<div class="card" onclick="openEvent('${escapeHtml(e.ID)}')">
         <b>${escapeHtml(e.NAME)}</b><br>
         <span class="small">
           ${formatDate(e.DATE)}
@@ -345,7 +348,6 @@ if(!filtered.length){
           ${e.END   ? "– " + formatTime(e.END)   : ""}
         </span><br>
         <span class="small">${escapeHtml(e.PLACE)}</span>
-        ${probehlá ? "<span class='small'> · Proběhlá</span>" : ""}
       </div>`
     })
 
