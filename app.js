@@ -658,12 +658,21 @@ function addSwipe(el, eventId){
     }
     isDragging = false
 
-    // pokud se karta skoro nepohnula = tap = otevři detail
-    if(!moved || Math.abs(currentX) < 8){
-      el.style.transform = ""
-      openEvent(eventId)
-      return
-    }
+    // spočítej celkový pohyb včetně vertikálního
+const totalMove = Math.abs(currentX) + Math.abs(e.changedTouches[0].clientY - startY)
+
+// pokud byl celkový pohyb malý = tap = otevři detail
+if(!moved && totalMove < 12){
+  el.style.transform = ""
+  openEvent(eventId)
+  return
+}
+
+// pokud byl pohyb hlavně vertikální = scroll = ignoruj
+if(!isHorizontal){
+  el.style.transform = ""
+  return
+}
 
     el.style.transition = "transform 0.2s ease"
 
