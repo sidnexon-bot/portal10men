@@ -252,18 +252,10 @@ async function renderDashboard(){
           <b>Tvoje docházka:</b><br>
           ${renderAttendanceStatus(myStatus)}
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <button onclick="doAttendance('${id}','Přijdu')">
-  <span class="icon">${iconCheck()}</span>
-  Přijdu
-</button>
-            <button onclick="doAttendance('${id}','Možná')">
-  <span class="icon">${iconMaybe()}</span>
-  Možná
-</button>
-            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">
-  <span class="icon">${iconClose()}</span>
-  Nepřijdu
-</button>
+            <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
+<button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
+<button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+
           </div>
         </div>`
       }else{
