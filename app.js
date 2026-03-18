@@ -252,9 +252,18 @@ async function renderDashboard(){
           <b>Tvoje docházka:</b><br>
           ${renderAttendanceStatus(myStatus)}
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <button onclick="doAttendance('${upcoming.ID}','Přijdu')">✅ Přijdu</button>
-            <button onclick="doAttendance('${upcoming.ID}','Možná')">🤔 Možná</button>
-            <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">❌ Nepřijdu</button>
+            <button onclick="doAttendance('${id}','Přijdu')">
+  <span class="icon">${iconCheck()}</span>
+  Přijdu
+</button>
+            <button onclick="doAttendance('${id}','Možná')">
+  <span class="icon">${iconMaybe()}</span>
+  Možná
+</button>
+            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">
+  <span class="icon">${iconClose()}</span>
+  Nepřijdu
+</button>
           </div>
         </div>`
       }else{
@@ -426,22 +435,45 @@ async function openEvent(id){
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
     const open  = attendance.filter(a => !a.STATUS).length
 
-    html += `<div class="card">
-      ✅ Přijdu: <b>${yes}</b> &nbsp;
-      🤔 Možná: <b>${maybe}</b> &nbsp;
-      ❌ Nepřijdu: <b>${no}</b> &nbsp;
-      ❓ Nevyplněno: <b>${open}</b>
-    </div>`
+    html += `
+<div class="card attendance-summary">
+
+  <div class="summary-item">
+    <span class="icon">${iconCheck()}</span>
+    Přijdu <b>${yes}</b>
+  </div>
+
+  <div class="summary-item">
+    <span class="icon">${iconMaybe()}</span>
+    Možná <b>${maybe}</b>
+  </div>
+
+  <div class="summary-item">
+    <span class="icon">${iconClose()}</span>
+    Nepřijdu <b>${no}</b>
+  </div>
+
+  <div class="summary-item">
+    <span class="icon">${iconQuestion()}</span>
+    Nevyplněno <b>${open}</b>
+  </div>
+
+</div>
+`
 
     html += "<div>"
     attendance.forEach(a => {
-      const icon = a.STATUS === "Přijdu"   ? "✅" :
-                   a.STATUS === "Možná"    ? "🤔" :
-                   a.STATUS === "Nepřijdu" ? "❌" : "❓"
-      html += `<div class="small" style="padding:4px 0">
-        ${icon} ${escapeHtml(a.NAME)}
-        ${a.REASON ? "<span style='color:#999'> · " + escapeHtml(a.REASON) + "</span>" : ""}
-      </div>`
+      const icon =
+  a.STATUS === "Přijdu"   ? iconCheck() :
+  a.STATUS === "Možná"    ? iconMaybe() :
+  a.STATUS === "Nepřijdu" ? iconClose() :
+                            iconQuestion()
+
+html += `
+<div class="small">
+  <span class="icon">${icon}</span>
+  ${escapeHtml(a.NAME)}
+</div>`
     })
     html += "</div>"
 
@@ -454,9 +486,27 @@ async function openEvent(id){
 }
 
 function renderAttendanceStatus(status){
-  if(!status) return "<p class='notice'>Docházka nevyplněna</p>"
-  const icon = status === "Přijdu" ? "✅" : status === "Možná" ? "🤔" : "❌"
-  return `<p>Tvůj aktuální stav: <b>${icon} ${escapeHtml(status)}</b></p>`
+  if(!status){
+    return `<p class="notice">
+      <span class="icon">${iconQuestion()}</span>
+      Docházka nevyplněna
+    </p>`
+  }
+
+  const icon =
+    status === "Přijdu"   ? iconCheck() :
+    status === "Možná"    ? iconMaybe() :
+                            iconClose()
+
+  return `
+  <div class="attendance-status">
+    Tvůj aktuální stav:
+    <b>
+      <span class="icon">${icon}</span>
+      ${escapeHtml(status)}
+    </b>
+  </div>
+  `
 }
 
 /* ===============================
@@ -629,7 +679,7 @@ async function renderHeatmap(){
       lookup[r.ID_AKCE + "_" + r.EMAIL] = r.STATUS || ""
     })
 
-    let html = `<h3 class="season-title">📊 Docházka skupiny</h3>`
+    let html = `<h3 class="season-title"> Docházka skupiny</h3>`
 
     // navigace měsíců
     html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
