@@ -178,16 +178,6 @@ main{
   margin-top:12px;
 }
 
-.card button{
-  background:#007aff;
-  color:#fff;
-
-  border-radius:12px;
-  padding:10px 16px;
-
-  font-weight:600;
-}
-
 /* TEXT */
 
 h2{
@@ -247,13 +237,24 @@ h3{
 /* BUTTONS */
 
 button{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+
   padding:10px 14px;
-  border-radius:10px;
+  border-radius:12px;
   border:none;
+
+  font-size:14px;
+  font-weight:600;
+
   background:#f2f2f7;
   color:#007aff;
-  font-size:13px;
-  font-weight:600;
+}
+
+.primary-btn{
+  background:#007aff;
+  color:#fff;
 }
 
 button:active{
@@ -262,19 +263,19 @@ button:active{
 
 /* STATUS BUTTON COLORS */
 
-button[onclick*="'Přijdu'"]{
+.btn-yes{
   background:#e6f4ea;
-  color:#1e7e34;
+  color:#34c759;
 }
 
-button[onclick*="'Možná'"]{
+.btn-maybe{
   background:#fff3cd;
-  color:#856404;
+  color:#ff9f0a;
 }
 
-button[onclick*="'Nepřijdu'"]{
+.btn-no{
   background:#fdecea;
-  color:#b02a37;
+  color:#ff3b30;
 }
 
 .profile-btn{
@@ -503,10 +504,11 @@ select:focus{
   border-radius:10px;
 }
 
-.attendance-buttons{
-  display:flex;
-  gap:8px;
-  margin-top:8px;
+.attendance-buttons button{
+  flex:1;
+  justify-content:center;
+  padding:12px 10px;
+  border-radius:14px;
 }
 
 .back-btn{
@@ -516,15 +518,21 @@ select:focus{
   font-weight:500;
 }
 
-.attendance-status{
-  margin:6px 0 10px;
-  font-size:14px;
-  color:#6b6b70;
+.status-Přijdu{
+  color:#34c759;
+}
+
+.status-Možná{
+  color:#ff9f0a;
+}
+
+.status-Nepřijdu{
+  color:#ff3b30;
 }
 
 .icon{
-  width:20px;
-  height:20px;
+  width:22px;
+  height:22px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
