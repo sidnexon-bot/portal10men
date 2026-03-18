@@ -5,10 +5,54 @@
 let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
 let MEMBER_NAME  = localStorage.getItem("memberName")  || null
 let ACTIVE_TAB   = "dashboard"
-let MEMBER_ROLE = localStorage.getItem("memberRole") || "MEMBER"
+let MEMBER_ROLE  = localStorage.getItem("memberRole") || "MEMBER"
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
+
+/* ===============================
+   CACHE
+================================ */
+
+const CACHE = {
+  events:  null,
+  members: null,
+  heatmap: null,
+  energy:  null,
+  detail:  {},
+  ts:      {},
+  TTL:     5 * 60 * 1000
+}
+
+function cacheValid(key){
+  return CACHE.ts[key] && (Date.now() - CACHE.ts[key] < CACHE.TTL)
+}
+
+async function cachedApi(action, params){
+  if(action === "eventdetail" && params?.id){
+    const key = "detail_" + params.id
+    if(CACHE.detail[params.id] && cacheValid(key)) return CACHE.detail[params.id]
+    const data = await api(action, params)
+    CACHE.detail[params.id] = data
+    CACHE.ts[key] = Date.now()
+    return data
+  }
+  if(CACHE[action] && cacheValid(action)) return CACHE[action]
+  const data = await api(action, params)
+  CACHE[action] = data
+  CACHE.ts[action] = Date.now()
+  return data
+}
+
+function invalidateCache(action, id){
+  if(id){
+    delete CACHE.detail[id]
+    delete CACHE.ts["detail_" + id]
+  }else{
+    CACHE[action] = null
+    CACHE.ts[action] = null
+  }
+}
 
 /* ===============================
    HELPERS
@@ -119,7 +163,7 @@ async function start(){
 
     setLoading()
 
-    const members = await api("members")
+    const members = await cachedApi("members")
     window.MEMBERS = members
 
     const profileBtn = document.getElementById("profileBtn")
@@ -204,7 +248,7 @@ async function renderDashboard(){
 
   try{
 
-    const events = await api("events")
+    const events = await cachedApi("events")
     const now    = new Date()
 
     const keywords = ["zkouška", "zkoušky", "plánování"]
@@ -244,7 +288,7 @@ async function renderDashboard(){
       if(MEMBER_EMAIL){
         let detail = {attendance:[]}
         try{
-          detail = await api("eventdetail", {id: upcoming.ID})
+          detail = await cachedApi("eventdetail", {id: upcoming.ID})
         }catch(e){
           console.error("eventdetail fail", e)
         }
@@ -259,8 +303,7 @@ async function renderDashboard(){
             <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
             <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
           </div>
-      </div>`
-
+        </div>`
       }else{
         html += "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
       }
@@ -288,8 +331,8 @@ async function renderDashboard(){
       html += "<p class='notice'>Žádné koncerty</p>"
     }
 
-     const heatmapHtml = await renderHeatmap()
-html += `<div id="heatmap-container">${heatmapHtml}</div>`
+    const heatmapHtml = await renderHeatmap()
+    html += `<div id="heatmap-container">${heatmapHtml}</div>`
 
     container().innerHTML = html
 
@@ -317,7 +360,7 @@ async function renderEvents(){
 
   try{
 
-    const events = await api("events")
+    const events = await cachedApi("events")
 
     if(!Array.isArray(events) || !events.length){
       setError("Žádné akce")
@@ -369,7 +412,7 @@ async function openEvent(id){
 
   try{
 
-    const data       = await api("eventdetail", {id})
+    const data       = await cachedApi("eventdetail", {id})
     const event      = data.event      || {}
     const program    = data.program    || []
     const attendance = data.attendance || []
@@ -405,10 +448,14 @@ async function openEvent(id){
     }
 
     // poznámka
-    html += `<div class="card">
-      <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
-      <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
-    </div>`
+    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+      html += `<div class="card">
+        <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+        <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
+      </div>`
+    }else if(event.NOTE){
+      html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
+    }
 
     // docházka
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
@@ -432,57 +479,31 @@ async function openEvent(id){
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
     const open  = attendance.filter(a => !a.STATUS).length
 
-    html += `
-<div class="card attendance-summary">
-
-  <div class="summary-item">
-    <span class="icon">${iconCheck()}</span>
-    Přijdu <b>${yes}</b>
-  </div>
-
-  <div class="summary-item">
-    <span class="icon">${iconMaybe()}</span>
-    Možná <b>${maybe}</b>
-  </div>
-
-  <div class="summary-item">
-    <span class="icon">${iconClose()}</span>
-    Nepřijdu <b>${no}</b>
-  </div>
-
-  <div class="summary-item">
-    <span class="icon">${iconQuestion()}</span>
-    Nevyplněno <b>${open}</b>
-  </div>
-
-</div>
-`
+    html += `<div class="card attendance-summary">
+      <div class="summary-item"><span class="icon">${iconCheck()}</span> Přijdu <b>${yes}</b></div>
+      <div class="summary-item"><span class="icon">${iconMaybe()}</span> Možná <b>${maybe}</b></div>
+      <div class="summary-item"><span class="icon">${iconClose()}</span> Nepřijdu <b>${no}</b></div>
+      <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
+    </div>`
 
     html += "<div>"
     attendance.forEach(a => {
-      const icon =
-  a.STATUS === "Přijdu"   ? iconCheck() :
-  a.STATUS === "Možná"    ? iconMaybe() :
-  a.STATUS === "Nepřijdu" ? iconClose() :
-                            iconQuestion()
-
-html += `
-<div class="small">
-  <span class="icon">${icon}</span>
-  ${escapeHtml(a.NAME)}
-</div>`
+      const icon = a.STATUS === "Přijdu"   ? iconCheck() :
+                   a.STATUS === "Možná"    ? iconMaybe() :
+                   a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+      html += `<div class="small"><span class="icon">${icon}</span> ${escapeHtml(a.NAME)}</div>`
     })
     html += "</div>"
-     
-// admin tlačítka
-     
+
+    // admin tlačítka
     if(MEMBER_ROLE === "ADMIN"){
       html += `<hr>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="openEventForm('${id}')" style="flex:1"> Upravit</button>
-        <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">🗑 Smazat</button>
+        <button onclick="openEventForm('${id}')" style="flex:1">Upravit</button>
+        <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">Smazat</button>
       </div>`
     }
+
     container().innerHTML = html
 
   }catch(err){
@@ -493,26 +514,11 @@ html += `
 
 function renderAttendanceStatus(status){
   if(!status){
-    return `<p class="notice">
-      <span class="icon">${iconQuestion()}</span>
-      Docházka nevyplněna
-    </p>`
+    return `<p class="notice"><span class="icon">${iconQuestion()}</span> Docházka nevyplněna</p>`
   }
-
-  const icon =
-    status === "Přijdu"   ? iconCheck() :
-    status === "Možná"    ? iconMaybe() :
-                            iconClose()
-
-  return `
-  <div class="attendance-status">
-    Tvůj aktuální stav:
-    <b>
-      <span class="icon">${icon}</span>
-      ${escapeHtml(status)}
-    </b>
-  </div>
-  `
+  const icon = status === "Přijdu" ? iconCheck() :
+               status === "Možná"  ? iconMaybe() : iconClose()
+  return `<div class="attendance-status">Tvůj aktuální stav: <b><span class="icon">${icon}</span> ${escapeHtml(status)}</b></div>`
 }
 
 /* ===============================
@@ -523,6 +529,7 @@ async function doAttendance(eventId, status){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena nahoře"); return }
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
+    invalidateCache("eventdetail", eventId)
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
@@ -536,6 +543,7 @@ async function doAttendanceWithReason(eventId, status){
   if(reason === null) return
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
+    invalidateCache("eventdetail", eventId)
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
@@ -555,7 +563,7 @@ async function openEventForm(id){
 
   if(id){
     try{
-      const data = await api("eventdetail", {id})
+      const data = await cachedApi("eventdetail", {id})
       event = data.event || {}
     }catch(e){
       setError("Chyba při načítání akce")
@@ -564,8 +572,6 @@ async function openEventForm(id){
   }
 
   const isEdit = !!id
-
-  // formátuj datum pro input type=date
   const dateVal = event.DATE
     ? new Date(event.DATE).toISOString().substring(0,10)
     : ""
@@ -573,7 +579,6 @@ async function openEventForm(id){
   let html = `
   <button onclick="renderEvents()" style="margin-bottom:12px">← Zpět</button>
   <h2>${isEdit ? "Upravit akci" : "Nová akce"}</h2>
-
   <div class="card">
     <label>Název<br>
       <input id="fName" value="${escapeHtml(event.NAME || "")}" placeholder="Název akce">
@@ -627,10 +632,13 @@ async function saveEvent(id){
   try{
     if(id){
       await api("updateevent", {id, name, date, start, end, place, note, status})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
       alert("Akce upravena")
       openEvent(id)
     }else{
       const result = await api("addevent", {name, date, start, end, place, note, status})
+      invalidateCache("events")
       alert("Akce vytvořena, vygenerováno " + result.attendanceRows + " řádků docházky")
       renderEvents()
     }
@@ -641,17 +649,16 @@ async function saveEvent(id){
 }
 
 async function deleteEvent(id){
-
   if(!confirm("Opravdu smazat tuto akci?")) return
-
   try{
     await api("deleteevent", {id})
+    invalidateCache("events")
+    invalidateCache("eventdetail", id)
     alert("Akce smazána")
     renderEvents()
   }catch(err){
     alert("Chyba při mazání: " + (err?.message || err))
   }
-
 }
 
 /* ===============================
@@ -662,6 +669,7 @@ async function saveNote(eventId){
   const note = document.getElementById("eventNote")?.value ?? ""
   try{
     await api("updatenote", {id: eventId, note})
+    invalidateCache("eventdetail", eventId)
     alert("Poznámka uložena")
   }catch(err){
     alert("Chyba: " + (err?.message || err))
@@ -675,7 +683,7 @@ async function saveNote(eventId){
 async function renderPayments(){
   setLoading()
   try{
-    const data = await api("payments")
+    const data = await cachedApi("payments")
     let html = "<h2>Platby</h2>"
     if(!Array.isArray(data) || !data.length){
       html += "<div class='card'>Žádné platby</div>"
@@ -697,8 +705,8 @@ async function renderPayments(){
 async function renderEnergy(){
   setLoading()
   try{
-    const events  = await api("events")
-    const now     = new Date()
+    const events   = await cachedApi("events")
+    const now      = new Date()
     const upcoming = events
       .filter(e => new Date(e.DATE) >= now)
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
@@ -726,7 +734,7 @@ async function renderEnergy(){
       <button onclick="saveEnergy()">Uložit</button>
     </div>`
 
-    const history = await api("energy")
+    const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
       html += "<h3>Historie</h3>"
       history.reverse().forEach(r => {
@@ -751,6 +759,7 @@ async function saveEnergy(){
   if(!end)    { alert("Zadej stav na konci"); return }
   try{
     await api("setenergy", {event: eventId, start, end})
+    invalidateCache("energy")
     renderEnergy()
   }catch(err){
     alert("Chyba při ukládání: " + (err?.message || err))
@@ -761,44 +770,38 @@ async function saveEnergy(){
    HEATMAPA
 ================================ */
 
-let HEATMAP_MONTH = null // null = aktuální měsíc
+let HEATMAP_MONTH = null
 
 async function renderHeatmap(){
 
   try{
 
-    const data    = await api("heatmap")
+    const data    = await cachedApi("heatmap")
     const events  = data.events  || []
     const members = data.members || []
     const rows    = data.rows    || []
 
     if(!events.length || !members.length) return ""
 
-    // inicializuj měsíc na aktuální
     if(!HEATMAP_MONTH){
       const now = new Date()
       HEATMAP_MONTH = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2,"0")
     }
 
-    // filtr akcí podle vybraného měsíce
     const [year, month] = HEATMAP_MONTH.split("-").map(Number)
     const filtered = events.filter(e => {
       const d = new Date(e.DATE)
       return d.getFullYear() === year && d.getMonth() + 1 === month
     })
 
-    // název měsíce
     const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
 
-    // lookup
     const lookup = {}
     rows.forEach(r => {
       lookup[r.ID_AKCE + "_" + r.EMAIL] = r.STATUS || ""
     })
 
-    let html = `<h3 class="season-title"> Docházka skupiny</h3>`
-
-    // navigace měsíců
+    let html = `<h3 class="season-title">Docházka skupiny</h3>`
     html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <button onclick="heatmapPrev()" style="padding:6px 12px">‹</button>
       <span style="flex:1;text-align:center;font-weight:600">${escapeHtml(monthName)}</span>
@@ -811,8 +814,7 @@ async function renderHeatmap(){
     }
 
     html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
-    html += `<table class="heatmap">`
-    html += `<thead><tr><th class="heatmap-event-col"></th>`
+    html += `<table class="heatmap"><thead><tr><th class="heatmap-event-col"></th>`
 
     members.forEach(m => {
       const initials = m.NAME.split(" ").map(n => n[0]).join("")
@@ -823,7 +825,6 @@ async function renderHeatmap(){
     filtered.forEach(e => {
       html += `<tr>`
       html += `<td class="heatmap-label">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
-
       members.forEach(m => {
         const status = lookup[e.ID + "_" + m.EMAIL] || ""
         const color  = status === "Přijdu"   ? "#d4f5e2" :
@@ -834,7 +835,6 @@ async function renderHeatmap(){
                        status === "Nepřijdu" ? "✗" : ""
         html += `<td class="heatmap-cell" style="background:${color}" title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}">${icon}</td>`
       })
-
       html += `</tr>`
     })
 
