@@ -473,7 +473,16 @@ html += `
 </div>`
     })
     html += "</div>"
-
+     
+// admin tlačítka
+     
+    if(MEMBER_ROLE === "ADMIN"){
+      html += `<hr>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="openEventForm('${id}')" style="flex:1"> Upravit</button>
+        <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">🗑 Smazat</button>
+      </div>`
+    }
     container().innerHTML = html
 
   }catch(err){
@@ -532,6 +541,117 @@ async function doAttendanceWithReason(eventId, status){
   }catch(err){
     alert("Chyba při ukládání docházky: " + (err?.message || err))
   }
+}
+
+/* ===============================
+   SPRÁVA AKCÍ (ADMIN)
+================================ */
+
+async function openEventForm(id){
+
+  setLoading()
+
+  let event = {}
+
+  if(id){
+    try{
+      const data = await api("eventdetail", {id})
+      event = data.event || {}
+    }catch(e){
+      setError("Chyba při načítání akce")
+      return
+    }
+  }
+
+  const isEdit = !!id
+
+  // formátuj datum pro input type=date
+  const dateVal = event.DATE
+    ? new Date(event.DATE).toISOString().substring(0,10)
+    : ""
+
+  let html = `
+  <button onclick="renderEvents()" style="margin-bottom:12px">← Zpět</button>
+  <h2>${isEdit ? "Upravit akci" : "Nová akce"}</h2>
+
+  <div class="card">
+    <label>Název<br>
+      <input id="fName" value="${escapeHtml(event.NAME || "")}" placeholder="Název akce">
+    </label>
+    <label>Datum<br>
+      <input id="fDate" type="date" value="${dateVal}">
+    </label>
+    <label>Čas začátku<br>
+      <input id="fStart" type="time" value="${escapeHtml(event.START || "")}">
+    </label>
+    <label>Čas konce<br>
+      <input id="fEnd" type="time" value="${escapeHtml(event.END || "")}">
+    </label>
+    <label>Místo<br>
+      <input id="fPlace" value="${escapeHtml(event.PLACE || "")}" placeholder="Místo konání">
+    </label>
+    <label>Poznámka<br>
+      <input id="fNote" value="${escapeHtml(event.NOTE || "")}" placeholder="Volitelná poznámka">
+    </label>
+    <label>Status<br>
+      <select id="fStatus">
+        <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
+        <option value="Proběhlá"  ${event.STATUS === "Proběhlá"  ? "selected" : ""}>Proběhlá</option>
+      </select>
+    </label>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="flex:1;background:#eaf7ef;color:#1a7a3a">
+        ${isEdit ? "Uložit změny" : "Vytvořit akci"}
+      </button>
+      <button onclick="renderEvents()" style="flex:1">Zrušit</button>
+    </div>
+  </div>`
+
+  container().innerHTML = html
+
+}
+
+async function saveEvent(id){
+
+  const name   = document.getElementById("fName")?.value.trim()
+  const date   = document.getElementById("fDate")?.value
+  const start  = document.getElementById("fStart")?.value
+  const end    = document.getElementById("fEnd")?.value
+  const place  = document.getElementById("fPlace")?.value.trim()
+  const note   = document.getElementById("fNote")?.value.trim()
+  const status = document.getElementById("fStatus")?.value
+
+  if(!name){ alert("Zadej název akce"); return }
+  if(!date){ alert("Zadej datum"); return }
+
+  try{
+    if(id){
+      await api("updateevent", {id, name, date, start, end, place, note, status})
+      alert("Akce upravena")
+      openEvent(id)
+    }else{
+      const result = await api("addevent", {name, date, start, end, place, note, status})
+      alert("Akce vytvořena, vygenerováno " + result.attendanceRows + " řádků docházky")
+      renderEvents()
+    }
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+
+}
+
+async function deleteEvent(id){
+
+  if(!confirm("Opravdu smazat tuto akci?")) return
+
+  try{
+    await api("deleteevent", {id})
+    alert("Akce smazána")
+    renderEvents()
+  }catch(err){
+    alert("Chyba při mazání: " + (err?.message || err))
+  }
+
 }
 
 /* ===============================
