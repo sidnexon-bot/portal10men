@@ -316,20 +316,38 @@ async function renderDashboard(){
     </div>`
 
     // --- KONCERTY JARO/LÉTO ---
-    html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
-    if(spring.length){
-      spring.forEach(e => { html += concertRow(e, now) })
-    }else{
-      html += "<p class='notice'>Žádné koncerty</p>"
-    }
+html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
+if(spring.length){
+  html += `<div class="card" style="padding:0">`
+  spring.forEach((e, i) => {
+    const past = new Date(e.DATE) < now
+    const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+      <b style="font-size:15px">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+      <span class="small" style="text-align:right;margin-left:12px;flex-shrink:0">${formatDate(e.DATE)}${e.PLACE ? "<br>" + escapeHtml(e.PLACE) : ""}</span>
+    </div>`
+  })
+  html += `</div>`
+}else{
+  html += "<p class='notice'>Žádné koncerty</p>"
+}
 
-    // --- KONCERTY PODZIM/ZIMA ---
-    html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
-    if(autumn.length){
-      autumn.forEach(e => { html += concertRow(e, now) })
-    }else{
-      html += "<p class='notice'>Žádné koncerty</p>"
-    }
+// --- KONCERTY PODZIM/ZIMA ---
+html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
+if(autumn.length){
+  html += `<div class="card" style="padding:0">`
+  autumn.forEach((e, i) => {
+    const past = new Date(e.DATE) < now
+    const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+      <b style="font-size:15px">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+      <span class="small" style="text-align:right;margin-left:12px;flex-shrink:0">${formatDate(e.DATE)}${e.PLACE ? "<br>" + escapeHtml(e.PLACE) : ""}</span>
+    </div>`
+  })
+  html += `</div>`
+}else{
+  html += "<p class='notice'>Žádné koncerty</p>"
+}
 
     const heatmapHtml = await renderHeatmap()
     html += `<div id="heatmap-container">${heatmapHtml}</div>`
