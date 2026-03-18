@@ -181,8 +181,10 @@ function closeMemberModal(){
 function selectMember(m){
   MEMBER_EMAIL = m.EMAIL
   MEMBER_NAME  = m.NAME
+  MEMBER_ROLE  = m.ROLE || "MEMBER"
   localStorage.setItem("memberEmail", MEMBER_EMAIL)
   localStorage.setItem("memberName",  MEMBER_NAME)
+  localStorage.setItem("memberRole",  MEMBER_ROLE)
 
   const profileBtn = document.getElementById("profileBtn")
   if(profileBtn) profileBtn.textContent = getInitials(MEMBER_NAME)
