@@ -585,19 +585,21 @@ async function doAttendanceWithReason(eventId, status){
 
 function addSwipe(el, eventId){
 
-  let startX = 0
-  let startY = 0
-  let currentX = 0
+  let startX     = 0
+  let startY     = 0
+  let currentX   = 0
   let isDragging = false
   let isHorizontal = null
+  let moved      = false
   const THRESHOLD = 80
 
   el.addEventListener("touchstart", e => {
-    startX   = e.touches[0].clientX
-    startY   = e.touches[0].clientY
-    currentX = 0
+    startX       = e.touches[0].clientX
+    startY       = e.touches[0].clientY
+    currentX     = 0
     isDragging   = true
     isHorizontal = null
+    moved        = false
     el.style.transition = "none"
   }, {passive: true})
 
@@ -607,7 +609,6 @@ function addSwipe(el, eventId){
     const dx = e.touches[0].clientX - startX
     const dy = e.touches[0].clientY - startY
 
-    // rozhodnutí jestli je gesto horizontální nebo vertikální
     if(isHorizontal === null){
       if(Math.abs(dx) > Math.abs(dy) + 5){
         isHorizontal = true
@@ -622,29 +623,26 @@ function addSwipe(el, eventId){
 
     e.preventDefault()
     currentX = dx
+    if(Math.abs(dx) > 8) moved = true
 
-    // posun karty
     el.style.transform = `translateX(${currentX}px)`
 
-    // barevný podklad
     const bg = el.parentElement.querySelector(".swipe-bg")
     if(bg){
       if(currentX > 20){
         bg.style.background = "#d4f5e2"
         bg.textContent = "✓ Přijdu"
         bg.style.color = "#1a7a3a"
-        bg.style.left = "0"
-        bg.style.right = "auto"
-        bg.style.textAlign = "left"
+        bg.style.justifyContent = "flex-start"
         bg.style.paddingLeft = "20px"
+        bg.style.paddingRight = ""
       }else if(currentX < -20){
         bg.style.background = "#fde8e8"
         bg.textContent = "✗ Nepřijdu"
         bg.style.color = "#c00"
-        bg.style.right = "0"
-        bg.style.left = "auto"
-        bg.style.textAlign = "right"
+        bg.style.justifyContent = "flex-end"
         bg.style.paddingRight = "20px"
+        bg.style.paddingLeft = ""
       }else{
         bg.style.background = "transparent"
         bg.textContent = ""
@@ -654,30 +652,34 @@ function addSwipe(el, eventId){
   }, {passive: false})
 
   el.addEventListener("touchend", () => {
-    if(!isDragging || !isHorizontal){
+    if(!isDragging){
       isDragging = false
       return
     }
     isDragging = false
 
+    // pokud se karta skoro nepohnula = tap = otevři detail
+    if(!moved || Math.abs(currentX) < 8){
+      el.style.transform = ""
+      openEvent(eventId)
+      return
+    }
+
     el.style.transition = "transform 0.2s ease"
 
     if(currentX > THRESHOLD){
-      // swipe doprava = Přijdu
       el.style.transform = `translateX(110%)`
       setTimeout(() => {
         el.style.transform = ""
         confirmSwipe(eventId, "Přijdu", el)
       }, 200)
     }else if(currentX < -THRESHOLD){
-      // swipe doleva = Nepřijdu
       el.style.transform = `translateX(-110%)`
       setTimeout(() => {
         el.style.transform = ""
-        confirmSwipe(eventId, "Nepřijdu", el)
+        confirmSwipeWithReason(eventId, el)
       }, 200)
     }else{
-      // vrátit zpět
       el.style.transform = ""
       const bg = el.parentElement.querySelector(".swipe-bg")
       if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
@@ -693,17 +695,54 @@ async function confirmSwipe(eventId, status, el){
     return
   }
 
-  // vizuální potvrzení
   const bg = el.parentElement.querySelector(".swipe-bg")
   if(bg){
-    bg.style.background = status === "Přijdu" ? "#d4f5e2" : "#fde8e8"
-    bg.textContent = status === "Přijdu" ? "✓ Uloženo" : "✗ Uloženo"
+    bg.style.background = "#d4f5e2"
+    bg.textContent = "✓ Uloženo"
+    bg.style.color = "#1a7a3a"
+    bg.style.justifyContent = "center"
   }
 
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
-    // krátká pauza pak reset
+    setTimeout(() => {
+      if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
+    }, 1000)
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+
+}
+
+async function confirmSwipeWithReason(eventId, el){
+
+  if(!MEMBER_EMAIL){
+    alert("Nejdřív vyber člena")
+    return
+  }
+
+  const reason = prompt("Důvod nepřítomnosti:")
+  if(reason === null){
+    // zrušeno — vrátit kartu
+    el.style.transition = "transform 0.2s ease"
+    el.style.transform = ""
+    const bg = el.parentElement.querySelector(".swipe-bg")
+    if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
+    return
+  }
+
+  const bg = el.parentElement.querySelector(".swipe-bg")
+  if(bg){
+    bg.style.background = "#fde8e8"
+    bg.textContent = "✗ Uloženo"
+    bg.style.color = "#c00"
+    bg.style.justifyContent = "center"
+  }
+
+  try{
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
+    invalidateCache("eventdetail", eventId)
     setTimeout(() => {
       if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
     }, 1000)
