@@ -585,13 +585,14 @@ async function doAttendanceWithReason(eventId, status){
 
 function addSwipe(el, eventId){
 
-  let startX     = 0
-  let startY     = 0
-  let currentX   = 0
-  let isDragging = false
+  let startX       = 0
+  let startY       = 0
+  let endY         = 0
+  let currentX     = 0
+  let isDragging   = false
   let isHorizontal = null
-  let moved      = false
-  const THRESHOLD = 80
+  let moved        = false
+  const THRESHOLD  = 80
 
   el.addEventListener("touchstart", e => {
     startX       = e.touches[0].clientX
@@ -651,28 +652,28 @@ function addSwipe(el, eventId){
 
   }, {passive: false})
 
-  el.addEventListener("touchend", () => {
+  el.addEventListener("touchend", e => {
     if(!isDragging){
       isDragging = false
       return
     }
     isDragging = false
 
-    // spočítej celkový pohyb včetně vertikálního
-const totalMove = Math.abs(currentX) + Math.abs(e.changedTouches[0].clientY - startY)
+    endY = e.changedTouches[0].clientY
+    const totalMove = Math.abs(currentX) + Math.abs(endY - startY)
 
-// pokud byl celkový pohyb malý = tap = otevři detail
-if(!moved && totalMove < 12){
-  el.style.transform = ""
-  openEvent(eventId)
-  return
-}
+    // tap = malý pohyb = otevři detail
+    if(!moved && totalMove < 12){
+      el.style.transform = ""
+      openEvent(eventId)
+      return
+    }
 
-// pokud byl pohyb hlavně vertikální = scroll = ignoruj
-if(!isHorizontal){
-  el.style.transform = ""
-  return
-}
+    // scroll = vertikální pohyb = ignoruj
+    if(!isHorizontal){
+      el.style.transform = ""
+      return
+    }
 
     el.style.transition = "transform 0.2s ease"
 
