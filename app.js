@@ -594,6 +594,10 @@ function addSwipe(el, eventId){
   let moved        = false
   const THRESHOLD  = 80
 
+  el.addEventListener("click", () => {
+    if(!moved) openEvent(eventId)
+  })
+
   el.addEventListener("touchstart", e => {
     startX       = e.touches[0].clientX
     startY       = e.touches[0].clientY
@@ -662,14 +666,11 @@ function addSwipe(el, eventId){
     endY = e.changedTouches[0].clientY
     const totalMove = Math.abs(currentX) + Math.abs(endY - startY)
 
-    // tap = malý pohyb = otevři detail
     if(!moved && totalMove < 12){
       el.style.transform = ""
-      openEvent(eventId)
       return
     }
 
-    // scroll = vertikální pohyb = ignoruj
     if(!isHorizontal){
       el.style.transform = ""
       return
