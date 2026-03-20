@@ -636,17 +636,16 @@ select:focus{
   }
 }
 
-.card, .swipe-wrapper, .concert-row, .season-title {
+.card, .concert-row, .season-title {
   animation: fadeInUp 0.3s ease both;
 }
 
-/* postupné zpoždění pro každou kartu */
-.card:nth-child(1), .swipe-wrapper:nth-child(1) { animation-delay: 0.05s }
-.card:nth-child(2), .swipe-wrapper:nth-child(2) { animation-delay: 0.10s }
-.card:nth-child(3), .swipe-wrapper:nth-child(3) { animation-delay: 0.15s }
-.card:nth-child(4), .swipe-wrapper:nth-child(4) { animation-delay: 0.20s }
-.card:nth-child(5), .swipe-wrapper:nth-child(5) { animation-delay: 0.25s }
-.card:nth-child(6), .swipe-wrapper:nth-child(6) { animation-delay: 0.30s }
-.card:nth-child(7), .swipe-wrapper:nth-child(7) { animation-delay: 0.35s }
-.card:nth-child(8), .swipe-wrapper:nth-child(8) { animation-delay: 0.40s }
-
+.swipe-card {
+  animation: fadeInUp 0.3s ease both;
+  position: relative;
+  margin-bottom: 0;
+  border-radius: 18px;
+  cursor: pointer;
+  touch-action: pan-y;
+  background: #fff;
+}
