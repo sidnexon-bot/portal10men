@@ -626,6 +626,11 @@ function addSwipe(el, eventId){
 
     if(!isHorizontal) return
 
+     console.log("touchmove horizontal", currentX)
+const bg = el.parentElement.querySelector(".swipe-bg")
+console.log("bg element:", bg)
+
+
     e.preventDefault()
     currentX = dx
     if(Math.abs(dx) > 8) moved = true
