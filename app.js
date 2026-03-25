@@ -386,48 +386,103 @@ async function renderEvents(){
     }
 
     events.sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-    const now      = new Date()
-    const filtered = events.filter(e => new Date(e.DATE) >= now)
 
-    let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    const now = new Date()
+    now.setHours(0,0,0,0)
+
+    // najdi aktuální měsíc nebo měsíc nejbližší akce
+    if(!window.EVENTS_MONTH){
+      const nextEvent = events.find(e => {
+        const d = new Date(e.DATE)
+        d.setHours(0,0,0,0)
+        return d >= now
+      })
+      const ref = nextEvent ? new Date(nextEvent.DATE) : now
+      window.EVENTS_MONTH = ref.getFullYear() + "-" + String(ref.getMonth() + 1).padStart(2,"0")
+    }
+
+    const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
+    const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
+
+    // filtr akcí pro vybraný měsíc
+    const filtered = events.filter(e => {
+      const d = new Date(e.DATE)
+      return d.getFullYear() === year && d.getMonth() + 1 === month
+    })
+
+    // najdi nejbližší akci globálně
+    const nextEvent = events.find(e => {
+      const d = new Date(e.DATE)
+      d.setHours(0,0,0,0)
+      return d >= now
+    })
+
+    let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0">Akce</h2>
-      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="openEventForm()">+ Přidat akci</button>` : ""}
+      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="openEventForm()">+ Přidat</button>` : ""}
+    </div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
+      <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
+      <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
     </div>`
 
     if(!filtered.length){
-      html += "<p class='notice'>Žádné nadcházející akce</p>"
+      html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
       container().innerHTML = html
       return
     }
 
     filtered.forEach(e => {
-  html += `<div class="swipe-wrapper">
-    <div class="swipe-bg"></div>
-    <div class="card swipe-card" data-id="${escapeHtml(e.ID)}">
-      <b>${escapeHtml(e.NAME)}</b><br>
-      <span class="small">
-        ${formatDate(e.DATE)}
-        ${e.START ? "· " + formatTime(e.START) : ""}
-        ${e.END   ? "– " + formatTime(e.END)   : ""}
-      </span><br>
-      <span class="small">${escapeHtml(e.PLACE)}</span>
-    </div>
-  </div>`
-})
+      const d = new Date(e.DATE)
+      d.setHours(0,0,0,0)
+      const isPast     = d < now
+      const isNext     = nextEvent && e.ID === nextEvent.ID
+      const opacity    = isPast ? "0.4" : "1"
+      const highlight  = isNext ? "border-left:3px solid #007aff;" : ""
 
-container().innerHTML = html
+      html += `<div class="swipe-wrapper" style="opacity:${opacity}">
+        <div class="swipe-bg"></div>
+        <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
+          ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
+          <b>${escapeHtml(e.NAME)}</b><br>
+          <span class="small">
+            ${formatDate(e.DATE)}
+            ${e.START ? "· " + formatTime(e.START) : ""}
+            ${e.END   ? "– " + formatTime(e.END)   : ""}
+          </span><br>
+          <span class="small">${escapeHtml(e.PLACE)}</span>
+        </div>
+      </div>`
+    })
 
-// přidej swipe na každou kartu
-document.querySelectorAll(".swipe-card").forEach(card => {
-  const id = card.dataset.id
-  addSwipe(card, id)
-})
+    container().innerHTML = html
 
+    document.querySelectorAll(".swipe-card").forEach(card => {
+      const id = card.dataset.id
+      addSwipe(card, id)
+    })
 
   }catch(err){
     setError("Chyba při načítání akcí: " + (err?.message || err))
   }
 
+}
+
+function eventsMonthPrev(){
+  const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
+  const d = new Date(year, month - 2, 1)
+  window.EVENTS_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  renderEvents()
+}
+
+function eventsMonthNext(){
+  const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
+  const d = new Date(year, month, 1)
+  window.EVENTS_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  renderEvents()
 }
 
 /* ===============================
