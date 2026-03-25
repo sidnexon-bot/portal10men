@@ -177,7 +177,11 @@ async function start(){
     profileBtn.onclick = () => openMemberModal()
 
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
-    document.getElementById("btnEvents").onclick    = () => { setActiveTab("events");    renderEvents() }
+    document.getElementById("btnEvents").onclick = () => {
+  setActiveTab("events")
+  window.EVENTS_MONTH = null
+  renderEvents()
+}
     document.getElementById("btnPayments").onclick  = () => { setActiveTab("payments");  renderPayments() }
     document.getElementById("btnEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy() }
 
