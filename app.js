@@ -448,18 +448,21 @@ async function renderEvents(){
       const highlight  = isNext ? "border-left:3px solid #007aff;" : ""
 
       html += `<div class="swipe-wrapper" style="opacity:${opacity}">
-        <div class="swipe-bg"></div>
-        <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
-          ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
-          <b>${escapeHtml(e.NAME)}</b><br>
-          <span class="small">
-            ${formatDate(e.DATE)}
-            ${e.START ? "· " + formatTime(e.START) : ""}
-            ${e.END   ? "– " + formatTime(e.END)   : ""}
-          </span><br>
-          <span class="small">${escapeHtml(e.PLACE)}</span>
-        </div>
-      </div>`
+  <div class="swipe-bg">
+    <span class="swipe-bg-left">✓ Přijdu</span>
+    <span class="swipe-bg-right">✗ Nepřijdu</span>
+  </div>
+  <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
+    ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
+    <b>${escapeHtml(e.NAME)}</b><br>
+    <span class="small">
+      ${formatDate(e.DATE)}
+      ${e.START ? "· " + formatTime(e.START) : ""}
+      ${e.END   ? "– " + formatTime(e.END)   : ""}
+    </span><br>
+    <span class="small">${escapeHtml(e.PLACE)}</span>
+  </div>
+</div>`
     })
 
     container().innerHTML = html
@@ -691,26 +694,15 @@ function addSwipe(el, eventId){
 
     el.style.transform = `translateX(${currentX}px)`
 
-    let bg = el.parentElement.querySelector(".swipe-bg")
-    if(bg){
-      if(currentX > 20){
-        bg.style.background = "#d4f5e2"
-        bg.textContent = "✓ Přijdu"
-        bg.style.color = "#1a7a3a"
-        bg.style.justifyContent = "flex-start"
-        bg.style.paddingLeft = "20px"
-        bg.style.paddingRight = ""
-      }else if(currentX < -20){
-        bg.style.background = "#fde8e8"
-        bg.textContent = "✗ Nepřijdu"
-        bg.style.color = "#c00"
-        bg.style.justifyContent = "flex-end"
-        bg.style.paddingRight = "20px"
-        bg.style.paddingLeft = ""
-      }else{
-        bg.style.background = "transparent"
-        bg.textContent = ""
-      }
+    let wrapper = el.parentElement
+    if(currentX > 20){
+      wrapper.classList.add("swiping-right")
+      wrapper.classList.remove("swiping-left")
+    }else if(currentX < -20){
+      wrapper.classList.add("swiping-left")
+      wrapper.classList.remove("swiping-right")
+    }else{
+      wrapper.classList.remove("swiping-right", "swiping-left")
     }
 
   }, {passive: false})
@@ -727,11 +719,13 @@ function addSwipe(el, eventId){
 
     if(!moved && totalMove < 12){
       el.style.transform = ""
+      el.parentElement.classList.remove("swiping-right", "swiping-left")
       return
     }
 
     if(!isHorizontal){
       el.style.transform = ""
+      el.parentElement.classList.remove("swiping-right", "swiping-left")
       return
     }
 
@@ -741,84 +735,50 @@ function addSwipe(el, eventId){
       el.style.transform = `translateX(110%)`
       setTimeout(() => {
         el.style.transform = ""
+        el.parentElement.classList.remove("swiping-right", "swiping-left")
         confirmSwipe(eventId, "Přijdu", el)
       }, 200)
     }else if(currentX < -THRESHOLD){
       el.style.transform = `translateX(-110%)`
       setTimeout(() => {
         el.style.transform = ""
+        el.parentElement.classList.remove("swiping-right", "swiping-left")
         confirmSwipeWithReason(eventId, el)
       }, 200)
     }else{
       el.style.transform = ""
-      let bg = el.parentElement.querySelector(".swipe-bg")
-      if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
+      el.parentElement.classList.remove("swiping-right", "swiping-left")
     }
   })
 
 }
 
 async function confirmSwipe(eventId, status, el){
-
-  if(!MEMBER_EMAIL){
-    alert("Nejdřív vyber člena")
-    return
-  }
-
-  let bg = el.parentElement.querySelector(".swipe-bg")
-  if(bg){
-    bg.style.background = "#d4f5e2"
-    bg.textContent = "✓ Uloženo"
-    bg.style.color = "#1a7a3a"
-    bg.style.justifyContent = "center"
-  }
-
+  if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
-    setTimeout(() => {
-      if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
-    }, 1000)
   }catch(err){
     alert("Chyba: " + (err?.message || err))
   }
-
 }
 
 async function confirmSwipeWithReason(eventId, el){
-
-  if(!MEMBER_EMAIL){
-    alert("Nejdřív vyber člena")
-    return
-  }
+  if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
 
   const reason = prompt("Důvod nepřítomnosti:")
   if(reason === null){
     el.style.transition = "transform 0.2s ease"
     el.style.transform = ""
-    let bg = el.parentElement.querySelector(".swipe-bg")
-    if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
     return
-  }
-
-  let bg = el.parentElement.querySelector(".swipe-bg")
-  if(bg){
-    bg.style.background = "#fde8e8"
-    bg.textContent = "✗ Uloženo"
-    bg.style.color = "#c00"
-    bg.style.justifyContent = "center"
   }
 
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
     invalidateCache("eventdetail", eventId)
-    setTimeout(() => {
-      if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
-    }, 1000)
   }catch(err){
     alert("Chyba: " + (err?.message || err))
   }
-
 }
 
 /* ===============================
