@@ -239,13 +239,51 @@ h3{
 
 .swipe-bg{
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
-  font-weight: 700;
-  font-size: 15px;
   border-radius: 18px;
   transition: background 0.1s;
+  z-index: 0;
+}
+
+.swipe-bg-left{
+  position: absolute;
+  left: 20px;
+  color: #1a7a3a;
+  font-weight: 700;
+  font-size: 15px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.swipe-bg-right{
+  position: absolute;
+  right: 20px;
+  color: #c00;
+  font-weight: 700;
+  font-size: 15px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.swipe-wrapper.swiping-right{
+  background: #d4f5e2;
+}
+
+.swipe-wrapper.swiping-right .swipe-bg-left{
+  opacity: 1;
+}
+
+.swipe-wrapper.swiping-left{
+  background: #fde8e8;
+}
+
+.swipe-wrapper.swiping-left .swipe-bg-right{
+  opacity: 1;
 }
 
 /* BUTTONS */
@@ -639,4 +677,5 @@ select:focus{
   cursor: pointer;
   touch-action: pan-y;
   background: #fff;
+  z-index: 1;
 }
