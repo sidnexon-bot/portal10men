@@ -232,9 +232,11 @@ h3{
 
 .swipe-wrapper{
   position: relative;
-  overflow: hidden;
   border-radius: 18px;
   margin-bottom: 12px;
+  overflow: hidden;
+  background: transparent;
+  transition: background 0.1s;
 }
 
 .swipe-bg{
@@ -246,8 +248,7 @@ h3{
   display: flex;
   align-items: center;
   border-radius: 18px;
-  transition: background 0.1s;
-  z-index: 0;
+  pointer-events: none;
 }
 
 .swipe-bg-left{
@@ -284,6 +285,16 @@ h3{
 
 .swipe-wrapper.swiping-left .swipe-bg-right{
   opacity: 1;
+}
+
+.swipe-card{
+  position: relative;
+  margin-bottom: 0;
+  border-radius: 18px;
+  cursor: pointer;
+  touch-action: pan-y;
+  background: #fff;
+  will-change: transform;
 }
 
 /* BUTTONS */
@@ -667,15 +678,4 @@ select:focus{
 
 .card, .concert-row, .season-title {
   animation: fadeInUp 0.3s ease both;
-}
-
-.swipe-card {
-  animation: fadeInUp 0.3s ease both;
-  position: relative;
-  margin-bottom: 0;
-  border-radius: 18px;
-  cursor: pointer;
-  touch-action: pan-y;
-  background: #fff;
-  z-index: 1;
 }
