@@ -626,15 +626,13 @@ function addSwipe(el, eventId){
 
     if(!isHorizontal) return
 
-const bg = el.parentElement.querySelector(".swipe-bg")
-
     e.preventDefault()
     currentX = dx
     if(Math.abs(dx) > 8) moved = true
 
     el.style.transform = `translateX(${currentX}px)`
 
-    const bg = el.parentElement.querySelector(".swipe-bg")
+    let bg = el.parentElement.querySelector(".swipe-bg")
     if(bg){
       if(currentX > 20){
         bg.style.background = "#d4f5e2"
@@ -694,7 +692,7 @@ const bg = el.parentElement.querySelector(".swipe-bg")
       }, 200)
     }else{
       el.style.transform = ""
-      const bg = el.parentElement.querySelector(".swipe-bg")
+      let bg = el.parentElement.querySelector(".swipe-bg")
       if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
     }
   })
@@ -708,7 +706,7 @@ async function confirmSwipe(eventId, status, el){
     return
   }
 
-  const bg = el.parentElement.querySelector(".swipe-bg")
+  let bg = el.parentElement.querySelector(".swipe-bg")
   if(bg){
     bg.style.background = "#d4f5e2"
     bg.textContent = "✓ Uloženo"
@@ -737,15 +735,14 @@ async function confirmSwipeWithReason(eventId, el){
 
   const reason = prompt("Důvod nepřítomnosti:")
   if(reason === null){
-    // zrušeno — vrátit kartu
     el.style.transition = "transform 0.2s ease"
     el.style.transform = ""
-    const bg = el.parentElement.querySelector(".swipe-bg")
+    let bg = el.parentElement.querySelector(".swipe-bg")
     if(bg){ bg.style.background = "transparent"; bg.textContent = "" }
     return
   }
 
-  const bg = el.parentElement.querySelector(".swipe-bg")
+  let bg = el.parentElement.querySelector(".swipe-bg")
   if(bg){
     bg.style.background = "#fde8e8"
     bg.textContent = "✗ Uloženo"
