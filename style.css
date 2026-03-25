@@ -675,7 +675,3 @@ select:focus{
     transform: translateY(0);
   }
 }
-
-.card, .concert-row, .season-title {
-  animation: fadeInUp 0.3s ease both;
-}
