@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>10men Portal</title>
+  <title>10base</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="apple-touch-icon" href="icon.png">
+  <script src="auth.js"></script>
 </head>
 <body>
-
+<script>
+  const currentUser = Auth.require(['admin', 'member', 'art']);
+  // currentUser.role obsahuje roli – použij pro podmíněné zobrazení prvků
+</script>
   <header>
     <div class="header-inner">
       <div class="header-row">
         <div>
-          <h1>10men Portál</h1>
+          <h1>10base</h1>
           <div class="subtitle">Powered by 10menogram</div>
         </div>
         <div id="profileBtn" class="profile-btn">ZV</div>
