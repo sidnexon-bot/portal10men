@@ -6,6 +6,7 @@ let MEMBER_EMAIL = null
 let MEMBER_NAME  = null
 let ACTIVE_TAB   = "dashboard"
 let MEMBER_ROLE  = "MEMBER"
+let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
@@ -20,15 +21,37 @@ function initMemberFromSession(){
   MEMBER_EMAIL = user.email;
   MEMBER_NAME  = user.name;
   MEMBER_ROLE  = (user.role || 'member').toUpperCase();
+  AUTH_ROLE    = MEMBER_ROLE; // zapamatuj původní roli
 
-  const profileBtn = document.getElementById("profileBtn")
-  if(profileBtn){
-    profileBtn.textContent = getInitials(MEMBER_NAME)
-    // Pouze admin má klikatelný přepínač člena
-    profileBtn.style.cursor = MEMBER_ROLE === 'ADMIN' ? 'pointer' : 'default'
-  }
+  updateProfileBtn();
   return true;
 }
+
+function updateProfileBtn(){
+  const profileBtn = document.getElementById("profileBtn")
+  if(profileBtn) profileBtn.textContent = getInitials(MEMBER_NAME)
+
+  // Naplň menu daty přihlášeného (vždy původní user ze session)
+  const user = JSON.parse(sessionStorage.getItem('10base_user') || 'null');
+  if(user){
+    document.getElementById("profileMenuName").textContent  = user.name;
+    document.getElementById("profileMenuEmail").textContent = user.email;
+    document.getElementById("profileMenuRole").textContent  = user.role;
+    document.getElementById("profileMenuVoice").textContent  = user.voice;
+  }
+
+  // Přepínač jen pro admina
+  const switchBtn = document.getElementById("profileMenuSwitchBtn")
+  if(switchBtn){
+    if(AUTH_ROLE === 'ADMIN'){
+      switchBtn.classList.remove('hidden');
+      switchBtn.onclick = () => { closeProfileMenu(); openMemberModal(); }
+    } else {
+      switchBtn.classList.add('hidden');
+    }
+  }
+}
+
 
 /* ===============================
    CACHE
@@ -173,6 +196,11 @@ function iconQuestion(){
   return `<svg viewBox="0 0 24 24"><path d="M12 18h.01M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2-3 4"/></svg>`
 }
 
+function closeProfileMenu(){
+  const menu = document.getElementById("profileMenu");
+  if(menu) menu.classList.add("hidden");
+}
+
 /* ===============================
    START
 ================================ */
@@ -197,8 +225,18 @@ async function start(){
 
     // Pouze admin může přepínat členy
     if(MEMBER_ROLE === 'ADMIN'){
-      profileBtn.onclick = () => openMemberModal()
-    }
+      // Toggle profile menu
+profileBtn.onclick = (e) => {
+  e.stopPropagation();
+  document.getElementById("profileMenu").classList.toggle("hidden");
+}
+
+// Zavři menu kliknutím mimo
+document.addEventListener("click", () => {
+  const menu = document.getElementById("profileMenu");
+  if(menu) menu.classList.add("hidden");
+})
+
 
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
     document.getElementById("btnEvents").onclick = () => {
