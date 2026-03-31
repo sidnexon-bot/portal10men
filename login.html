@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10base – Přihlášení</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <h1>10base</h1>
+    <p>Přihlas se svým Google účtem</p>
+
+    <div id="g_id_onload"
+      data-client_id="TVOJE_GOOGLE_CLIENT_ID"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-locale="cs">
+    </div>
+
+    <p id="login-error" class="error hidden"></p>
+  </div>
+
+  <script>
+    async function handleCredentialResponse(response) {
+      const idToken = response.credential;
+
+      // Pošli token na backend k ověření
+      const res = await fetch('TVOJE_APPS_SCRIPT_URL', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'verifyUser', idToken })
+      });
+      const user = await res.json();
+
+      if (user.success) {
+        // Ulož session
+        sessionStorage.setItem('10base_user', JSON.stringify(user));
+        sessionStorage.setItem('10base_token', idToken);
+        // Přesměruj na hlavní stránku
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('login-error').textContent =
+          'Přístup zamítnut: ' + user.error;
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>
