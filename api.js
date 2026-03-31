@@ -1,8 +1,8 @@
-// api.js - robustní wrapper, který překryje staré api a nezničí existující metody
+// api.js - robustní wrapper s auth podporou
 (function(){
   const API_URL = "https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec";
 
-  // Pomocná funkce: postaví URL s parametry
+  // Pomocná funkce: postaví URL s parametry (pro GET)
   function buildUrl(action, params){
     const u = new URL(API_URL);
     if(action) u.searchParams.set("action", action);
@@ -14,54 +14,84 @@
     return u.toString();
   }
 
-  // základní fetch wrapper - vrátí parsed JSON nebo {error:...}
-  async function callApi(action, params){
+  // Získá token z sessionStorage (vloží Auth nebo přímý přístup)
+  function getToken(){
+    try{ return sessionStorage.getItem("10base_token") || null; }
+    catch(e){ return null; }
+  }
+
+  // GET wrapper - beze změny, zpětná kompatibilita
+  async function callGet(action, params){
     const url = buildUrl(action, params);
-    const resp = await fetch(url, {cache: "no-store"});
-    // pokud není 200, pokusíme se načíst text pro lepší chybovou hlášku
+    const resp = await fetch(url, { cache: "no-store" });
     if(!resp.ok){
       const txt = await resp.text().catch(()=>"(no body)");
       throw new Error(`API error ${resp.status} ${resp.statusText} - ${txt}`);
     }
-    // pokusíme se o JSON
     const text = await resp.text();
-    try{
-      return JSON.parse(text);
-    }catch(err){
-      // pokud to není JSON, vrať text
-      return { _raw: text };
-    }
+    try{ return JSON.parse(text); }
+    catch(e){ return { _raw: text }; }
   }
 
-  // pokud už existuje window.api, uložíme ho, abychom zachovali eventuální metody
+  // POST wrapper - pro autentizované akce, token v těle requestu
+  async function callPost(action, params){
+    const token = getToken();
+    const body = {
+      action,
+      ...(params || {}),
+      ...(token ? { idToken: token } : {})
+    };
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+    if(!resp.ok){
+      const txt = await resp.text().catch(()=>"(no body)");
+      throw new Error(`API error ${resp.status} ${resp.statusText} - ${txt}`);
+    }
+    const text = await resp.text();
+    try{ return JSON.parse(text); }
+    catch(e){ return { _raw: text }; }
+  }
+
+  // Seznam akcí, které vyžadují POST + auth token
+  // Rozšiřuj podle potřeby
+  const POST_ACTIONS = new Set([
+    "verifyUser",
+    "getMembers",
+    "getEvents",
+    "addEventNote",
+    "updateAttendance",
+    "getAttendance"
+  ]);
+
   const previousApi = (typeof window !== "undefined" && window.api) ? window.api : null;
 
-  // Hlavní funkce, kterou budou volat staré volání jako api("members", { event: id })
   async function api(action, params){
-    // pokud někde jinde už byl objekt se stejnými metodami (např. api.members),
-    // vyzkoušíme delegovat na něj — to zajistí zpětnou kompatibilitu.
+    // zpětná kompatibilita se starými metodami
     try{
       if(previousApi && typeof previousApi === "object" && typeof previousApi[action] === "function"){
-        // delegujeme na starou implementaci (pokud je synchronní, budeme vracet hodnotu / Promise)
         const res = previousApi[action](params);
-        // pokud vrací promise, počkej
         if(res && typeof res.then === "function") return await res;
         return res;
       }
     }catch(e){
-      // pokud delegace selže, pokračujeme vlastní fetch logikou
       console.warn("api wrapper: delegation to previous api failed:", e);
     }
 
-    // fallback: zavolat REST endpoint
-    return await callApi(action, params);
+    // POST pro autentizované akce, GET pro ostatní
+    if(POST_ACTIONS.has(action)){
+      return await callPost(action, params);
+    }
+    return await callGet(action, params);
   }
 
-  // přidej pár helperů jako properties, aby kód, který očekává api.members() nebo api.getMembers() fungoval
-  api.get = (action, params) => api(action, params);
+  // Helpery
+  api.get  = (action, params) => callGet(action, params);
+  api.post = (action, params) => callPost(action, params);
   api.call = (action, params) => api(action, params);
 
-  // pokud starý objekt obsahoval metody, zachovej je jako api.methodName
+  // zachování starých metod
   if(previousApi && typeof previousApi === "object"){
     Object.keys(previousApi).forEach(k=>{
       if(!(k in api)){
@@ -70,17 +100,10 @@
     });
   }
 
-  // předej na globální objekt (přepíše cokoli tam bylo)
-  if(typeof window !== "undefined"){
-    window.api = api;
-  }
-  // CommonJS compat pro testy/Node
-  if(typeof module !== "undefined" && module.exports){
-    module.exports = api;
-  }
+  if(typeof window !== "undefined") window.api = api;
+  if(typeof module !== "undefined" && module.exports) module.exports = api;
 
-  // Pro debug: log jednou
   try{
-    if(window && window.console) window.console.info && window.console.info("api.js loaded - wrapper installed");
+    if(window && window.console) window.console.info && window.console.info("api.js loaded - auth wrapper installed");
   }catch(e){}
 })();
