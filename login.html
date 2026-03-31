@@ -32,27 +32,25 @@
 
   <script>
     async function handleCredentialResponse(response) {
-      const idToken = response.credential;
+  const idToken = response.credential;
 
-      // Pošli token na backend k ověření
-      const res = await fetch('https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'verifyUser', idToken })
-      });
-      const user = await res.json();
+  const url = new URL('https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec');
+  url.searchParams.set('action', 'verifyUser');
+  url.searchParams.set('idToken', idToken);
 
-      if (user.success) {
-        // Ulož session
-        sessionStorage.setItem('10base_user', JSON.stringify(user));
-        sessionStorage.setItem('10base_token', idToken);
-        // Přesměruj na hlavní stránku
-        window.location.href = 'index.html';
-      } else {
-        document.getElementById('login-error').textContent =
-          'Přístup zamítnut: ' + user.error;
-        document.getElementById('login-error').classList.remove('hidden');
-      }
-    }
+  const res = await fetch(url.toString(), { cache: 'no-store' });
+  const user = await res.json();
+
+  if (user.success) {
+    sessionStorage.setItem('10base_user', JSON.stringify(user));
+    sessionStorage.setItem('10base_token', idToken);
+    window.location.href = 'index.html';
+  } else {
+    document.getElementById('login-error').textContent = 'Přístup zamítnut: ' + user.error;
+    document.getElementById('login-error').classList.remove('hidden');
+  }
+}
+
   </script>
 
 </body>
