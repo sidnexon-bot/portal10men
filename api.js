@@ -57,7 +57,6 @@
   // Seznam akcí, které vyžadují POST + auth token
   // Rozšiřuj podle potřeby
   const POST_ACTIONS = new Set([
-    "verifyUser",
     "getMembers",
     "getEvents",
     "addEventNote",
