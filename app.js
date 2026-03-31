@@ -2,13 +2,33 @@
    STAV APLIKACE
 ================================ */
 
-let MEMBER_EMAIL = localStorage.getItem("memberEmail") || null
-let MEMBER_NAME  = localStorage.getItem("memberName")  || null
+let MEMBER_EMAIL = null
+let MEMBER_NAME  = null
 let ACTIVE_TAB   = "dashboard"
-let MEMBER_ROLE  = localStorage.getItem("memberRole") || "MEMBER"
+let MEMBER_ROLE  = "MEMBER"
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
 Proces obměny členů výboru probíhá, více info na zkoušce.`
+
+// Inicializace identity z Google session (přihlášení přes login.html)
+function initMemberFromSession(){
+  const user = JSON.parse(sessionStorage.getItem('10base_user') || 'null');
+  if(!user){
+    window.location.href = 'login.html';
+    return false;
+  }
+  MEMBER_EMAIL = user.email;
+  MEMBER_NAME  = user.name;
+  MEMBER_ROLE  = (user.role || 'member').toUpperCase();
+
+  const profileBtn = document.getElementById("profileBtn")
+  if(profileBtn){
+    profileBtn.textContent = getInitials(MEMBER_NAME)
+    // Pouze admin má klikatelný přepínač člena
+    profileBtn.style.cursor = MEMBER_ROLE === 'ADMIN' ? 'pointer' : 'default'
+  }
+  return true;
+}
 
 /* ===============================
    CACHE
@@ -161,6 +181,9 @@ async function start(){
 
   try{
 
+    // Nejdříve ověř session – pokud není, přesměruje na login
+    if(!initMemberFromSession()) return;
+
     setLoading()
 
     const members = await cachedApi("members")
@@ -169,19 +192,20 @@ async function start(){
     const profileBtn = document.getElementById("profileBtn")
     if(!profileBtn){ console.error("profileBtn nenalezen"); return }
 
-    if(MEMBER_EMAIL){
-      profileBtn.textContent = getInitials(MEMBER_NAME)
-      setStatus(MEMBER_NAME)
-    }
+    // Identita už je nastavena z initMemberFromSession()
+    setStatus(MEMBER_NAME)
 
-    profileBtn.onclick = () => openMemberModal()
+    // Pouze admin může přepínat členy
+    if(MEMBER_ROLE === 'ADMIN'){
+      profileBtn.onclick = () => openMemberModal()
+    }
 
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
     document.getElementById("btnEvents").onclick = () => {
-  setActiveTab("events")
-  window.EVENTS_MONTH = null
-  renderEvents()
-}
+      setActiveTab("events")
+      window.EVENTS_MONTH = null
+      renderEvents()
+    }
     document.getElementById("btnPayments").onclick  = () => { setActiveTab("payments");  renderPayments() }
     document.getElementById("btnEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy() }
 
@@ -199,6 +223,9 @@ async function start(){
 ================================ */
 
 function openMemberModal(){
+  // Pouze admin může přepínat členy
+  if(MEMBER_ROLE.toLowerCase() !== 'admin') return;
+
   const modal = document.getElementById("memberModal")
   const list  = document.getElementById("memberList")
   if(!modal || !list) return
