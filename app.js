@@ -224,19 +224,17 @@ async function start(){
     setStatus(MEMBER_NAME)
 
     // Pouze admin může přepínat členy
-    if(MEMBER_ROLE === 'ADMIN'){
-      // Toggle profile menu
-profileBtn.onclick = (e) => {
-  e.stopPropagation();
-  document.getElementById("profileMenu").classList.toggle("hidden");
-}
+    // Toggle profile menu – klikatelný pro všechny (menu má logout pro každého)
+    profileBtn.onclick = (e) => {
+      e.stopPropagation();
+      document.getElementById("profileMenu").classList.toggle("hidden");
+    }
 
-// Zavři menu kliknutím mimo
-document.addEventListener("click", () => {
-  const menu = document.getElementById("profileMenu");
-  if(menu) menu.classList.add("hidden");
-})
-
+    // Zavři menu kliknutím mimo
+    document.addEventListener("click", () => {
+      const menu = document.getElementById("profileMenu");
+      if(menu) menu.classList.add("hidden");
+    })
 
     document.getElementById("btnDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard() }
     document.getElementById("btnEvents").onclick = () => {
@@ -249,7 +247,7 @@ document.addEventListener("click", () => {
 
     setActiveTab("dashboard")
     renderDashboard()
-
+  }
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
