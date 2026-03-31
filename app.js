@@ -247,7 +247,7 @@ async function start(){
 
     setActiveTab("dashboard")
     renderDashboard()
-  }
+  
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
