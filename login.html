@@ -35,7 +35,7 @@
       const idToken = response.credential;
 
       // Pošli token na backend k ověření
-      const res = await fetch('TVOJE_APPS_SCRIPT_URL', {
+      const res = await fetch('https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec', {
         method: 'POST',
         body: JSON.stringify({ action: 'verifyUser', idToken })
       });
