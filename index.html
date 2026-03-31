@@ -12,18 +12,30 @@
 <script>
   const currentUser = Auth.require(['admin', 'member', 'art']);
   // currentUser.role obsahuje roli – použij pro podmíněné zobrazení prvků
-</script>
-  <header>
-    <div class="header-inner">
-      <div class="header-row">
-        <div>
-          <h1>10base</h1>
-          <div class="subtitle">Powered by 10menogram</div>
-        </div>
+ <header>
+  <div class="header-inner">
+    <div class="header-row">
+      <div>
+        <h1>10base</h1>
+        <div class="subtitle">Powered by 10menogram</div>
+      </div>
+      <div style="position:relative">
         <div id="profileBtn" class="profile-btn">ZV</div>
+        <div id="profileMenu" class="profile-menu hidden">
+          <div class="profile-menu-info">
+            <div id="profileMenuName" class="profile-menu-name"></div>
+            <div id="profileMenuEmail" class="profile-menu-email"></div>
+            <div id="profileMenuRole" class="profile-menu-role"></div>
+            <div id="profileMenuVoice" class="profile-menu-voice"></div>
+          </div>
+          <hr class="profile-menu-divider">
+          <div id="profileMenuSwitchBtn" class="profile-menu-item hidden">👥 Přepnout člena</div>
+          <div class="profile-menu-item profile-menu-logout" onclick="Auth.logout()">⏏ Odhlásit se</div>
+        </div>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
   <main id="main">
     <p class="notice">Načítám…</p>
