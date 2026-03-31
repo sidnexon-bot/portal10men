@@ -1166,4 +1166,4 @@ async function refreshHeatmap(){
    INIT
 ================================ */
 
-start()
+document.addEventListener("DOMContentLoaded", () => start())
