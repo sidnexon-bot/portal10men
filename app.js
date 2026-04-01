@@ -8,8 +8,7 @@ let ACTIVE_TAB   = "dashboard"
 let MEMBER_ROLE  = "MEMBER"
 let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
 
-const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.
-Proces obměny členů výboru probíhá, více info na zkoušce.`
+const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.`
 
 // Inicializace identity z Google session (přihlášení přes login.html)
 function initMemberFromSession(){
