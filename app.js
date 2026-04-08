@@ -824,7 +824,7 @@ function renderProgramEditor(songs, currentIds, event){
   let html = `
   <button onclick="openEvent('${escapeHtml(window.PROG_EVENT)}')" style="margin-bottom:12px">← Zpět</button>
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
-  <p class="small">Vyber až 10 skladeb v požadovaném pořadí.</p>
+  <p class="small">Vyber skladby</p>
 
   <div class="card" style="margin-bottom:16px">
     <input
@@ -896,14 +896,9 @@ function toggleProgSong(songId){
   if(idx > -1){
     window.PROG_CURRENT.splice(idx, 1)
   }else{
-    if(window.PROG_CURRENT.length >= 10){
-      alert("Maximálně 10 skladeb")
-      return
-    }
     window.PROG_CURRENT.push(songId)
   }
   refreshProgSelected()
-  // aktualizuj checkmark
   const check = document.getElementById("progcheck_" + songId)
   if(check) check.textContent = window.PROG_CURRENT.includes(songId) ? "✅" : ""
 }
