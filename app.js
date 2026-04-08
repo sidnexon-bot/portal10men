@@ -661,10 +661,25 @@ async function openEvent(id){
           ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
+          ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
         </div>
       </div>
     `).join("")}
+    ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
+        <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Upravit program</button>
+      </div>
+    ` : ""}
+  </div>`
+}else{
+  html += `<div class="event-card">
+    <div class="event-label">Program</div>
+    <p class="notice" style="margin:0">Program není k dispozici</p>
+    ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
+        <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Vytvořit program</button>
+      </div>
+    ` : ""}
   </div>`
 
     }else{
