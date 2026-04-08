@@ -935,17 +935,16 @@ async function saveProgram(eventId){
 }
 
 async function saveProgram(eventId){
-
-  const songs = []
-  for(let i = 0; i < 10; i++){
-    const val = document.getElementById("prog_" + i)?.value
-    if(val) songs.push(val)
+  const songs = window.PROG_CURRENT || []
+  try{
+    await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
+    invalidateCache("eventdetail", eventId)
+    alert("Program uložen (" + songs.length + " skladeb)")
+    openEvent(eventId)
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
   }
-
-  if(!songs.length){
-    alert("Vyber alespoň jednu skladbu")
-    return
-  }
+}
 
   try{
     await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
