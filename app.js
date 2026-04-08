@@ -666,7 +666,6 @@ async function openEvent(id){
       </div>
     `).join("")}
   </div>`
-}
 
     }else{
       html += "<p class='notice'>Program není k dispozici</p>"
