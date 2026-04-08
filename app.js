@@ -939,16 +939,6 @@ async function saveProgram(eventId){
   try{
     await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
     invalidateCache("eventdetail", eventId)
-    alert("Program uložen (" + songs.length + " skladeb)")
-    openEvent(eventId)
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
-  try{
-    await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
-    invalidateCache("eventdetail", eventId)
     lsDel("cache_repertoar")
     alert("Program uložen (" + songs.length + " skladeb)")
     openEvent(eventId)
@@ -957,7 +947,6 @@ async function saveProgram(eventId){
   }
 
 }
-
 
 function renderAttendanceStatus(status){
   if(!status){
