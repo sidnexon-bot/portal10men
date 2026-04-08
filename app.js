@@ -575,7 +575,14 @@ if(MEMBER_EMAIL){
       ${e.START ? "· " + formatTime(e.START) : ""}
       ${e.END   ? "– " + formatTime(e.END)   : ""}
     </span><br>
-    <span class="small">${escapeHtml(e.PLACE)}</span>
+    <span class="small">${escapeHtml(e.PLACE)}
+    ${(()=>{
+  const a = myAttendance[e.ID]
+  if(!a || !a.status) return ""
+  const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+  return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
+})()}
+</span>
   </div>
 </div>`
     })
