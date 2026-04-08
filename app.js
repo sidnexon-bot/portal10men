@@ -109,12 +109,21 @@ async function cachedApi(action, params){
     return data
   }
 
-  // pro ostatní akce
+  if(action === "myattendance" && params?.email){
+    const key = "myattendance_" + params.email
+    const stored = lsGet(key)
+    if(stored){
+      api(action, params).then(fresh => lsSet(key, fresh)).catch(()=>{})
+      return stored
+    }
+    const data = await api(action, params)
+    lsSet(key, data)
+    return data
+  }
+
   const stored = lsGet(action)
   if(stored){
-    api(action, params).then(fresh => {
-      lsSet(action, fresh)
-    }).catch(()=>{})
+    api(action, params).then(fresh => lsSet(action, fresh)).catch(()=>{})
     return stored
   }
 
@@ -483,6 +492,12 @@ async function renderEvents(){
   try{
 
     const events = await cachedApi("events")
+    let myAttendance = {}
+if(MEMBER_EMAIL){
+  try{
+    myAttendance = await cachedApi("myattendance", {email: MEMBER_EMAIL}) || {}
+  }catch(e){ console.error("myattendance fail", e) }
+}
 
     if(!Array.isArray(events) || !events.length){
       setError("Žádné akce")
@@ -720,6 +735,7 @@ async function doAttendance(eventId, status){
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
+    lsDel("myattendance_" + MEMBER_EMAIL)
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
@@ -734,6 +750,7 @@ async function doAttendanceWithReason(eventId, status){
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
     invalidateCache("eventdetail", eventId)
+    lsDel("myattendance_" + MEMBER_EMAIL)
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
@@ -858,6 +875,7 @@ async function confirmSwipe(eventId, status, el){
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
+    lsDel("myattendance_" + MEMBER_EMAIL)
   }catch(err){
     alert("Chyba: " + (err?.message || err))
   }
@@ -876,6 +894,7 @@ async function confirmSwipeWithReason(eventId, el){
   try{
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
     invalidateCache("eventdetail", eventId)
+    lsDel("myattendance_" + MEMBER_EMAIL)
   }catch(err){
     alert("Chyba: " + (err?.message || err))
   }
