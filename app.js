@@ -652,21 +652,21 @@ async function openEvent(id){
 
     // program
     if(program.length){
-      html += `<div class="event-card">
-  <div class="event-label">Program</div>
-  ${program.map((p, i) => `
-    <div class="event-row">
-      <div>
-        <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-        ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+  html += `<div class="event-card">
+    <div class="event-label">Program</div>
+    ${program.map((p, i) => `
+      <div class="event-row">
+        <div>
+          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        ${p.LENGTH ? `<span class="small">${escapeHtml(p.LENGTH)}</span>` : ""}
-        ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
-      </div>
-    </div>
-  `).join("")}
-</div>`
+    `).join("")}
+  </div>`
+}
 
     }else{
       html += "<p class='notice'>Program není k dispozici</p>"
