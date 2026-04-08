@@ -651,7 +651,7 @@ async function openEvent(id){
     `
 
     // program
-    if(program.length){
+if(program.length){
   html += `<div class="event-card">
     <div class="event-label">Program</div>
     ${program.map((p, i) => `
@@ -680,23 +680,18 @@ async function openEvent(id){
         <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Vytvořit program</button>
       </div>
     ` : ""}
-    </div>`
-  }
-</div>`
+  </div>`
 }
-    }else{
-      html += "<p class='notice'>Program není k dispozici</p>"
-    }
 
-    // poznámka
-    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-      html += `<div class="card">
-        <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
-        <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
-      </div>`
-    }else if(event.NOTE){
-      html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
-    }
+// poznámka
+if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+  html += `<div class="card">
+    <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+    <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
+  </div>`
+}else if(event.NOTE){
+  html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
+}
 
     // docházka
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
