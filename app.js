@@ -12,7 +12,7 @@ const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akc
 
 // Inicializace identity z Google session (přihlášení přes login.html)
 function initMemberFromSession(){
-  const user = JSON.parse(sessionStorage.getItem('10base_user') || 'null');
+  const user = JSON.parse(localStorage.getItem('10base_user') || 'null');
   if(!user){
     window.location.href = 'login.html';
     return false;
@@ -31,7 +31,7 @@ function updateProfileBtn(){
   if(profileBtn) profileBtn.textContent = getInitials(MEMBER_NAME)
 
   // Naplň menu daty přihlášeného (vždy původní user ze session)
-  const user = JSON.parse(sessionStorage.getItem('10base_user') || 'null');
+  const user = JSON.parse(localStorage.getItem('10base_user') || 'null');
   if(user){
     document.getElementById("profileMenuName").textContent  = user.name;
     document.getElementById("profileMenuEmail").textContent = user.email;
