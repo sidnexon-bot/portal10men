@@ -51,48 +51,86 @@ function updateProfileBtn(){
   }
 }
 
-
 /* ===============================
    CACHE
 ================================ */
 
+const CACHE_TTL = 30 * 60 * 1000  // 30 minut
+
+function lsGet(key){
+  try{
+    const raw = localStorage.getItem("cache_" + key)
+    if(!raw) return null
+    const {data, ts} = JSON.parse(raw)
+    if(Date.now() - ts > CACHE_TTL) return null
+    return data
+  }catch(e){ return null }
+}
+
+function lsSet(key, data){
+  try{
+    localStorage.setItem("cache_" + key, JSON.stringify({data, ts: Date.now()}))
+  }catch(e){}
+}
+
+function lsDel(key){
+  try{ localStorage.removeItem("cache_" + key) }catch(e){}
+}
+
 const CACHE = {
-  events:  null,
-  members: null,
-  heatmap: null,
-  energy:  null,
-  detail:  {},
-  ts:      {},
-  TTL:     5 * 60 * 1000
+  detail: {},
+  ts:     {}
 }
 
 function cacheValid(key){
-  return CACHE.ts[key] && (Date.now() - CACHE.ts[key] < CACHE.TTL)
+  return CACHE.ts[key] && (Date.now() - CACHE.ts[key] < CACHE_TTL)
 }
 
 async function cachedApi(action, params){
+
   if(action === "eventdetail" && params?.id){
     const key = "detail_" + params.id
     if(CACHE.detail[params.id] && cacheValid(key)) return CACHE.detail[params.id]
+    const stored = lsGet(key)
+    if(stored){
+      CACHE.detail[params.id] = stored
+      CACHE.ts[key] = Date.now()
+      api(action, params).then(fresh => {
+        CACHE.detail[params.id] = fresh
+        CACHE.ts[key] = Date.now()
+        lsSet(key, fresh)
+      }).catch(()=>{})
+      return stored
+    }
     const data = await api(action, params)
     CACHE.detail[params.id] = data
     CACHE.ts[key] = Date.now()
+    lsSet(key, data)
     return data
   }
-  if(CACHE[action] && cacheValid(action)) return CACHE[action]
+
+  // pro ostatní akce
+  const stored = lsGet(action)
+  if(stored){
+    api(action, params).then(fresh => {
+      lsSet(action, fresh)
+    }).catch(()=>{})
+    return stored
+  }
+
   const data = await api(action, params)
-  CACHE[action] = data
-  CACHE.ts[action] = Date.now()
+  lsSet(action, data)
   return data
+
 }
 
 function invalidateCache(action, id){
   if(id){
     delete CACHE.detail[id]
     delete CACHE.ts["detail_" + id]
+    lsDel("detail_" + id)
   }else{
-    CACHE[action] = null
-    CACHE.ts[action] = null
+    lsDel(action)
   }
 }
 
