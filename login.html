@@ -42,8 +42,8 @@
   const user = await res.json();
 
   if (user.success) {
-    sessionStorage.setItem('10base_user', JSON.stringify(user));
-    sessionStorage.setItem('10base_token', idToken);
+    localStorage.setItem('10base_user', JSON.stringify(user));
+    localStorage.setItem('10base_token', idToken);
     window.location.href = 'index.html';
   } else {
     document.getElementById('login-error').textContent = 'Přístup zamítnut: ' + user.error;
