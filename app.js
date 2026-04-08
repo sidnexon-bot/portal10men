@@ -9,6 +9,7 @@ let MEMBER_ROLE  = "MEMBER"
 let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.`
+const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
 
 // Inicializace identity z Google session (přihlášení přes login.html)
 function initMemberFromSession(){
@@ -385,6 +386,14 @@ async function renderDashboard(){
 
     let html = ""
 
+if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+  html += `<div style="margin-bottom:16px">
+    <a href="${INFODOC_FORM_URL}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
+      Vytvořit infodokument
+    </a>
+  </div>`
+}
+
     // --- NEJBLIŽŠÍ AKCE ---
     if(upcoming){
       html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
@@ -708,13 +717,34 @@ async function openEvent(id){
     html += "</div>"
 
     // admin tlačítka
-    if(MEMBER_ROLE === "ADMIN"){
-      html += `<hr>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="openEventForm('${id}')" style="flex:1">Upravit</button>
-        <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">Smazat</button>
-      </div>`
-    }
+    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+  html += `<hr>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`
+
+  if(event.DOC_URL){
+    html += `<a href="${escapeHtml(event.DOC_URL)}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
+   Otevřít infodokument
+    </a>`
+  }
+
+  html += `<button onclick="uploadDocUrl('${id}')" style="width:100%">
+     ${event.DOC_URL ? "Změnit infodokument" : "Nahrát infodokument"}
+  </button>`
+
+  html += `<button onclick="openProgramEditor('${id}')" style="width:100%">
+    Vytvořit / upravit program
+  </button>`
+
+  if(MEMBER_ROLE === "ADMIN"){
+    html += `<div style="display:flex;gap:8px">
+      <button onclick="openEventForm('${id}')" style="flex:1">Upravit akci</button>
+      <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">Smazat</button>
+    </div>`
+  }
+
+  html += `</div>`
+}
+
 
     container().innerHTML = html
 
@@ -723,6 +753,103 @@ async function openEvent(id){
   }
 
 }
+
+async function uploadDocUrl(eventId){
+  const url = prompt("Vlož odkaz na infodokument:")
+  if(!url || !url.startsWith("http")){ 
+    if(url !== null) alert("Neplatný odkaz — musí začínat http")
+    return 
+  }
+  try{
+    await api("setdocurl", {id: eventId, url})
+    invalidateCache("eventdetail", eventId)
+    openEvent(eventId)
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+async function openProgramEditor(eventId){
+
+  setLoading()
+
+  try{
+
+    const repertoar = await cachedApi("repertoar")
+    const detail    = await cachedApi("eventdetail", {id: eventId})
+    const event     = detail.event   || {}
+    const program   = detail.program || []
+
+    // aktuální pořadí skladeb
+    const currentIds = program
+      .sort((a,b) => Number(a.ORDER) - Number(b.ORDER))
+      .map(p => p.SONG_ID)
+
+    // filtruj aktivní skladby
+    const active = repertoar.filter(r =>
+      r.STATUS === "Aktivní" || r.STATUS === "aktivní"
+    ).sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
+
+    let html = `
+    <button onclick="openEvent('${eventId}')" style="margin-bottom:12px">← Zpět</button>
+    <h2>Program: ${escapeHtml(event.NAME)}</h2>
+    <p class="small">Vyber až 10 skladeb v požadovaném pořadí.</p>
+    <div id="programSlots">`
+
+    for(let i = 0; i < 10; i++){
+      const selectedId = currentIds[i] || ""
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="small" style="width:20px;text-align:right;flex-shrink:0">${i+1}.</span>
+        <select id="prog_${i}" style="flex:1">
+          <option value="">— bez skladby —</option>
+          ${active.map(r => `
+            <option value="${escapeHtml(r.ID)}" ${r.ID === selectedId ? "selected" : ""}>
+              ${escapeHtml(r.NAME)}${r.AUTHOR ? " · " + escapeHtml(r.AUTHOR) : ""}
+            </option>
+          `).join("")}
+        </select>
+      </div>`
+    }
+
+    html += `</div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="saveProgram('${eventId}')" style="flex:1;background:#eaf7ef;color:#1a7a3a">Uložit program</button>
+      <button onclick="openEvent('${eventId}')" style="flex:1">Zrušit</button>
+    </div>`
+
+    container().innerHTML = html
+
+  }catch(err){
+    setError("Chyba: " + (err?.message || err))
+  }
+
+}
+
+async function saveProgram(eventId){
+
+  const songs = []
+  for(let i = 0; i < 10; i++){
+    const val = document.getElementById("prog_" + i)?.value
+    if(val) songs.push(val)
+  }
+
+  if(!songs.length){
+    alert("Vyber alespoň jednu skladbu")
+    return
+  }
+
+  try{
+    await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
+    invalidateCache("eventdetail", eventId)
+    lsDel("cache_repertoar")
+    alert("Program uložen (" + songs.length + " skladeb)")
+    openEvent(eventId)
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+
+}
+
 
 function renderAttendanceStatus(status){
   if(!status){
@@ -1189,7 +1316,12 @@ async function renderHeatmap(){
         const icon   = status === "Přijdu"   ? "✓" :
                        status === "Možná"    ? "?" :
                        status === "Nepřijdu" ? "✗" : ""
-        html += `<td class="heatmap-cell" style="background:${color}" title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}">${icon}</td>`
+        const reason = rows.find(r => r.ID_AKCE === e.ID && r.EMAIL === m.EMAIL)?.REASON || ""
+const clickInfo = status
+  ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
+  : ""
+html += `<td class="heatmap-cell" style="background:${color};${status ? 'cursor:pointer' : ''}" onclick="${clickInfo}">${icon}</td>`
+
       })
       html += `</tr>`
     })
@@ -1223,6 +1355,13 @@ async function refreshHeatmap(){
   if(!el) return
   el.innerHTML = "<p class='notice'>Načítám…</p>"
   el.innerHTML = await renderHeatmap()
+}
+
+function heatmapInfo(name, eventName, status, reason){
+  const icon = status === "Přijdu" ? "✅" : status === "Nepřijdu" ? "❌" : "🤔"
+  let msg = `${name}\n${eventName}\n\n${icon} ${status}`
+  if(reason) msg += `\nDůvod: ${reason}`
+  alert(msg)
 }
 
 /* ===============================
