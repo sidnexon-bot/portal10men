@@ -920,7 +920,9 @@ function refreshProgSelected(){
 }
 
 async function saveProgram(eventId){
+  console.log("saveProgram called, PROG_CURRENT:", window.PROG_CURRENT)
   const songs = window.PROG_CURRENT || []
+  console.log("songs length:", songs.length)
   if(!songs.length){ alert("Vyber alespoň jednu skladbu"); return }
   try{
     await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
