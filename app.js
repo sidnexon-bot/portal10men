@@ -680,8 +680,10 @@ async function openEvent(id){
         <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Vytvořit program</button>
       </div>
     ` : ""}
-  </div>`
-
+    </div>`
+  }
+</div>`
+}
     }else{
       html += "<p class='notice'>Program není k dispozici</p>"
     }
