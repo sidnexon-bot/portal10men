@@ -202,7 +202,23 @@ function container(){
 }
 
 function setLoading(){
-  container().innerHTML = "<p class='notice'>Načítám…</p>"
+  container().innerHTML = `
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-line tall"></div>
+      <div class="skeleton skeleton-line medium"></div>
+      <div class="skeleton skeleton-line short"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-line tall"></div>
+      <div class="skeleton skeleton-line medium"></div>
+      <div class="skeleton skeleton-line short"></div>
+    </div>
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-line tall"></div>
+      <div class="skeleton skeleton-line medium"></div>
+      <div class="skeleton skeleton-line short"></div>
+    </div>
+  `
 }
 
 function setError(msg){
