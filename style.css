@@ -870,4 +870,32 @@ body.dark .skeleton{
   background-size: 800px 100%;
 }
 
+body.dark .heatmap-cell[style*="background:#d4f5e2"]{
+  background: #1a3d2b !important;
+  color: #30d158;
+}
+
+body.dark .heatmap-cell[style*="background:#fde8e8"]{
+  background: #3d1a1a !important;
+  color: #ff453a;
+}
+
+body.dark .heatmap-cell[style*="background:#fff4dc"]{
+  background: #3d3220 !important;
+  color: #ffd60a;
+}
+
+body.dark .heatmap-cell[style*="background:#f2f2f7"]{
+  background: #2c2c2e !important;
+  color: #8e8e93;
+}
+
+body.dark .heatmap-label{
+  color: #ebebf5;
+}
+
+body.dark .heatmap-th{
+  color: #8e8e93;
+}
+
 
