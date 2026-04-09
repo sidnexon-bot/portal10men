@@ -781,7 +781,8 @@ body.dark {
 }
 
 body.dark header{
-  background: rgba(28,28,30,0.8);
+  background: rgba(28,28,30,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 body.dark .bottom{
