@@ -265,6 +265,29 @@ function closeProfileMenu(){
 }
 
 /* ===============================
+   DARK MODE
+================================ */
+
+function initDarkMode(){
+  const saved = localStorage.getItem("darkMode")
+  if(saved === "1") applyDarkMode(true)
+}
+
+function applyDarkMode(on){
+  document.body.classList.toggle("dark", on)
+  const btn = document.getElementById("darkModeToggle")
+  if(btn) btn.textContent = on ? "☀️ Světlý režim" : "🌙 Tmavý režim"
+}
+
+function toggleDarkMode(){
+  const isDark = document.body.classList.contains("dark")
+  applyDarkMode(!isDark)
+  localStorage.setItem("darkMode", isDark ? "0" : "1")
+  closeProfileMenu()
+}
+
+
+/* ===============================
    START
 ================================ */
 
