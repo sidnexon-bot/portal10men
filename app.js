@@ -396,9 +396,16 @@ async function renderDashboard(){
       return m >= 7 && m <= 12
     })
 
-    const upcoming = events
-      .filter(e => new Date(e.DATE) >= now)
-      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
+    const today = new Date()
+today.setHours(0,0,0,0)
+
+const upcoming = events
+  .filter(e => {
+    const d = new Date(e.DATE)
+    d.setHours(0,0,0,0)
+    return d >= today
+  })
+  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
     let html = ""
 
