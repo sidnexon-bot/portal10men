@@ -437,10 +437,14 @@ const upcoming = events
 
 if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `<div style="margin-bottom:16px">
-    <a href="${INFODOC_FORM_URL}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
-      Vytvořit infodokument
-    </a>
-  </div>`
+  <a href="${INFODOC_FORM_URL}" target="_blank" 
+    style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;
+    background:transparent;border-radius:12px;font-size:14px;font-weight:600;
+    color:#007aff;text-decoration:none;border:1.5px solid #007aff">
+    Vytvořit infodokument
+  </a>
+</div>`
+
 }
 
     // --- NEJBLIŽŠÍ AKCE ---
