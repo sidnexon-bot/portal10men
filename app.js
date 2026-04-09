@@ -297,6 +297,8 @@ async function start(){
 
     // Nejdříve ověř session – pokud není, přesměruje na login
     if(!initMemberFromSession()) return;
+   
+    initDarkMode()
 
     setLoading()
 
