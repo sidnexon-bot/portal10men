@@ -898,4 +898,7 @@ body.dark .heatmap-th{
   color: #8e8e93;
 }
 
+body.dark .card[style*="padding:0"] div[style*="border-bottom"]{
+  border-bottom-color: #3a3a3c !important;
+}
 
