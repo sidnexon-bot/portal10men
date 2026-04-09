@@ -310,7 +310,8 @@ async function start(){
 
     setActiveTab("dashboard")
     renderDashboard()
-  
+    initPullToRefresh()
+
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
@@ -1488,6 +1489,85 @@ function heatmapInfo(name, eventName, status, reason){
   let msg = `${name}\n${eventName}\n\n${icon} ${status}`
   if(reason) msg += `\nDůvod: ${reason}`
   alert(msg)
+}
+
+/* ===============================
+   PULL TO REFRESH
+================================ */
+
+function initPullToRefresh(){
+  let startY     = 0
+  let pulling    = false
+  let indicator  = null
+  const THRESHOLD = 80
+
+  document.addEventListener("touchstart", e => {
+    if(window.scrollY === 0){
+      startY  = e.touches[0].clientY
+      pulling = true
+    }
+  }, {passive: true})
+
+  document.addEventListener("touchmove", e => {
+    if(!pulling) return
+    const dy = e.touches[0].clientY - startY
+    if(dy <= 0) return
+
+    if(!indicator){
+      indicator = document.createElement("div")
+      indicator.id = "pull-indicator"
+      indicator.style.cssText = `
+        position:fixed;top:0;left:0;right:0;
+        display:flex;align-items:center;justify-content:center;
+        height:0;overflow:hidden;
+        background:rgba(242,242,247,0.9);
+        backdrop-filter:blur(10px);
+        font-size:13px;color:#8e8e93;font-weight:600;
+        transition:height 0.1s;
+        z-index:50;
+      `
+      document.body.prepend(indicator)
+    }
+
+    const progress = Math.min(dy / THRESHOLD, 1)
+    const height   = Math.min(dy * 0.4, 60)
+    indicator.style.height = height + "px"
+
+    if(progress < 1){
+      indicator.textContent = "↓ Potáhni pro obnovení"
+    }else{
+      indicator.textContent = "↑ Uvolni pro obnovení"
+    }
+
+  }, {passive: true})
+
+  document.addEventListener("touchend", e => {
+    if(!pulling) return
+    pulling = false
+
+    const dy = e.changedTouches[0].clientY - startY
+
+    if(indicator){
+      indicator.style.height = "0"
+      setTimeout(() => {
+        indicator?.remove()
+        indicator = null
+      }, 200)
+    }
+
+    if(dy >= THRESHOLD && window.scrollY === 0){
+      // invaliduj cache a refresh
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("cache_"))
+        .forEach(k => localStorage.removeItem(k))
+
+      // obnov aktuální tab
+      if(ACTIVE_TAB === "dashboard")  renderDashboard()
+      else if(ACTIVE_TAB === "events") renderEvents()
+      else if(ACTIVE_TAB === "payments") renderPayments()
+      else if(ACTIVE_TAB === "energy") renderEnergy()
+    }
+  })
 }
 
 /* ===============================
