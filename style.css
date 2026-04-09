@@ -771,3 +771,97 @@ select:focus{
   width: 70%;
 }
 
+/* DARK MODE */
+body.dark {
+  --bg:   #1c1c1e;
+  --card: #2c2c2e;
+  --text: #ffffff;
+  --muted:#8e8e93;
+  --accent:#ffffff;
+}
+
+body.dark header{
+  background: rgba(28,28,30,0.8);
+}
+
+body.dark .bottom{
+  background: linear-gradient(
+    to bottom,
+    rgba(44,44,46,0.95),
+    rgba(44,44,46,0.7)
+  );
+  border-color: rgba(255,255,255,0.1);
+}
+
+body.dark .bottom button{
+  color: #8e8e93;
+}
+
+body.dark .bottom button.active{
+  color: #0a84ff;
+  background: rgba(10,132,255,0.12);
+}
+
+body.dark .modal-content{
+  background: #2c2c2e;
+}
+
+body.dark .member-row{
+  border-color: #3a3a3c;
+  color: #fff;
+}
+
+body.dark .member-row:active{
+  background: #3a3a3c;
+}
+
+body.dark .profile-menu{
+  background: #2c2c2e;
+  border-color: #3a3a3c;
+}
+
+body.dark .profile-menu-item{
+  color: #fff;
+}
+
+body.dark .profile-menu-divider{
+  border-color: #3a3a3c;
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background: #3a3a3c;
+  color: #fff;
+  border-color: #48484a;
+}
+
+body.dark .swipe-card{
+  background: #2c2c2e;
+  color: #fff;
+}
+
+body.dark .event-card{
+  background: #2c2c2e;
+  color: #fff;
+}
+
+body.dark .event-row{
+  border-color: #3a3a3c;
+}
+
+body.dark button{
+  background: #3a3a3c;
+  color: #0a84ff;
+}
+
+body.dark .skeleton-card{
+  background: #2c2c2e;
+}
+
+body.dark .skeleton{
+  background: linear-gradient(90deg, #3a3a3c 25%, #48484a 50%, #3a3a3c 75%);
+  background-size: 800px 100%;
+}
+
+
