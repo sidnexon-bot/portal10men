@@ -734,7 +734,7 @@ if(program.length){
     <p class="notice" style="margin:0">Program není k dispozici</p>
     ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-        <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Vytvořit program</button>
+        <button onclick="openProgramEditor('${id}')" style="width:100%">Vytvořit program</button>
       </div>
     ` : ""}
   </div>`
