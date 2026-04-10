@@ -1424,6 +1424,8 @@ main{
 
 @media (min-width: 768px) and (max-width: 1024px){
 
+  @media (min-width: 768px) and (max-width: 1024px){
+
   main{
     margin-left: 220px;
     width: calc(100vw - 220px);
@@ -1431,19 +1433,32 @@ main{
     padding: 24px 16px 60px;
   }
 
-  .events-layout.two-col{
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
+  /* jeden sloupec na tabletu */
+  .events-layout,
+  .events-layout.two-col,
   .events-layout.three-col{
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    margin: 0;
+    gap: 16px;
   }
 
-  .events-layout.three-col #edit-panel-slot{
-    grid-column: 1 / -1;
+  /* detail a edit panel pod sebou */
+  #detail-panel-slot,
+  #edit-panel-slot{
+    position: static;
+    max-height: none;
+  }
+
+  /* heatmapa přes celou šířku */
+  .desktop-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-col-right{
+    overflow-x: auto;
   }
 
 }
+
 
