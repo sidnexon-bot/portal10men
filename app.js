@@ -285,13 +285,27 @@ function showToast(msg, duration = 2000){
 }
 
 function showSaving(){
+  // overlay
+  let overlay = document.getElementById("saving-overlay")
+  if(!overlay){
+    overlay = document.createElement("div")
+    overlay.id = "saving-overlay"
+    overlay.style.cssText = `
+      position:fixed;inset:0;
+      background:transparent;
+      z-index:500;
+      pointer-events:all;
+    `
+    document.body.appendChild(overlay)
+  }
   showToast("Ukládám…", 10000)
 }
 
 function hideSaving(successMsg = "Uloženo ✓"){
+  const overlay = document.getElementById("saving-overlay")
+  if(overlay) overlay.remove()
   showToast(successMsg, 1500)
 }
-
 
 /* ===============================
    DARK MODE
