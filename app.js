@@ -837,7 +837,7 @@ async function openEventForm(id){
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
       </button>
-      <button onclick="${isDesktop ? `openEvent('${id}')` : "renderEvents()"}">Zrušit</button>
+      <button onclick="${isDesktop ? (id ? `openEvent('${id}')` : "renderEvents()") : "renderEvents()"}">Zrušit</button>
     </div>
   </div>`
 
@@ -845,16 +845,6 @@ async function openEventForm(id){
     target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
   }else{
     container().innerHTML = html
-     }
-  }  
-
-  }catch(err){
-
-    if(target){
-      target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
-    }else{
-      setError("Chyba při načítání akce: " + (err?.message || err))
-    }
   }
 
 }
