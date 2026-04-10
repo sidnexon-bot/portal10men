@@ -755,7 +755,8 @@ ${(()=>{
     })
 
 if(isDesktop){
-  html = `<div class="events-layout"><div id="events-list">${html}</div><div id="detail-panel-slot" style="position:sticky;top:40px"></div></div>`
+  html = `<div class="events-layout"><div id="events-list">${html}</div><div id="detail-panel-slot" style="position:sticky;top:40px"></div><div></div></div>`
+
   container().innerHTML = html
 }else{
   container().innerHTML = html
