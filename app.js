@@ -265,6 +265,10 @@ function closeProfileMenu(){
   if(menu) menu.classList.add("hidden");
 }
 
+function detailPanel(){
+  return document.getElementById("detail-panel")
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -750,7 +754,18 @@ ${(()=>{
 </div>`
     })
 
-    container().innerHTML = html
+if(isDesktop){
+  html = `<div class="events-layout"><div>${html}</div></div>`
+  container().innerHTML = html
+  // pokud byl předtím otevřen detail, znovu ho zobraz
+  if(detailPanel().innerHTML){
+    detailPanel().style.display = "block"
+    // přidej detail panel do gridu
+    container().querySelector(".events-layout").appendChild(detailPanel())
+  }
+}else{
+  container().innerHTML = html
+}
 
     document.querySelectorAll(".swipe-card").forEach(card => {
       const id = card.dataset.id
@@ -783,7 +798,18 @@ function eventsMonthNext(){
 
 async function openEvent(id){
 
-  setLoading()
+  const target = (isDesktop && ACTIVE_TAB === "events") ? detailPanel() : container()
+
+  if(isDesktop && ACTIVE_TAB === "events"){
+    target.style.display = "block"
+    target.innerHTML = `<div class="skeleton-card">
+      <div class="skeleton skeleton-line tall"></div>
+      <div class="skeleton skeleton-line medium"></div>
+      <div class="skeleton skeleton-line short"></div>
+    </div>`
+  }else{
+    setLoading()
+  }
 
   try{
 
@@ -793,7 +819,7 @@ async function openEvent(id){
     const attendance = data.attendance || []
 
     let html = `
-<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>
+${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
 <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
 
 <div class="card" style="margin-bottom:20px">
@@ -931,7 +957,7 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `</div>`
 }
 
-container().innerHTML = html
+target.innerHTML = html
 
   }catch(err){
     setError("Chyba při načítání akce: " + (err?.message || err))
