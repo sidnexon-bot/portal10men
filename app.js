@@ -974,32 +974,18 @@ function refreshProgSelected(){
 }
 
 async function saveProgram(eventId){
-  console.log("saveProgram called, PROG_CURRENT:", window.PROG_CURRENT)
-  const songs = window.PROG_CURRENT || []
-  console.log("songs length:", songs.length)
-  if(!songs.length){ alert("Vyber alespoň jednu skladbu"); return }
-  try{
-    await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
-    invalidateCache("eventdetail", eventId)
-    alert("Program uložen (" + songs.length + " skladeb)")
-    openEvent(eventId)
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
-async function saveProgram(eventId){
   const songs = window.PROG_CURRENT || []
   try{
+    showSaving()
     await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
     invalidateCache("eventdetail", eventId)
     lsDel("cache_repertoar")
-    alert("Program uložen (" + songs.length + " skladeb)")
+    hideSaving(`Program uložen (${songs.length} skladeb) ✓`)
     openEvent(eventId)
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
   }
-
 }
 
 function renderAttendanceStatus(status){
@@ -1018,12 +1004,15 @@ function renderAttendanceStatus(status){
 async function doAttendance(eventId, status){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena nahoře"); return }
   try{
+    showSaving()
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
+    hideSaving("Docházka uložena ✓")
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba při ukládání docházky: " + (err?.message || err))
   }
 }
@@ -1033,12 +1022,15 @@ async function doAttendanceWithReason(eventId, status){
   const reason = prompt("Důvod nepřítomnosti:")
   if(reason === null) return
   try{
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
+    showSaving()
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
+    hideSaving("Docházka uložena ✓")
     if(ACTIVE_TAB === "dashboard") renderDashboard()
     else openEvent(eventId)
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba při ukládání docházky: " + (err?.message || err))
   }
 }
@@ -1158,11 +1150,16 @@ function addSwipe(el, eventId){
 async function confirmSwipe(eventId, status, el){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
   try{
+    showSaving()
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
+    hideSaving("Docházka uložena ✓")
+    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    else openEvent(eventId)
   }catch(err){
-    alert("Chyba: " + (err?.message || err))
+    hideSaving("Chyba ✗")
+    alert("Chyba při ukládání docházky: " + (err?.message || err))
   }
 }
 
@@ -1177,11 +1174,16 @@ async function confirmSwipeWithReason(eventId, el){
   }
 
   try{
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
+    showSaving()
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
+    hideSaving("Docházka uložena ✓")
+    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    else openEvent(eventId)
   }catch(err){
-    alert("Chyba: " + (err?.message || err))
+    hideSaving("Chyba ✗")
+    alert("Chyba při ukládání docházky: " + (err?.message || err))
   }
 }
 
@@ -1264,19 +1266,21 @@ async function saveEvent(id){
   if(!date){ alert("Zadej datum"); return }
 
   try{
+    showSaving()
     if(id){
       await api("updateevent", {id, name, date, start, end, place, note, status})
       invalidateCache("events")
       invalidateCache("eventdetail", id)
-      alert("Akce upravena")
+      hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
       const result = await api("addevent", {name, date, start, end, place, note, status})
       invalidateCache("events")
-      alert("Akce vytvořena, vygenerováno " + result.attendanceRows + " řádků docházky")
+      hideSaving("Akce vytvořena ✓")
       renderEvents()
     }
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
   }
 
@@ -1285,12 +1289,14 @@ async function saveEvent(id){
 async function deleteEvent(id){
   if(!confirm("Opravdu smazat tuto akci?")) return
   try{
+    showSaving()
     await api("deleteevent", {id})
     invalidateCache("events")
     invalidateCache("eventdetail", id)
-    alert("Akce smazána")
+    hideSaving("Akce smazána ✓")
     renderEvents()
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba při mazání: " + (err?.message || err))
   }
 }
@@ -1302,10 +1308,12 @@ async function deleteEvent(id){
 async function saveNote(eventId){
   const note = document.getElementById("eventNote")?.value ?? ""
   try{
+    showSaving()
     await api("updatenote", {id: eventId, note})
     invalidateCache("eventdetail", eventId)
-    alert("Poznámka uložena")
+    hideSaving("Poznámka uložena ✓")
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
   }
 }
@@ -1394,10 +1402,13 @@ async function saveEnergy(){
   if(!start)  { alert("Zadej stav na začátku"); return }
   if(!end)    { alert("Zadej stav na konci"); return }
   try{
+    showSaving()
     await api("setenergy", {event: eventId, start, end})
     invalidateCache("energy")
+    hideSaving("Energie uložena ✓")
     renderEnergy()
   }catch(err){
+    hideSaving("Chyba ✗")
     alert("Chyba při ukládání: " + (err?.message || err))
   }
 }
