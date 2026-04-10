@@ -357,157 +357,254 @@ h3{
 /* BUTTONS */
 
 button{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 
-  padding:10px 14px;
-  border-radius:12px;
-  border:none;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: none;
 
-  font-size:14px;
-  font-weight:600;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
 
-  background:#f2f2f7;
-  color:#007aff;
-}
+  background: #e8e8ed;
+  color: #007aff;
 
-.primary-btn{
-  background:#007aff;
-  color:#fff;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:active{
-  transform:scale(0.96);
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.primary-btn{
+  background: #007aff;
+  color: #fff;
+}
+
+/* Potvrzovací — zelené */
+button[style*="#eaf7ef"],
+button[style*="#1a7a3a"]{
+  background: #d4f5e2 !important;
+  color: #1a7a3a !important;
+}
+
+/* Zamítací — červené */
+button[style*="#fdecec"],
+button[style*="#c00"]{
+  background: #fde8e8 !important;
+  color: #c00 !important;
+}
+
+/* Docházka tlačítka */
+button[onclick*="'Přijdu'"]{
+  background: #d4f5e2;
+  color: #1a7a3a;
+}
+
+button[onclick*="'Možná'"]{
+  background: #fff4dc;
+  color: #b07800;
+}
+
+button[onclick*="'Nepřijdu'"]{
+  background: #fde8e8;
+  color: #c00;
+}
+
+/* Dark mode */
+body.dark button{
+  background: #3a3a3c;
+  color: #0a84ff;
+}
+
+body.dark button[style*="#eaf7ef"],
+body.dark button[style*="#1a7a3a"]{
+  background: #1a3d2b !important;
+  color: #30d158 !important;
+}
+
+body.dark button[style*="#fdecec"],
+body.dark button[style*="#c00"]{
+  background: #3d1a1a !important;
+  color: #ff453a !important;
+}
+
+body.dark button[onclick*="'Přijdu'"]{
+  background: #1a3d2b;
+  color: #30d158;
+}
+
+body.dark button[onclick*="'Možná'"]{
+  background: #3d3220;
+  color: #ffd60a;
+}
+
+body.dark button[onclick*="'Nepřijdu'"]{
+  background: #3d1a1a;
+  color: #ff453a;
 }
 
 /* STATUS BUTTON COLORS */
 
 .btn-yes{
-  background:#e6f4ea;
-  color:#34c759;
+  background: #d4f5e2;
+  color: #1a7a3a;
 }
 
 .btn-maybe{
-  background:#fff3cd;
-  color:#ff9f0a;
+  background: #fff4dc;
+  color: #b07800;
 }
 
 .btn-no{
-  background:#fdecea;
-  color:#ff3b30;
+  background: #fde8e8;
+  color: #c00;
 }
+
+/* PROFILE BTN */
 
 .profile-btn{
-  width:44px;
-  height:44px;
-  border-radius:50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
 
-  background:#e5e5ea;
-  color:#000;
+  background: #e5e5ea;
+  color: #000;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  font-weight:600;
-  font-size:14px;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
 
-  margin-top:4px;
+  margin-top: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 
-  cursor:pointer;
-
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  /* přepsat button defaults */
+  padding: 0;
+  border-radius: 50%;
+  transition: transform 0.12s ease, opacity 0.12s ease;
 }
+
+body.dark .profile-btn{
+  background: #3a3a3c;
+  color: #fff;
+}
+
 /* NAV */
 
 .bottom-wrap{
-  position:fixed;
-  bottom:12px;
-  left:0;
-  right:0;
-  display:flex;
-  justify-content:center;
-  z-index:20;
-}
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
-.bottom-wrap{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
+  display: flex;
+  justify-content: center;
 
-  display:flex;
-  justify-content:center;
-
-  padding-bottom:calc(12px + env(safe-area-inset-bottom));
-  pointer-events:none;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  pointer-events: none;
+  z-index: 20;
 }
 
 .bottom{
-  display:flex;
-  justify-content:space-between; /* 🔥 klíčové */
+  display: flex;
+  justify-content: space-between;
 
-  width:100%;           /* 👉 roztáhne */
-  max-width:420px;      /* 👉 iPhone šířka */
-  
-  margin:12px;
-  padding:6px;
+  width: 100%;
+  max-width: 420px;
 
-  background:linear-gradient(
+  margin: 12px;
+  padding: 6px;
+
+  background: linear-gradient(
     to bottom,
     rgba(255,255,255,0.9),
     rgba(255,255,255,0.6)
   );
-  backdrop-filter:blur(30px);
-  -webkit-backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,0.4);
-  border-radius:24px;
-  box-shadow:0 8px 30px rgba(0,0,0,0.12);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 
-  pointer-events:auto;
+  pointer-events: auto;
 }
 
 .bottom button{
-  flex:1; /* 🔥 rovnoměrná šířka */
+  flex: 1;
 
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-  gap:4px;
+  gap: 4px;
 
-  border:none;
-  background:transparent;
+  border: none;
+  background: transparent;
 
-  padding:8px 4px;
-  border-radius:18px;
+  padding: 8px 4px;
+  border-radius: 18px;
 
-  font-size:12px;
-  color:#6b6b70;
+  font-size: 12px;
+  color: #6b6b70;
 
-  transition:all 0.2s ease;
+  transition: all 0.2s ease;
+  opacity: 1;
+}
+
+.bottom button:active{
+  transform: scale(0.95);
+  opacity: 0.7;
 }
 
 .bottom button.active{
-  background:rgba(0,122,255,0.08); /* jemnější */
-  color:#007aff;
-
-  transform:none; /* 🔥 vypnout scale */
+  background: rgba(0,122,255,0.08);
+  color: #007aff;
+  transform: none;
 }
 
 .bottom button.active .icon svg{
-  stroke:#007aff;
-  transform:scale(1.1);
+  stroke: #007aff;
+  transform: scale(1.1);
 }
 
 .bottom button span{
-  font-size:18px;
+  font-size: 18px;
 }
 
 .bottom button small{
-  margin-top:2px;
+  margin-top: 2px;
+}
+
+body.dark .bottom{
+  background: linear-gradient(
+    to bottom,
+    rgba(44,44,46,0.95),
+    rgba(44,44,46,0.7)
+  );
+  border-color: rgba(255,255,255,0.1);
+}
+
+body.dark .bottom button{
+  color: #8e8e93;
+  background: transparent;
+}
+
+body.dark .bottom button.active{
+  color: #0a84ff;
+  background: rgba(10,132,255,0.15);
 }
 
 select{
