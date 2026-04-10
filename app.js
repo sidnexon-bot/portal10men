@@ -715,7 +715,11 @@ async function renderEvents(){
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
       if(isDesktop){
-        container().innerHTML = `<div class="events-layout single" id="events-layout"><div id="events-list">${html}</div><div id="detail-panel-slot" style="position:sticky;top:40px"></div></div>`
+        container().innerHTML = `<div class="events-layout" id="events-layout">
+          <div id="events-list">${html}</div>
+          <div id="detail-panel-slot"></div>
+          <div id="edit-panel-slot"></div>
+        </div>`
       }else{
         container().innerHTML = html
       }
@@ -755,7 +759,11 @@ async function renderEvents(){
     })
 
     if(isDesktop){
-      container().innerHTML = `<div class="events-layout single" id="events-layout"><div id="events-list">${html}</div><div id="detail-panel-slot" style="position:sticky;top:40px"></div></div>`
+      container().innerHTML = `<div class="events-layout" id="events-layout">
+        <div id="events-list">${html}</div>
+        <div id="detail-panel-slot" style="position:sticky;top:40px"></div>
+        <div id="edit-panel-slot" style="position:sticky;top:40px"></div>
+      </div>`
     }else{
       container().innerHTML = html
     }
@@ -773,12 +781,15 @@ async function renderEvents(){
 
 async function openEventForm(id){
 
-  const slotEl = document.getElementById("detail-panel-slot")
-  const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
+  const editSlot = document.getElementById("edit-panel-slot")
+  const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
 
   if(target){
     const layout = document.getElementById("events-layout")
-    if(layout) layout.classList.remove("single")
+    if(layout){
+      layout.classList.remove("two-col", "three-col")
+      layout.classList.add("three-col")
+    }
     target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
       <div class="skeleton-card" style="background:transparent">
         <div class="skeleton skeleton-line tall"></div>
@@ -795,7 +806,11 @@ async function openEventForm(id){
       const data = await cachedApi("eventdetail", {id})
       event = data.event || {}
     }catch(e){
-      setError("Chyba při načítání akce")
+      if(target){
+        target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
+      }else{
+        setError("Chyba při načítání akce")
+      }
       return
     }
   }
@@ -854,18 +869,22 @@ async function openEvent(id){
   const slotEl = document.getElementById("detail-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
 
-  const skeletonHtml = `<div style="background:var(--card);border-radius:18px;padding:20px">
-    <div class="skeleton-card" style="background:transparent">
-      <div class="skeleton skeleton-line tall"></div>
-      <div class="skeleton skeleton-line medium"></div>
-      <div class="skeleton skeleton-line short"></div>
-    </div>
-  </div>`
-
   if(target){
     const layout = document.getElementById("events-layout")
-    if(layout) layout.classList.remove("single")
-    target.innerHTML = skeletonHtml
+    if(layout){
+      layout.classList.remove("two-col", "three-col")
+      layout.classList.add("two-col")
+      // smaž edit panel při otevření nového detailu
+      const editSlot = document.getElementById("edit-panel-slot")
+      if(editSlot) editSlot.innerHTML = ""
+    }
+    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
+      <div class="skeleton-card" style="background:transparent">
+        <div class="skeleton skeleton-line tall"></div>
+        <div class="skeleton skeleton-line medium"></div>
+        <div class="skeleton skeleton-line short"></div>
+      </div>
+    </div>`
   }else{
     setLoading()
   }
@@ -1048,7 +1067,24 @@ async function uploadDocUrl(eventId){
 
 async function openProgramEditor(eventId){
 
-  setLoading()
+  const editSlot = document.getElementById("edit-panel-slot")
+  const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
+
+  if(target){
+    const layout = document.getElementById("events-layout")
+    if(layout){
+      layout.classList.remove("two-col", "three-col")
+      layout.classList.add("three-col")
+    }
+    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
+      <div class="skeleton-card" style="background:transparent">
+        <div class="skeleton skeleton-line tall"></div>
+        <div class="skeleton skeleton-line medium"></div>
+      </div>
+    </div>`
+  }else{
+    setLoading()
+  }
 
   try{
 
@@ -1057,34 +1093,38 @@ async function openProgramEditor(eventId){
     const event     = detail.event   || {}
     const program   = detail.program || []
 
-    const currentIds = program
-      .sort((a,b) => Number(a.ORDER) - Number(b.ORDER))
-      .map(p => p.SONG_ID)
+    const mainProgram   = program.filter(p => !p.ENCORE)
+    const encoreProgram = program.filter(p => p.ENCORE)
 
     const active = repertoar
-  .sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
+      .sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
 
-    // ulož do window pro přístup z search funkce
-   const mainProgram   = program.filter(p => !p.ENCORE)
-const encoreProgram = program.filter(p => p.ENCORE)
+    window.PROG_SONGS   = active
+    window.PROG_EVENT   = eventId
+    window.PROG_MAIN    = mainProgram.map(p => p.SONG_ID)
+    window.PROG_ENCORE  = [
+      encoreProgram[0]?.SONG_ID || "",
+      encoreProgram[1]?.SONG_ID || ""
+    ]
+    window.PROG_CURRENT = []
+    PROG_ACTIVE_SECTION = "main"
 
-  window.PROG_SONGS   = active
-  window.PROG_EVENT   = eventId
-  window.PROG_MAIN    = mainProgram.map(p => p.SONG_ID)
-  window.PROG_ENCORE  = [
-  encoreProgram[0]?.SONG_ID || "",
-  encoreProgram[1]?.SONG_ID || ""
-]
-window.PROG_CURRENT = []
-PROG_ACTIVE_SECTION = "main"
+    const html = renderProgramEditor(active, [], event)
 
-container().innerHTML = renderProgramEditor(active, [], event)
-refreshProgSelected()
+    if(target){
+      target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
+    }else{
+      container().innerHTML = `<div class="prog-wrapper">${html}</div>`
+    }
 
-
+    refreshProgSelected()
 
   }catch(err){
-    setError("Chyba: " + (err?.message || err))
+    if(target){
+      target.innerHTML = `<p class="notice">Chyba při načítání programu</p>`
+    }else{
+      setError("Chyba: " + (err?.message || err))
+    }
   }
 
 }
