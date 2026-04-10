@@ -733,16 +733,17 @@ async function openEvent(id){
     const attendance = data.attendance || []
 
     let html = `
-    <button onclick="renderEvents()" style="margin-bottom:12px">← Zpět</button>
-    <h2>${escapeHtml(event.NAME)}</h2>
-    <div class="small">
-      ${formatDate(event.DATE)}
-      ${event.START ? "· " + formatTime(event.START) : ""}
-      ${event.END   ? "– " + formatTime(event.END)   : ""}
-      ${event.PLACE ? "· " + escapeHtml(event.PLACE) : ""}
-    </div>
-    ${event.NOTE ? "<div class='small' style='margin-top:4px'>" + escapeHtml(event.NOTE) + "</div>" : ""}
-    `
+<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>
+<h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
+
+<div class="card" style="margin-bottom:20px">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}</b></div>
+    <div><span class="small" style="display:block;margin-bottom:2px">Čas</span><b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b></div>
+    <div><span class="small" style="display:block;margin-bottom:2px">Místo</span><b>${escapeHtml(event.PLACE) || "—"}</b></div>
+    ${event.NOTE ? `<div style="padding-top:8px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
+  </div>
+</div>`
 
 // --- DOCHÁZKA ---
 const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
@@ -781,18 +782,6 @@ attendance.forEach(a => {
   html += `<div class="small"><span class="icon">${icon}</span> ${escapeHtml(a.NAME)}${a.REASON ? ` <span style="color:#999">· ${escapeHtml(a.REASON)}</span>` : ""}</div>`
 })
 html += "</div>"
-
-// --- POZNÁMKA ---
-if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-  html += `<div class="card">
-    <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
-    <div class="btn-group" style="margin-top:8px">
-      <button onclick="saveNote('${id}')">Uložit poznámku</button>
-    </div>
-  </div>`
-}else if(event.NOTE){
-  html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
-}
 
 // --- PROGRAM ---
 const mainProgram   = program.filter(p => !p.ENCORE)
