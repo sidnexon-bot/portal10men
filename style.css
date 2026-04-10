@@ -1057,3 +1057,212 @@ body.dark #saving-overlay{
   background: rgba(28,28,30,0.6) !important;
 }
 
+/* ===============================
+   DESKTOP LAYOUT (768px+)
+================================ */
+
+@media (min-width: 768px){
+
+  /* skryj spodní lištu */
+  .bottom-wrap{
+    display: none;
+  }
+
+  /* layout */
+  body{
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+  }
+
+  /* sidebar */
+  .sidebar{
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    min-height: 100vh;
+    background: #fff;
+    border-right: 1px solid #e5e5ea;
+    padding: 32px 16px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 30;
+  }
+
+  body.dark .sidebar{
+    background: #1c1c1e;
+    border-right-color: #3a3a3c;
+  }
+
+  .sidebar-logo{
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-subtitle{
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .sidebar-profile{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--bg);
+    margin-bottom: 24px;
+  }
+
+  body.dark .sidebar-profile{
+    background: #2c2c2e;
+  }
+
+  .sidebar-profile-avatar{
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e5e5ea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  body.dark .sidebar-profile-avatar{
+    background: #3a3a3c;
+    color: #fff;
+  }
+
+  .sidebar-profile-name{
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .sidebar-profile-role{
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .sidebar-nav{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .sidebar-nav-item{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b6b70;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border: none;
+    background: transparent;
+    text-align: left;
+    width: 100%;
+  }
+
+  .sidebar-nav-item:active{
+    transform: none;
+    opacity: 1;
+  }
+
+  .sidebar-nav-item.active{
+    background: rgba(0,122,255,0.08);
+    color: #007aff;
+    font-weight: 600;
+  }
+
+  .sidebar-nav-item .icon{
+    width: 20px;
+    height: 20px;
+  }
+
+  body.dark .sidebar-nav-item{
+    color: #8e8e93;
+  }
+
+  body.dark .sidebar-nav-item.active{
+    background: rgba(10,132,255,0.12);
+    color: #0a84ff;
+  }
+
+  .sidebar-divider{
+    border: none;
+    border-top: 1px solid #e5e5ea;
+    margin: 12px 0;
+  }
+
+  body.dark .sidebar-divider{
+    border-color: #3a3a3c;
+  }
+
+  .sidebar-bottom{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-action{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b6b70;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    transition: background 0.15s;
+  }
+
+  .sidebar-action:active{
+    transform: none;
+    opacity: 1;
+  }
+
+  body.dark .sidebar-action{
+    color: #8e8e93;
+  }
+
+  .sidebar-action:hover,
+  .sidebar-nav-item:hover{
+    background: var(--bg);
+  }
+
+  body.dark .sidebar-action:hover,
+  body.dark .sidebar-nav-item:hover{
+    background: #2c2c2e;
+  }
+
+  /* hlavní obsah */
+  header{
+    display: none;
+  }
+
+  main{
+    margin-left: 220px;
+    max-width: 680px;
+    padding: 40px 32px 60px;
+  }
+
+}
+
