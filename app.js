@@ -759,6 +759,22 @@ if(program.length){
         </div>
       </div>
     `).join("")}
+    ${program.filter(p => p.ENCORE).length ? `
+  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
+    <div class="small" style="font-weight:600;margin-bottom:6px">Přídavky</div>
+    ${program.filter(p => p.ENCORE).map((p, i) => `
+      <div class="event-row">
+        <div>
+          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
+        </div>
+      </div>
+    `).join("")}
+  </div>
+` : ""}
     ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
         <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Upravit program</button>
@@ -1043,6 +1059,15 @@ function toggleProgSong(songId){
     window.PROG_MAIN.push(songId)
   }
   refreshProgSelected()
+}
+
+function filterProgSongs(query){
+  const q = query.toLowerCase().trim()
+  document.querySelectorAll("#progSongList .prog-song-row").forEach(row => {
+    const name   = row.dataset.name   || ""
+    const author = row.dataset.author || ""
+    row.style.display = (!q || name.includes(q) || author.includes(q)) ? "" : "none"
+  })
 }
 
 function removeProgSong(list, idx){
