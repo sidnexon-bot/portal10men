@@ -1597,9 +1597,7 @@ async function saveEnergy(){
 let HEATMAP_MONTH = null
 
 async function renderHeatmap(){
-
   try{
-
     const data    = await cachedApi("heatmap")
     const events  = data.events  || []
     const members = data.members || []
@@ -1622,7 +1620,7 @@ async function renderHeatmap(){
 
     const lookup = {}
     rows.forEach(r => {
-      lookup[r.ID_AKCE + "_" + r.EMAIL] = r.STATUS || ""
+      lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
     })
 
     let html = `<h3 class="season-title">Docházka skupiny</h3>`
@@ -1637,44 +1635,78 @@ async function renderHeatmap(){
       return html
     }
 
-    html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
-    html += `<table class="heatmap"><thead><tr><th class="heatmap-event-col"></th>`
-
-    members.forEach(m => {
-      const initials = m.NAME.split(" ").map(n => n[0]).join("")
-      html += `<th class="heatmap-th" title="${escapeHtml(m.NAME)}">${escapeHtml(initials)}</th>`
-    })
-    html += `</tr></thead><tbody>`
-
-    filtered.forEach(e => {
-      html += `<tr>`
-      html += `<td class="heatmap-label">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
+    if(isDesktop){
+      // Desktop — řádky = akce, sloupce = členové, celá jména
+      html += `<div style="overflow-x:auto">`
+      html += `<table class="heatmap" style="width:100%"><thead><tr>
+        <th style="text-align:left;padding:6px 8px;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap">Akce</th>`
       members.forEach(m => {
-        const status = lookup[e.ID + "_" + m.EMAIL] || ""
-        const color  = status === "Přijdu"   ? "#d4f5e2" :
-                       status === "Možná"    ? "#fff4dc" :
-                       status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
-        const icon   = status === "Přijdu"   ? "✓" :
-                       status === "Možná"    ? "?" :
-                       status === "Nepřijdu" ? "✗" : ""
-        const reason = rows.find(r => r.ID_AKCE === e.ID && r.EMAIL === m.EMAIL)?.REASON || ""
-const clickInfo = status
-  ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
-  : ""
-html += `<td class="heatmap-cell" style="background:${color};${status ? 'cursor:pointer' : ''}" onclick="${clickInfo}">${icon}</td>`
-
+        html += `<th style="padding:6px 4px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap">${escapeHtml(m.NAME.split(" ")[0])}<br><span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span></th>`
       })
-      html += `</tr>`
-    })
+      html += `</tr></thead><tbody>`
 
-    html += `</tbody></table></div>`
+      filtered.forEach(e => {
+        html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
+        html += `<td style="padding:8px 8px 8px 0;font-size:12px;white-space:nowrap">
+          <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
+          <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
+        </td>`
+        members.forEach(m => {
+          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
+          const status = entry.status || ""
+          const reason = entry.reason || ""
+          const color  = status === "Přijdu"   ? "#d4f5e2" :
+                         status === "Možná"    ? "#fff4dc" :
+                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
+          const icon   = status === "Přijdu"   ? "✓" :
+                         status === "Možná"    ? "?" :
+                         status === "Nepřijdu" ? "✗" : ""
+          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
+          html += `<td class="heatmap-cell" style="background:${color};${status?"cursor:pointer":""};width:32px;height:32px;border-radius:8px;text-align:center;font-size:13px" onclick="${click}">${icon}</td>`
+        })
+        html += `</tr>`
+      })
+
+      html += `</tbody></table></div>`
+
+    }else{
+      // Mobil — původní kompaktní verze s iniciálami
+      html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
+      html += `<table class="heatmap"><thead><tr><th class="heatmap-event-col"></th>`
+      members.forEach(m => {
+        const initials = m.NAME.split(" ").map(n => n[0]).join("")
+        html += `<th class="heatmap-th" title="${escapeHtml(m.NAME)}">${escapeHtml(initials)}</th>`
+      })
+      html += `</tr></thead><tbody>`
+
+      filtered.forEach(e => {
+        html += `<tr>`
+        html += `<td class="heatmap-label">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
+        members.forEach(m => {
+          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
+          const status = entry.status || ""
+          const reason = entry.reason || ""
+          const color  = status === "Přijdu"   ? "#d4f5e2" :
+                         status === "Možná"    ? "#fff4dc" :
+                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
+          const icon   = status === "Přijdu"   ? "✓" :
+                         status === "Možná"    ? "?" :
+                         status === "Nepřijdu" ? "✗" : ""
+          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
+          html += `<td class="heatmap-cell" style="background:${color};${status?"cursor:pointer":""}" onclick="${click}">${icon}</td>`
+        })
+        html += `</tr>`
+      })
+
+      html += `</tbody></table></div>`
+    }
+
     return html
 
   }catch(err){
     console.error("Heatmap error:", err)
     return ""
   }
-
 }
 
 function heatmapPrev(){
@@ -1692,7 +1724,7 @@ function heatmapNext(){
 }
 
 async function refreshHeatmap(){
-  const el = document.getElementById("heatmap-container")
+  const el = document.getElementById("heatmap-container") || document.querySelector(".desktop-col-right")
   if(!el) return
   el.innerHTML = "<p class='notice'>Načítám…</p>"
   el.innerHTML = await renderHeatmap()
