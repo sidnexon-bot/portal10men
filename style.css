@@ -1267,6 +1267,34 @@ body.dark #saving-overlay{
   min-width: 36px;
 }
 
+  body.dark .heatmap-desktop th{
+  color: #8e8e93 !important;
+}
+
+body.dark .heatmap-desktop tr{
+  border-top-color: #3a3a3c !important;
+}
+
+body.dark .heatmap-desktop td div[style*="background:#d4f5e2"]{
+  background: #1a3d2b !important;
+  color: #30d158;
+}
+
+body.dark .heatmap-desktop td div[style*="background:#fde8e8"]{
+  background: #3d1a1a !important;
+  color: #ff453a;
+}
+
+body.dark .heatmap-desktop td div[style*="background:#fff4dc"]{
+  background: #3d3220 !important;
+  color: #ffd60a;
+}
+
+body.dark .heatmap-desktop td div[style*="background:#f2f2f7"]{
+  background: #2c2c2e !important;
+  color: #8e8e93;
+}
+
     /* hlavní obsah */
   header{
     display: none;
