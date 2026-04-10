@@ -203,9 +203,7 @@ function container(){
 }
 
 function setLoading(){
-  if(isDesktop) html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
-else html += `<div id="heatmap-container">${heatmapHtml}</div>`
-   container().innerHTML = `
+  container().innerHTML = `
     <div class="skeleton-card">
       <div class="skeleton skeleton-line tall"></div>
       <div class="skeleton skeleton-line medium"></div>
@@ -616,6 +614,13 @@ if(autumn.length){
   html += `</div>`
 }else{
   html += "<p class='notice'>Žádné koncerty</p>"
+}
+
+     const heatmapHtml = await renderHeatmap()
+if(isDesktop){
+  html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
+}else{
+  html += `<div id="heatmap-container">${heatmapHtml}</div>`
 }
 
     container().innerHTML = html
