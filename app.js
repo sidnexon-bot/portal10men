@@ -744,11 +744,64 @@ async function openEvent(id){
     ${event.NOTE ? "<div class='small' style='margin-top:4px'>" + escapeHtml(event.NOTE) + "</div>" : ""}
     `
 
-    // program
-if(program.length){
+// --- DOCHÁZKA ---
+const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
+const myStatus = myRow?.STATUS || ""
+
+html += `<div class="event-card">
+  <div class="event-label">Docházka</div>
+  ${MEMBER_EMAIL ? `
+    <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
+    <div class="btn-group">
+      <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+      <button onclick="doAttendance('${id}','Možná')">Možná</button>
+      <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+    </div>
+  ` : `<div class="muted">Vyber člena</div>`}
+</div>`
+
+// přehled skupiny
+const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
+const maybe = attendance.filter(a => a.STATUS === "Možná").length
+const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
+const open  = attendance.filter(a => !a.STATUS).length
+
+html += `<div class="card attendance-summary">
+  <div class="summary-item"><span class="icon">${iconCheck()}</span> Přijdu <b>${yes}</b></div>
+  <div class="summary-item"><span class="icon">${iconMaybe()}</span> Možná <b>${maybe}</b></div>
+  <div class="summary-item"><span class="icon">${iconClose()}</span> Nepřijdu <b>${no}</b></div>
+  <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
+</div>`
+
+html += "<div>"
+attendance.forEach(a => {
+  const icon = a.STATUS === "Přijdu"   ? iconCheck() :
+               a.STATUS === "Možná"    ? iconMaybe() :
+               a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+  html += `<div class="small"><span class="icon">${icon}</span> ${escapeHtml(a.NAME)}${a.REASON ? ` <span style="color:#999">· ${escapeHtml(a.REASON)}</span>` : ""}</div>`
+})
+html += "</div>"
+
+// --- POZNÁMKA ---
+if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+  html += `<div class="card">
+    <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+    <div class="btn-group" style="margin-top:8px">
+      <button onclick="saveNote('${id}')">Uložit poznámku</button>
+    </div>
+  </div>`
+}else if(event.NOTE){
+  html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
+}
+
+// --- PROGRAM ---
+const mainProgram   = program.filter(p => !p.ENCORE)
+const encoreProgram = program.filter(p => p.ENCORE)
+
+if(mainProgram.length){
   html += `<div class="event-card">
     <div class="event-label">Program</div>
-    ${program.map((p, i) => `
+    ${mainProgram.map((p, i) => `
       <div class="event-row">
         <div>
           <b>${i+1}. ${escapeHtml(p.NAME)}</b>
@@ -759,25 +812,25 @@ if(program.length){
         </div>
       </div>
     `).join("")}
-    ${program.filter(p => p.ENCORE).length ? `
-  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-    <div class="small" style="font-weight:600;margin-bottom:6px">Přídavky</div>
-    ${program.filter(p => p.ENCORE).map((p, i) => `
-      <div class="event-row">
-        <div>
-          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
-        </div>
+    ${encoreProgram.length ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
+        <div class="event-label" style="margin-bottom:6px">Přídavky</div>
+        ${encoreProgram.map((p, i) => `
+          <div class="event-row">
+            <div>
+              <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+              ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
+            </div>
+          </div>
+        `).join("")}
       </div>
-    `).join("")}
-  </div>
-` : ""}
+    ` : ""}
     ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-        <button onclick="openProgramEditor('${id}')" style="width:100%">🎵 Upravit program</button>
+        <button onclick="openProgramEditor('${id}')" style="width:100%">Upravit program</button>
       </div>
     ` : ""}
   </div>`
@@ -793,87 +846,36 @@ if(program.length){
   </div>`
 }
 
-// poznámka
+// --- INFODOKUMENT (viditelný všem) ---
+${event.DOC_URL ? `
+html += \`<a href="${escapeHtml(event.DOC_URL)}" target="_blank"
+  style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
+  Otevřít infodokument
+</a>\`
+` : ""}
+
+// --- ADMIN PANEL ---
 if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-  html += `<div class="card">
-  <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
-  <div class="btn-group" style="margin-top:8px">
-    <button onclick="saveNote('${id}')">Uložit poznámku</button>
-  </div>
-</div>`
-}else if(event.NOTE){
-  html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
-}
-
-    // docházka
-    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-    const myStatus = myRow?.STATUS || ""
-
-    html += `<div class="event-card">
-      <div class="event-label">Docházka</div>
-      ${MEMBER_EMAIL ? `
-        <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
-        <div class="btn-group">
-          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-          <button onclick="doAttendance('${id}','Možná')">Možná</button>
-          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-        </div>
-      ` : `<div class="muted">Vyber člena</div>`}
-    </div>`
-
-    // přehled skupiny
-    const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
-    const maybe = attendance.filter(a => a.STATUS === "Možná").length
-    const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
-    const open  = attendance.filter(a => !a.STATUS).length
-
-    html += `<div class="card attendance-summary">
-      <div class="summary-item"><span class="icon">${iconCheck()}</span> Přijdu <b>${yes}</b></div>
-      <div class="summary-item"><span class="icon">${iconMaybe()}</span> Možná <b>${maybe}</b></div>
-      <div class="summary-item"><span class="icon">${iconClose()}</span> Nepřijdu <b>${no}</b></div>
-      <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
-    </div>`
-
-    html += "<div>"
-    attendance.forEach(a => {
-      const icon = a.STATUS === "Přijdu"   ? iconCheck() :
-                   a.STATUS === "Možná"    ? iconMaybe() :
-                   a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-      html += `<div class="small"><span class="icon">${icon}</span> ${escapeHtml(a.NAME)}</div>`
-    })
-    html += "</div>"
-
-    // admin tlačítka
-    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `<hr>
   <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`
 
-  if(event.DOC_URL){
-    html += `<a href="${escapeHtml(event.DOC_URL)}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
-   Otevřít infodokument
-    </a>`
-  }
-
-  html += `<button onclick="uploadDocUrl('${id}')" style="width:100%">
-     ${event.DOC_URL ? "Změnit infodokument" : "Nahrát infodokument"}
-  </button>`
-
-  html += `<button onclick="openProgramEditor('${id}')" style="width:100%">
-    Vytvořit / upravit program
-  </button>`
+  html += `<div class="btn-group">
+    <button onclick="uploadDocUrl('${id}')" style="width:100%">
+      ${event.DOC_URL ? "Změnit infodokument" : "Nahrát infodokument"}
+    </button>
+  </div>`
 
   if(MEMBER_ROLE === "ADMIN"){
-    html += `<div class="btn-group" style="margin-top:16px">
-      <button onclick="openEventForm('${id}')" style="flex:1">Upravit akci</button>
-      <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">Smazat</button>
+    html += `<div class="btn-group">
+      <button onclick="openEventForm('${id}')">Upravit akci</button>
+      <button onclick="deleteEvent('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
     </div>`
   }
 
   html += `</div>`
 }
 
-
-    container().innerHTML = html
+container().innerHTML = html
 
   }catch(err){
     setError("Chyba při načítání akce: " + (err?.message || err))
