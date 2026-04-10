@@ -285,21 +285,24 @@ function showToast(msg, duration = 2000){
 }
 
 function showSaving(){
-  // overlay
   let overlay = document.getElementById("saving-overlay")
   if(!overlay){
     overlay = document.createElement("div")
     overlay.id = "saving-overlay"
     overlay.style.cssText = `
       position:fixed;inset:0;
-      background:transparent;
+      background:rgba(242,242,247,0.6);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
       z-index:500;
       pointer-events:all;
+      transition:opacity 0.2s ease;
     `
     document.body.appendChild(overlay)
   }
   showToast("Ukládám…", 10000)
 }
+
 
 function hideSaving(successMsg = "Uloženo ✓"){
   const overlay = document.getElementById("saving-overlay")
