@@ -1052,3 +1052,8 @@ body.dark .toast{
   background: rgba(255,255,255,0.15);
   backdrop-filter: blur(10px);
 }
+
+body.dark #saving-overlay{
+  background: rgba(28,28,30,0.6) !important;
+}
+
