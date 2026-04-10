@@ -1023,3 +1023,32 @@ body.dark a[style*="#e8e8ed"]{
   background: #3a3a3c !important;
   color: #0a84ff !important;
 }
+
+/* TOAST NOTIFIKACE */
+.toast{
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+body.dark .toast{
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+}
