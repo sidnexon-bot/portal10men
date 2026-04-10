@@ -1266,3 +1266,40 @@ body.dark #saving-overlay{
 
 }
 
+  main{
+    margin-left: 220px;
+    max-width: 900px;
+    padding: 40px 48px 60px;
+  }
+
+  .card, .event-card{
+    max-width: 100%;
+  }
+
+  /* oprav sidebar tlačítka */
+  .sidebar-nav-item{
+    background: transparent !important;
+  }
+
+  .sidebar-nav-item.active{
+    background: rgba(0,122,255,0.08) !important;
+    color: #007aff !important;
+  }
+
+  body.dark .sidebar-nav-item.active{
+    background: rgba(10,132,255,0.12) !important;
+    color: #0a84ff !important;
+  }
+
+  /* sidebar akce stejně */
+  .sidebar-action{
+    background: transparent !important;
+  }
+
+  /* dashboard dvousloupcový layout */
+  .desktop-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
