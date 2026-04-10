@@ -1370,14 +1370,16 @@ async function renderEnergy(){
       })
 
     html += `</select></label>
-      <label>Stav na začátku:<br>
-        <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-      </label>
-      <label>Stav na konci:<br>
-        <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-      </label>
-      <button onclick="saveEnergy()">Uložit</button>
-    </div>`
+  <label>Stav na začátku:<br>
+    <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+  </label>
+  <label>Stav na konci:<br>
+    <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+  </label>
+  <div class="btn-group" style="margin-top:8px">
+    <button onclick="saveEnergy()">Uložit</button>
+  </div>
+</div>`
 
     const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
