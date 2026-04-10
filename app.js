@@ -1040,7 +1040,7 @@ async function doAttendance(eventId, status){
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
-    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
     else openEvent(eventId)
   }catch(err){
     hideSaving("Chyba ✗")
@@ -1054,11 +1054,11 @@ async function doAttendanceWithReason(eventId, status){
   if(reason === null) return
   try{
     showSaving()
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
-    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
     else openEvent(eventId)
   }catch(err){
     hideSaving("Chyba ✗")
