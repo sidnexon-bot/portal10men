@@ -1157,6 +1157,20 @@ function setProgSection(section){
   }
 }
 
+function eventsMonthPrev(){
+  const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
+  const d = new Date(year, month - 2, 1)
+  window.EVENTS_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  renderEvents()
+}
+
+function eventsMonthNext(){
+  const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
+  const d = new Date(year, month, 1)
+  window.EVENTS_MONTH = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2,"0")
+  renderEvents()
+}
+
 function refreshProgSelected(){
   const el = document.getElementById("progSelected")
   if(el){
