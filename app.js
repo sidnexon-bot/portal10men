@@ -452,7 +452,7 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
 }
 
     // --- NEJBLIŽŠÍ AKCE ---
-    if(upcoming){
+   if(upcoming){
   html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
 
   let attendanceHtml = ""
@@ -460,34 +460,26 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
     let detail = {attendance:[]}
     try{
       detail = await cachedApi("eventdetail", {id: upcoming.ID})
-    }catch(e){
-      console.error("eventdetail fail", e)
-    }
+    }catch(e){ console.error("eventdetail fail", e) }
     const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
-
     attendanceHtml = `
-      <hr style="border:none;border-top:1px solid rgba(128,128,128,0.2);margin:12px 0">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Tvoje docházka</div>
+      <div style="font-size:13px;color:var(--muted);margin:12px 0 6px">Tvoje docházka</div>
       ${renderAttendanceStatus(myStatus)}
       <div class="btn-group" style="margin-top:10px">
         <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
         <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
         <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
       </div>`
+  }else{
+    attendanceHtml = "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
   }
 
   html += `<div class="card next" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
-    <b style="font-size:20px">${escapeHtml(upcoming.NAME)}</b><br>
-    <span class="small">
-      ${formatDate(upcoming.DATE)}
-      ${upcoming.START ? "· " + formatTime(upcoming.START) : ""}
-      ${upcoming.END   ? "– " + formatTime(upcoming.END)   : ""}
-    </span><br>
-    <span class="small">${escapeHtml(upcoming.PLACE)}</span>
-  </div>
-  <div class="card" style="margin-top:-8px;border-radius:0 0 18px 18px;padding-top:8px">
-    ${attendanceHtml || "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"}
+    <b style="font-size:20px;display:block;margin-bottom:6px">${escapeHtml(upcoming.NAME)}</b>
+    <div class="small">${formatDate(upcoming.DATE)}${upcoming.START ? " · " + formatTime(upcoming.START) : ""}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</div>
+    <div class="small">${escapeHtml(upcoming.PLACE)}</div>
+    ${attendanceHtml}
   </div>`
 }
 
@@ -498,16 +490,11 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
     </div>`
 
     // --- KONCERTY JARO/LÉTO ---
-html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
-if(spring.length){
-  html += `<div class="card" style="padding:0">`
-  spring.forEach((e, i) => {
-    const past = new Date(e.DATE) < now
-    const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-      <b style="font-size:15px">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-      <span class="small" style="text-align:right;margin-left:12px;flex-shrink:0">${formatDate(e.DATE)}${e.PLACE ? "<br>" + escapeHtml(e.PLACE) : ""}</span>
-    </div>`
+html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+  <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+  <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+  ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+</div>`
   })
   html += `</div>`
 }else{
@@ -515,15 +502,9 @@ if(spring.length){
 }
 
 // --- KONCERTY PODZIM/ZIMA ---
-html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
-if(autumn.length){
-  html += `<div class="card" style="padding:0">`
-  autumn.forEach((e, i) => {
-    const past = new Date(e.DATE) < now
-    const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
   <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-  <div class="small" style="margin-top:2px">${formatDate(e.DATE)}</div>
+  <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
   ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
 </div>`
   })
