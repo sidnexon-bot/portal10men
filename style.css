@@ -418,6 +418,17 @@ button[onclick*="'Nepřijdu'"]{
   color: #c00;
 }
 
+/* BUTTON GROUP — automatické rozložení */
+.btn-group{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-group button{
+  flex: 1;
+}
+
 /* Dark mode */
 body.dark button{
   background: #3a3a3c;
@@ -734,7 +745,7 @@ select:focus{
 }
 
 .attendance-buttons button{
-  flex:1;
+  flex: 1;
   justify-content:center;
   padding:12px 10px;
   border-radius:14px;
