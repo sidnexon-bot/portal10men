@@ -845,10 +845,11 @@ async function openEventForm(id){
     target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
   }else{
     container().innerHTML = html
-  }
-}
+     }
+  }  
 
   }catch(err){
+
     if(target){
       target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
     }else{
