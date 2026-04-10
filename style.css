@@ -1252,6 +1252,26 @@ body.dark #saving-overlay{
     background: var(--bg);
   }
 
+    /* master/detail layout */
+  .events-layout{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  #detail-panel{
+    position: sticky;
+    top: 40px;
+    background: var(--card);
+    border-radius: 18px;
+    padding: 20px;
+  }
+
+  body.dark #detail-panel{
+    background: #2c2c2e;
+  }
+
   body.dark .sidebar-action:hover,
   body.dark .sidebar-nav-item:hover{
     background: #2c2c2e;
