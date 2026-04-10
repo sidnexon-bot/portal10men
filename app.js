@@ -1093,7 +1093,6 @@ function refreshProgSelected(){
       </div>`
     }).join("")
   }
-}
 
 async function saveProgram(eventId){
   const main   = window.PROG_MAIN   || []
