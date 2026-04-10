@@ -277,6 +277,10 @@ function applyDarkMode(on){
   document.body.classList.toggle("dark", on)
   const btn = document.getElementById("darkModeToggle")
   if(btn) btn.textContent = on ? "☀️ Světlý režim" : "🌙 Tmavý režim"
+
+  // aktualizuj barvu status baru
+  const meta = document.querySelector('meta[name="theme-color"]:not([media])')
+  if(meta) meta.content = on ? "#1c1c1e" : "#f2f2f7"
 }
 
 function toggleDarkMode(){
