@@ -1275,19 +1275,31 @@ body.dark #saving-overlay{
     align-items: start;
     max-width: 560px;
     margin: 0 auto;
+    width: 100%;
   }
 
   .events-layout.two-col{
     grid-template-columns: 1fr 1fr;
-    max-width: none;
+    max-width: 100%;
     margin: 0;
   }
 
   .events-layout.three-col{
     grid-template-columns: 1fr 1fr 1fr;
-    max-width: none;
+    max-width: 100%;
     margin: 0;
   }
+
+  #detail-panel-slot,
+  #edit-panel-slot{
+    position: sticky;
+    top: 40px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    width: 100%;
+    min-width: 0;
+  }
+
 
   #detail-panel-slot,
   #edit-panel-slot{
@@ -1367,11 +1379,14 @@ body.dark .heatmap-desktop td div[style*="background:#f2f2f7"]{
     display: none;
   }
 
-  main{
+main{
     margin-left: 220px;
-    max-width: 900px;
-    padding: 40px 48px 60px;
+    width: calc(100vw - 220px);
+    max-width: none;
+    padding: 40px 32px 60px;
+    box-sizing: border-box;
   }
+
 
   .card, .event-card{
     max-width: 100%;
