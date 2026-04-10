@@ -1253,7 +1253,7 @@ body.dark #saving-overlay{
   }
 
     /* master/detail layout */
-      .events-layout{
+     .events-layout{
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
@@ -1264,6 +1264,14 @@ body.dark #saving-overlay{
     grid-template-columns: 1fr;
     max-width: 560px;
     margin: 0 auto;
+  }
+
+  #detail-panel-slot{
+    position: sticky;
+    top: 40px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    width: 100%;
   }
 
   #detail-panel{
