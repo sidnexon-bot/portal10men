@@ -265,6 +265,35 @@ function closeProfileMenu(){
 }
 
 /* ===============================
+   TOAST & LOADING
+================================ */
+
+function showToast(msg, duration = 2000){
+  let toast = document.getElementById("toast")
+  if(!toast){
+    toast = document.createElement("div")
+    toast.id = "toast"
+    toast.className = "toast"
+    document.body.appendChild(toast)
+  }
+  toast.textContent = msg
+  toast.classList.add("show")
+  clearTimeout(toast._timer)
+  toast._timer = setTimeout(() => {
+    toast.classList.remove("show")
+  }, duration)
+}
+
+function showSaving(){
+  showToast("Ukládám…", 10000)
+}
+
+function hideSaving(successMsg = "Uloženo ✓"){
+  showToast(successMsg, 1500)
+}
+
+
+/* ===============================
    DARK MODE
 ================================ */
 
