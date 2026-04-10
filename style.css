@@ -1421,3 +1421,29 @@ main{
   }
 
 }
+
+@media (min-width: 768px) and (max-width: 1024px){
+
+  main{
+    margin-left: 220px;
+    width: calc(100vw - 220px);
+    max-width: none;
+    padding: 24px 16px 60px;
+  }
+
+  .events-layout.two-col{
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .events-layout.three-col{
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .events-layout.three-col #edit-panel-slot{
+    grid-column: 1 / -1;
+  }
+
+}
+
