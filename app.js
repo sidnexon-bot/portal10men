@@ -1623,12 +1623,12 @@ async function renderHeatmap(){
       lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
     })
 
-    let html = `<h3 class="season-title">Docházka skupiny</h3>`
-    html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <button onclick="heatmapPrev()" style="padding:6px 12px">‹</button>
-      <span style="flex:1;text-align:center;font-weight:600">${escapeHtml(monthName)}</span>
-      <button onclick="heatmapNext()" style="padding:6px 12px">›</button>
-    </div>`
+    let html += `<h3 class="season-title">Docházka skupiny</h3>`
+html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:12px;padding:6px 10px">
+  <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
+  <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
+  <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
+</div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
@@ -1637,37 +1637,42 @@ async function renderHeatmap(){
 
     if(isDesktop){
       // Desktop — řádky = akce, sloupce = členové, celá jména
-      html += `<div style="overflow-x:auto">`
-      html += `<table class="heatmap" style="width:100%"><thead><tr>
-        <th style="text-align:left;padding:6px 8px;font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap">Akce</th>`
-      members.forEach(m => {
-        html += `<th style="padding:6px 4px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap">${escapeHtml(m.NAME.split(" ")[0])}<br><span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span></th>`
-      })
-      html += `</tr></thead><tbody>`
+      html += `<div style="overflow-x:auto">
+<table class="heatmap heatmap-desktop" style="width:auto;border-collapse:separate;border-spacing:0 4px"><thead><tr>
+  <th style="text-align:left;padding:6px 16px 6px 0;font-size:12px;color:var(--muted);font-weight:600">Akce</th>`
+members.forEach(m => {
+  html += `<th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;min-width:60px">
+    ${escapeHtml(m.NAME.split(" ")[0])}<br>
+    <span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span>
+  </th>`
+})
+html += `</tr></thead><tbody>`
 
-      filtered.forEach(e => {
-        html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
-        html += `<td style="padding:8px 8px 8px 0;font-size:12px;white-space:nowrap">
-          <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
-          <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
-        </td>`
-        members.forEach(m => {
-          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
-          const status = entry.status || ""
-          const reason = entry.reason || ""
-          const color  = status === "Přijdu"   ? "#d4f5e2" :
-                         status === "Možná"    ? "#fff4dc" :
-                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
-          const icon   = status === "Přijdu"   ? "✓" :
-                         status === "Možná"    ? "?" :
-                         status === "Nepřijdu" ? "✗" : ""
-          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
-          html += `<td class="heatmap-cell" style="background:${color};${status?"cursor:pointer":""};width:32px;height:32px;border-radius:8px;text-align:center;font-size:13px" onclick="${click}">${icon}</td>`
-        })
-        html += `</tr>`
-      })
+filtered.forEach(e => {
+  html += `<tr>`
+  html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
+    <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
+    <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
+  </td>`
+  members.forEach(m => {
+    const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
+    const status = entry.status || ""
+    const reason = entry.reason || ""
+    const color  = status === "Přijdu"   ? "#d4f5e2" :
+                   status === "Možná"    ? "#fff4dc" :
+                   status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
+    const icon   = status === "Přijdu"   ? "✓" :
+                   status === "Možná"    ? "?" :
+                   status === "Nepřijdu" ? "✗" : ""
+    const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
+    html += `<td style="padding:2px 4px;text-align:center;vertical-align:middle">
+      <div style="background:${color};${status?"cursor:pointer":""}width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin:0 auto" onclick="${click}">${icon}</div>
+    </td>`
+  })
+  html += `</tr>`
+})
 
-      html += `</tbody></table></div>`
+html += `</tbody></table></div>`
 
     }else{
       // Mobil — původní kompaktní verze s iniciálami
