@@ -327,6 +327,7 @@ function applyDarkMode(on){
   // aktualizuj barvu status baru
   const meta = document.querySelector('meta[name="theme-color"]:not([media])')
   if(meta) meta.content = on ? "#1c1c1e" : "#f2f2f7"
+  updateSidebarDarkLabel()
 }
 
 function toggleDarkMode(){
@@ -386,12 +387,63 @@ async function start(){
     setActiveTab("dashboard")
     renderDashboard()
     initPullToRefresh()
+    initSidebar()
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
 
 }
+
+/* ===============================
+   SIDEBAR (desktop)
+================================ */
+
+function initSidebar(){
+  const sidebar = document.getElementById("sidebar")
+  if(!sidebar) return
+
+  // zobraz sidebar jen na desktopu
+  if(window.innerWidth >= 768){
+    sidebar.style.display = "flex"
+  }
+
+  window.addEventListener("resize", () => {
+    sidebar.style.display = window.innerWidth >= 768 ? "flex" : "none"
+  })
+
+  // naplň profil
+  document.getElementById("sidebarAvatar").textContent = getInitials(MEMBER_NAME)
+  document.getElementById("sidebarName").textContent   = MEMBER_NAME  || "—"
+  document.getElementById("sidebarRole").textContent   = MEMBER_ROLE  || "—"
+
+  // navigace
+  document.getElementById("sidebarDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard(); updateSidebarActive("dashboard") }
+  document.getElementById("sidebarEvents").onclick    = () => { setActiveTab("events");    window.EVENTS_MONTH = null; renderEvents();   updateSidebarActive("events") }
+  document.getElementById("sidebarPayments").onclick  = () => { setActiveTab("payments");  renderPayments();  updateSidebarActive("payments") }
+  document.getElementById("sidebarEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy();    updateSidebarActive("energy") }
+
+  // dark mode label
+  updateSidebarDarkLabel()
+}
+
+function updateSidebarActive(tab){
+  const map = {
+    dashboard: "sidebarDashboard",
+    events:    "sidebarEvents",
+    payments:  "sidebarPayments",
+    energy:    "sidebarEnergy"
+  }
+  document.querySelectorAll(".sidebar-nav-item").forEach(b => b.classList.remove("active"))
+  const btn = document.getElementById(map[tab])
+  if(btn) btn.classList.add("active")
+}
+
+function updateSidebarDarkLabel(){
+  const label = document.getElementById("sidebarDarkLabel")
+  if(label) label.textContent = document.body.classList.contains("dark") ? "Světlý režim" : "Tmavý režim"
+}
+
 
 /* ===============================
    MEMBER MODAL
