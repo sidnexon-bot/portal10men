@@ -539,8 +539,8 @@ const upcoming = events
   .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
     const isDesktop = window.innerWidth >= 768
-let html = isDesktop ? `<div class="desktop-grid"><div class="desktop-col-left">` : ""
-
+let html = ""
+if(isDesktop) html += `<div class="desktop-grid"><div class="desktop-col-left">`
 
     // --- NEJBLIŽŠÍ AKCE ---
    if(upcoming){
