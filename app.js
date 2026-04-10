@@ -755,22 +755,16 @@ ${(()=>{
     })
 
 if(isDesktop){
-  html = `<div class="events-layout"><div>${html}</div></div>`
+  html = `<div class="events-layout"><div id="events-list">${html}</div><div id="detail-panel-slot" style="position:sticky;top:40px"></div></div>`
   container().innerHTML = html
-  // pokud byl předtím otevřen detail, znovu ho zobraz
-  if(detailPanel().innerHTML){
-    detailPanel().style.display = "block"
-    // přidej detail panel do gridu
-    container().querySelector(".events-layout").appendChild(detailPanel())
-  }
 }else{
   container().innerHTML = html
 }
 
-    document.querySelectorAll(".swipe-card").forEach(card => {
-      const id = card.dataset.id
-      addSwipe(card, id)
-    })
+document.querySelectorAll(".swipe-card").forEach(card => {
+  const id = card.dataset.id
+  addSwipe(card, id)
+})
 
   }catch(err){
     setError("Chyba při načítání akcí: " + (err?.message || err))
@@ -798,14 +792,16 @@ function eventsMonthNext(){
 
 async function openEvent(id){
 
-  const target = (isDesktop && ACTIVE_TAB === "events") ? detailPanel() : container()
+  const slotEl = document.getElementById("detail-panel-slot")
+  const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
 
-  if(isDesktop && ACTIVE_TAB === "events"){
-    target.style.display = "block"
-    target.innerHTML = `<div class="skeleton-card">
-      <div class="skeleton skeleton-line tall"></div>
-      <div class="skeleton skeleton-line medium"></div>
-      <div class="skeleton skeleton-line short"></div>
+  if(target){
+    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-line tall"></div>
+        <div class="skeleton skeleton-line medium"></div>
+        <div class="skeleton skeleton-line short"></div>
+      </div>
     </div>`
   }else{
     setLoading()
@@ -957,7 +953,11 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `</div>`
 }
 
-target.innerHTML = html
+if(target){
+  target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
+}else{
+  container().innerHTML = html
+}
 
   }catch(err){
     setError("Chyba při načítání akce: " + (err?.message || err))
