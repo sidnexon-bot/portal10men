@@ -1182,7 +1182,6 @@ function refreshProgSelected(){
         if(!song) return ""
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
           <span style="flex:1">${i+1}. ${escapeHtml(song.NAME)}</span>
-          <div id="progSongList" style="max-height:240px;overflow-y:auto;min-height:60px">
           <div style="display:flex;gap:4px">
             <button onclick="moveProgSong(${i},-1)" style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===0?"disabled":""}>↑</button>
             <button onclick="moveProgSong(${i},1)"  style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===window.PROG_MAIN.length-1?"disabled":""}>↓</button>
