@@ -847,12 +847,12 @@ if(mainProgram.length){
 }
 
 // --- INFODOKUMENT (viditelný všem) ---
-${event.DOC_URL ? `
-html += \`<a href="${escapeHtml(event.DOC_URL)}" target="_blank"
-  style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
-  Otevřít infodokument
-</a>\`
-` : ""}
+if(event.DOC_URL){
+  html += `<a href="${escapeHtml(event.DOC_URL)}" target="_blank"
+    style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
+    Otevřít infodokument
+  </a>`
+}
 
 // --- ADMIN PANEL ---
 if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
