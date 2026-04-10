@@ -899,15 +899,22 @@ async function openProgramEditor(eventId){
   .sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
 
     // ulož do window pro přístup z search funkce
-    window.PROG_SONGS   = active
-    window.PROG_EVENT   = eventId
-    window.PROG_MAIN    = [...currentIds]
-    window.PROG_ENCORE  = ["", ""]
-    window.PROG_CURRENT = []
-    PROG_ACTIVE_SECTION = "main"
+   const mainProgram   = program.filter(p => !p.ENCORE)
+const encoreProgram = program.filter(p => p.ENCORE)
 
-container().innerHTML = renderProgramEditor(active, currentIds, event)
+  window.PROG_SONGS   = active
+  window.PROG_EVENT   = eventId
+  window.PROG_MAIN    = mainProgram.map(p => p.SONG_ID)
+  window.PROG_ENCORE  = [
+  encoreProgram[0]?.SONG_ID || "",
+  encoreProgram[1]?.SONG_ID || ""
+]
+window.PROG_CURRENT = []
+PROG_ACTIVE_SECTION = "main"
+
+container().innerHTML = renderProgramEditor(active, [], event)
 refreshProgSelected()
+
 
 
   }catch(err){
@@ -918,41 +925,34 @@ refreshProgSelected()
 
 function renderProgramEditor(songs, currentIds, event){
 
-  window.PROG_MAIN   = [...(window.PROG_MAIN   || [])]
-  window.PROG_ENCORE = [...(window.PROG_ENCORE || ["",""])]
-
   let html = `
   <button onclick="openEvent('${escapeHtml(window.PROG_EVENT)}')" style="margin-bottom:12px">← Zpět</button>
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
 
   <div class="card" style="margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="small" style="font-weight:600">Program</div>
-      <div id="prog-main-indicator" class="small" style="color:#007aff;font-weight:600">← přidávám sem</div>
-    </div>
+    <div class="small" style="font-weight:600;margin-bottom:8px">Program</div>
     <div id="progSelected"></div>
   </div>
 
-  <div class="card" style="margin-bottom:12px" onclick="setProgSection('encore')">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="small" style="font-weight:600">Přídavky</div>
-      <div id="prog-encore-indicator" class="small" style="color:#007aff;font-weight:600;display:none">← přidávám sem</div>
-    </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="small" style="font-weight:600;margin-bottom:8px">Přídavky</div>
     <div id="progEncores"></div>
   </div>
 
   <div class="card" style="margin-bottom:16px">
-    <input
-      id="progSearch"
-      placeholder="🔍 Hledat skladbu…"
-      oninput="filterProgSongs(this.value)"
-      style="margin-bottom:12px"
-    >
+    <div class="small" style="font-weight:600;margin-bottom:8px">
+      Přidávám do: 
+      <button onclick="setProgSection('main')"   id="btnSectionMain"   style="padding:4px 10px;font-size:12px;background:#007aff;color:#fff">Program</button>
+      <button onclick="setProgSection('encore')" id="btnSectionEncore" style="padding:4px 10px;font-size:12px;background:#e8e8ed;color:#000">Přídavky</button>
+    </div>
+    <input id="progSearch" placeholder="🔍 Hledat skladbu…" oninput="filterProgSongs(this.value)" style="margin-bottom:12px">
     <div id="progSongList" style="max-height:240px;overflow-y:auto">`
 
   songs.forEach(r => {
-    const checked = window.PROG_MAIN.includes(r.ID) || window.PROG_ENCORE.includes(r.ID)
-    html += `<div class="prog-song-row" data-id="${escapeHtml(r.ID)}" data-name="${escapeHtml(r.NAME).toLowerCase()}" data-author="${escapeHtml(r.AUTHOR || "").toLowerCase()}"
+    html += `<div class="prog-song-row"
+      data-id="${escapeHtml(r.ID)}"
+      data-name="${escapeHtml(r.NAME).toLowerCase()}"
+      data-author="${escapeHtml(r.AUTHOR || "").toLowerCase()}"
       onclick="toggleProgSong('${escapeHtml(r.ID)}')"
       style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f2f2f7;cursor:pointer">
       <div>
@@ -961,7 +961,6 @@ function renderProgramEditor(songs, currentIds, event){
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         ${r.PDF ? `<a href="${escapeHtml(r.PDF)}" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#007aff;text-decoration:none">📄</a>` : ""}
-        <span id="progcheck_${escapeHtml(r.ID)}" style="font-size:16px">${checked ? "✅" : ""}</span>
       </div>
     </div>`
   })
@@ -976,71 +975,20 @@ function renderProgramEditor(songs, currentIds, event){
   return html
 }
 
-function filterProgSongs(query){
-  const q = query.toLowerCase().trim()
-  document.querySelectorAll(".prog-song-row").forEach(row => {
-    const name   = row.dataset.name   || ""
-    const author = row.dataset.author || ""
-    row.style.display = (!q || name.includes(q) || author.includes(q)) ? "" : "none"
-  })
-}
-
-function toggleProgSong(songId){
-  const inMain   = window.PROG_MAIN.includes(songId)
-  const inEncore = window.PROG_ENCORE.includes(songId)
-
-  if(inMain || inEncore){
-    // odeber odkudkoli
-    window.PROG_MAIN   = window.PROG_MAIN.filter(id => id !== songId)
-    window.PROG_ENCORE = window.PROG_ENCORE.map(id => id === songId ? "" : id)
-  }else{
-    // přidej do aktivní sekce
-    if(PROG_ACTIVE_SECTION === "encore"){
-      const free = window.PROG_ENCORE.indexOf("")
-      if(free > -1){
-        window.PROG_ENCORE[free] = songId
-      }else{
-        showToast("Přídavky jsou plné (max 2)")
-        return
-      }
-    }else{
-      window.PROG_MAIN.push(songId)
-    }
-  }
-
-  refreshProgSelected()
-  const check = document.getElementById("progcheck_" + songId)
-  if(check){
-    const selected = window.PROG_MAIN.includes(songId) || window.PROG_ENCORE.includes(songId)
-    check.textContent = selected ? "✅" : ""
-  }
-}
-
-function removeProgSong(songId, list, encoreIdx){
-  if(list === "main"){
-    window.PROG_MAIN = window.PROG_MAIN.filter(id => id !== songId)
-  }else{
-    window.PROG_ENCORE[encoreIdx] = ""
-  }
-  refreshProgSelected()
-  const check = document.getElementById("progcheck_" + songId)
-  if(check) check.textContent = ""
-}
-
-function moveProgSong(idx, dir){
-  const arr = window.PROG_MAIN
-  const newIdx = idx + dir
-  if(newIdx < 0 || newIdx >= arr.length) return
-  ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
-  refreshProgSelected()
-}
+let PROG_ACTIVE_SECTION = "main"
 
 function setProgSection(section){
   PROG_ACTIVE_SECTION = section
-  const mainInd   = document.getElementById("prog-main-indicator")
-  const encoreInd = document.getElementById("prog-encore-indicator")
-  if(mainInd)   mainInd.style.display   = section === "main"   ? "" : "none"
-  if(encoreInd) encoreInd.style.display = section === "encore" ? "" : "none"
+  const btnMain   = document.getElementById("btnSectionMain")
+  const btnEncore = document.getElementById("btnSectionEncore")
+  if(btnMain){
+    btnMain.style.background   = section === "main"   ? "#007aff" : "#e8e8ed"
+    btnMain.style.color        = section === "main"   ? "#fff"    : "#000"
+  }
+  if(btnEncore){
+    btnEncore.style.background = section === "encore" ? "#007aff" : "#e8e8ed"
+    btnEncore.style.color      = section === "encore" ? "#fff"    : "#000"
+  }
 }
 
 function refreshProgSelected(){
@@ -1053,11 +1001,11 @@ function refreshProgSelected(){
         const song = window.PROG_SONGS.find(r => r.ID === id)
         if(!song) return ""
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
-          <span style="flex:1" onclick="setProgSection('main')">${i+1}. ${escapeHtml(song.NAME)}</span>
+          <span style="flex:1">${i+1}. ${escapeHtml(song.NAME)}</span>
           <div style="display:flex;gap:4px">
             <button onclick="moveProgSong(${i},-1)" style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===0?"disabled":""}>↑</button>
             <button onclick="moveProgSong(${i},1)"  style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===window.PROG_MAIN.length-1?"disabled":""}>↓</button>
-            <button onclick="removeProgSong('${escapeHtml(id)}','main')" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>
+            <button onclick="removeProgSong('main',${i})" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>
           </div>
         </div>`
       }).join("")
@@ -1066,44 +1014,67 @@ function refreshProgSelected(){
 
   const ee = document.getElementById("progEncores")
   if(ee){
-    ee.innerHTML = [0,1].map(i => {
-      const id   = window.PROG_ENCORE[i] || ""
-      const song = id ? window.PROG_SONGS.find(r => r.ID === id) : null
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7" onclick="setProgSection('encore')">
-        <span style="flex:1;color:${song ? "inherit" : "var(--muted)"}">
-          ${i+1}. ${song ? escapeHtml(song.NAME) : "— nevybráno"}
-        </span>
-        ${song ? `<button onclick="removeProgSong('${escapeHtml(id)}','encore',${i})" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
-      </div>`
-    }).join("")
+    const encores = window.PROG_ENCORE.filter(Boolean)
+    if(!encores.length){
+      ee.innerHTML = `<p class="notice" style="margin:0">Zatím žádné přídavky</p>`
+    }else{
+      ee.innerHTML = encores.map((id, i) => {
+        const song = window.PROG_SONGS.find(r => r.ID === id)
+        if(!song) return ""
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
+          <span style="flex:1">${i+1}. ${escapeHtml(song.NAME)}</span>
+          <button onclick="removeProgSong('encore',${i})" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>
+        </div>`
+      }).join("")
+    }
   }
 }
 
-  // přídavky
-  const ee = document.getElementById("progEncores")
-  if(ee){
-    ee.innerHTML = [0,1].map(i => {
-      const id   = window.PROG_ENCORE[i] || ""
-      const song = id ? window.PROG_SONGS.find(r => r.ID === id) : null
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
-        <span style="flex:1;color:${song ? "inherit" : "var(--muted)"}">
-          Přídavek ${i+1}${song ? ": " + escapeHtml(song.NAME) : " — nevybráno"}
-        </span>
-        ${song ? `<button onclick="removeProgSong('${escapeHtml(id)}','encore',${i})" style="padding:4px 10px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
-      </div>`
-    }).join("")
+function toggleProgSong(songId){
+  if(PROG_ACTIVE_SECTION === "encore"){
+    const filled = window.PROG_ENCORE.filter(Boolean).length
+    if(filled >= 2){
+      showToast("Přídavky jsou plné (max 2)")
+      return
+    }
+    const free = window.PROG_ENCORE.indexOf("")
+    if(free > -1) window.PROG_ENCORE[free] = songId
+  }else{
+    window.PROG_MAIN.push(songId)
   }
+  refreshProgSelected()
+}
+
+function removeProgSong(list, idx){
+  if(list === "main"){
+    window.PROG_MAIN.splice(idx, 1)
+  }else{
+    window.PROG_ENCORE[idx] = ""
+  }
+  refreshProgSelected()
+}
+
+function moveProgSong(idx, dir){
+  const arr    = window.PROG_MAIN
+  const newIdx = idx + dir
+  if(newIdx < 0 || newIdx >= arr.length) return
+  ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+  refreshProgSelected()
+}
 
 async function saveProgram(eventId){
   const main   = window.PROG_MAIN   || []
   const encore = (window.PROG_ENCORE || []).filter(Boolean)
-  const songs  = [...main, ...encore]
   try{
     showSaving()
-    await api("setprogram", {id: eventId, songs: JSON.stringify(songs)})
+    await api("setprogram", {
+      id:     eventId,
+      songs:  JSON.stringify(main),
+      encore: JSON.stringify(encore)
+    })
     invalidateCache("eventdetail", eventId)
     lsDel("cache_repertoar")
-    hideSaving(`Program uložen ✓`)
+    hideSaving("Program uložen ✓")
     openEvent(eventId)
   }catch(err){
     hideSaving("Chyba ✗")
