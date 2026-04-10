@@ -18,6 +18,10 @@ body{
   color:var(--text);
 }
 
+main{
+  margin-left: 0;
+}
+
 /* HEADER */
 
 header{
@@ -1256,12 +1260,6 @@ body.dark #saving-overlay{
   /* hlavní obsah */
   header{
     display: none;
-  }
-
-  main{
-    margin-left: 220px;
-    max-width: 680px;
-    padding: 40px 32px 60px;
   }
 
 }
