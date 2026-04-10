@@ -10,7 +10,7 @@ let AUTH_ROLE = null // původní role přihlášeného – nemění se při př
 
 const BULLETIN = `Koncert s Verum a InVoice se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
-const isDesktop = window.innerWidth >= 768
+const isDesktop = window.innerWidth >= 1025
 
 // Inicializace identity z Google session (přihlášení přes login.html)
 function initMemberFromSession(){
