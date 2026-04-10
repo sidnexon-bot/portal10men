@@ -481,13 +481,15 @@ const upcoming = events
     const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
     attendanceHtml = `
-      <div style="font-size:13px;color:var(--muted);margin:12px 0 6px">Tvoje docházka</div>
-      ${renderAttendanceStatus(myStatus)}
-      <div class="btn-group" style="margin-top:10px">
-        <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-        <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
-        <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
-      </div>`
+  <hr style="border:none;border-top:1px solid rgba(128,128,128,0.15);margin:12px -16px">
+  <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Tvoje docházka</div>
+  ${renderAttendanceStatus(myStatus)}
+  <div class="btn-group" style="margin-top:10px">
+    <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
+    <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
+    <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+  </div>`
+
   }else{
     attendanceHtml = "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
   }
