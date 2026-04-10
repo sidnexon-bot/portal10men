@@ -477,7 +477,7 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
         html += `<div class="card">
           <b>Tvoje docházka:</b><br>
           ${renderAttendanceStatus(myStatus)}
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <div class="btn-group">
             <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
             <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
             <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
@@ -758,7 +758,7 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       <div class="event-label">Docházka</div>
       ${MEMBER_EMAIL ? `
         <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
-        <div class="attendance-buttons">
+        <div class="btn-group">
           <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
           <button onclick="doAttendance('${id}','Možná')">Možná</button>
           <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
@@ -808,7 +808,7 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   </button>`
 
   if(MEMBER_ROLE === "ADMIN"){
-    html += `<div style="display:flex;gap:8px">
+    html += `<div class="btn-group" style="margin-top:16px">
       <button onclick="openEventForm('${id}')" style="flex:1">Upravit akci</button>
       <button onclick="deleteEvent('${id}')" style="flex:1;background:#fdecec;color:#c00">Smazat</button>
     </div>`
@@ -927,7 +927,7 @@ function renderProgramEditor(songs, currentIds, event){
 
   html += `</div></div>
 
-  <div style="display:flex;gap:8px">
+  <div class="btn-group" style="margin-top:16px">
     <button onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="flex:1;background:#eaf7ef;color:#1a7a3a">Uložit program</button>
     <button onclick="openEvent('${escapeHtml(window.PROG_EVENT)}')" style="flex:1">Zrušit</button>
   </div>`
@@ -1247,7 +1247,7 @@ async function openEventForm(id){
         <option value="Proběhlá"  ${event.STATUS === "Proběhlá"  ? "selected" : ""}>Proběhlá</option>
       </select>
     </label>
-    <div style="display:flex;gap:8px;margin-top:16px">
+    <div class="btn-group" style="margin-top:16px">
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="flex:1;background:#eaf7ef;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
       </button>
