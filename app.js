@@ -895,9 +895,8 @@ async function openProgramEditor(eventId){
       .sort((a,b) => Number(a.ORDER) - Number(b.ORDER))
       .map(p => p.SONG_ID)
 
-    const active = repertoar.filter(r =>
-      r.STATUS === "Aktivní" || r.STATUS === "aktivní"
-    ).sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
+    const active = repertoar
+  .sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
 
     // ulož do window pro přístup z search funkce
     window.PROG_SONGS   = active
