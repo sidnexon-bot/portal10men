@@ -1257,12 +1257,10 @@ body.dark #saving-overlay{
     background: #2c2c2e;
   }
 
-  /* hlavní obsah */
+    /* hlavní obsah */
   header{
     display: none;
   }
-
-}
 
   main{
     margin-left: 220px;
@@ -1301,3 +1299,5 @@ body.dark #saving-overlay{
     gap: 20px;
     align-items: start;
   }
+
+}
