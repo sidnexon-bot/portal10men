@@ -1623,7 +1623,7 @@ async function renderHeatmap(){
       lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
     })
 
-    let html += `<h3 class="season-title">Docházka skupiny</h3>`
+    let html = `<h3 class="season-title">Docházka skupiny</h3>`
 html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:12px;padding:6px 10px">
   <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
   <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
