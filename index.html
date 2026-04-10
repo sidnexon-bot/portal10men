@@ -12,6 +12,64 @@
   <script src="auth.js"></script>
 </head>
 <body>
+  <!-- SIDEBAR (desktop only) -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-logo">10base</div>
+  <div class="sidebar-subtitle">Powered by 10menogram</div>
+
+  <div class="sidebar-profile">
+    <div class="sidebar-profile-avatar" id="sidebarAvatar">?</div>
+    <div>
+      <div class="sidebar-profile-name" id="sidebarName">—</div>
+      <div class="sidebar-profile-role" id="sidebarRole">—</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="sidebar-nav-item active" id="sidebarDashboard">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      </span>
+      Přehled
+    </button>
+    <button class="sidebar-nav-item" id="sidebarEvents">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </span>
+      Akce
+    </button>
+    <button class="sidebar-nav-item" id="sidebarPayments">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      </span>
+      Platby
+    </button>
+    <button class="sidebar-nav-item" id="sidebarEnergy">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L4.5 13.5H12L11 22l8.5-11.5H12L13 2z"/></svg>
+      </span>
+      Energie
+    </button>
+  </nav>
+
+  <hr class="sidebar-divider">
+
+  <div class="sidebar-bottom">
+    <button class="sidebar-action" onclick="toggleDarkMode()">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </span>
+      <span id="sidebarDarkLabel">Tmavý režim</span>
+    </button>
+    <button class="sidebar-action" onclick="Auth.logout()" style="color:#ff3b30">
+      <span class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </span>
+      Odhlásit se
+    </button>
+  </div>
+</aside>
+
  <header>
   <div class="header-inner">
     <div class="header-row">
