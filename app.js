@@ -202,7 +202,9 @@ function container(){
 }
 
 function setLoading(){
-  container().innerHTML = `
+  if(isDesktop) html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
+else html += `<div id="heatmap-container">${heatmapHtml}</div>`
+   container().innerHTML = `
     <div class="skeleton-card">
       <div class="skeleton skeleton-line tall"></div>
       <div class="skeleton skeleton-line medium"></div>
