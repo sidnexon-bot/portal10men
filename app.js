@@ -743,9 +743,11 @@ if(program.length){
 // poznámka
 if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `<div class="card">
-    <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
-    <button style="margin-top:8px" onclick="saveNote('${id}')">Uložit poznámku</button>
-  </div>`
+  <textarea id="eventNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+  <div class="btn-group" style="margin-top:8px">
+    <button onclick="saveNote('${id}')">Uložit poznámku</button>
+  </div>
+</div>`
 }else if(event.NOTE){
   html += `<div class="card"><p class="small">${escapeHtml(event.NOTE)}</p></div>`
 }
