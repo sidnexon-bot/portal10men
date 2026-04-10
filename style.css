@@ -1253,11 +1253,17 @@ body.dark #saving-overlay{
   }
 
     /* master/detail layout */
-    .events-layout{
+      .events-layout{
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 24px;
     align-items: start;
+  }
+
+  .events-layout.single{
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    margin: 0 auto;
   }
 
   #detail-panel{
