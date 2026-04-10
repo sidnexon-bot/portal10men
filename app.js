@@ -489,12 +489,18 @@ if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       <p>${escapeHtml(BULLETIN).replaceAll("\n","<br>")}</p>
     </div>`
 
-    // --- KONCERTY JARO/LÉTO ---
-html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-  <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-  <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-  ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-</div>`
+   // --- KONCERTY JARO/LÉTO ---
+html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
+if(spring.length){
+  html += `<div class="card" style="padding:0">`
+  spring.forEach((e, i) => {
+    const past   = new Date(e.DATE) < now
+    const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+      <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+      <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+      ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+    </div>`
   })
   html += `</div>`
 }else{
@@ -502,17 +508,22 @@ html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16p
 }
 
 // --- KONCERTY PODZIM/ZIMA ---
-html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-  <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-  <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-  ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-</div>`
+html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
+if(autumn.length){
+  html += `<div class="card" style="padding:0">`
+  autumn.forEach((e, i) => {
+    const past   = new Date(e.DATE) < now
+    const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+      <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+      <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+      ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+    </div>`
   })
   html += `</div>`
 }else{
   html += "<p class='notice'>Žádné koncerty</p>"
 }
-
     const heatmapHtml = await renderHeatmap()
     html += `<div id="heatmap-container">${heatmapHtml}</div>`
 
