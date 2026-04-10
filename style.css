@@ -1257,6 +1257,16 @@ body.dark #saving-overlay{
     background: #2c2c2e;
   }
 
+  .heatmap-desktop th,
+.heatmap-desktop td{
+  white-space: nowrap;
+}
+
+.heatmap-desktop td.heatmap-cell{
+  width: auto;
+  min-width: 36px;
+}
+
     /* hlavní obsah */
   header{
     display: none;
