@@ -590,18 +590,18 @@ if(MEMBER_EMAIL){
 
 if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
   html += `<div class="btn-group" style="margin-bottom:16px">`
-  html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">📄 Infodokument</a>`
+  html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
   if(MEMBER_ROLE === "ADMIN"){
-    html += `<button onclick="openEventForm()">+ Přidat akci</button>`
+    html += `<button onclick="openEventForm()">+ Přidat novou akci</button>`
   }
   html += `</div>`
 }
 
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
-      <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
-      <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
-    </div>`
+   html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+  <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
+  <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
+  <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
+</div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
