@@ -1018,3 +1018,8 @@ body.dark .prog-song-row{
 body.dark .prog-song-row .small{
   color: #8e8e93;
 }
+
+body.dark a[style*="#e8e8ed"]{
+  background: #3a3a3c !important;
+  color: #0a84ff !important;
+}
