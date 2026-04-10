@@ -1220,6 +1220,11 @@ body.dark #saving-overlay{
     color: #0a84ff;
   }
 
+  .sidebar-nav-item,
+  .sidebar-action{
+    justify-content: flex-start;
+  }
+
   .sidebar-divider{
     border: none;
     border-top: 1px solid #e5e5ea;
