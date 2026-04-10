@@ -771,177 +771,82 @@ async function renderEvents(){
 
 }
 
-async function openEvent(id){
+async function openEventForm(id){
 
   const slotEl = document.getElementById("detail-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
 
-  const skeletonHtml = `<div style="background:var(--card);border-radius:18px;padding:20px">
-    <div class="skeleton-card" style="background:transparent">
-      <div class="skeleton skeleton-line tall"></div>
-      <div class="skeleton skeleton-line medium"></div>
-      <div class="skeleton skeleton-line short"></div>
-    </div>
-  </div>`
-
   if(target){
     const layout = document.getElementById("events-layout")
     if(layout) layout.classList.remove("single")
-    target.innerHTML = skeletonHtml
+    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
+      <div class="skeleton-card" style="background:transparent">
+        <div class="skeleton skeleton-line tall"></div>
+        <div class="skeleton skeleton-line medium"></div>
+      </div>
+    </div>`
   }else{
     setLoading()
   }
 
-  try{
-
-    const data       = await cachedApi("eventdetail", {id})
-    const event      = data.event      || {}
-    const program    = data.program    || []
-    const attendance = data.attendance || []
-
-    let html = `
-      ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
-      <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
-
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}</b></div>
-          <div><span class="small" style="display:block;margin-bottom:2px">Čas</span><b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b></div>
-          <div><span class="small" style="display:block;margin-bottom:2px">Místo</span><b>${escapeHtml(event.PLACE) || "—"}</b></div>
-          ${event.NOTE ? `<div style="padding-top:8px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
-        </div>
-      </div>`
-
-    // --- DOCHÁZKA ---
-    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-    const myStatus = myRow?.STATUS || ""
-
-    html += `<div class="event-card">
-      <div class="event-label">Docházka</div>
-      ${MEMBER_EMAIL ? `
-        <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
-        <div class="btn-group">
-          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-          <button onclick="doAttendance('${id}','Možná')">Možná</button>
-          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-        </div>
-      ` : `<div class="muted">Vyber člena</div>`}
-    </div>`
-
-    const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
-    const maybe = attendance.filter(a => a.STATUS === "Možná").length
-    const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
-    const open  = attendance.filter(a => !a.STATUS).length
-
-    html += `<div class="card attendance-summary">
-      <div class="summary-item"><span class="icon">${iconCheck()}</span> Přijdu <b>${yes}</b></div>
-      <div class="summary-item"><span class="icon">${iconMaybe()}</span> Možná <b>${maybe}</b></div>
-      <div class="summary-item"><span class="icon">${iconClose()}</span> Nepřijdu <b>${no}</b></div>
-      <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
-    </div>`
-
-    html += `<div style="margin-bottom:20px">`
-    attendance.forEach(a => {
-      const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                    a.STATUS === "Možná"    ? iconMaybe() :
-                    a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-      const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                    a.STATUS === "Možná"    ? "#ff9f0a" :
-                    a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-      html += `<div class="small" style="padding:3px 0;color:${color}">
-        <span class="icon" style="color:${color}">${icon}</span>
-        ${escapeHtml(a.NAME)}
-        ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-      </div>`
-    })
-    html += `</div>`
-
-    // --- PROGRAM ---
-    const mainProgram   = program.filter(p => !p.ENCORE)
-    const encoreProgram = program.filter(p => p.ENCORE)
-
-    if(mainProgram.length){
-      html += `<div class="event-card">
-        <div class="event-label">Program</div>
-        ${mainProgram.map((p, i) => `
-          <div class="event-row">
-            <div>
-              <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-              ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
-            </div>
-          </div>
-        `).join("")}
-        ${encoreProgram.length ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <div class="event-label" style="margin-bottom:6px">Přídavky</div>
-            ${encoreProgram.map((p, i) => `
-              <div class="event-row">
-                <div>
-                  <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-                  ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        ` : ""}
-        ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${id}')" style="width:100%">Upravit program</button>
-          </div>
-        ` : ""}
-      </div>`
-    }else{
-      html += `<div class="event-card">
-        <div class="event-label">Program</div>
-        <p class="notice" style="margin:0">Program není k dispozici</p>
-        ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${id}')" style="width:100%">Vytvořit program</button>
-          </div>
-        ` : ""}
-      </div>`
+  let event = {}
+  if(id){
+    try{
+      const data = await cachedApi("eventdetail", {id})
+      event = data.event || {}
+    }catch(e){
+      setError("Chyba při načítání akce")
+      return
     }
+  }
 
-    // --- INFODOKUMENT ---
-    if(event.DOC_URL){
-      html += `<a href="${escapeHtml(event.DOC_URL)}" target="_blank"
-        style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
-        Otevřít infodokument
-      </a>`
-    }
+  const isEdit = !!id
+  const dateVal = event.DATE
+    ? new Date(event.DATE).toISOString().substring(0,10)
+    : ""
 
-    // --- ADMIN PANEL ---
-    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-      html += `<hr>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`
+  let html = `
+  ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:12px">← Zpět</button>` : ""}
+  <h2>${isEdit ? "Upravit akci" : "Nová akce"}</h2>
+  <div class="card">
+    <label>Název<br>
+      <input id="fName" value="${escapeHtml(event.NAME || "")}" placeholder="Název akce">
+    </label>
+    <label>Datum<br>
+      <input id="fDate" type="date" value="${dateVal}">
+    </label>
+    <label>Čas začátku<br>
+      <input id="fStart" type="time" value="${escapeHtml(event.START || "")}">
+    </label>
+    <label>Čas konce<br>
+      <input id="fEnd" type="time" value="${escapeHtml(event.END || "")}">
+    </label>
+    <label>Místo<br>
+      <input id="fPlace" value="${escapeHtml(event.PLACE || "")}" placeholder="Místo konání">
+    </label>
+    <label>Poznámka<br>
+      <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
+    </label>
+    <label>Status<br>
+      <select id="fStatus">
+        <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
+        <option value="Proběhlá"  ${event.STATUS === "Proběhlá"  ? "selected" : ""}>Proběhlá</option>
+      </select>
+    </label>
+    <div class="btn-group" style="margin-top:16px">
+      <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
+        ${isEdit ? "Uložit změny" : "Vytvořit akci"}
+      </button>
+      <button onclick="${isDesktop ? `openEvent('${id}')` : "renderEvents()"}">Zrušit</button>
+    </div>
+  </div>`
 
-      html += `<div class="btn-group">
-        <button onclick="uploadDocUrl('${id}')" style="width:100%">
-          ${event.DOC_URL ? "Změnit infodokument" : "Nahrát infodokument"}
-        </button>
-      </div>`
-
-      if(MEMBER_ROLE === "ADMIN"){
-        html += `<div class="btn-group">
-          <button onclick="openEventForm('${id}')">Upravit akci</button>
-          <button onclick="deleteEvent('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
-        </div>`
-      }
-
-      html += `</div>`
-    }
-
-    if(target){
-      target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
-    }else{
-      container().innerHTML = html
-    }
+  if(target){
+    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
+  }else{
+    container().innerHTML = html
+  }
+}
 
   }catch(err){
     if(target){
@@ -1159,20 +1064,32 @@ function moveProgSong(idx, dir){
   refreshProgSelected()
 }
 
-async function saveProgram(eventId){
-  const main   = window.PROG_MAIN   || []
-  const encore = (window.PROG_ENCORE || []).filter(Boolean)
+async function saveEvent(id){
+  const name   = document.getElementById("fName")?.value.trim()
+  const date   = document.getElementById("fDate")?.value
+  const start  = document.getElementById("fStart")?.value
+  const end    = document.getElementById("fEnd")?.value
+  const place  = document.getElementById("fPlace")?.value.trim()
+  const note   = document.getElementById("fNote")?.value.trim()
+  const status = document.getElementById("fStatus")?.value
+
+  if(!name){ alert("Zadej název akce"); return }
+  if(!date){ alert("Zadej datum"); return }
+
   try{
     showSaving()
-    await api("setprogram", {
-      id:     eventId,
-      songs:  JSON.stringify(main),
-      encore: JSON.stringify(encore)
-    })
-    invalidateCache("eventdetail", eventId)
-    lsDel("cache_repertoar")
-    hideSaving("Program uložen ✓")
-    openEvent(eventId)
+    if(id){
+      await api("updateevent", {id, name, date, start, end, place, note, status})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce upravena ✓")
+      openEvent(id)
+    }else{
+      const result = await api("addevent", {name, date, start, end, place, note, status})
+      invalidateCache("events")
+      hideSaving("Akce vytvořena ✓")
+      renderEvents()
+    }
   }catch(err){
     hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
