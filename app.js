@@ -598,11 +598,16 @@ if(MEMBER_EMAIL){
       return d >= now
     })
 
-    let html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <h2 style="margin:0">Akce</h2>
-      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="openEventForm()">+ Přidat</button>` : ""}
-    </div>
+    let html = `<h2 style="margin:0 0 12px">Akce</h2>`
+
+if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+  html += `<div class="btn-group" style="margin-bottom:16px">`
+  html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
+  if(MEMBER_ROLE === "ADMIN"){
+    html += `<button onclick="openEventForm()">+ Přidat akci</button>`
+  }
+  html += `</div>`
+}
 
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
       <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
