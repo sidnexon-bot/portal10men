@@ -999,3 +999,11 @@ body.dark .card[style*="padding:0"] div[style*="border-bottom"]{
   border-bottom-color: #3a3a3c !important;
 }
 
+body.dark .prog-song-row{
+  background: #2c2c2e !important;
+  color: #fff;
+}
+
+body.dark .prog-song-row .small{
+  color: #8e8e93;
+}
