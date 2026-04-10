@@ -774,14 +774,21 @@ html += `<div class="card attendance-summary">
   <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
 </div>`
 
-html += "<div>"
+html += `<div style="margin-bottom:20px">`
 attendance.forEach(a => {
-  const icon = a.STATUS === "Přijdu"   ? iconCheck() :
-               a.STATUS === "Možná"    ? iconMaybe() :
-               a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-  html += `<div class="small"><span class="icon">${icon}</span> ${escapeHtml(a.NAME)}${a.REASON ? ` <span style="color:#999">· ${escapeHtml(a.REASON)}</span>` : ""}</div>`
+  const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                a.STATUS === "Možná"    ? iconMaybe() :
+                a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+  const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                a.STATUS === "Možná"    ? "#ff9f0a" :
+                a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+  html += `<div class="small" style="padding:3px 0;color:${color}">
+    <span class="icon" style="color:${color}">${icon}</span>
+    ${escapeHtml(a.NAME)}
+    ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+  </div>`
 })
-html += "</div>"
+html += `</div>`
 
 // --- PROGRAM ---
 const mainProgram   = program.filter(p => !p.ENCORE)
