@@ -405,6 +405,7 @@ async function start(){
     renderDashboard()
     initPullToRefresh()
     initSidebar()
+    startPolling()
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
@@ -2068,6 +2069,70 @@ function initPullToRefresh(){
     }
   })
 }
+
+/* ===============================
+   SMART POLLING
+================================ */
+
+let POLLING_INTERVAL = null
+let LAST_SIGNATURE   = null
+
+function startPolling(){
+  if(POLLING_INTERVAL) return
+  POLLING_INTERVAL = setInterval(checkForChanges, 15000)
+}
+
+function stopPolling(){
+  if(POLLING_INTERVAL){
+    clearInterval(POLLING_INTERVAL)
+    POLLING_INTERVAL = null
+  }
+}
+
+async function checkForChanges(){
+  try{
+    const result = await api("lastmodified")
+    const sig    = result.signature
+
+    if(LAST_SIGNATURE === null){
+      LAST_SIGNATURE = sig
+      return
+    }
+
+    if(sig !== LAST_SIGNATURE){
+      LAST_SIGNATURE = sig
+      invalidateAllCache()
+      silentRefresh()
+    }
+  }catch(e){
+    console.error("polling error", e)
+  }
+}
+
+function invalidateAllCache(){
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("cache_"))
+    .forEach(k => localStorage.removeItem(k))
+  CACHE.detail = {}
+  CACHE.ts     = {}
+}
+
+async function silentRefresh(){
+  if(ACTIVE_TAB === "dashboard")     renderDashboard()
+  else if(ACTIVE_TAB === "events")   renderEvents()
+  else if(ACTIVE_TAB === "payments") renderPayments()
+  else if(ACTIVE_TAB === "energy")   renderEnergy()
+}
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden){
+    stopPolling()
+  }else{
+    startPolling()
+    checkForChanges()
+  }
+})
+
 
 /* ===============================
    INIT
