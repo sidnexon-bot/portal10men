@@ -1438,7 +1438,7 @@ body.dark .heatmap-desktop td div[style*="background:#f2f2f7"]{
 main{
     margin-left: 220px;
     width: calc(100vw - 220px);
-    max-width: 720px;
+    max-width: none;
     padding: 40px 8% 60px;
     box-sizing: border-box;
   }
