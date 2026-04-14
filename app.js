@@ -1665,10 +1665,10 @@ async function renderPayments(){
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
                 <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
                 <div class="btn-group">
-                  <select id="payMember_${escapeHtml(v.id)}" style="flex:2">
+                  <select id="payMember_${escapeHtml(v.id)}" style="flex:2" onclick="event.stopPropagation()">
                     ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
                   </select>
-                  <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px;flex:1" value="${v.amount}">
+                  <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px;flex:1" value="${v.amount}" onclick="event.stopPropagation()">
                   <button onclick="event.stopPropagation();recordPayment('${escapeHtml(v.id)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
                 </div>
               </div>
