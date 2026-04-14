@@ -1595,18 +1595,101 @@ async function saveNote(eventId){
 async function renderPayments(){
   setLoading()
   try{
-    const data = await cachedApi("payments")
-    let html = "<h2>Platby</h2>"
+    const data = await cachedApi("payments", {email: MEMBER_EMAIL})
+
+    let html = `<h2 style="margin:0 0 16px">Platby</h2>`
+
     if(!Array.isArray(data) || !data.length){
-      html += "<div class='card'>Žádné platby</div>"
-    }else{
-      data.forEach(p => {
-        html += `<div class="card">${escapeHtml(p.NAME)} – ${escapeHtml(p.STATUS)}</div>`
-      })
+      html += `<div class="card">Žádné aktivní výběry</div>`
+      container().innerHTML = html
+      return
     }
+
+    data.forEach(v => {
+      const myPaid    = v.myPaid || 0
+      const isPaid    = myPaid >= v.amount
+      const statusColor = isPaid ? "#34c759" : "#ff3b30"
+      const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
+
+      html += `<div class="card" style="margin-bottom:20px">
+
+        <b style="font-size:18px">${escapeHtml(v.name)}</b>
+        <div class="small" style="margin-top:4px">
+          Částka: <b>${v.amount} Kč</b>
+          ${v.deadline ? ` · Deadline: <b>${formatDate(v.deadline)}</b>` : ""}
+        </div>
+
+        <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:12px;display:flex;justify-content:space-between;align-items:center">
+          <span>Tvůj stav:</span>
+          <b style="color:${statusColor}">${statusText}${myPaid > 0 && !isPaid ? ` (${myPaid} Kč)` : ""}</b>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="small" style="font-weight:600;margin-bottom:8px">Přehled skupiny</div>
+          ${v.members.map(m => {
+            const paid    = m.paid >= v.amount
+            const color   = paid ? "#34c759" : "#ff3b30"
+            const icon    = paid ? "✓" : "✗"
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+              <span style="font-size:14px;color:${color}">${icon} ${escapeHtml(m.name)}</span>
+              <span class="small">${m.paid > 0 ? m.paid + " Kč" : "—"}${m.date ? " · " + formatDate(m.date) : ""}</span>
+            </div>`
+          }).join("")}
+        </div>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+          <div class="small" style="font-weight:600;margin-bottom:4px">Celkem vybráno</div>
+          <div style="display:flex;justify-content:space-between">
+            <span class="small">Vybráno: <b>${v.totalPaid} Kč</b></span>
+            <span class="small">Zbývá: <b>${v.remaining} Kč</b></span>
+          </div>
+        </div>
+
+        ${!isPaid ? `
+          <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:14px">
+            <div class="small" style="font-weight:600;margin-bottom:6px">Jak zaplatit</div>
+            <div class="small" style="margin-bottom:8px">${escapeHtml(v.instructions)}</div>
+            <div class="small">Účet: <b>${escapeHtml(v.account)}</b></div>
+            ${v.iban ? `<div class="small">IBAN: <b>${escapeHtml(v.iban)}</b></div>` : ""}
+            ${v.qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(v.qrUrl)}" style="width:160px;height:160px;border-radius:8px"></div>` : ""}
+          </div>
+        ` : ""}
+
+        ${MEMBER_ROLE === "ADMIN" ? `
+          <hr style="margin:16px 0;border:none;border-top:1px solid rgba(128,128,128,0.15)">
+          <div class="small" style="font-weight:600;margin-bottom:8px">Admin — zaznamenat platbu</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="payMember_${escapeHtml(v.id)}" style="flex:1">
+              ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
+            </select>
+            <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px" value="${v.amount}">
+            <button onclick="recordPayment('${escapeHtml(v.id)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
+          </div>
+        ` : ""}
+
+      </div>`
+    })
+
     container().innerHTML = html
+
   }catch(err){
     setError("Chyba při načítání plateb: " + (err?.message || err))
+  }
+}
+
+async function recordPayment(vyberuvId){
+  const email  = document.getElementById("payMember_" + vyberuvId)?.value
+  const amount = document.getElementById("payAmount_" + vyberuvId)?.value
+  if(!email || !amount){ alert("Vyber člena a zadej částku"); return }
+  try{
+    showSaving()
+    await api("setpayment", {id_vyberu: vyberuvId, email, paid: amount})
+    invalidateCache("payments")
+    hideSaving("Platba uložena ✓")
+    renderPayments()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
   }
 }
 
