@@ -135,6 +135,18 @@ async function cachedApi(action, params){
 
 }
 
+if(action === "payments" && params?.email){
+  const key = "payments_" + params.email
+  const stored = lsGet(key)
+  if(stored){
+    api(action, params).then(fresh => lsSet(key, fresh)).catch(()=>{})
+    return stored
+  }
+  const data = await api(action, params)
+  lsSet(key, data)
+  return data
+}
+
 function invalidateCache(action, id){
   if(id){
     delete CACHE.detail[id]
@@ -1599,76 +1611,87 @@ async function renderPayments(){
 
     let html = `<h2 style="margin:0 0 16px">Platby</h2>`
 
-    if(!Array.isArray(data) || !data.length){
-      html += `<div class="card">Žádné aktivní výběry</div>`
-      container().innerHTML = html
-      return
+    if(MEMBER_ROLE === "ADMIN"){
+      html += `<div class="btn-group" style="margin-bottom:16px">
+        <button onclick="openAddCollection()">+ Přidat výběr</button>
+      </div>`
     }
 
-    data.forEach(v => {
-      const myPaid    = v.myPaid || 0
-      const isPaid    = myPaid >= v.amount
-      const statusColor = isPaid ? "#34c759" : "#ff3b30"
-      const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
+    if(!Array.isArray(data) || !data.length){
+      html += `<div class="card">Žádné aktivní výběry</div>`
+    }else{
+      data.forEach(v => {
+        const myPaid   = v.myPaid || 0
+        const isPaid   = myPaid >= v.amount
+        const statusColor = isPaid ? "#34c759" : "#ff3b30"
+        const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
 
-      html += `<div class="card" style="margin-bottom:20px">
-
-        <b style="font-size:18px">${escapeHtml(v.name)}</b>
-        <div class="small" style="margin-top:4px">
-          Částka: <b>${v.amount} Kč</b>
-          ${v.deadline ? ` · Deadline: <b>${formatDate(v.deadline)}</b>` : ""}
-        </div>
-
-        <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:12px;display:flex;justify-content:space-between;align-items:center">
-          <span>Tvůj stav:</span>
-          <b style="color:${statusColor}">${statusText}${myPaid > 0 && !isPaid ? ` (${myPaid} Kč)` : ""}</b>
-        </div>
-
-        <div style="margin-top:12px">
-          <div class="small" style="font-weight:600;margin-bottom:8px">Přehled skupiny</div>
-          ${v.members.map(m => {
-            const paid    = m.paid >= v.amount
-            const color   = paid ? "#34c759" : "#ff3b30"
-            const icon    = paid ? "✓" : "✗"
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-              <span style="font-size:14px;color:${color}">${icon} ${escapeHtml(m.name)}</span>
-              <span class="small">${m.paid > 0 ? m.paid + " Kč" : "—"}${m.date ? " · " + formatDate(m.date) : ""}</span>
-            </div>`
-          }).join("")}
-        </div>
-
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-          <div class="small" style="font-weight:600;margin-bottom:4px">Celkem vybráno</div>
-          <div style="display:flex;justify-content:space-between">
-            <span class="small">Vybráno: <b>${v.totalPaid} Kč</b></span>
-            <span class="small">Zbývá: <b>${v.remaining} Kč</b></span>
+        html += `
+        <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollection('${escapeHtml(v.id)}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <b style="font-size:16px">${escapeHtml(v.name)}</b>
+              <div class="small" style="margin-top:2px">
+                ${v.amount} Kč
+                ${v.deadline ? " · do " + formatDate(v.deadline) : ""}
+              </div>
+            </div>
+            <div style="text-align:right">
+              <b style="color:${statusColor};font-size:13px">${statusText}</b>
+              ${myPaid > 0 && !isPaid ? `<div class="small">${myPaid} Kč zaplaceno</div>` : ""}
+              <div style="font-size:18px;color:var(--muted);margin-top:2px" id="chevron_${escapeHtml(v.id)}">›</div>
+            </div>
           </div>
-        </div>
 
-        ${!isPaid ? `
-          <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:14px">
-            <div class="small" style="font-weight:600;margin-bottom:6px">Jak zaplatit</div>
-            <div class="small" style="margin-bottom:8px">${escapeHtml(v.instructions)}</div>
-            <div class="small">Účet: <b>${escapeHtml(v.account)}</b></div>
-            ${v.iban ? `<div class="small">IBAN: <b>${escapeHtml(v.iban)}</b></div>` : ""}
-            ${v.qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(v.qrUrl)}" style="width:160px;height:160px;border-radius:8px"></div>` : ""}
+          <div id="detail_${escapeHtml(v.id)}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+
+            <div class="small" style="font-weight:600;margin-bottom:8px">Přehled skupiny</div>
+            ${v.members.map(m => {
+              const paid  = m.paid >= v.amount
+              const color = paid ? "#34c759" : "#ff3b30"
+              const icon  = paid ? "✓" : "✗"
+              return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+                <span style="font-size:14px;color:${color}">${icon} ${escapeHtml(m.name)}</span>
+                <span class="small">${m.paid > 0 ? m.paid + " Kč" : "—"}${m.date ? " · " + formatDate(m.date) : ""}</span>
+              </div>`
+            }).join("")}
+
+            <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(128,128,128,0.15)">
+              <span class="small">Vybráno: <b>${v.totalPaid} Kč</b></span>
+              <span class="small">Zbývá: <b>${v.remaining} Kč</b></span>
+            </div>
+
+            ${MEMBER_ROLE === "ADMIN" ? `
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+                <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
+                <div class="btn-group">
+                  <select id="payMember_${escapeHtml(v.id)}" style="flex:2">
+                    ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
+                  </select>
+                  <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px;flex:1" value="${v.amount}">
+                  <button onclick="event.stopPropagation();recordPayment('${escapeHtml(v.id)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
+                </div>
+              </div>
+            ` : ""}
+
           </div>
-        ` : ""}
+        </div>`
+      })
+    }
 
-        ${MEMBER_ROLE === "ADMIN" ? `
-          <hr style="margin:16px 0;border:none;border-top:1px solid rgba(128,128,128,0.15)">
-          <div class="small" style="font-weight:600;margin-bottom:8px">Admin — zaznamenat platbu</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select id="payMember_${escapeHtml(v.id)}" style="flex:1">
-              ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
-            </select>
-            <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px" value="${v.amount}">
-            <button onclick="recordPayment('${escapeHtml(v.id)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
-          </div>
-        ` : ""}
-
-      </div>`
-    })
+    // --- FIXNÍ SPODNÍ PANEL ---
+    if(Array.isArray(data) && data.length){
+      const first = data[0]
+      if(first.instructions || first.account || first.qrUrl){
+        html += `<div class="card" style="margin-top:8px">
+          <div class="small" style="font-weight:600;margin-bottom:6px">Jak zaplatit</div>
+          ${first.instructions ? `<div class="small" style="margin-bottom:8px">${escapeHtml(first.instructions)}</div>` : ""}
+          ${first.account ? `<div class="small">Účet: <b>${escapeHtml(first.account)}</b></div>` : ""}
+          ${first.iban ? `<div class="small">IBAN: <b>${escapeHtml(first.iban)}</b></div>` : ""}
+          ${first.qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(first.qrUrl)}" style="width:160px;height:160px;border-radius:8px" onerror="this.style.display='none'"></div>` : ""}
+        </div>`
+      }
+    }
 
     container().innerHTML = html
 
@@ -1677,15 +1700,47 @@ async function renderPayments(){
   }
 }
 
+function toggleCollection(id){
+  const detail  = document.getElementById("detail_" + id)
+  const chevron = document.getElementById("chevron_" + id)
+  if(!detail) return
+  const isOpen = detail.style.display !== "none"
+  detail.style.display  = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
 async function recordPayment(vyberuvId){
   const email  = document.getElementById("payMember_" + vyberuvId)?.value
-  const amount = document.getElementById("payAmount_" + vyberuvId)?.value
+  const amount = document.getElementById("payAmount_"  + vyberuvId)?.value
   if(!email || !amount){ alert("Vyber člena a zadej částku"); return }
   try{
     showSaving()
     await api("setpayment", {id_vyberu: vyberuvId, email, paid: amount})
-    invalidateCache("payments")
+    lsDel("payments")
     hideSaving("Platba uložena ✓")
+    renderPayments()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+function openAddCollection(){
+  const name   = prompt("Název výběru:")
+  if(!name) return
+  const amount = prompt("Částka na osobu (Kč):")
+  if(!amount || isNaN(amount)) return
+  const deadline = prompt("Deadline (YYYY-MM-DD, nebo prázdné):")
+
+  saveCollection(name, amount, deadline || "")
+}
+
+async function saveCollection(name, amount, deadline){
+  try{
+    showSaving()
+    await api("addcollection", {name, amount, deadline})
+    lsDel("payments")
+    hideSaving("Výběr vytvořen ✓")
     renderPayments()
   }catch(err){
     hideSaving("Chyba ✗")
