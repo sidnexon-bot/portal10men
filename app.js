@@ -1663,6 +1663,9 @@ async function renderPayments(){
 
             ${MEMBER_ROLE === "ADMIN" ? `
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+                <div class="btn-group" style="margin-bottom:12px">
+                  <button onclick="event.stopPropagation();deleteCollection('${escapeHtml(v.id)}')" style="background:#fde8e8;color:#c00">Smazat výběr</button>
+              </div>
                 <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
                 <div class="btn-group">
                   <select id="payMember_${escapeHtml(v.id)}" style="flex:2" onclick="event.stopPropagation()">
@@ -1707,6 +1710,20 @@ function toggleCollection(id){
   const isOpen = detail.style.display !== "none"
   detail.style.display  = isOpen ? "none" : "block"
   if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
+async function deleteCollection(id){
+  if(!confirm("Opravdu smazat tento výběr včetně všech plateb?")) return
+  try{
+    showSaving()
+    await api("deletecollection", {id})
+    lsDel("payments_" + MEMBER_EMAIL)
+    hideSaving("Výběr smazán ✓")
+    renderPayments()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 async function recordPayment(vyberuvId){
