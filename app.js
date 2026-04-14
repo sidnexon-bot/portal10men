@@ -1609,7 +1609,8 @@ async function renderPayments(){
   try{
     const data = await cachedApi("payments", {email: MEMBER_EMAIL})
 
-    let html = `<h2 style="margin:0 0 16px">Platby</h2>`
+    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
+    html += `<h2 style="margin:0 0 16px">Platby</h2>`
 
     if(MEMBER_ROLE === "ADMIN"){
       html += `<div class="btn-group" style="margin-bottom:16px">
@@ -1621,10 +1622,10 @@ async function renderPayments(){
       html += `<div class="card">Žádné aktivní výběry</div>`
     }else{
       data.forEach(v => {
-        const myPaid   = v.myPaid || 0
-        const isPaid   = myPaid >= v.amount
+        const myPaid      = v.myPaid || 0
+        const isPaid      = myPaid >= v.amount
         const statusColor = isPaid ? "#34c759" : "#ff3b30"
-        const statusText  = isPaid ? "Máš zaplaceno" : "Prosím, doplať"
+        const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
 
         html += `
         <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollection('${escapeHtml(v.id)}')">
@@ -1665,7 +1666,7 @@ async function renderPayments(){
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
                 <div class="btn-group" style="margin-bottom:12px">
                   <button onclick="event.stopPropagation();deleteCollection('${escapeHtml(v.id)}')" style="background:#fde8e8;color:#c00">Smazat výběr</button>
-              </div>
+                </div>
                 <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
                 <div class="btn-group">
                   <select id="payMember_${escapeHtml(v.id)}" style="flex:2" onclick="event.stopPropagation()">
@@ -1680,10 +1681,8 @@ async function renderPayments(){
           </div>
         </div>`
       })
-    }
 
-    // --- FIXNÍ SPODNÍ PANEL ---
-    if(Array.isArray(data) && data.length){
+      // --- FIXNÍ SPODNÍ PANEL ---
       const first = data[0]
       if(first.instructions || first.account || first.qrUrl){
         html += `<div class="card" style="margin-top:8px">
@@ -1696,6 +1695,7 @@ async function renderPayments(){
       }
     }
 
+    if(isDesktop) html += `</div>`
     container().innerHTML = html
 
   }catch(err){
