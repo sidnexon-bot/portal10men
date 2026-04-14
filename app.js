@@ -1624,7 +1624,7 @@ async function renderPayments(){
         const myPaid   = v.myPaid || 0
         const isPaid   = myPaid >= v.amount
         const statusColor = isPaid ? "#34c759" : "#ff3b30"
-        const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
+        const statusText  = isPaid ? "Máš zaplaceno" : "Prosím, doplať"
 
         html += `
         <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollection('${escapeHtml(v.id)}')">
