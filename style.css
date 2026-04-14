@@ -1076,6 +1076,57 @@ body.dark #saving-overlay{
   width: 100%;
 }
 
+/* HOVER EFEKTY */
+
+button:hover{
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+.card[onclick]:hover,
+.swipe-card:hover,
+.concert-row:hover,
+.member-row:hover,
+.profile-menu-item:hover,
+.sidebar-nav-item:hover,
+.sidebar-action:hover{
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.card[onclick]:hover{
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.1),
+    0 2px 8px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+a[href]:hover{
+  opacity: 0.8;
+}
+
+/* plynulé přechody */
+button,
+.card[onclick],
+.swipe-card,
+.sidebar-nav-item,
+.sidebar-action,
+.profile-menu-item,
+a[href]{
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* zruš hover na mobilech kde není myš */
+@media (hover: none){
+  button:hover,
+  .card[onclick]:hover,
+  a[href]:hover{
+    opacity: 1;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 /* ===============================
    DESKTOP LAYOUT (768px+)
 ================================ */
@@ -1388,10 +1439,15 @@ main{
     margin-left: 220px;
     width: calc(100vw - 220px);
     max-width: none;
-    padding: 40px 32px 60px;
+    padding: 40px 8% 60px;
     box-sizing: border-box;
   }
 
+    main > *{
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
   .card, .event-card{
     max-width: 100%;
