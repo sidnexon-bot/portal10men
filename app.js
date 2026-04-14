@@ -133,9 +133,7 @@ async function cachedApi(action, params){
   lsSet(action, data)
   return data
 
-}
-
-if(action === "payments" && params?.email){
+   if(action === "payments" && params?.email){
   const key = "payments_" + params.email
   const stored = lsGet(key)
   if(stored){
@@ -145,6 +143,8 @@ if(action === "payments" && params?.email){
   const data = await api(action, params)
   lsSet(key, data)
   return data
+ }
+
 }
 
 function invalidateCache(action, id){
