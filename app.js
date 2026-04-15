@@ -442,7 +442,7 @@ function initSidebar(){
   document.getElementById("sidebarEvents").onclick    = () => { setActiveTab("events");    window.EVENTS_MONTH = null; renderEvents();   updateSidebarActive("events") }
   document.getElementById("sidebarPayments").onclick  = () => { setActiveTab("payments");  renderPayments();  updateSidebarActive("payments") }
   document.getElementById("sidebarEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy();    updateSidebarActive("energy") }
-  document.getElementById("sidebarRepertoar").onclick = () => { setActiveTab("repertoar")  renderRepertoar()  updateSidebarActive("repertoar") }
+  document.getElementById("sidebarRepertoar").onclick = () => { setActiveTab("repertoar");  renderRepertoar();  updateSidebarActive("repertoar") }
 
   // dark mode label
   updateSidebarDarkLabel()
