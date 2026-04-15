@@ -246,6 +246,8 @@ function setActiveTab(name){
     events:    "btnEvents",
     payments:  "btnPayments",
     energy:    "btnEnergy"
+    repertoar: "btnRepertoar"
+
   }
   const btn = document.getElementById(map[name])
   if(btn) btn.classList.add("active")
@@ -440,6 +442,7 @@ function initSidebar(){
   document.getElementById("sidebarEvents").onclick    = () => { setActiveTab("events");    window.EVENTS_MONTH = null; renderEvents();   updateSidebarActive("events") }
   document.getElementById("sidebarPayments").onclick  = () => { setActiveTab("payments");  renderPayments();  updateSidebarActive("payments") }
   document.getElementById("sidebarEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy();    updateSidebarActive("energy") }
+  document.getElementById("sidebarRepertoar").onclick = () => { setActiveTab("repertoar")  renderRepertoar()  updateSidebarActive("repertoar") }
 
   // dark mode label
   updateSidebarDarkLabel()
@@ -451,6 +454,8 @@ function updateSidebarActive(tab){
     events:    "sidebarEvents",
     payments:  "sidebarPayments",
     energy:    "sidebarEnergy"
+    repertoar: "sidebarRepertoar"
+
   }
   document.querySelectorAll(".sidebar-nav-item").forEach(b => b.classList.remove("active"))
   const btn = document.getElementById(map[tab])
