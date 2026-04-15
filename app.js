@@ -1971,6 +1971,27 @@ html += `</tbody></table></div>`
     html += `</div></div>`
   })
 
+       // shrnutí docházky
+const prijdu = members.filter(m => (lookup[e.ID + "_" + m.EMAIL]?.status || "") === "Přijdu")
+const total  = prijdu.length
+
+const byVoice = {}
+prijdu.forEach(m => {
+  const voice = m.VOICE || "?"
+  byVoice[voice] = (byVoice[voice] || 0) + 1
+})
+
+html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">
+  <div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">`
+
+Object.entries(byVoice).sort().forEach(([voice, count]) => {
+  html += `<span class="small">${escapeHtml(voice)}: <b>${count}</b></span>`
+})
+
+html += `</div></div>`
+
+       
   html += `</div>`
 }
 
