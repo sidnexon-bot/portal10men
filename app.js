@@ -1981,7 +1981,7 @@ async function renderHeatmap(){
         html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">`
         html += `<div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>`
         html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`
-        const voiceOrder = ["TENOR 1", "TENOR 2", "BAS 1", "BAS 2"]
+        const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
 Object.entries(byVoice)
   .sort((a, b) => {
     const ai = voiceOrder.indexOf(a[0])
