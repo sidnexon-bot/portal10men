@@ -1,4 +1,3 @@
-/* ===============================
    STAV APLIKACE
 ================================ */
 
@@ -1860,10 +1859,15 @@ async function renderHeatmap(){
     }
 
     const [year, month] = HEATMAP_MONTH.split("-").map(Number)
+    const today = new Date()
+    today.setHours(0,0,0,0)
+
     const filtered = events.filter(e => {
       const d = new Date(e.DATE)
-      return d.getFullYear() === year && d.getMonth() + 1 === month
+      d.setHours(0,0,0,0)
+      return d.getFullYear() === year && d.getMonth() + 1 === month && d >= today
     })
+
 
     const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
 
