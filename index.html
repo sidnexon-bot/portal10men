@@ -169,6 +169,22 @@
     </div>
   </div>
 
+  <div id="moznaModal" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeMoznaModal()"></div>
+  <div class="modal-content" style="padding:20px">
+    <div class="modal-header">Upřesni docházku</div>
+    <div class="btn-group" style="margin-bottom:12px">
+      <button onclick="confirmMozna('spise-ano')" style="background:#d4f5e2;color:#1a7a3a">Spíše ano</button>
+      <button onclick="confirmMozna('spise-ne')" style="background:#fde8e8;color:#c00">Spíše ne</button>
+    </div>
+    <input id="moznaReason" placeholder="Důvod " style="margin-bottom:12px">
+    <div class="btn-group">
+      <button onclick="confirmMozna('spise-ano')" style="display:none"></button>
+      <button onclick="closeMoznaModal()">Zrušit</button>
+    </div>
+  </div>
+</div>
+
   <!-- PIN zatím vypnut -->
 
   <script src="api.js"></script>
