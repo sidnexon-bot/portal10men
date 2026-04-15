@@ -1545,7 +1545,7 @@ async function confirmSwipeWithReason(eventId, el){
 
   try{
     showSaving()
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status})
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
