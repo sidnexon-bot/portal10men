@@ -597,7 +597,7 @@ if(isDesktop) html += `<div class="desktop-grid"><div class="desktop-col-left">`
   ${renderAttendanceStatus(myStatus)}
   <div class="btn-group" style="margin-top:10px">
     <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-    <button onclick="doAttendanceMozna('${id}')">Možná</button>
+    <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
     <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
   </div>`
 
