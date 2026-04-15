@@ -1976,7 +1976,15 @@ async function renderHeatmap(){
         html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">`
         html += `<div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>`
         html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`
-        Object.entries(byVoice).sort().forEach(([voice, count]) => {
+        const voiceOrder = ["TENOR 1", "TENOR 2", "BAS 1", "BAS 2"]
+Object.entries(byVoice)
+  .sort((a, b) => {
+    const ai = voiceOrder.indexOf(a[0])
+    const bi = voiceOrder.indexOf(b[0])
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
+  .forEach(([voice, count]) => {
+
           html += `<span class="small">${escapeHtml(voice)}: <b>${count}</b></span>`
         })
         html += `</div></div>`
