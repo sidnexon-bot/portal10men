@@ -208,10 +208,14 @@ function formatLength(t){
   if(!t) return ""
   if(typeof t === "string" && t.includes("T")){
     const parts = t.split("T")[1].split(".")[0].split(":")
-    const h = parseInt(parts[0])
     const m = parseInt(parts[1])
     const s = parseInt(parts[2])
-    if(h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`
+    return `${m}:${String(s).padStart(2,"0")}`
+  }
+  if(typeof t === "string" && t.includes(":")){
+    const parts = t.split(":")
+    const m = parseInt(parts[1] || parts[0])
+    const s = parseInt(parts[2] || 0)
     return `${m}:${String(s).padStart(2,"0")}`
   }
   return String(t).substring(0,5)
