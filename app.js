@@ -1887,7 +1887,7 @@ async function renderRepertoar(){
     </div>`
 
     html += `<div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">`
-    const statusy = ["Vše", "Aktivní", "Neaktuální", "Mimo rep"]
+    const statusy = ["Vše", "Aktivní", "Neaktuální", "Mimo repertoár"]
     statusy.forEach(s => {
       html += `<button
         id="filterBtn_${s}"
