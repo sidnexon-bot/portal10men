@@ -1405,23 +1405,36 @@ async function doAttendanceWithReason(eventId, status){
   }
 }
 
-async function doAttendanceMozna(eventId){
+let MOZNA_EVENT_ID = null
+
+function doAttendanceMozna(eventId){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena nahoře"); return }
+  MOZNA_EVENT_ID = eventId
+  const modal = document.getElementById("moznaModal")
+  const input = document.getElementById("moznaReason")
+  if(input) input.value = ""
+  if(modal) modal.classList.remove("hidden")
+}
 
-  const choice = confirm("Upřesni svou odpověď:\nOK = Spíše ano\nZrušit = Spíše ne")
-  const reason = prompt("Důvod:")
-  if(reason === null) return
+function closeMoznaModal(){
+  const modal = document.getElementById("moznaModal")
+  if(modal) modal.classList.add("hidden")
+  MOZNA_EVENT_ID = null
+}
 
-  const detailReason = (choice ? "Spíše ano" : "Spíše ne") + (reason ? ": " + reason : "")
+async function confirmMozna(choice){
+  const reason    = document.getElementById("moznaReason")?.value.trim() || ""
+  const detailReason = (choice === "spise-ano" ? "Spíše ano" : "Spíše ne") + (reason ? ": " + reason : "")
+  closeMoznaModal()
 
   try{
     showSaving()
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Možná", reason: detailReason})
-    invalidateCache("eventdetail", eventId)
+    await api("setattendance", {event: MOZNA_EVENT_ID, member: MEMBER_EMAIL, status: "Možná", reason: detailReason})
+    invalidateCache("eventdetail", MOZNA_EVENT_ID)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
     if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
-    else openEvent(eventId)
+    else openEvent(MOZNA_EVENT_ID)
   }catch(err){
     hideSaving("Chyba ✗")
     alert("Chyba při ukládání docházky: " + (err?.message || err))
