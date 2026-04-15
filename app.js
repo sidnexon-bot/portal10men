@@ -1873,11 +1873,11 @@ async function renderHeatmap(){
     })
 
     let html = `<h3 class="season-title">Docházka skupiny</h3>`
-html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:12px;padding:6px 10px">
-  <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
-  <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
-  <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
-</div>`
+    html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:12px;padding:6px 10px">
+      <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
+      <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
+      <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
+    </div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
@@ -1885,115 +1885,107 @@ html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-botto
     }
 
     if(isDesktop){
-      // Desktop — řádky = akce, sloupce = členové, celá jména
+
       html += `<div style="overflow-x:auto">
-<table class="heatmap heatmap-desktop" style="width:auto;border-collapse:separate;border-spacing:0 4px"><thead><tr>
-  <th style="text-align:left;padding:6px 16px 6px 0;font-size:12px;color:var(--muted);font-weight:600">Akce</th>`
-members.forEach(m => {
-  html += `<th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;min-width:60px">
-    ${escapeHtml(m.NAME.split(" ")[0])}<br>
-    <span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span>
-  </th>`
-})
-html += `</tr></thead><tbody>`
+      <table class="heatmap heatmap-desktop" style="width:auto;border-collapse:separate;border-spacing:0 4px"><thead><tr>
+        <th style="text-align:left;padding:6px 16px 6px 0;font-size:12px;color:var(--muted);font-weight:600">Akce</th>`
 
-filtered.forEach(e => {
-  html += `<tr>`
-  html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
-    <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
-    <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
-  </td>`
-  members.forEach(m => {
-    const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
-    const status = entry.status || ""
-    const reason = entry.reason || ""
-    const color  = status === "Přijdu"   ? "#d4f5e2" :
-                   status === "Možná"    ? "#fff4dc" :
-                   status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
-    const icon   = status === "Přijdu"   ? "✓" :
-                   status === "Možná"    ? "?" :
-                   status === "Nepřijdu" ? "✗" : ""
-    const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
-    html += `<td style="padding:2px 4px;text-align:center;vertical-align:middle">
-      <div style="background:${color};${status?"cursor:pointer":""}width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin:0 auto" onclick="${click}">${icon}</div>
-    </td>`
-  })
-  html += `</tr>`
-})
+      members.forEach(m => {
+        html += `<th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;min-width:60px">
+          ${escapeHtml(m.NAME.split(" ")[0])}<br>
+          <span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span>
+        </th>`
+      })
+      html += `</tr></thead><tbody>`
 
-html += `</tbody></table></div>`
+      filtered.forEach(e => {
+        html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
+        html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
+          <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
+          <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
+        </td>`
+        members.forEach(m => {
+          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
+          const status = entry.status || ""
+          const reason = entry.reason || ""
+          const color  = status === "Přijdu"   ? "#d4f5e2" :
+                         status === "Možná"    ? "#fff4dc" :
+                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
+          const icon   = status === "Přijdu"   ? "✓" :
+                         status === "Možná"    ? "?" :
+                         status === "Nepřijdu" ? "✗" : ""
+          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
+          html += `<td style="padding:2px 4px;text-align:center;vertical-align:middle">
+            <div style="background:${color};${status?"cursor:pointer;":""}width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin:0 auto" onclick="${click}">${icon}</div>
+          </td>`
+        })
+        html += `</tr>`
+      })
+
+      html += `</tbody></table></div>`
 
     }else{
-  // Mobil — jeden blok s kartičkami
-  html += `<div class="card" style="padding:0">`
 
-  filtered.forEach((e, idx) => {
-    const border = idx < filtered.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.15);" : ""
+      // Mobil — jeden blok s kartičkami
+      html += `<div class="card" style="padding:0">`
 
-    html += `<div style="padding:14px 16px;${border}">`
+      filtered.forEach((e, idx) => {
+        const border = idx < filtered.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.15);" : ""
 
-    // název akce a datum
-    html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px">${escapeHtml(e.NAME)}</div>`
-    html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
+        html += `<div style="padding:14px 16px;${border}">`
 
-    // řada avatarů
-    html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`
+        // název a datum
+        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px">${escapeHtml(e.NAME)}</div>`
+        html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
 
-    members.forEach(m => {
-      const entry    = lookup[e.ID + "_" + m.EMAIL] || {}
-      const status   = entry.status || ""
-      const reason   = entry.reason || ""
-      const initials = m.NAME.split(" ").map(n => n[0]).join("")
+        // avatary
+        html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`
 
-      const bg = status === "Přijdu"   ? "#34c759" :
-                 status === "Možná"    ? "#ff9f0a" :
-                 status === "Nepřijdu" ? "#ff3b30" : "#c7c7cc"
+        members.forEach(m => {
+          const entry    = lookup[e.ID + "_" + m.EMAIL] || {}
+          const status   = entry.status || ""
+          const reason   = entry.reason || ""
+          const initials = m.NAME.split(" ").map(n => n[0]).join("")
 
-      const click = status
-        ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
-        : ""
+          const bg = status === "Přijdu"   ? "#34c759" :
+                     status === "Možná"    ? "#ff9f0a" :
+                     status === "Nepřijdu" ? "#ff3b30" : "#c7c7cc"
 
-      html += `<div
-        onclick="${click}"
-        style="
-          width:32px;height:32px;
-          border-radius:50%;
-          background:${bg};
-          display:flex;align-items:center;justify-content:center;
-          font-size:11px;font-weight:700;color:#fff;
-          cursor:${status ? "pointer" : "default"};
-          flex-shrink:0
-        "
-        title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}"
-      >${escapeHtml(initials)}</div>`
-    })
+          const click = status
+            ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
+            : ""
 
-    html += `</div></div>`
-  })
+          html += `<div
+            onclick="${click}"
+            style="width:32px;height:32px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:${status ? "pointer" : "default"};flex-shrink:0"
+            title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}"
+          >${escapeHtml(initials)}</div>`
+        })
 
-       // shrnutí docházky
-const prijdu = members.filter(m => (lookup[e.ID + "_" + m.EMAIL]?.status || "") === "Přijdu")
-const total  = prijdu.length
+        html += `</div>`
 
-const byVoice = {}
-prijdu.forEach(m => {
-  const voice = m.VOICE || "?"
-  byVoice[voice] = (byVoice[voice] || 0) + 1
-})
+        // shrnutí docházky
+        const prijdu  = members.filter(m => (lookup[e.ID + "_" + m.EMAIL]?.status || "") === "Přijdu")
+        const total   = prijdu.length
+        const byVoice = {}
+        prijdu.forEach(m => {
+          const voice = m.VOICE || "?"
+          byVoice[voice] = (byVoice[voice] || 0) + 1
+        })
 
-html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">
-  <div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap">`
+        html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">`
+        html += `<div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>`
+        html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`
+        Object.entries(byVoice).sort().forEach(([voice, count]) => {
+          html += `<span class="small">${escapeHtml(voice)}: <b>${count}</b></span>`
+        })
+        html += `</div></div>`
 
-Object.entries(byVoice).sort().forEach(([voice, count]) => {
-  html += `<span class="small">${escapeHtml(voice)}: <b>${count}</b></span>`
-})
+        html += `</div>` // konec řádku akce
+      })
 
-html += `</div></div>`
-
-       
-  html += `</div>`
-}
+      html += `</div>` // konec card bloku
+    }
 
     return html
 
