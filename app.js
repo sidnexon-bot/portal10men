@@ -1845,6 +1845,130 @@ async function saveEnergy(){
 }
 
 /* ===============================
+   REPERTOAR
+================================ */
+
+async function renderRepertoar(){
+  setLoading()
+  try{
+    const data = await cachedApi("repertoar")
+
+    if(!Array.isArray(data) || !data.length){
+      container().innerHTML = `<h2>Repertoár</h2><div class="card">Žádné skladby</div>`
+      return
+    }
+
+    const sorted = [...data].sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
+
+    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
+
+    html += `<h2 style="margin:0 0 16px">Repertoár</h2>`
+
+    html += `<div class="card" style="margin-bottom:16px">
+      <input
+        id="repertoarSearch"
+        placeholder="🔍 Hledat skladbu, skladatele…"
+        oninput="filterRepertoar(this.value)"
+        style="margin-bottom:0"
+      >
+    </div>`
+
+    html += `<div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">`
+    const statusy = ["Vše", "Aktivní", "Neaktuální", "Mimo rep"]
+    statusy.forEach(s => {
+      html += `<button
+        id="filterBtn_${s}"
+        onclick="filterRepertoarStatus('${s}')"
+        style="padding:6px 14px;font-size:13px;${s === "Vše" ? "background:#007aff;color:#fff" : ""}"
+      >${s}</button>`
+    })
+    html += `</div>`
+
+    html += `<div id="repertoarList" style="margin-top:12px">`
+
+    sorted.forEach(r => {
+      const statusColor = r.STATUS === "Aktivní"    ? "#34c759" :
+                          r.STATUS === "Neaktuální" ? "#ff9f0a" :
+                          r.STATUS === "Mimo rep"   ? "#ff3b30" : "#8e8e93"
+
+      html += `<div class="repertoar-row card"
+        data-name="${escapeHtml(r.NAME).toLowerCase()}"
+        data-author="${escapeHtml(r.AUTHOR).toLowerCase()}"
+        data-arranged="${escapeHtml(r.ARRANGED_BY).toLowerCase()}"
+        data-text="${escapeHtml(r.TEXT_BY).toLowerCase()}"
+        data-status="${escapeHtml(r.STATUS)}"
+        style="margin-bottom:10px"
+      >
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(r.NAME)}</div>
+            ${r.AUTHOR ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>` : ""}
+            ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
+            ${r.TEXT_BY ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>` : ""}
+            <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+              ${r.LENGTH ? `<span class="small">⏱ ${escapeHtml(r.LENGTH)}</span>` : ""}
+              <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
+              ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
+            </div>
+          </div>
+          ${r.PDF ? `
+            <a href="${escapeHtml(r.PDF)}" target="_blank"
+              style="flex-shrink:0;padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
+              📄 Noty
+            </a>
+          ` : ""}
+        </div>
+      </div>`
+    })
+
+    html += `</div>`
+    if(isDesktop) html += `</div>`
+
+    container().innerHTML = html
+
+  }catch(err){
+    setError("Chyba při načítání repertoáru: " + (err?.message || err))
+  }
+}
+
+function filterRepertoar(query){
+  const q = query.toLowerCase().trim()
+  document.querySelectorAll(".repertoar-row").forEach(row => {
+    const name     = row.dataset.name     || ""
+    const author   = row.dataset.author   || ""
+    const arranged = row.dataset.arranged || ""
+    const text     = row.dataset.text     || ""
+    const match = !q || name.includes(q) || author.includes(q) || arranged.includes(q) || text.includes(q)
+    row.style.display = match ? "" : "none"
+  })
+}
+
+function filterRepertoarStatus(status){
+  // aktualizuj styl tlačítek
+  document.querySelectorAll("[id^='filterBtn_']").forEach(btn => {
+    btn.style.background = ""
+    btn.style.color = ""
+  })
+  const activeBtn = document.getElementById("filterBtn_" + status)
+  if(activeBtn){
+    activeBtn.style.background = "#007aff"
+    activeBtn.style.color = "#fff"
+  }
+
+  document.querySelectorAll(".repertoar-row").forEach(row => {
+    if(status === "Vše"){
+      row.style.display = ""
+    }else{
+      row.style.display = row.dataset.status === status ? "" : "none"
+    }
+  })
+
+  // resetuj textové vyhledávání
+  const search = document.getElementById("repertoarSearch")
+  if(search) search.value = ""
+}
+
+/* ===============================
    HEATMAPA
 ================================ */
 
