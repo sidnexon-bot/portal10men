@@ -1924,36 +1924,49 @@ filtered.forEach(e => {
 html += `</tbody></table></div>`
 
     }else{
-      // Mobil — původní kompaktní verze s iniciálami
-      html += `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">`
-      html += `<table class="heatmap"><thead><tr><th class="heatmap-event-col"></th>`
-      members.forEach(m => {
-        const initials = m.NAME.split(" ").map(n => n[0]).join("")
-        html += `<th class="heatmap-th" title="${escapeHtml(m.NAME)}">${escapeHtml(initials)}</th>`
-      })
-      html += `</tr></thead><tbody>`
+  // Mobil — kartičky pro každou akci
+  filtered.forEach(e => {
+    html += `<div class="card" style="margin-bottom:12px">`
+    
+    // název akce a datum
+    html += `<div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(e.NAME)}</div>`
+    html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
+    
+    // řada avatarů členů
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`
+    
+    members.forEach(m => {
+      const entry   = lookup[e.ID + "_" + m.EMAIL] || {}
+      const status  = entry.status || ""
+      const reason  = entry.reason || ""
+      const initials = m.NAME.split(" ").map(n => n[0]).join("")
+      
+      const bg = status === "Přijdu"   ? "#34c759" :
+                 status === "Možná"    ? "#ff9f0a" :
+                 status === "Nepřijdu" ? "#ff3b30" : "#c7c7cc"
+      
+      const click = status
+        ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
+        : ""
 
-      filtered.forEach(e => {
-        html += `<tr>`
-        html += `<td class="heatmap-label">${escapeHtml(e.NAME)}<span class="heatmap-date"> ${formatDate(e.DATE)}</span></td>`
-        members.forEach(m => {
-          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
-          const status = entry.status || ""
-          const reason = entry.reason || ""
-          const color  = status === "Přijdu"   ? "#d4f5e2" :
-                         status === "Možná"    ? "#fff4dc" :
-                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
-          const icon   = status === "Přijdu"   ? "✓" :
-                         status === "Možná"    ? "?" :
-                         status === "Nepřijdu" ? "✗" : ""
-          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
-          html += `<td class="heatmap-cell" style="background:${color};${status?"cursor:pointer":""}" onclick="${click}">${icon}</td>`
-        })
-        html += `</tr>`
-      })
-
-      html += `</tbody></table></div>`
-    }
+      html += `<div
+        onclick="${click}"
+        style="
+          width:32px;height:32px;
+          border-radius:50%;
+          background:${bg};
+          display:flex;align-items:center;justify-content:center;
+          font-size:11px;font-weight:700;color:#fff;
+          cursor:${status ? "pointer" : "default"};
+          flex-shrink:0
+        "
+        title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}"
+      >${escapeHtml(initials)}</div>`
+    })
+    
+    html += `</div></div>`
+  })
+}
 
     return html
 
