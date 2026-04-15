@@ -245,7 +245,7 @@ function setActiveTab(name){
     dashboard: "btnDashboard",
     events:    "btnEvents",
     payments:  "btnPayments",
-    energy:    "btnEnergy"
+    energy:    "btnEnergy",
     repertoar: "btnRepertoar"
 
   }
