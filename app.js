@@ -204,6 +204,19 @@ function formatTime(t){
   return String(t).substring(0,5)
 }
 
+function formatLength(t){
+  if(!t) return ""
+  if(typeof t === "string" && t.includes("T")){
+    const d = new Date(t)
+    const h = d.getUTCHours()
+    const m = d.getUTCMinutes()
+    const s = d.getUTCSeconds()
+    if(h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`
+    return `${m}:${String(s).padStart(2,"0")}`
+  }
+  return String(t).substring(0,5)
+}
+
 function isToday(date){
   const d = new Date(date)
   const t = new Date()
@@ -1906,7 +1919,7 @@ async function renderRepertoar(){
             ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
             ${r.TEXT_BY ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>` : ""}
             <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
-              ${r.LENGTH ? `<span class="small">⏱ ${escapeHtml(r.LENGTH)}</span>` : ""}
+              ${r.LENGTH ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
               <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
               ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
             </div>
@@ -1914,7 +1927,7 @@ async function renderRepertoar(){
           ${r.PDF ? `
             <a href="${escapeHtml(r.PDF)}" target="_blank"
               style="flex-shrink:0;padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
-              📄 Noty
+              Noty
             </a>
           ` : ""}
         </div>
