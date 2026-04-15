@@ -453,7 +453,7 @@ function updateSidebarActive(tab){
     dashboard: "sidebarDashboard",
     events:    "sidebarEvents",
     payments:  "sidebarPayments",
-    energy:    "sidebarEnergy"
+    energy:    "sidebarEnergy",
     repertoar: "sidebarRepertoar"
 
   }
