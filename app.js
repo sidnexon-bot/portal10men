@@ -597,7 +597,7 @@ if(isDesktop) html += `<div class="desktop-grid"><div class="desktop-col-left">`
   ${renderAttendanceStatus(myStatus)}
   <div class="btn-group" style="margin-top:10px">
     <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-    <button onclick="doAttendance('${upcoming.ID}','Možná')">Možná</button>
+    <button onclick="doAttendanceMozna('${id}')">Možná</button>
     <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
   </div>`
 
@@ -954,7 +954,7 @@ async function openEvent(id){
         <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
         <div class="btn-group">
           <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-          <button onclick="doAttendance('${id}','Možná')">Možná</button>
+          <button onclick="doAttendanceMozna('${id}')">Možná</button>
           <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
         </div>
       ` : `<div class="muted">Vyber člena</div>`}
@@ -1394,6 +1394,29 @@ async function doAttendanceWithReason(eventId, status){
   try{
     showSaving()
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
+    invalidateCache("eventdetail", eventId)
+    lsDel("myattendance_" + MEMBER_EMAIL)
+    hideSaving("Docházka uložena ✓")
+    if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
+    else openEvent(eventId)
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba při ukládání docházky: " + (err?.message || err))
+  }
+}
+
+async function doAttendanceMozna(eventId){
+  if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena nahoře"); return }
+
+  const choice = confirm("Upřesni svou odpověď:\nOK = Spíše ano\nZrušit = Spíše ne")
+  const reason = prompt("Důvod:")
+  if(reason === null) return
+
+  const detailReason = (choice ? "Spíše ano" : "Spíše ne") + (reason ? ": " + reason : "")
+
+  try{
+    showSaving()
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Možná", reason: detailReason})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
