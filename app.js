@@ -1924,27 +1924,31 @@ filtered.forEach(e => {
 html += `</tbody></table></div>`
 
     }else{
-  // Mobil — kartičky pro každou akci
-  filtered.forEach(e => {
-    html += `<div class="card" style="margin-bottom:12px">`
-    
+  // Mobil — jeden blok s kartičkami
+  html += `<div class="card" style="padding:0">`
+
+  filtered.forEach((e, idx) => {
+    const border = idx < filtered.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.15);" : ""
+
+    html += `<div style="padding:14px 16px;${border}">`
+
     // název akce a datum
-    html += `<div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(e.NAME)}</div>`
+    html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px">${escapeHtml(e.NAME)}</div>`
     html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
-    
-    // řada avatarů členů
+
+    // řada avatarů
     html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`
-    
+
     members.forEach(m => {
-      const entry   = lookup[e.ID + "_" + m.EMAIL] || {}
-      const status  = entry.status || ""
-      const reason  = entry.reason || ""
+      const entry    = lookup[e.ID + "_" + m.EMAIL] || {}
+      const status   = entry.status || ""
+      const reason   = entry.reason || ""
       const initials = m.NAME.split(" ").map(n => n[0]).join("")
-      
+
       const bg = status === "Přijdu"   ? "#34c759" :
                  status === "Možná"    ? "#ff9f0a" :
                  status === "Nepřijdu" ? "#ff3b30" : "#c7c7cc"
-      
+
       const click = status
         ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
         : ""
@@ -1963,9 +1967,11 @@ html += `</tbody></table></div>`
         title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}"
       >${escapeHtml(initials)}</div>`
     })
-    
+
     html += `</div></div>`
   })
+
+  html += `</div>`
 }
 
     return html
