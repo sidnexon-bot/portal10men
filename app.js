@@ -302,6 +302,23 @@ function detailPanel(){
   return document.getElementById("detail-panel")
 }
 
+function updateAttendanceBadge(eventId, status){
+  const card = document.querySelector(`.swipe-card[data-id="${eventId}"]`)
+  if(!card) return
+
+  // smaž starý badge
+  const old = card.querySelector(".attendance-badge")
+  if(old) old.remove()
+
+  // přidej nový
+  const color = status === "Přijdu" ? "#34c759" : status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+  const badge = document.createElement("div")
+  badge.className = "attendance-badge"
+  badge.style.cssText = `margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em`
+  badge.textContent = status
+  card.appendChild(badge)
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -1575,11 +1592,11 @@ async function confirmSwipe(eventId, status, el){
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
-    if(ACTIVE_TAB === "dashboard") renderDashboard()
-    else openEvent(eventId)
+    // aktualizuj badge na kartě
+    updateAttendanceBadge(eventId, status)
   }catch(err){
     hideSaving("Chyba ✗")
-    alert("Chyba při ukládání docházky: " + (err?.message || err))
+    alert("Chyba: " + (err?.message || err))
   }
 }
 
@@ -1598,12 +1615,11 @@ async function confirmSwipeWithReason(eventId, el){
     await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
     invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
-    hideSaving("Docházka uložena ✓")
-    if(ACTIVE_TAB === "dashboard") renderDashboard()
-    else openEvent(eventId)
+    hideSaving("Nepřijdu ✓")
+    updateAttendanceBadge(eventId, "Nepřijdu")
   }catch(err){
     hideSaving("Chyba ✗")
-    alert("Chyba při ukládání docházky: " + (err?.message || err))
+    alert("Chyba: " + (err?.message || err))
   }
 }
 
