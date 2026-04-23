@@ -306,11 +306,10 @@ function updateAttendanceBadge(eventId, status){
   const card = document.querySelector(`.swipe-card[data-id="${eventId}"]`)
   if(!card) return
 
-  // smaž starý badge
-  const old = card.querySelector(".attendance-badge")
-  if(old) old.remove()
+  // smaž všechny divy s uppercase stylem (starý badge)
+  card.querySelectorAll("div[style*='text-transform:uppercase']").forEach(el => el.remove())
+  card.querySelectorAll(".attendance-badge").forEach(el => el.remove())
 
-  // přidej nový
   const color = status === "Přijdu" ? "#34c759" : status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
   const badge = document.createElement("div")
   badge.className = "attendance-badge"
