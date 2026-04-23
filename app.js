@@ -1423,11 +1423,19 @@ function closeMoznaModal(){
 }
 
 async function confirmMozna(choice){
-  const eventId   = MOZNA_EVENT_ID  // ulož před zavřením modalu
-  const reason    = document.getElementById("moznaReason")?.value.trim() || ""
-  const detailReason = (choice === "spise-ano" ? "Spíše ano" : "Spíše ne") + (reason ? ": " + reason : "")
-  
-  closeMoznaModal()  // teď můžeme zavřít — eventId je uloženo lokálně
+  const eventId = MOZNA_EVENT_ID
+  const reason  = document.getElementById("moznaReason")?.value.trim() || ""
+
+  if(!reason){
+    document.getElementById("moznaReason").style.border = "2px solid #ff3b30"
+    document.getElementById("moznaReason").placeholder  = "Důvod je povinný"
+    return
+  }
+
+  document.getElementById("moznaReason").style.border = ""
+  const detailReason = (choice === "spise-ano" ? "Spíše ano" : "Spíše ne") + ": " + reason
+
+  closeMoznaModal()
 
   if(!eventId){ alert("Chyba: ID akce nenalezeno"); return }
 
