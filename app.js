@@ -1923,6 +1923,9 @@ async function renderRepertoar(){
     if(!Array.isArray(data) || !data.length){
       container().innerHTML = `<h2>Repertoár</h2><div class="card">Žádné skladby</div>`
       return
+
+    console.log("LENGTH:", data[0].LENGTH)
+
     }
 
     const sorted = [...data].sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
