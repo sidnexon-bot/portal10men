@@ -419,6 +419,28 @@ async function verifyPin(params){
   return {success: String(member.pin) === String(params.pin)}
 }
 
+async function getLastModified(){
+  const dochazka = await dbGet("/dochazka")
+  const akce     = await dbGet("/akce")
+  const program  = await dbGet("/program")
+
+  const dArr = objToArray(dochazka)
+  const aArr = objToArray(akce)
+  const pArr = objToArray(program)
+
+  const lastD = dArr.length
+  const lastA = aArr.length
+  const lastP = pArr.length
+
+  const lastUpdated = dArr.reduce((latest, d) => {
+    return d.updated_at > latest ? d.updated_at : latest
+  }, "")
+
+  return {
+    signature: `${lastUpdated}_${lastA}_${lastP}_${lastD}`
+  }
+}
+
 // ===============================
 // HLAVNÍ API FUNKCE
 // ===============================
