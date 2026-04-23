@@ -1,0 +1,31 @@
+{
+  "vybery": {
+    "v1": {
+      "id": "v1",
+      "name": "Členské příspěvky z.s. 2026",
+      "amount": 1000,
+      "deadline": "2026-02-28",
+      "active": "YES"
+    }
+  },
+  "platby": {
+    "p1":  {"id":"p1",  "id_vyberu":"v1", "email":"adrian.filcik@gmail.com",        "paid":1000, "date":"2026-01-10"},
+    "p2":  {"id":"p2",  "id_vyberu":"v1", "email":"sidney4hassane@gmail.com",        "paid":1000, "date":"2026-04-14"},
+    "p3":  {"id":"p3",  "id_vyberu":"v1", "email":"ctirad@zenka.cz",                 "paid":1000, "date":"2026-01-14"},
+    "p4":  {"id":"p4",  "id_vyberu":"v1", "email":"maartin.jelinek@gmail.com",       "paid":0,    "date":""},
+    "p5":  {"id":"p5",  "id_vyberu":"v1", "email":"lebedaantonin22@gmail.com",       "paid":1000, "date":"2026-02-12"},
+    "p6":  {"id":"p6",  "id_vyberu":"v1", "email":"krystof.tulis@gmail.com",         "paid":1000, "date":"2026-02-19"},
+    "p7":  {"id":"p7",  "id_vyberu":"v1", "email":"karel.spinka@email.cz",           "paid":1000, "date":"2026-02-18"},
+    "p8":  {"id":"p8",  "id_vyberu":"v1", "email":"13artolomejzverina@gmail.com",    "paid":1000, "date":"2026-02-02"},
+    "p9":  {"id":"p9",  "id_vyberu":"v1", "email":"holecek.vavra@gmail.com",         "paid":0,    "date":""},
+    "p10": {"id":"p10", "id_vyberu":"v1", "email":"lukvorlik@gmail.com",             "paid":1000, "date":"2026-02-04"}
+  },
+  "config": {
+    "app_title": "10men",
+    "reminder_days": "3",
+    "payment_account": "",
+    "payment_iban": "",
+    "payment_instructions": "",
+    "payment_qr_url": ""
+  }
+}
