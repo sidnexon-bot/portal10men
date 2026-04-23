@@ -1,108 +1,452 @@
-// api.js - robustní wrapper s auth podporou
-(function(){
-  const API_URL = "https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec";
+// api.js - Firebase wrapper
+import { database, ref, get, set, update, remove, push, onValue } from "./firebase.js"
 
-  // Pomocná funkce: postaví URL s parametry (pro GET)
-  function buildUrl(action, params){
-    const u = new URL(API_URL);
-    if(action) u.searchParams.set("action", action);
-    if(params && typeof params === "object"){
-      Object.keys(params).forEach(k=>{
-        if(params[k] !== undefined && params[k] !== null) u.searchParams.set(k, String(params[k]));
-      });
-    }
-    return u.toString();
-  }
+const DB = database
 
-  // Získá token z sessionStorage (vloží Auth nebo přímý přístup)
-  function getToken(){
-    try{ return sessionStorage.getItem("10base_token") || null; }
-    catch(e){ return null; }
-  }
+// ===============================
+// HELPERS
+// ===============================
 
-  // GET wrapper - beze změny, zpětná kompatibilita
-  async function callGet(action, params){
-    const url = buildUrl(action, params);
-    const resp = await fetch(url, { cache: "no-store" });
-    if(!resp.ok){
-      const txt = await resp.text().catch(()=>"(no body)");
-      throw new Error(`API error ${resp.status} ${resp.statusText} - ${txt}`);
-    }
-    const text = await resp.text();
-    try{ return JSON.parse(text); }
-    catch(e){ return { _raw: text }; }
-  }
+async function dbGet(path){
+  const snapshot = await get(ref(DB, path))
+  return snapshot.exists() ? snapshot.val() : null
+}
 
-  // POST wrapper - pro autentizované akce, token v těle requestu
-  async function callPost(action, params){
-    const token = getToken();
-    const body = {
-      action,
-      ...(params || {}),
-      ...(token ? { idToken: token } : {})
-    };
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify(body)
-    });
-    if(!resp.ok){
-      const txt = await resp.text().catch(()=>"(no body)");
-      throw new Error(`API error ${resp.status} ${resp.statusText} - ${txt}`);
-    }
-    const text = await resp.text();
-    try{ return JSON.parse(text); }
-    catch(e){ return { _raw: text }; }
-  }
+async function dbSet(path, data){
+  await set(ref(DB, path), data)
+  return {status: "ok"}
+}
 
-  // Seznam akcí, které vyžadují POST + auth token
-  // Rozšiřuj podle potřeby
-  const POST_ACTIONS = new Set([
-    "getMembers",
-    "getEvents",
-    "addEventNote",
-    "updateAttendance",
-    "getAttendance"
-  ]);
+async function dbUpdate(path, data){
+  await update(ref(DB, path), data)
+  return {status: "ok"}
+}
 
-  const previousApi = (typeof window !== "undefined" && window.api) ? window.api : null;
+async function dbRemove(path){
+  await remove(ref(DB, path))
+  return {status: "ok"}
+}
 
-  async function api(action, params){
-    // zpětná kompatibilita se starými metodami
-    try{
-      if(previousApi && typeof previousApi === "object" && typeof previousApi[action] === "function"){
-        const res = previousApi[action](params);
-        if(res && typeof res.then === "function") return await res;
-        return res;
+function objToArray(obj){
+  if(!obj) return []
+  return Object.values(obj)
+}
+
+// ===============================
+// API FUNKCE
+// ===============================
+
+async function getMembers(){
+  const data = await dbGet("/members")
+  return objToArray(data)
+}
+
+async function getEvents(){
+  const data = await dbGet("/akce")
+  return objToArray(data).map(e => ({
+    ID:     e.id,
+    NAME:   e.name,
+    DATE:   e.date,
+    START:  e.start,
+    END:    e.end,
+    PLACE:  e.place,
+    NOTE:   e.note,
+    STATUS: e.status,
+    DOC_URL: e.doc_url || ""
+  }))
+}
+
+async function getEventDetail(id){
+  const akce      = await dbGet("/akce/" + id)
+  const dochazka  = await dbGet("/dochazka")
+  const program   = await dbGet("/program")
+  const repertoar = await dbGet("/repertoar")
+  const members   = await dbGet("/members")
+
+  const attendance = objToArray(dochazka)
+    .filter(d => d.id_akce === id)
+    .map(d => {
+      const m = objToArray(members).find(m => m.email === d.email) || {}
+      return {
+        ID:         d.id,
+        ID_AKCE:    d.id_akce,
+        EMAIL:      d.email,
+        NAME:       m.name || d.email,
+        VOICE:      m.voice || "",
+        STATUS:     d.status || "",
+        REASON:     d.reason || "",
+        UPDATED_AT: d.updated_at || ""
       }
-    }catch(e){
-      console.warn("api wrapper: delegation to previous api failed:", e);
-    }
+    })
 
-    // POST pro autentizované akce, GET pro ostatní
-    if(POST_ACTIONS.has(action)){
-      return await callPost(action, params);
-    }
-    return await callGet(action, params);
-  }
-
-  // Helpery
-  api.get  = (action, params) => callGet(action, params);
-  api.post = (action, params) => callPost(action, params);
-  api.call = (action, params) => api(action, params);
-
-  // zachování starých metod
-  if(previousApi && typeof previousApi === "object"){
-    Object.keys(previousApi).forEach(k=>{
-      if(!(k in api)){
-        try{ api[k] = previousApi[k]; }catch(e){}
+  const prog = objToArray(program)
+    .filter(p => p.id_akce === id)
+    .sort((a,b) => Number(a.order) - Number(b.order))
+    .map(p => {
+      const song = objToArray(repertoar).find(r => r.id === p.song_id) || {}
+      return {
+        ID:      p.id,
+        ORDER:   p.order,
+        SONG_ID: p.song_id,
+        NAME:    song.name   || "",
+        AUTHOR:  song.author || "",
+        PDF:     song.pdf    || "",
+        ENCORE:  Number(p.order) >= 900
       }
-    });
+    })
+
+  return {
+    event: {
+      ID:      akce.id,
+      NAME:    akce.name,
+      DATE:    akce.date,
+      START:   akce.start,
+      END:     akce.end,
+      PLACE:   akce.place,
+      NOTE:    akce.note,
+      STATUS:  akce.status,
+      DOC_URL: akce.doc_url || ""
+    },
+    attendance,
+    program: prog
+  }
+}
+
+async function setAttendance(params){
+  const dochazka = await dbGet("/dochazka")
+  const entries  = objToArray(dochazka)
+  const existing = entries.find(d => d.id_akce === params.event && d.email === params.member)
+
+  const data = {
+    id_akce:    params.event,
+    email:      params.member,
+    status:     params.status,
+    reason:     params.reason || "",
+    updated_by: params.member,
+    updated_at: new Date().toISOString()
   }
 
-  if(typeof window !== "undefined") window.api = api;
-  if(typeof module !== "undefined" && module.exports) module.exports = api;
+  if(existing){
+    data.id = existing.id
+    await dbUpdate("/dochazka/" + existing.id, data)
+  }else{
+    const newRef = push(ref(DB, "/dochazka"))
+    data.id = newRef.key
+    await dbSet("/dochazka/" + data.id, data)
+  }
+  return {status: "saved"}
+}
 
-  try{
-    if(window && window.console) window.console.info && window.console.info("api.js loaded - auth wrapper installed");
-  }catch(e){}
-})();
+async function getMyAttendance(email){
+  const dochazka = await dbGet("/dochazka")
+  const map = {}
+  objToArray(dochazka)
+    .filter(d => d.email === email)
+    .forEach(d => {
+      map[d.id_akce] = {status: d.status || "", reason: d.reason || ""}
+    })
+  return map
+}
+
+async function getHeatmap(){
+  const akce     = await dbGet("/akce")
+  const members  = await dbGet("/members")
+  const dochazka = await dbGet("/dochazka")
+
+  return {
+    events:  objToArray(akce).map(e => ({ID: e.id, NAME: e.name, DATE: e.date})),
+    members: objToArray(members).map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
+    rows:    objToArray(dochazka).map(d => ({
+      ID_AKCE: d.id_akce,
+      EMAIL:   d.email,
+      STATUS:  d.status || "",
+      REASON:  d.reason || ""
+    }))
+  }
+}
+
+async function addEvent(params){
+  const members = await dbGet("/members")
+  const id = "a" + Date.now()
+
+  await dbSet("/akce/" + id, {
+    id,
+    name:    params.name,
+    date:    params.date,
+    start:   params.start   || "",
+    end:     params.end     || "",
+    place:   params.place   || "",
+    note:    params.note    || "",
+    status:  params.status  || "Plánovaná",
+    doc_url: ""
+  })
+
+  // vytvoř záznamy docházky pro všechny členy
+  const memberList = objToArray(members)
+  for(const m of memberList){
+    const dRef = push(ref(DB, "/dochazka"))
+    await dbSet("/dochazka/" + dRef.key, {
+      id:         dRef.key,
+      id_akce:    id,
+      email:      m.email,
+      status:     "",
+      reason:     "",
+      updated_by: "",
+      updated_at: ""
+    })
+  }
+
+  return {status: "created", id, attendanceRows: memberList.length}
+}
+
+async function updateEvent(params){
+  await dbUpdate("/akce/" + params.id, {
+    name:   params.name,
+    date:   params.date,
+    start:  params.start  || "",
+    end:    params.end    || "",
+    place:  params.place  || "",
+    note:   params.note   || "",
+    status: params.status || "Plánovaná"
+  })
+  return {status: "updated"}
+}
+
+async function deleteEvent(id){
+  // smaž akci
+  await dbRemove("/akce/" + id)
+
+  // smaž docházku
+  const dochazka = await dbGet("/dochazka")
+  const toDelete = objToArray(dochazka).filter(d => d.id_akce === id)
+  for(const d of toDelete) await dbRemove("/dochazka/" + d.id)
+
+  // smaž program
+  const program = await dbGet("/program")
+  const progDel = objToArray(program).filter(p => p.id_akce === id)
+  for(const p of progDel) await dbRemove("/program/" + p.id)
+
+  return {status: "deleted"}
+}
+
+async function setDocUrl(params){
+  await dbUpdate("/akce/" + params.id, {doc_url: params.url})
+  return {status: "saved"}
+}
+
+async function setProgram(params){
+  const program = await dbGet("/program")
+  const toDelete = objToArray(program).filter(p => p.id_akce === params.id)
+  for(const p of toDelete) await dbRemove("/program/" + p.id)
+
+  const songs  = params.songs  ? JSON.parse(params.songs)  : []
+  const encore = params.encore ? JSON.parse(params.encore) : []
+
+  for(let i = 0; i < songs.length; i++){
+    const pRef = push(ref(DB, "/program"))
+    await dbSet("/program/" + pRef.key, {
+      id:      pRef.key,
+      id_akce: params.id,
+      order:   i + 1,
+      song_id: songs[i]
+    })
+  }
+
+  for(let i = 0; i < encore.length; i++){
+    const pRef = push(ref(DB, "/program"))
+    await dbSet("/program/" + pRef.key, {
+      id:      pRef.key,
+      id_akce: params.id,
+      order:   901 + i,
+      song_id: encore[i]
+    })
+  }
+
+  return {status: "saved"}
+}
+
+async function updateNote(params){
+  await dbUpdate("/akce/" + params.id, {note: params.note})
+  return {status: "saved"}
+}
+
+async function getRepertoar(){
+  const data = await dbGet("/repertoar")
+  return objToArray(data).map(r => ({
+    ID:          r.id,
+    NAME:        r.name,
+    AUTHOR:      r.author      || "",
+    ARRANGED_BY: r.arranged_by || "",
+    TEXT_BY:     r.text_by     || "",
+    LENGTH:      r.length      || "",
+    STATUS:      r.status      || "",
+    PDF:         r.pdf         || "",
+    CODE:        r.code        || ""
+  }))
+}
+
+async function getEnergy(){
+  const energie = await dbGet("/energie")
+  const akce    = await dbGet("/akce")
+  return objToArray(energie).map(e => {
+    const a = akce[e.id_akce] || {}
+    return {
+      ID:      e.id,
+      ID_AKCE: e.id_akce,
+      START:   e.start,
+      END:     e.end,
+      DATE:    a.date || e.date || ""
+    }
+  })
+}
+
+async function setEnergy(params){
+  const akce  = await dbGet("/akce/" + params.event)
+  const eRef  = push(ref(DB, "/energie"))
+  await dbSet("/energie/" + eRef.key, {
+    id:      eRef.key,
+    id_akce: params.event,
+    start:   Number(params.start),
+    end:     Number(params.end),
+    date:    akce ? akce.date : new Date().toISOString()
+  })
+  return {status: "saved"}
+}
+
+async function getPayments(email){
+  const vybery  = await dbGet("/vybery")
+  const platby  = await dbGet("/platby")
+  const members = await dbGet("/members")
+  const config  = await dbGet("/config")
+
+  const active = objToArray(vybery).filter(v => v.active === "YES")
+
+  return active.map(v => {
+    const vsechnyPlatby = objToArray(platby).filter(p => p.id_vyberu === v.id)
+    const mojePlatba   = vsechnyPlatby.find(p => p.email === email)
+
+    const memberStatus = objToArray(members).map(m => {
+      const p = vsechnyPlatby.find(x => x.email === m.email)
+      return {
+        name:  m.name,
+        email: m.email,
+        paid:  p ? Number(p.paid) || 0 : 0,
+        date:  p ? p.date : null
+      }
+    })
+
+    const totalPaid = vsechnyPlatby.reduce((sum, p) => sum + (Number(p.paid) || 0), 0)
+    const remaining = (Number(v.amount) * objToArray(members).length) - totalPaid
+
+    return {
+      id:           v.id,
+      name:         v.name,
+      amount:       Number(v.amount),
+      deadline:     v.deadline,
+      totalPaid,
+      remaining,
+      myPaid:       mojePlatba ? Number(mojePlatba.paid) || 0 : 0,
+      members:      memberStatus,
+      account:      config.payment_account      || "",
+      iban:         config.payment_iban         || "",
+      instructions: config.payment_instructions || "",
+      qrUrl:        config.payment_qr_url       || ""
+    }
+  })
+}
+
+async function setPayment(params){
+  const platby   = await dbGet("/platby")
+  const existing = objToArray(platby).find(p => p.id_vyberu === params.id_vyberu && p.email === params.email)
+
+  if(existing){
+    await dbUpdate("/platby/" + existing.id, {
+      paid: Number(params.paid),
+      date: new Date().toISOString()
+    })
+  }else{
+    const pRef = push(ref(DB, "/platby"))
+    await dbSet("/platby/" + pRef.key, {
+      id:        pRef.key,
+      id_vyberu: params.id_vyberu,
+      email:     params.email,
+      paid:      Number(params.paid),
+      date:      new Date().toISOString()
+    })
+  }
+  return {status: "saved"}
+}
+
+async function addCollection(params){
+  const members = await dbGet("/members")
+  const id = "v" + Date.now()
+
+  await dbSet("/vybery/" + id, {
+    id,
+    name:     params.name,
+    amount:   Number(params.amount),
+    deadline: params.deadline || "",
+    active:   "YES"
+  })
+
+  const memberList = objToArray(members)
+  for(const m of memberList){
+    const pRef = push(ref(DB, "/platby"))
+    await dbSet("/platby/" + pRef.key, {
+      id:        pRef.key,
+      id_vyberu: id,
+      email:     m.email,
+      paid:      0,
+      date:      ""
+    })
+  }
+
+  return {status: "created", id}
+}
+
+async function deleteCollection(id){
+  await dbRemove("/vybery/" + id)
+  const platby   = await dbGet("/platby")
+  const toDelete = objToArray(platby).filter(p => p.id_vyberu === id)
+  for(const p of toDelete) await dbRemove("/platby/" + p.id)
+  return {status: "deleted"}
+}
+
+async function verifyPin(params){
+  const members = await dbGet("/members")
+  const member  = objToArray(members).find(m => m.email === params.email)
+  if(!member) return {success: false}
+  return {success: String(member.pin) === String(params.pin)}
+}
+
+// ===============================
+// HLAVNÍ API FUNKCE
+// ===============================
+
+async function api(action, params = {}){
+  switch(action){
+    case "members":       return await getMembers()
+    case "events":        return await getEvents()
+    case "eventdetail":   return await getEventDetail(params.id)
+    case "setattendance": return await setAttendance(params)
+    case "myattendance":  return await getMyAttendance(params.email)
+    case "heatmap":       return await getHeatmap()
+    case "addevent":      return await addEvent(params)
+    case "updateevent":   return await updateEvent(params)
+    case "deleteevent":   return await deleteEvent(params.id)
+    case "setdocurl":     return await setDocUrl(params)
+    case "setprogram":    return await setProgram(params)
+    case "updatenote":    return await updateNote(params)
+    case "repertoar":     return await getRepertoar()
+    case "energy":        return await getEnergy()
+    case "setenergy":     return await setEnergy(params)
+    case "payments":      return await getPayments(params.email)
+    case "setpayment":    return await setPayment(params)
+    case "addcollection": return await addCollection(params)
+    case "deletecollection": return await deleteCollection(params.id)
+    case "verifypin":     return await verifyPin(params)
+    default: throw new Error("Unknown action: " + action)
+  }
+}
+
+window.api = api
