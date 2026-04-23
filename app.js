@@ -1423,18 +1423,22 @@ function closeMoznaModal(){
 }
 
 async function confirmMozna(choice){
+  const eventId   = MOZNA_EVENT_ID  // ulož před zavřením modalu
   const reason    = document.getElementById("moznaReason")?.value.trim() || ""
   const detailReason = (choice === "spise-ano" ? "Spíše ano" : "Spíše ne") + (reason ? ": " + reason : "")
-  closeMoznaModal()
+  
+  closeMoznaModal()  // teď můžeme zavřít — eventId je uloženo lokálně
+
+  if(!eventId){ alert("Chyba: ID akce nenalezeno"); return }
 
   try{
     showSaving()
-    await api("setattendance", {event: MOZNA_EVENT_ID, member: MEMBER_EMAIL, status: "Možná", reason: detailReason})
-    invalidateCache("eventdetail", MOZNA_EVENT_ID)
+    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Možná", reason: detailReason})
+    invalidateCache("eventdetail", eventId)
     lsDel("myattendance_" + MEMBER_EMAIL)
     hideSaving("Docházka uložena ✓")
     if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
-    else openEvent(MOZNA_EVENT_ID)
+    else openEvent(eventId)
   }catch(err){
     hideSaving("Chyba ✗")
     alert("Chyba při ukládání docházky: " + (err?.message || err))
