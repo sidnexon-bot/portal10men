@@ -467,6 +467,7 @@ async function api(action, params = {}){
     case "addcollection": return await addCollection(params)
     case "deletecollection": return await deleteCollection(params.id)
     case "verifypin":     return await verifyPin(params)
+    case "lastmodified": return await getLastModified()
     default: throw new Error("Unknown action: " + action)
   }
 }
