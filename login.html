@@ -32,28 +32,59 @@
     <p id="login-error" class="error hidden"></p>
   </div>
 
-  <script>
-    async function handleCredentialResponse(response) {
-  const idToken = response.credential;
+  <script type="module">
+  import { auth, signInWithPopup, GoogleAuthProvider } from "./firebase.js"
+  import { database, ref, get } from "./firebase.js"
 
-  const url = new URL('https://script.google.com/macros/s/AKfycbx74L6IrbOJmCdIEF4SxGOoS8aV3rTtVc2XIsGXgfu6OnO27Kh3KGLv4lwzdw6n1Qnzgw/exec');
-  url.searchParams.set('action', 'verifyUser');
-  url.searchParams.set('idToken', idToken);
+  async function handleGoogleLogin(){
+    try{
+      const provider = new GoogleAuthProvider()
+      const result   = await signInWithPopup(auth, provider)
+      const user     = result.user
+      const email    = user.email
 
-  const res = await fetch(url.toString(), { cache: 'no-store' });
-  const user = await res.json();
+      // ověř uživatele v Firebase databázi
+      const snapshot = await get(ref(database, "/members"))
+      const members  = snapshot.val()
+      const member   = Object.values(members).find(m => m.email === email)
 
-  if (user.success) {
-    localStorage.setItem('10base_user', JSON.stringify(user));
-    localStorage.setItem('10base_token', idToken);
-    window.location.href = 'index.html';
-  } else {
-    document.getElementById('login-error').textContent = 'Přístup zamítnut: ' + user.error;
-    document.getElementById('login-error').classList.remove('hidden');
+      if(!member){
+        document.getElementById("login-error").textContent = "Přístup zamítnut: email není v seznamu členů"
+        document.getElementById("login-error").classList.remove("hidden")
+        return
+      }
+
+      // ulož do localStorage
+      localStorage.setItem("10base_user", JSON.stringify({
+        email: member.email,
+        name:  member.name,
+        role:  member.role,
+        voice: member.voice,
+        success: true
+      }))
+
+      window.location.href = "index.html"
+
+    }catch(err){
+      document.getElementById("login-error").textContent = "Chyba přihlášení: " + err.message
+      document.getElementById("login-error").classList.remove("hidden")
+    }
   }
-}
 
-  </script>
+  // nahraď Google tlačítko
+  window.addEventListener("load", () => {
+    const btn = document.createElement("button")
+    btn.textContent = "Přihlásit se přes Google"
+    btn.className = "primary-btn"
+    btn.style.cssText = "width:100%;padding:14px;font-size:16px;margin-top:16px"
+    btn.onclick = handleGoogleLogin
+    document.querySelector(".login-card").appendChild(btn)
+
+    // skryj původní Google tlačítko
+    const gBtn = document.querySelector(".g_id_signin")
+    if(gBtn) gBtn.style.display = "none"
+  })
+</script>
 
 </body>
 </html>
