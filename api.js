@@ -3,6 +3,16 @@ import { database, ref, get, set, update, remove, push, onValue } from "./fireba
 
 const DB = database
 
+import { onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"
+
+export function watchChanges(callback){
+  onValue(ref(DB, "/dochazka"), () => callback("dochazka"))
+  onValue(ref(DB, "/akce"),     () => callback("akce"))
+  onValue(ref(DB, "/program"),  () => callback("program"))
+}
+
+window.watchChanges = watchChanges
+
 // ===============================
 // HELPERS
 // ===============================
