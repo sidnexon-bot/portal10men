@@ -483,3 +483,5 @@ async function api(action, params = {}){
 }
 
 window.api = api
+window.watchChanges = watchChanges
+
