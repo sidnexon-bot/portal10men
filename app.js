@@ -442,7 +442,7 @@ async function start(){
     renderDashboard()
     initPullToRefresh()
     initSidebar()
-    startPolling()
+    initRealtime()
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
@@ -2330,41 +2330,16 @@ function initPullToRefresh(){
 }
 
 /* ===============================
-   SMART POLLING
+   REALTIME
 ================================ */
 
-let POLLING_INTERVAL = null
-let LAST_SIGNATURE   = null
-
-function startPolling(){
-  if(POLLING_INTERVAL) return
-  POLLING_INTERVAL = setInterval(checkForChanges, 15000)
-}
-
-function stopPolling(){
-  if(POLLING_INTERVAL){
-    clearInterval(POLLING_INTERVAL)
-    POLLING_INTERVAL = null
-  }
-}
-
-async function checkForChanges(){
-  try{
-    const result = await api("lastmodified")
-    const sig    = result.signature
-
-    if(LAST_SIGNATURE === null){
-      LAST_SIGNATURE = sig
-      return
-    }
-
-    if(sig !== LAST_SIGNATURE){
-      LAST_SIGNATURE = sig
+function initRealtime(){
+  if(typeof watchChanges === "function"){
+    watchChanges((changed) => {
+      console.log("Firebase change:", changed)
       invalidateAllCache()
       silentRefresh()
-    }
-  }catch(e){
-    console.error("polling error", e)
+    })
   }
 }
 
@@ -2384,13 +2359,13 @@ async function silentRefresh(){
 }
 
 document.addEventListener("visibilitychange", () => {
-  if(document.hidden){
-    stopPolling()
-  }else{
-    startPolling()
-    checkForChanges()
+  if(!document.hidden){
+    // při návratu na stránku jen invaliduj cache a refreshni
+    invalidateAllCache()
+    silentRefresh()
   }
 })
+
 
 
 /* ===============================
