@@ -2372,7 +2372,7 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(waitForApi)
       start()
     }
-  }, 50)
+  }, 100)
 })
 
 /* ===============================
