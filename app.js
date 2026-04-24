@@ -2366,7 +2366,14 @@ document.addEventListener("visibilitychange", () => {
   }
 })
 
-
+document.addEventListener("DOMContentLoaded", () => {
+  const waitForApi = setInterval(() => {
+    if(typeof window.api === "function"){
+      clearInterval(waitForApi)
+      start()
+    }
+  }, 50)
+})
 
 /* ===============================
    INIT
