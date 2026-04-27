@@ -2333,13 +2333,7 @@ async function renderRepertoar(){
       >
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div style="font-weight:600;font-size:15px">${escapeHtml(r.NAME)}</div>
-              <button
-                onclick="event.stopPropagation();toggleFav('${escapeHtml(r.ID)}')"
-                style="background:none;border:none;padding:0;font-size:18px;cursor:pointer;line-height:1"
-              >${isFav ? "❤️" : "🤍"}</button>
-            </div>
+            <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(r.NAME)}</div>
             ${r.AUTHOR ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>` : ""}
             ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
             ${r.TEXT_BY ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>` : ""}
@@ -2349,14 +2343,22 @@ async function renderRepertoar(){
               ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
             </div>
           </div>
-          ${r.PDF ? `
-            <a href="${escapeHtml(r.PDF)}" target="_blank"
-              style="flex-shrink:0;padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
-              Noty
-            </a>
-          ` : ""}
-        </div>
-      </div>`
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+            ${r.PDF ? `
+              <a href="${escapeHtml(r.PDF)}" target="_blank"
+                style="padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
+                Noty
+              </a>
+            ` : ""}
+            <button
+              onclick="event.stopPropagation();toggleFav('${escapeHtml(r.ID)}')"
+              style="background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;justify-content:center"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="${isFav ? "#ff3b30" : "#c7c7cc"}" fill="${isFav ? "#ff3b30" : "none"}" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
     })
 
     html += `</div>`
