@@ -2641,6 +2641,7 @@ window.openFormModal        = openFormModal
 window.closeFormModal       = closeFormModal
 window.addAktualita         = addAktualita
 window.editAktualita        = editAktualita
+window.deleteAktualita      = deleteAktualita
 window.addTodoItem          = addTodoItem
 window.toggleTodo           = toggleTodo
 window.deleteTodoItem       = deleteTodoItem
