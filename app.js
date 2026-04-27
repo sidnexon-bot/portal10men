@@ -707,31 +707,39 @@ async function renderDashboard(){
     // --- AKTUALITY ---
 const aktuality = await cachedApi("aktuality")
 const todos     = await cachedApi("todos")
-
 html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
-html += `<div class="card">`
+html += `<div class="card" style="padding:0">`
 
 if(Array.isArray(aktuality) && aktuality.length){
   aktuality.forEach((a, idx) => {
-    const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);padding-bottom:10px;margin-bottom:10px;" : ""
-    html += `<div style="${border}">
-      <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
-      ${a.date ? `<div class="small" style="margin-top:4px">${formatDate(a.date)}</div>` : ""}
-      ${MEMBER_ROLE === "ADMIN" ? `
-  <div class="btn-group" style="margin-top:8px">
-    <button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="padding:4px 10px;font-size:12px">Upravit</button>
-    <button onclick="deleteAktualita('${escapeHtml(a.id)}')" style="padding:4px 10px;font-size:12px;background:#fde8e8;color:#c00">Smazat</button>
-  </div>
-` : ""}
+    const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
+    const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+    html += `<div
+      style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+      onclick="${MEMBER_ROLE === "ADMIN" ? `selectAktualita('${escapeHtml(a.id)}')` : ""}"
+    >
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
+          ${a.date ? `<div class="small" style="margin-top:4px">${formatDate(a.date)}</div>` : ""}
+        </div>
+        ${isSelected ? `<div style="color:#007aff;font-size:20px;margin-left:10px">✓</div>` : ""}
+      </div>
+      ${isSelected ? `
+        <div class="btn-group" style="margin-top:10px">
+          <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+          <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+        </div>
+      ` : ""}
     </div>`
   })
 }else{
-  html += `<p class="notice" style="margin:0">Žádné aktuality</p>`
+  html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`
 }
 
 if(MEMBER_ROLE === "ADMIN"){
-  html += `<div class="btn-group" style="margin-top:12px">
-    <button onclick="addAktualita()">+ Přidat aktualitu</button>
+  html += `<div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+    <button onclick="addAktualita()" style="width:100%">+ Přidat aktualitu</button>
   </div>`
 }
 
@@ -739,28 +747,41 @@ html += `</div>`
 
 // --- TO-DO LIST ---
 html += `<h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>`
-html += `<div class="card">`
+html += `<div class="card" style="padding:0">`
 
 if(Array.isArray(todos) && todos.length){
-  todos.forEach(t => {
-    const done = t.done === true
-    html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-      <div onclick="toggleTodo('${escapeHtml(t.id)}',${!done})"
-        style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
-        ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+  todos.forEach((t, idx) => {
+    const done       = t.done === true
+    const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
+    const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
+    html += `<div
+      style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+      onclick="${MEMBER_ROLE === "ADMIN" ? `selectTodo('${escapeHtml(t.id)}')` : ""}"
+    >
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+        </div>
+        <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+        ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+        ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
       </div>
-      <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-      ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
-      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="deleteTodoItem('${escapeHtml(t.id)}')" style="padding:2px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
+      ${isSelected ? `
+        <div class="btn-group" style="margin-top:10px">
+          <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+          <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+          <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+        </div>
+      ` : ""}
     </div>`
   })
 }else{
-  html += `<p class="notice" style="margin:0">Žádné úkoly</p>`
+  html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`
 }
 
 if(MEMBER_ROLE === "ADMIN"){
-  html += `<div class="btn-group" style="margin-top:10px">
-    <button onclick="addTodoItem()">+ Přidat úkol</button>
+  html += `<div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+    <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
   </div>`
 }
 
@@ -823,6 +844,9 @@ function toggleDashboardEvent(){
   const isOpen  = el.style.display !== "none"
   el.style.display = isOpen ? "none" : "block"
 }
+
+let AKTUALITA_SELECTED = null
+let TODO_SELECTED = null
 
 function toggleAktualita(id){
   const el      = document.getElementById("detailAkt_" + id)
@@ -901,6 +925,32 @@ async function deleteAktualita(id){
   }catch(err){
     alert("Chyba: " + (err?.message || err))
   }
+}
+
+function selectAktualita(id){
+  AKTUALITA_SELECTED = AKTUALITA_SELECTED === id ? null : id
+  renderDashboard()
+}
+
+function selectTodo(id){
+  TODO_SELECTED = TODO_SELECTED === id ? null : id
+  renderDashboard()
+}
+
+async function editTodoItem(id, text, deadline){
+  openFormModal("Upravit úkol", [
+    {key: "text",     label: "Úkol",    type: "text", value: text},
+    {key: "deadline", label: "Deadline", type: "date", value: deadline}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text úkolu"); return }
+    try{
+      closeFormModal()
+      await api("updatetodo", {id, text: values.text, deadline: values.deadline})
+      lsDel("todos")
+      TODO_SELECTED = null
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
 }
 
 async function addTodoItem(){
@@ -2712,6 +2762,9 @@ window.closeFormModal       = closeFormModal
 window.addAktualita         = addAktualita
 window.editAktualita        = editAktualita
 window.deleteAktualita      = deleteAktualita
+window.selectAktualita      = selectAktualita
+window.selectTodo           = selectTodo
+window.editTodoItem         = editTodoItem
 window.addTodoItem          = addTodoItem
 window.toggleTodo           = toggleTodo
 window.deleteTodoItem       = deleteTodoItem
