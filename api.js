@@ -327,16 +327,56 @@ async function toggleFavorite(params){
 }
 
 async function setEnergy(params){
-  const akce  = await dbGet("/akce/" + params.event)
-  const eRef  = push(ref(DB, "/energie"))
-  await dbSet("/energie/" + eRef.key, {
-    id:      eRef.key,
-    id_akce: params.event,
-    start:   Number(params.start),
-    end:     Number(params.end),
-    date:    akce ? akce.date : new Date().toISOString()
-  })
-  return {status: "saved"}
+  const akce = await dbGet("/akce/" + params.event)
+
+  if(params.phase === "start"){
+    // vytvoř nový záznam jen se startem
+    const eRef = push(ref(DB, "/energie"))
+    await dbSet("/energie/" + eRef.key, {
+      id:      eRef.key,
+      id_akce: params.event,
+      start:   Number(params.start),
+      end:     null,
+      date:    akce ? akce.date : new Date().toISOString()
+    })
+    return {status: "start_saved"}
+
+  }else if(params.phase === "end"){
+    // najdi existující záznam pro tuto akci bez konce
+    const energie = await dbGet("/energie")
+    const existing = objToArray(energie).find(e => 
+      e.id_akce === params.event && (e.end === null || e.end === undefined || e.end === "")
+    )
+
+    if(existing){
+      // aktualizuj existující záznam
+      await dbUpdate("/energie/" + existing.id, {end: Number(params.end)})
+      return {status: "end_saved"}
+    }else{
+      // nenašel se záznam bez konce — vytvoř nový
+      const eRef = push(ref(DB, "/energie"))
+      await dbSet("/energie/" + eRef.key, {
+        id:      eRef.key,
+        id_akce: params.event,
+        start:   null,
+        end:     Number(params.end),
+        date:    akce ? akce.date : new Date().toISOString()
+      })
+      return {status: "end_saved_new"}
+    }
+
+  }else{
+    // zpětná kompatibilita — starý způsob
+    const eRef = push(ref(DB, "/energie"))
+    await dbSet("/energie/" + eRef.key, {
+      id:      eRef.key,
+      id_akce: params.event,
+      start:   Number(params.start),
+      end:     Number(params.end),
+      date:    akce ? akce.date : new Date().toISOString()
+    })
+    return {status: "saved"}
+  }
 }
 
 async function updateEnergie(params){
