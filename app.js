@@ -636,7 +636,7 @@ async function renderDashboard(){
           <div class="small">${escapeHtml(upcoming.PLACE)}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
             <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
-            <span class="small">✓ Přijdu: <b>${attendanceCount}</b></span>
+            <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
           </div>
         </div>
 
