@@ -321,6 +321,19 @@ async function setEnergy(params){
   return {status: "saved"}
 }
 
+async function updateEnergie(params){
+  await dbUpdate("/energie/" + params.id, {
+    start: Number(params.start),
+    end:   Number(params.end)
+  })
+  return {status: "updated"}
+}
+
+async function deleteEnergie(id){
+  await dbRemove("/energie/" + id)
+  return {status: "deleted"}
+}
+
 async function getPayments(email){
   const vybery  = await dbGet("/vybery")
   const platby  = await dbGet("/platby")
@@ -528,6 +541,8 @@ async function api(action, params = {}){
     case "repertoar":     return await getRepertoar()
     case "energy":        return await getEnergy()
     case "setenergy":     return await setEnergy(params)
+    case "updateenergie": return await updateEnergie(params)
+    case "deleteenergie": return await deleteEnergie(params.id)
     case "payments":      return await getPayments(params.email)
     case "setpayment":    return await setPayment(params)
     case "addcollection": return await addCollection(params)
