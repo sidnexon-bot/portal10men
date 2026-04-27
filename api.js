@@ -490,11 +490,10 @@ async function addTodo(params){
 }
 
 async function updateTodo(params){
-  await dbUpdate("/todos/" + params.id, {
-    text:     params.text,
-    deadline: params.deadline || "",
-    done:     params.done === true || params.done === "true"
-  })
+  const updates = {done: params.done === true || params.done === "true"}
+  if(params.text     !== undefined) updates.text     = params.text
+  if(params.deadline !== undefined) updates.deadline = params.deadline
+  await dbUpdate("/todos/" + params.id, updates)
   return {status: "saved"}
 }
 
