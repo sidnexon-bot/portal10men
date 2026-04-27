@@ -463,6 +463,16 @@ async function updateAktualita(params){
   return {status: "saved"}
 }
 
+async function addAktualita(params){
+  const aRef = push(ref(DB, "/aktuality"))
+  await dbSet("/aktuality/" + aRef.key, {
+    id:   aRef.key,
+    text: params.text,
+    date: params.date || ""
+  })
+  return {status: "created"}
+}
+
 async function getTodos(){
   const data = await dbGet("/todos")
   return objToArray(data).sort((a,b) => (a.deadline||"").localeCompare(b.deadline||""))
@@ -522,6 +532,7 @@ async function api(action, params = {}){
     case "lastmodified": return await getLastModified()
     case "aktuality":        return await getAktuality()
     case "updateaktualita":  return await updateAktualita(params)
+    case "addaktualita": return await addAktualita(params)
     case "todos":            return await getTodos()
     case "addtodo":          return await addTodo(params)
     case "updatetodo":       return await updateTodo(params)
