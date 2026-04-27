@@ -2278,9 +2278,8 @@ async function processMeterPhoto(input){
       return
     }
 
-    const targetInput = document.getElementById(METER_TARGET)
-    if(targetInput) targetInput.value = value
-    hideSaving("Přečteno: " + value + " kWh ✓")
+    const targetInput = document.getElementById(METER_TARGET + "Scan") || document.getElementById(METER_TARGET)
+if(targetInput) targetInput.value = value
 
   }catch(err){
     hideSaving("Chyba OCR ✗")
