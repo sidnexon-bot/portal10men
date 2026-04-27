@@ -583,102 +583,212 @@ async function renderDashboard(){
     })
 
     const today = new Date()
-today.setHours(0,0,0,0)
+    today.setHours(0,0,0,0)
 
-const upcoming = events
-  .filter(e => {
-    const d = new Date(e.DATE)
-    d.setHours(0,0,0,0)
-    return d >= today
-  })
-  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
+    const upcoming = events
+      .filter(e => {
+        const d = new Date(e.DATE)
+        d.setHours(0,0,0,0)
+        return d >= today
+      })
+      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
-    const isDesktop = window.innerWidth >= 768
-let html = ""
-if(isDesktop) html += `<div class="desktop-grid"><div class="desktop-col-left">`
+    let html = isDesktop ? `<div class="desktop-grid"><div class="desktop-col-left">` : ""
 
     // --- NEJBLIŽŠÍ AKCE ---
-   if(upcoming){
-  html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
+    if(upcoming){
+      html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
 
-  let attendanceHtml = ""
-  if(MEMBER_EMAIL){
-    let detail = {attendance:[]}
-    try{
-      detail = await cachedApi("eventdetail", {id: upcoming.ID})
-    }catch(e){ console.error("eventdetail fail", e) }
-    const myRow    = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
-    const myStatus = myRow?.STATUS || ""
-    attendanceHtml = `
-  <hr style="border:none;border-top:1px solid rgba(128,128,128,0.15);margin:12px -16px">
-  <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Tvoje docházka</div>
-  ${renderAttendanceStatus(myStatus)}
-  <div class="btn-group" style="margin-top:10px">
-    <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-    <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
-    <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
-  </div>`
+      let myStatus = ""
+      let attendanceCount = 0
+      let detail = {attendance:[], program:[]}
 
-  }else{
-    attendanceHtml = "<p class='notice'>Vyber člena pro zobrazení docházky.</p>"
-  }
+      if(MEMBER_EMAIL){
+        try{
+          detail = await cachedApi("eventdetail", {id: upcoming.ID})
+          const myRow = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
+          myStatus = myRow?.STATUS || ""
+          attendanceCount = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
+        }catch(e){ console.error("eventdetail fail", e) }
+      }
 
-  html += `<div class="card next" onclick="openEvent('${escapeHtml(upcoming.ID)}')">
-    <b style="font-size:20px;display:block;margin-bottom:6px">${escapeHtml(upcoming.NAME)}</b>
-    <div class="small">${formatDate(upcoming.DATE)}${upcoming.START ? " · " + formatTime(upcoming.START) : ""}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</div>
-    <div class="small">${escapeHtml(upcoming.PLACE)}</div>
-    ${attendanceHtml}
-  </div>`
-}
+      const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+      const statusText  = myStatus || "Nevyplněno"
+
+      html += `<div class="card" style="padding:0">
+        <div onclick="toggleDashboardEvent()" style="padding:16px;cursor:pointer">
+          <b style="font-size:18px;display:block;margin-bottom:6px">${escapeHtml(upcoming.NAME)}</b>
+          <div class="small">${formatDate(upcoming.DATE)}${upcoming.START ? " · " + formatTime(upcoming.START) : ""}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</div>
+          <div class="small">${escapeHtml(upcoming.PLACE)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+            <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
+            <span class="small">✓ Přijdu: <b>${attendanceCount}</b></span>
+          </div>
+        </div>
+
+        <div id="dashEventDetail" style="display:none;border-top:1px solid rgba(128,128,128,0.15)">
+          <div style="padding:16px">
+
+            <div class="btn-group" style="margin-bottom:16px">
+              <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
+              <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
+              <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+            </div>
+
+            ${upcoming.NOTE ? `<div style="margin-bottom:12px"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(upcoming.NOTE)}</div></div>` : ""}
+
+            ${(()=>{
+              const mainProgram   = (detail.program || []).filter(p => !p.ENCORE)
+              const encoreProgram = (detail.program || []).filter(p => p.ENCORE)
+              if(!mainProgram.length) return `<p class="notice">Program není k dispozici</p>`
+              return `<div class="event-card">
+                <div class="event-label">Program</div>
+                ${mainProgram.map((p,i) => `
+                  <div class="event-row">
+                    <div>
+                      <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+                      ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+                    </div>
+                    ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
+                  </div>
+                `).join("")}
+                ${encoreProgram.length ? `
+                  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
+                    <div class="event-label" style="margin-bottom:6px">Přídavky</div>
+                    ${encoreProgram.map((p,i) => `
+                      <div class="event-row">
+                        <div>
+                          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+                          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+                        </div>
+                        ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
+                      </div>
+                    `).join("")}
+                  </div>
+                ` : ""}
+              </div>`
+            })()}
+
+            ${upcoming.DOC_URL ? `
+              <a href="${escapeHtml(upcoming.DOC_URL)}" target="_blank"
+                style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-top:12px">
+                Otevřít infodokument
+              </a>
+            ` : ""}
+
+            ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+              <hr style="margin:16px 0;border:none;border-top:1px solid rgba(128,128,128,0.15)">
+              <div class="btn-group">
+                ${MEMBER_ROLE === "ADMIN" ? `<button onclick="openEventForm('${upcoming.ID}')">Upravit akci</button>` : ""}
+                <button onclick="openProgramEditor('${upcoming.ID}')">Upravit program</button>
+                <button onclick="uploadDocUrl('${upcoming.ID}')">Infodokument</button>
+              </div>
+            ` : ""}
+
+          </div>
+        </div>
+      </div>`
+    }
 
     // --- AKTUALITY ---
-    html += `<div class="card bulletin">
-      <b>📋 Aktuality</b>
-      <p>${escapeHtml(BULLETIN).replaceAll("\n","<br>")}</p>
-    </div>`
+    const aktuality = await cachedApi("aktuality")
+    const todos     = await cachedApi("todos")
 
-   // --- KONCERTY JARO/LÉTO ---
-html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
-if(spring.length){
-  html += `<div class="card" style="padding:0">`
-  spring.forEach((e, i) => {
-    const past   = new Date(e.DATE) < now
-    const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-      <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-      <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-      ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-    </div>`
-  })
-  html += `</div>`
-}else{
-  html += "<p class='notice'>Žádné koncerty</p>"
-}
+    html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
+    html += `<div class="card" style="padding:0">`
 
-// --- KONCERTY PODZIM/ZIMA ---
-html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
-if(autumn.length){
-  html += `<div class="card" style="padding:0">`
-  autumn.forEach((e, i) => {
-    const past   = new Date(e.DATE) < now
-    const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-    html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-      <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-      <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-      ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-    </div>`
-  })
-  html += `</div>`
-}else{
-  html += "<p class='notice'>Žádné koncerty</p>"
-}
+    if(Array.isArray(aktuality) && aktuality.length){
+      aktuality.forEach((a, idx) => {
+        const border = "border-bottom:1px solid rgba(128,128,128,0.1);"
+        html += `<div style="${border}">
+          <div onclick="toggleAktualita('${escapeHtml(a.id)}')" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:15px">${escapeHtml(a.text.split("\n")[0].substring(0,60))}${a.text.length > 60 ? "…" : ""}</div>
+              <div class="small" style="margin-top:2px">${a.date ? formatDate(a.date) : ""}</div>
+            </div>
+            <span style="color:var(--muted);font-size:18px" id="chevronAkt_${escapeHtml(a.id)}">›</span>
+          </div>
+          <div id="detailAkt_${escapeHtml(a.id)}" style="display:none;padding:0 16px 14px">
+            <div style="font-size:15px;white-space:pre-wrap;margin-bottom:12px">${escapeHtml(a.text)}</div>
+            ${MEMBER_ROLE === "ADMIN" ? `<button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text).replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>` : ""}
+          </div>
+        </div>`
+      })
+    }else{
+      html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`
+    }
 
-     const heatmapHtml = await renderHeatmap()
-if(isDesktop){
-  html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
-}else{
-  html += `<div id="heatmap-container">${heatmapHtml}</div>`
-}
+    // TODO LIST
+    html += `<div style="padding:14px 16px;border-top:1px solid rgba(128,128,128,0.1)">`
+    html += `<div style="font-weight:600;font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Úkoly</div>`
+
+    if(Array.isArray(todos) && todos.length){
+      todos.forEach(t => {
+        const done = t.done === true
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+          <div onclick="toggleTodo('${escapeHtml(t.id)}',${!done})"
+            style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+            ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+          </div>
+          <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+          ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+          ${MEMBER_ROLE === "ADMIN" ? `<button onclick="deleteTodoItem('${escapeHtml(t.id)}')" style="padding:2px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
+        </div>`
+      })
+    }else{
+      html += `<p class="notice" style="margin:0">Žádné úkoly</p>`
+    }
+
+    if(MEMBER_ROLE === "ADMIN"){
+      html += `<div class="btn-group" style="margin-top:10px">
+        <button onclick="addTodoItem()">+ Přidat úkol</button>
+      </div>`
+    }
+
+    html += `</div></div>`
+
+    // --- KONCERTY JARO/LÉTO ---
+    html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
+    if(spring.length){
+      html += `<div class="card" style="padding:0">`
+      spring.forEach((e, i) => {
+        const past   = new Date(e.DATE) < now
+        const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+        html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+          <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+          <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+          ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+        </div>`
+      })
+      html += `</div>`
+    }else{
+      html += "<p class='notice'>Žádné koncerty</p>"
+    }
+
+    // --- KONCERTY PODZIM/ZIMA ---
+    html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
+    if(autumn.length){
+      html += `<div class="card" style="padding:0">`
+      autumn.forEach((e, i) => {
+        const past   = new Date(e.DATE) < now
+        const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+        html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+          <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+          <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+          ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+        </div>`
+      })
+      html += `</div>`
+    }else{
+      html += "<p class='notice'>Žádné koncerty</p>"
+    }
+
+    const heatmapHtml = await renderHeatmap()
+    if(isDesktop){
+      html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
+    }else{
+      html += `<div id="heatmap-container">${heatmapHtml}</div>`
+    }
 
     container().innerHTML = html
 
@@ -687,6 +797,71 @@ if(isDesktop){
   }
 
 }
+
+function toggleDashboardEvent(){
+  const el      = document.getElementById("dashEventDetail")
+  if(!el) return
+  const isOpen  = el.style.display !== "none"
+  el.style.display = isOpen ? "none" : "block"
+}
+
+function toggleAktualita(id){
+  const el      = document.getElementById("detailAkt_" + id)
+  const chevron = document.getElementById("chevronAkt_" + id)
+  if(!el) return
+  const isOpen  = el.style.display !== "none"
+  el.style.display  = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
+async function toggleTodo(id, done){
+  try{
+    await api("updatetodo", {id, done})
+    lsDel("todos")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+async function deleteTodoItem(id){
+  if(!confirm("Smazat úkol?")) return
+  try{
+    await api("deletetodo", {id})
+    lsDel("todos")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+async function addTodoItem(){
+  const text     = prompt("Text úkolu:")
+  if(!text) return
+  const deadline = prompt("Deadline (YYYY-MM-DD, nebo prázdné):")
+  try{
+    await api("addtodo", {text, deadline: deadline || ""})
+    lsDel("todos")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+async function editAktualita(id, text, date){
+  const newText = prompt("Text aktuality:", text)
+  if(newText === null) return
+  const newDate = prompt("Datum (YYYY-MM-DD):", date)
+  if(newDate === null) return
+  try{
+    await api("updateaktualita", {id, text: newText, date: newDate})
+    lsDel("aktuality")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
 
 function concertRow(e, now){
   const past = new Date(e.DATE) < now
