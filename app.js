@@ -2144,28 +2144,65 @@ async function renderEnergy(){
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += "<h2>Energie</h2>"
     html += `<div class="card">
-      <label>Akce:<br>
-        <select id="energyEvent" style="width:100%;margin:6px 0 12px">
-          <option value="">Vyber akci</option>`
+  <label>Akce:<br>
+    <select id="energyEvent" style="width:100%;margin:6px 0 12px">
+      <option value="">Vyber akci</option>`
 
-    events
-      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-      .forEach(e => {
-        const selected = upcoming && e.ID === upcoming.ID ? "selected" : ""
-        html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
-      })
+events
+  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+  .forEach(e => {
+    const selected = upcoming && e.ID === upcoming.ID ? "selected" : ""
+    html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
+  })
 
-    html += `</select></label>
-      <label>Stav na začátku:<br>
-        <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-      </label>
-      <label>Stav na konci:<br>
-        <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-      </label>
-      <div class="btn-group" style="margin-top:8px">
-        <button onclick="saveEnergy()">Uložit</button>
+html += `</select></label>
+
+  <div class="btn-group" style="margin-bottom:16px">
+    <button onclick="setEnergyMode('manual')" id="btnEnergyManual" style="background:#007aff;color:#fff">Zadat ručně</button>
+    <button onclick="setEnergyMode('scan')"   id="btnEnergyScan">📷 Skenovat</button>
+  </div>
+
+  <div id="energyManual">
+    <label>Stav na začátku:<br>
+      <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+    </label>
+    <label>Stav na konci:<br>
+      <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+    </label>
+  </div>
+
+  <div id="energyScan" style="display:none">
+    <div style="margin-bottom:12px">
+      <div class="small" style="font-weight:600;margin-bottom:8px">Stav na začátku</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="energyStartScan" type="number" style="flex:1" placeholder="kWh">
+        <button onclick="scanMeter('energyStart')" style="flex-shrink:0;padding:10px 14px;font-size:13px">📷</button>
       </div>
-    </div>`
+    </div>
+    <div style="margin-bottom:12px">
+      <div class="small" style="font-weight:600;margin-bottom:8px">Stav na konci</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="energyEndScan" type="number" style="flex:1" placeholder="kWh">
+        <button onclick="scanMeter('energyEnd')" style="flex-shrink:0;padding:10px 14px;font-size:13px">📷</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-group" style="margin-top:8px">
+    <button onclick="saveEnergy()">Uložit</button>
+  </div>
+</div>
+
+<input type="file" id="meterInput" accept="image/*" capture="environment" style="display:none" onchange="processMeterPhoto(this)">`
+
+function setEnergyMode(mode){
+  document.getElementById("energyManual").style.display = mode === "manual" ? "block" : "none"
+  document.getElementById("energyScan").style.display   = mode === "scan"   ? "block" : "none"
+  document.getElementById("btnEnergyManual").style.background = mode === "manual" ? "#007aff" : ""
+  document.getElementById("btnEnergyManual").style.color      = mode === "manual" ? "#fff"    : ""
+  document.getElementById("btnEnergyScan").style.background   = mode === "scan"   ? "#007aff" : ""
+  document.getElementById("btnEnergyScan").style.color        = mode === "scan"   ? "#fff"    : ""
+}
 
     const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
@@ -2820,6 +2857,7 @@ window.selectEnergyRow      = selectEnergyRow
 window.editEnergyRow        = editEnergyRow
 window.deleteEnergyRow      = deleteEnergyRow
 window.saveEnergy           = saveEnergy
+window.setEnergyMode        = setEnergyMode
 window.uploadDocUrl         = uploadDocUrl
 window.toggleProgSong       = toggleProgSong
 window.removeProgSong       = removeProgSong
