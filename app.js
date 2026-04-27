@@ -2786,16 +2786,17 @@ function closeFormModal(){
 ================================ */
 
 function initRealtime(){
-  if(typeof watchChanges === "function"){
-    console.log("initRealtime: watchChanges found")
-    watchChanges((changed) => {
-      console.log("Firebase change:", changed)
-      invalidateAllCache()
-      silentRefresh()
-    })
-  }else{
-    console.log("initRealtime: watchChanges NOT found")
-  }
+  const tryInit = setInterval(() => {
+    if(typeof window.watchChanges === "function"){
+      clearInterval(tryInit)
+      console.log("initRealtime: watchChanges found")
+      window.watchChanges((changed) => {
+        console.log("Firebase change:", changed)
+        invalidateAllCache()
+        silentRefresh()
+      })
+    }
+  }, 100)
 }
 
 function invalidateAllCache(){
