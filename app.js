@@ -531,8 +531,8 @@ function openMemberModal(){
   window.MEMBERS.forEach(m => {
     const div = document.createElement("div")
     div.className = "member-row"
-    div.textContent = m.NAME
-    if(m.EMAIL === MEMBER_EMAIL){
+    div.textContent = m.NAME || m.name
+    if((m.EMAIL || m.email) === MEMBER_EMAIL){
       div.classList.add("active-member")
     }
     div.onclick = () => {
@@ -551,15 +551,16 @@ function closeMemberModal(){
 }
 
 function selectMember(m){
-  MEMBER_EMAIL = m.EMAIL
-  MEMBER_NAME  = m.NAME
-  MEMBER_ROLE  = m.ROLE || "MEMBER"
-  localStorage.setItem("memberEmail", MEMBER_EMAIL)
-  localStorage.setItem("memberName",  MEMBER_NAME)
-  localStorage.setItem("memberRole",  MEMBER_ROLE)
+  MEMBER_EMAIL = m.EMAIL || m.email
+  MEMBER_NAME  = m.NAME  || m.name
+  MEMBER_ROLE  = m.ROLE  || m.role || "MEMBER"
+  MEMBER_ROLE  = MEMBER_ROLE.toUpperCase()
 
   const profileBtn = document.getElementById("profileBtn")
   if(profileBtn) profileBtn.textContent = getInitials(MEMBER_NAME)
+  document.getElementById("sidebarAvatar").textContent = getInitials(MEMBER_NAME)
+  document.getElementById("sidebarName").textContent   = MEMBER_NAME
+  document.getElementById("sidebarRole").textContent   = MEMBER_ROLE
   setStatus(MEMBER_NAME)
 
   renderDashboard()
