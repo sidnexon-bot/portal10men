@@ -2131,6 +2131,7 @@ async function saveCollection(name, amount, deadline){
 ================================ */
 
 let ENERGY_SELECTED = null
+let ENERGY_EVENT = null
 
 async function renderEnergy(){
   setLoading()
@@ -2156,7 +2157,17 @@ async function renderEnergy(){
         html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
       })
 
-    html += `</select></label>
+      onchange="ENERGY_EVENT = this.value">
+    <option value="">Vyber akci</option>`
+
+events
+  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+  .forEach(e => {
+    const selected = (ENERGY_EVENT && e.ID === ENERGY_EVENT) || (!ENERGY_EVENT && upcoming && e.ID === upcoming.ID) ? "selected" : ""
+    html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
+  })
+
+html += `</select></label>`
 
       <div class="btn-group" style="margin-bottom:16px">
         <button onclick="setEnergyPhase('start')" id="btnPhaseStart" style="background:#007aff;color:#fff">Začátek zkoušky</button>
@@ -2189,7 +2200,7 @@ async function renderEnergy(){
       html += `<div class="small" style="color:var(--muted);margin-bottom:10px">Klepni na záznam pro výběr</div>`
       html += `<div id="energyList">`
 
-      history.slice().reverse().forEach(r => {
+      history.slice().sort((a,b) => new Date(b.DATE) - new Date(a.DATE)).forEach(r => {
         const isSelected = ENERGY_SELECTED === r.ID
         const spotreba   = r.END && r.START ? (Number(r.END) - Number(r.START)).toFixed(2) : null
 
@@ -2272,66 +2283,6 @@ async function saveEnergyPhase(phase){
   }
 }
 
-function setEnergyMode(mode){
-  document.getElementById("energyManual").style.display = mode === "manual" ? "block" : "none"
-  document.getElementById("energyScan").style.display   = mode === "scan"   ? "block" : "none"
-  document.getElementById("btnEnergyManual").style.background = mode === "manual" ? "#007aff" : ""
-  document.getElementById("btnEnergyManual").style.color      = mode === "manual" ? "#fff"    : ""
-  document.getElementById("btnEnergyScan").style.background   = mode === "scan"   ? "#007aff" : ""
-  document.getElementById("btnEnergyScan").style.color        = mode === "scan"   ? "#fff"    : ""
-}
-
-let METER_TARGET = null
-
-function scanMeter(targetId){
-  METER_TARGET = targetId
-  const input = document.getElementById("meterInput")
-  if(input) input.click()
-}
-
-async function processMeterPhoto(input){
-  const file = input.files[0]
-  if(!file) return
-
-  showSaving()
-  showToast("Rozpoznávám číslice…", 10000)
-
-  try{
-    const result = await Tesseract.recognize(file, "eng", {
-      tessedit_char_whitelist: "0123456789.",
-      psm: 7
-    })
-
-    let text = result.data.text.trim()
-    console.log("OCR raw:", text)
-
-    text = text.replace(/[^0-9.,]/g, "")
-    text = text.replace(",", ".")
-    const value = parseFloat(text)
-
-    if(isNaN(value)){
-      hideSaving("Nepodařilo se přečíst ✗")
-      alert("Nepodařilo se rozpoznat číslo. Zkus lepší osvětlení nebo zadej ručně.")
-      return
-    }
-
-    const targetInput = document.getElementById(METER_TARGET + "Scan") || document.getElementById(METER_TARGET)
-    if(targetInput) targetInput.value = value
-    hideSaving("Přečteno: " + value + " kWh ✓")
-
-  }catch(err){
-    hideSaving("Chyba OCR ✗")
-    alert("Chyba při rozpoznávání: " + (err?.message || err))
-  }finally{
-    input.value = ""
-    // záchranný reset overlay pro případ že hideSaving selže
-    setTimeout(() => {
-      const overlay = document.getElementById("saving-overlay")
-      if(overlay) overlay.remove()
-    }, 3000)
-  }
-}
-
 function selectEnergyRow(id){
   ENERGY_SELECTED = ENERGY_SELECTED === id ? null : id
   renderEnergy()
@@ -2385,12 +2336,36 @@ async function saveEnergy(){
     await api("setenergy", {event: eventId, start, end})
     invalidateCache("energy")
     hideSaving("Energie uložena ✓")
-    renderEnergy()
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba při ukládání: " + (err?.message || err))
+    if(phase === "start"){
+    const start = document.getElementById("energyStart")?.value
+    if(!start){ alert("Zadej stav na začátku"); return }
+    try{
+      showSaving()
+      ENERGY_EVENT = eventId
+      await api("setenergy", {event: eventId, start, end: null, phase: "start"})
+      invalidateCache("energy")
+      hideSaving("Stav na začátku uložen ✓")
+      // automaticky přepni na konec
+      setEnergyPhase("end")
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }else{
+    const end = document.getElementById("energyEnd")?.value
+    if(!end){ alert("Zadej stav na konci"); return }
+    try{
+      showSaving()
+      await api("setenergy", {event: eventId, end, phase: "end"})
+      invalidateCache("energy")
+      ENERGY_EVENT = null
+      hideSaving("Stav na konci uložen ✓")
+      renderEnergy()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
   }
-}
 
 /* ===============================
    REPERTOAR
