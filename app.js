@@ -749,66 +749,6 @@ if(MEMBER_ROLE === "ADMIN"){
 
 html += `</div>`
 
-     async function addAktualita(){
-  openFormModal("Nová aktualita", [
-    {key: "text", label: "Text", type: "textarea"},
-    {key: "date", label: "Datum", type: "date"}
-  ], async (values) => {
-    if(!values.text){ alert("Zadej text"); return }
-    try{
-      closeFormModal()
-      await api("addaktualita", {text: values.text, date: values.date})
-      lsDel("aktuality")
-      renderDashboard()
-    }catch(err){ alert("Chyba: " + err.message) }
-  })
-}
-
-async function editAktualita(id, text, date){
-  openFormModal("Upravit aktualitu", [
-    {key: "text", label: "Text", type: "textarea", value: text},
-    {key: "date", label: "Datum", type: "date", value: date}
-  ], async (values) => {
-    if(!values.text){ alert("Zadej text"); return }
-    try{
-      closeFormModal()
-      await api("updateaktualita", {id, text: values.text, date: values.date})
-      lsDel("aktuality")
-      renderDashboard()
-    }catch(err){ alert("Chyba: " + err.message) }
-  })
-}
-
-async function addTodoItem(){
-  openFormModal("Nový úkol", [
-    {key: "text",     label: "Úkol",    type: "text"},
-    {key: "deadline", label: "Deadline", type: "date"}
-  ], async (values) => {
-    if(!values.text){ alert("Zadej text úkolu"); return }
-    try{
-      closeFormModal()
-      await api("addtodo", {text: values.text, deadline: values.deadline})
-      lsDel("todos")
-      renderDashboard()
-    }catch(err){ alert("Chyba: " + err.message) }
-  })
-}
-
-function openAddCollection(){
-  openFormModal("Nový výběr", [
-    {key: "name",     label: "Název výběru",        type: "text"},
-    {key: "amount",   label: "Částka na osobu (Kč)", type: "number"},
-    {key: "deadline", label: "Deadline",              type: "date"}
-  ], async (values) => {
-    if(!values.name)  { alert("Zadej název"); return }
-    if(!values.amount){ alert("Zadej částku"); return }
-    try{
-      closeFormModal()
-      await saveCollection(values.name, values.amount, values.deadline)
-    }catch(err){ alert("Chyba: " + err.message) }
-  })
-}
-
     // --- KONCERTY JARO/LÉTO ---
     html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
     if(spring.length){
@@ -897,34 +837,6 @@ async function deleteTodoItem(id){
   }
 }
 
-async function addTodoItem(){
-  const text     = prompt("Text úkolu:")
-  if(!text) return
-  const deadline = prompt("Deadline (YYYY-MM-DD, nebo prázdné):")
-  try{
-    await api("addtodo", {text, deadline: deadline || ""})
-    lsDel("todos")
-    renderDashboard()
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
-async function editAktualita(id, text, date){
-  const newText = prompt("Text aktuality:", text)
-  if(newText === null) return
-  const newDate = prompt("Datum (YYYY-MM-DD):", date)
-  if(newDate === null) return
-  try{
-    await api("updateaktualita", {id, text: newText, date: newDate})
-    lsDel("aktuality")
-    renderDashboard()
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
-
 function concertRow(e, now){
   const past = new Date(e.DATE) < now
   return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
@@ -932,6 +844,67 @@ function concertRow(e, now){
     <span class="small concert-date">${formatDate(e.DATE)}${e.PLACE ? " · " + escapeHtml(e.PLACE) : ""}</span>
   </div>`
 }
+
+async function addAktualita(){
+  openFormModal("Nová aktualita", [
+    {key: "text", label: "Text", type: "textarea"},
+    {key: "date", label: "Datum", type: "date"}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text"); return }
+    try{
+      closeFormModal()
+      await api("addaktualita", {text: values.text, date: values.date})
+      lsDel("aktuality")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+async function editAktualita(id, text, date){
+  openFormModal("Upravit aktualitu", [
+    {key: "text", label: "Text", type: "textarea", value: text},
+    {key: "date", label: "Datum", type: "date", value: date}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text"); return }
+    try{
+      closeFormModal()
+      await api("updateaktualita", {id, text: values.text, date: values.date})
+      lsDel("aktuality")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+async function addTodoItem(){
+  openFormModal("Nový úkol", [
+    {key: "text",     label: "Úkol",    type: "text"},
+    {key: "deadline", label: "Deadline", type: "date"}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text úkolu"); return }
+    try{
+      closeFormModal()
+      await api("addtodo", {text: values.text, deadline: values.deadline})
+      lsDel("todos")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+function openAddCollection(){
+  openFormModal("Nový výběr", [
+    {key: "name",     label: "Název výběru",        type: "text"},
+    {key: "amount",   label: "Částka na osobu (Kč)", type: "number"},
+    {key: "deadline", label: "Deadline",              type: "date"}
+  ], async (values) => {
+    if(!values.name)  { alert("Zadej název"); return }
+    if(!values.amount){ alert("Zadej částku"); return }
+    try{
+      closeFormModal()
+      await saveCollection(values.name, values.amount, values.deadline)
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
 
 /* ===============================
    EVENTS
@@ -2164,8 +2137,6 @@ async function renderRepertoar(){
       container().innerHTML = `<h2>Repertoár</h2><div class="card">Žádné skladby</div>`
       return
 
-    console.log("LENGTH:", data[0].LENGTH)
-
     }
 
     const sorted = [...data].sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
@@ -2639,8 +2610,6 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ===============================
    INIT
 ================================ */
-
-document.addEventListener("DOMContentLoaded", () => start())
 
 // Globální funkce dostupné z HTML
 window.openFormModal        = openFormModal
