@@ -451,7 +451,11 @@ async function getLastModified(){
 
 async function getAktuality(){
   const data = await dbGet("/aktuality")
-  return objToArray(data).sort((a,b) => b.date.localeCompare(a.date))
+  return objToArray(data).sort((a,b) => {
+    const ad = a.date || ""
+    const bd = b.date || ""
+    return bd.localeCompare(ad)
+  })
 }
 
 async function updateAktualita(params){
