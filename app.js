@@ -2143,57 +2143,45 @@ async function renderEnergy(){
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += "<h2>Energie</h2>"
+
     html += `<div class="card">
-  <label>Akce:<br>
-    <select id="energyEvent" style="width:100%;margin:6px 0 12px">
-      <option value="">Vyber akci</option>`
+      <label>Akce:<br>
+        <select id="energyEvent" style="width:100%;margin:6px 0 12px">
+          <option value="">Vyber akci</option>`
 
-events
-  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-  .forEach(e => {
-    const selected = upcoming && e.ID === upcoming.ID ? "selected" : ""
-    html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
-  })
+    events
+      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+      .forEach(e => {
+        const selected = upcoming && e.ID === upcoming.ID ? "selected" : ""
+        html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
+      })
 
-html += `</select></label>
+    html += `</select></label>
 
-  <div class="btn-group" style="margin-bottom:16px">
-    <button onclick="setEnergyMode('manual')" id="btnEnergyManual" style="background:#007aff;color:#fff">Zadat ručně</button>
-    <button onclick="setEnergyMode('scan')"   id="btnEnergyScan">📷 Skenovat</button>
-  </div>
-
-  <div id="energyManual">
-    <label>Stav na začátku:<br>
-      <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-    </label>
-    <label>Stav na konci:<br>
-      <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-    </label>
-  </div>
-
-  <div id="energyScan" style="display:none">
-    <div style="margin-bottom:12px">
-      <div class="small" style="font-weight:600;margin-bottom:8px">Stav na začátku</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="energyStartScan" type="number" style="flex:1" placeholder="kWh">
-        <button onclick="scanMeter('energyStart')" style="flex-shrink:0;padding:10px 14px;font-size:13px">📷</button>
+      <div class="btn-group" style="margin-bottom:16px">
+        <button onclick="setEnergyPhase('start')" id="btnPhaseStart" style="background:#007aff;color:#fff">Začátek zkoušky</button>
+        <button onclick="setEnergyPhase('end')"   id="btnPhaseEnd">Konec zkoušky</button>
       </div>
-    </div>
-    <div style="margin-bottom:12px">
-      <div class="small" style="font-weight:600;margin-bottom:8px">Stav na konci</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="energyEndScan" type="number" style="flex:1" placeholder="kWh">
-        <button onclick="scanMeter('energyEnd')" style="flex-shrink:0;padding:10px 14px;font-size:13px">📷</button>
+
+      <div id="energyPhaseStart">
+        <label>Stav elektroměru na začátku (kWh):<br>
+          <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="např. 4520.19">
+        </label>
+        <div class="btn-group">
+          <button onclick="saveEnergyPhase('start')" style="background:#d4f5e2;color:#1a7a3a">Uložit stav na začátku</button>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="btn-group" style="margin-top:8px">
-    <button onclick="saveEnergy()">Uložit</button>
-  </div>
-</div>
+      <div id="energyPhaseEnd" style="display:none">
+        <label>Stav elektroměru na konci (kWh):<br>
+          <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="např. 4527.43">
+        </label>
+        <div class="btn-group">
+          <button onclick="saveEnergyPhase('end')" style="background:#d4f5e2;color:#1a7a3a">Uložit stav na konci</button>
+        </div>
+      </div>
 
-<input type="file" id="meterInput" accept="image/*" capture="environment" style="display:none" onchange="processMeterPhoto(this)">`
+    </div>`
 
     const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
@@ -2203,23 +2191,26 @@ html += `</select></label>
 
       history.slice().reverse().forEach(r => {
         const isSelected = ENERGY_SELECTED === r.ID
+        const spotreba   = r.END && r.START ? (Number(r.END) - Number(r.START)).toFixed(2) : null
+
         html += `<div
           class="card energy-row"
           data-id="${escapeHtml(r.ID)}"
           onclick="selectEnergyRow('${escapeHtml(r.ID)}')"
-          style="margin-bottom:8px;cursor:pointer;transition:all 0.15s;${isSelected ? "border:2px solid #007aff;background:#f0f6ff" : ""}"
+          style="margin-bottom:8px;cursor:pointer;${isSelected ? "border:2px solid #007aff;background:#f0f6ff" : ""}"
         >
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <div style="font-size:14px;font-weight:600">${formatDate(r.DATE)}</div>
-              <div class="small">Start: ${escapeHtml(String(r.START))} · Konec: ${escapeHtml(String(r.END))}</div>
-              <div class="small">Spotřeba: <b>${(Number(r.END) - Number(r.START)).toFixed(2)} kWh</b></div>
+              <div class="small">Začátek: ${escapeHtml(String(r.START))} kWh</div>
+              ${r.END ? `<div class="small">Konec: ${escapeHtml(String(r.END))} kWh</div>` : `<div class="small" style="color:#ff9f0a">Konec nezadán</div>`}
+              ${spotreba ? `<div class="small">Spotřeba: <b>${spotreba} kWh</b></div>` : ""}
             </div>
             ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
           </div>
           ${isSelected ? `
             <div class="btn-group" style="margin-top:10px">
-              <button onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END})" style="background:#e8f0fe;color:#007aff">Upravit</button>
+              <button onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END||""})" style="background:#e8f0fe;color:#007aff">Upravit</button>
               <button onclick="event.stopPropagation();deleteEnergyRow('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
             </div>
           ` : ""}
@@ -2234,6 +2225,50 @@ html += `</select></label>
 
   }catch(err){
     setError("Chyba při načítání energie: " + (err?.message || err))
+  }
+}
+
+function setEnergyPhase(phase){
+  document.getElementById("energyPhaseStart").style.display = phase === "start" ? "block" : "none"
+  document.getElementById("energyPhaseEnd").style.display   = phase === "end"   ? "block" : "none"
+  document.getElementById("btnPhaseStart").style.background = phase === "start" ? "#007aff" : ""
+  document.getElementById("btnPhaseStart").style.color      = phase === "start" ? "#fff"    : ""
+  document.getElementById("btnPhaseEnd").style.background   = phase === "end"   ? "#007aff" : ""
+  document.getElementById("btnPhaseEnd").style.color        = phase === "end"   ? "#fff"    : ""
+}
+
+async function saveEnergyPhase(phase){
+  const eventId = document.getElementById("energyEvent")?.value
+  if(!eventId){ alert("Vyber akci"); return }
+
+  if(phase === "start"){
+    const start = document.getElementById("energyStart")?.value
+    if(!start){ alert("Zadej stav na začátku"); return }
+    try{
+      showSaving()
+      await api("setenergy", {event: eventId, start, end: null, phase: "start"})
+      invalidateCache("energy")
+      hideSaving("Stav na začátku uložen ✓")
+      renderEnergy()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }else{
+    const end = document.getElementById("energyEnd")?.value
+    if(!end){ alert("Zadej stav na konci"); return }
+
+    // najdi existující záznam pro tuto akci
+    try{
+      showSaving()
+      await api("setenergy", {event: eventId, end, phase: "end"})
+      invalidateCache("energy")
+      hideSaving("Stav na konci uložen ✓")
+      renderEnergy()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
   }
 }
 
@@ -2908,9 +2943,8 @@ window.selectEnergyRow      = selectEnergyRow
 window.editEnergyRow        = editEnergyRow
 window.deleteEnergyRow      = deleteEnergyRow
 window.saveEnergy           = saveEnergy
-window.setEnergyMode        = setEnergyMode
-window.scanMeter            = scanMeter
-window.processMeterPhoto    = processMeterPhoto
+window.setEnergyPhase       = setEnergyPhase
+window.saveEnergyPhase      = saveEnergyPhase
 window.uploadDocUrl         = uploadDocUrl
 window.toggleProgSong       = toggleProgSong
 window.removeProgSong       = removeProgSong
