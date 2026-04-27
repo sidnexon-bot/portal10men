@@ -1583,6 +1583,13 @@ function renderAttendanceStatus(status){
   return `<div class="attendance-status">Tvůj aktuální stav: <b><span class="icon">${icon}</span> ${escapeHtml(status)}</b></div>`
 }
 
+function prefetchProgramPdfs(program){
+  const pdfs = program.filter(p => p.PDF)
+  if(!pdfs.length){ showToast("Program nemá žádné noty"); return }
+  pdfs.forEach(p => window.open(p.PDF, "_blank"))
+  showToast(`Otevřeno ${pdfs.length} PDF ✓`)
+}
+
 /* ===============================
    DOCHÁZKA
 ================================ */
