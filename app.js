@@ -2276,18 +2276,22 @@ async function saveEnergy(){
 async function renderRepertoar(){
   setLoading()
   try{
-    const data = await cachedApi("repertoar")
+    const data      = await cachedApi("repertoar")
+    const favorites = MEMBER_EMAIL ? await api("favorites", {email: MEMBER_EMAIL}) : {}
 
     if(!Array.isArray(data) || !data.length){
       container().innerHTML = `<h2>Repertoár</h2><div class="card">Žádné skladby</div>`
       return
-
     }
 
-    const sorted = [...data].sort((a,b) => String(a.NAME).localeCompare(String(b.NAME), "cs"))
+    const sorted = [...data].sort((a,b) => {
+      const af = favorites[a.ID] ? 1 : 0
+      const bf = favorites[b.ID] ? 1 : 0
+      if(bf !== af) return bf - af
+      return String(a.NAME).localeCompare(String(b.NAME), "cs")
+    })
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
-
     html += `<h2 style="margin:0 0 16px">Repertoár</h2>`
 
     html += `<div class="card" style="margin-bottom:16px">
@@ -2300,7 +2304,7 @@ async function renderRepertoar(){
     </div>`
 
     html += `<div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">`
-    const statusy = ["Vše", "Aktivní", "Neaktuální", "Mimo repertoár"]
+    const statusy = ["Vše", "Oblíbené", "Aktivní", "Neaktuální", "Mimo repertoár"]
     statusy.forEach(s => {
       html += `<button
         id="filterBtn_${s}"
@@ -2313,21 +2317,29 @@ async function renderRepertoar(){
     html += `<div id="repertoarList" style="margin-top:12px">`
 
     sorted.forEach(r => {
+      const isFav = !!favorites[r.ID]
       const statusColor = r.STATUS === "Aktivní"    ? "#34c759" :
                           r.STATUS === "Neaktuální" ? "#ff9f0a" :
                           r.STATUS === "Mimo rep"   ? "#ff3b30" : "#8e8e93"
 
       html += `<div class="repertoar-row card"
         data-name="${escapeHtml(r.NAME).toLowerCase()}"
-        data-author="${escapeHtml(r.AUTHOR).toLowerCase()}"
-        data-arranged="${escapeHtml(r.ARRANGED_BY).toLowerCase()}"
-        data-text="${escapeHtml(r.TEXT_BY).toLowerCase()}"
+        data-author="${escapeHtml(r.AUTHOR||"").toLowerCase()}"
+        data-arranged="${escapeHtml(r.ARRANGED_BY||"").toLowerCase()}"
+        data-text="${escapeHtml(r.TEXT_BY||"").toLowerCase()}"
         data-status="${escapeHtml(r.STATUS)}"
+        data-fav="${isFav ? "1" : "0"}"
         style="margin-bottom:10px"
       >
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(r.NAME)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="font-weight:600;font-size:15px">${escapeHtml(r.NAME)}</div>
+              <button
+                onclick="event.stopPropagation();toggleFav('${escapeHtml(r.ID)}')"
+                style="background:none;border:none;padding:0;font-size:18px;cursor:pointer;line-height:1"
+              >${isFav ? "❤️" : "🤍"}</button>
+            </div>
             ${r.AUTHOR ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>` : ""}
             ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
             ${r.TEXT_BY ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>` : ""}
@@ -2349,11 +2361,20 @@ async function renderRepertoar(){
 
     html += `</div>`
     if(isDesktop) html += `</div>`
-
     container().innerHTML = html
 
   }catch(err){
     setError("Chyba při načítání repertoáru: " + (err?.message || err))
+  }
+}
+
+async function toggleFav(songId){
+  if(!MEMBER_EMAIL) return
+  try{
+    await api("togglefavorite", {email: MEMBER_EMAIL, songId})
+    renderRepertoar()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
   }
 }
 
@@ -2370,7 +2391,6 @@ function filterRepertoar(query){
 }
 
 function filterRepertoarStatus(status){
-  // aktualizuj styl tlačítek
   document.querySelectorAll("[id^='filterBtn_']").forEach(btn => {
     btn.style.background = ""
     btn.style.color = ""
@@ -2384,12 +2404,13 @@ function filterRepertoarStatus(status){
   document.querySelectorAll(".repertoar-row").forEach(row => {
     if(status === "Vše"){
       row.style.display = ""
+    }else if(status === "Oblíbené"){
+      row.style.display = row.dataset.fav === "1" ? "" : "none"
     }else{
       row.style.display = row.dataset.status === status ? "" : "none"
     }
   })
 
-  // resetuj textové vyhledávání
   const search = document.getElementById("repertoarSearch")
   if(search) search.value = ""
 }
@@ -2782,6 +2803,7 @@ window.renderDashboard      = renderDashboard
 window.renderPayments       = renderPayments
 window.renderEnergy         = renderEnergy
 window.renderRepertoar      = renderRepertoar
+window.toggleFav            = toggleFav
 window.doAttendance         = doAttendance
 window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
