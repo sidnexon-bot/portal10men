@@ -2316,7 +2316,7 @@ async function renderRepertoar(){
 
     html += `<div id="repertoarList" style="margin-top:12px">`
 
-    sorted.forEach(r => {
+        sorted.forEach(r => {
       const isFav = !!favorites[r.ID]
       const statusColor = r.STATUS === "Aktivní"    ? "#34c759" :
                           r.STATUS === "Neaktuální" ? "#ff9f0a" :
@@ -2334,16 +2334,16 @@ async function renderRepertoar(){
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(r.NAME)}</div>
-            ${r.AUTHOR ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>` : ""}
-            ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
-            ${r.TEXT_BY ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>` : ""}
+            ${r.AUTHOR      ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>`      : ""}
+            ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>`  : ""}
+            ${r.TEXT_BY     ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>`          : ""}
             <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
               ${r.LENGTH ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
               <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
               ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
             </div>
           </div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
             ${r.PDF ? `
               <a href="${escapeHtml(r.PDF)}" target="_blank"
                 style="padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
@@ -2359,16 +2359,9 @@ async function renderRepertoar(){
               </svg>
             </button>
           </div>
+        </div>
+      </div>`
     })
-
-    html += `</div>`
-    if(isDesktop) html += `</div>`
-    container().innerHTML = html
-
-  }catch(err){
-    setError("Chyba při načítání repertoáru: " + (err?.message || err))
-  }
-}
 
 async function toggleFav(songId){
   if(!MEMBER_EMAIL) return
