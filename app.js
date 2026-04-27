@@ -717,7 +717,12 @@ if(Array.isArray(aktuality) && aktuality.length){
     html += `<div style="${border}">
       <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
       ${a.date ? `<div class="small" style="margin-top:4px">${formatDate(a.date)}</div>` : ""}
-      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="margin-top:8px;padding:4px 10px;font-size:12px">Upravit</button>` : ""}
+      ${MEMBER_ROLE === "ADMIN" ? `
+  <div class="btn-group" style="margin-top:8px">
+    <button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="padding:4px 10px;font-size:12px">Upravit</button>
+    <button onclick="deleteAktualita('${escapeHtml(a.id)}')" style="padding:4px 10px;font-size:12px;background:#fde8e8;color:#c00">Smazat</button>
+  </div>
+` : ""}
     </div>`
   })
 }else{
@@ -885,6 +890,17 @@ async function editAktualita(id, text, date){
       renderDashboard()
     }catch(err){ alert("Chyba: " + err.message) }
   })
+}
+
+async function deleteAktualita(id){
+  if(!confirm("Smazat aktualitu?")) return
+  try{
+    await api("deleteaktualita", {id})
+    lsDel("aktuality")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 async function addTodoItem(){
