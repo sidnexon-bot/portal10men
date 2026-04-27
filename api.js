@@ -449,6 +449,46 @@ async function getLastModified(){
   }
 }
 
+async function getAktuality(){
+  const data = await dbGet("/aktuality")
+  return objToArray(data).sort((a,b) => b.date.localeCompare(a.date))
+}
+
+async function updateAktualita(params){
+  await dbUpdate("/aktuality/" + params.id, {text: params.text, date: params.date})
+  return {status: "saved"}
+}
+
+async function getTodos(){
+  const data = await dbGet("/todos")
+  return objToArray(data).sort((a,b) => (a.deadline||"").localeCompare(b.deadline||""))
+}
+
+async function addTodo(params){
+  const tRef = push(ref(DB, "/todos"))
+  await dbSet("/todos/" + tRef.key, {
+    id:       tRef.key,
+    text:     params.text,
+    deadline: params.deadline || "",
+    done:     false
+  })
+  return {status: "created"}
+}
+
+async function updateTodo(params){
+  await dbUpdate("/todos/" + params.id, {
+    text:     params.text,
+    deadline: params.deadline || "",
+    done:     params.done === true || params.done === "true"
+  })
+  return {status: "saved"}
+}
+
+async function deleteTodo(id){
+  await dbRemove("/todos/" + id)
+  return {status: "deleted"}
+}
+
 // ===============================
 // HLAVNÍ API FUNKCE
 // ===============================
@@ -476,6 +516,12 @@ async function api(action, params = {}){
     case "deletecollection": return await deleteCollection(params.id)
     case "verifypin":     return await verifyPin(params)
     case "lastmodified": return await getLastModified()
+    case "aktuality":        return await getAktuality()
+    case "updateaktualita":  return await updateAktualita(params)
+    case "todos":            return await getTodos()
+    case "addtodo":          return await addTodo(params)
+    case "updatetodo":       return await updateTodo(params)
+    case "deletetodo":       return await deleteTodo(params.id)
     default: throw new Error("Unknown action: " + action)
   }
 }
