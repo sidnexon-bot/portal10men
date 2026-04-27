@@ -2145,20 +2145,10 @@ async function renderEnergy(){
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += "<h2>Energie</h2>"
 
-    html += `<div class="card">
-      <label>Akce:<br>
-        <select id="energyEvent" style="width:100%;margin:6px 0 12px">
-          <option value="">Vyber akci</option>`
+    html += `<label>Akce:<br>
+  <select id="energyEvent" style="width:100%;margin:6px 0 12px" onchange="ENERGY_EVENT = this.value">`
 
-    events
-      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-      .forEach(e => {
-        const selected = upcoming && e.ID === upcoming.ID ? "selected" : ""
-        html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
-      })
-
-      onchange="ENERGY_EVENT = this.value">
-    <option value="">Vyber akci</option>`
+html += `<option value="">Vyber akci</option>`
 
 events
   .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
