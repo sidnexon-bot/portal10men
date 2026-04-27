@@ -2035,16 +2035,6 @@ async function recordPayment(vyberuvId){
   }
 }
 
-function openAddCollection(){
-  const name   = prompt("Název výběru:")
-  if(!name) return
-  const amount = prompt("Částka na osobu (Kč):")
-  if(!amount || isNaN(amount)) return
-  const deadline = prompt("Deadline (YYYY-MM-DD, nebo prázdné):")
-
-  saveCollection(name, amount, deadline || "")
-}
-
 async function saveCollection(name, amount, deadline){
   try{
     showSaving()
