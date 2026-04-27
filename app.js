@@ -748,18 +748,63 @@ if(MEMBER_ROLE === "ADMIN"){
 html += `</div>`
 
      async function addAktualita(){
-  const text = prompt("Text aktuality:")
-  if(!text) return
-  const date = prompt("Datum (YYYY-MM-DD, nebo prázdné):")
-  try{
-    const newRef = push(ref(database, "/aktuality"))
-    // potřebujeme přistoupit k Firebase přímo
-    await api("addaktualita", {text, date: date || ""})
-    lsDel("aktuality")
-    renderDashboard()
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
+  openFormModal("Nová aktualita", [
+    {key: "text", label: "Text", type: "textarea"},
+    {key: "date", label: "Datum", type: "date"}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text"); return }
+    try{
+      closeFormModal()
+      await api("addaktualita", {text: values.text, date: values.date})
+      lsDel("aktuality")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+async function editAktualita(id, text, date){
+  openFormModal("Upravit aktualitu", [
+    {key: "text", label: "Text", type: "textarea", value: text},
+    {key: "date", label: "Datum", type: "date", value: date}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text"); return }
+    try{
+      closeFormModal()
+      await api("updateaktualita", {id, text: values.text, date: values.date})
+      lsDel("aktuality")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+async function addTodoItem(){
+  openFormModal("Nový úkol", [
+    {key: "text",     label: "Úkol",    type: "text"},
+    {key: "deadline", label: "Deadline", type: "date"}
+  ], async (values) => {
+    if(!values.text){ alert("Zadej text úkolu"); return }
+    try{
+      closeFormModal()
+      await api("addtodo", {text: values.text, deadline: values.deadline})
+      lsDel("todos")
+      renderDashboard()
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
+}
+
+function openAddCollection(){
+  openFormModal("Nový výběr", [
+    {key: "name",     label: "Název výběru",        type: "text"},
+    {key: "amount",   label: "Částka na osobu (Kč)", type: "number"},
+    {key: "deadline", label: "Deadline",              type: "date"}
+  ], async (values) => {
+    if(!values.name)  { alert("Zadej název"); return }
+    if(!values.amount){ alert("Zadej částku"); return }
+    try{
+      closeFormModal()
+      await saveCollection(values.name, values.amount, values.deadline)
+    }catch(err){ alert("Chyba: " + err.message) }
+  })
 }
 
     // --- KONCERTY JARO/LÉTO ---
@@ -2537,6 +2582,42 @@ function initPullToRefresh(){
       else if(ACTIVE_TAB === "energy") renderEnergy()
     }
   })
+}
+
+/* ===============================
+   FORMULÁŘ
+================================ */
+
+function openFormModal(title, fields, onSubmit){
+  const modal = document.getElementById("formModal")
+  const titleEl = document.getElementById("formModalTitle")
+  const bodyEl  = document.getElementById("formModalBody")
+  const submitBtn = document.getElementById("formModalSubmit")
+
+  titleEl.textContent = title
+  bodyEl.innerHTML = fields.map(f => `
+    <label style="display:block;margin-bottom:12px">
+      ${f.label}<br>
+      ${f.type === "textarea"
+        ? `<textarea id="fModal_${f.key}" style="width:100%;min-height:80px;margin-top:4px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${f.value||""}</textarea>`
+        : `<input id="fModal_${f.key}" type="${f.type||"text"}" value="${f.value||""}" placeholder="${f.placeholder||""}" style="margin-top:4px">`
+      }
+    </label>
+  `).join("")
+
+  submitBtn.onclick = () => {
+    const values = {}
+    fields.forEach(f => {
+      values[f.key] = document.getElementById("fModal_" + f.key)?.value.trim() || ""
+    })
+    onSubmit(values)
+  }
+
+  modal.classList.remove("hidden")
+}
+
+function closeFormModal(){
+  document.getElementById("formModal").classList.add("hidden")
 }
 
 /* ===============================
