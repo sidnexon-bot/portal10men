@@ -2362,6 +2362,14 @@ async function renderRepertoar(){
         </div>
       </div>`
     })
+         html += `</div>`
+    if(isDesktop) html += `</div>`
+    container().innerHTML = html
+
+  }catch(err){
+    setError("Chyba při načítání repertoáru: " + (err?.message || err))
+  }
+}
 
 async function toggleFav(songId){
   if(!MEMBER_EMAIL) return
