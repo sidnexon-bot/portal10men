@@ -1344,6 +1344,26 @@ function moveProgSong(idx, dir){
   refreshProgSelected()
 }
 
+async function saveProgram(eventId){
+  const main   = window.PROG_MAIN   || []
+  const encore = (window.PROG_ENCORE || []).filter(Boolean)
+  try{
+    showSaving()
+    await api("setprogram", {
+      id:     eventId,
+      songs:  JSON.stringify(main),
+      encore: JSON.stringify(encore)
+    })
+    invalidateCache("eventdetail", eventId)
+    lsDel("cache_repertoar")
+    hideSaving("Program uložen ✓")
+    openEvent(eventId)
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
 async function saveEvent(id){
   const name   = document.getElementById("fName")?.value.trim()
   const date   = document.getElementById("fDate")?.value
