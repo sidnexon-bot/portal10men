@@ -2130,8 +2130,8 @@ async function saveCollection(name, amount, deadline){
    ENERGIE
 ================================ */
 
-let ENERGY_SELECTED = null
-let ENERGY_EVENT = null
+window.ENERGY_EVENT    = null
+let ENERGY_SELECTED    = null
 
 async function renderEnergy(){
   setLoading()
@@ -2145,19 +2145,21 @@ async function renderEnergy(){
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += "<h2>Energie</h2>"
 
-    html += `<label>Akce:<br>
-  <select id="energyEvent" style="width:100%;margin:6px 0 12px" onchange="ENERGY_EVENT = this.value">`
+    html += `<div class="card">
+      <label>Akce:<br>
+        <select id="energyEvent" style="width:100%;margin:6px 0 12px" onchange="window.ENERGY_EVENT = this.value">`
 
-html += `<option value="">Vyber akci</option>`
+    html += `<option value="">Vyber akci</option>`
+    events
+      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+      .forEach(e => {
+        const selected = (window.ENERGY_EVENT && e.ID === window.ENERGY_EVENT) ||
+                         (!window.ENERGY_EVENT && upcoming && e.ID === upcoming.ID) ? "selected" : ""
+        if(selected) window.ENERGY_EVENT = e.ID
+        html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
+      })
 
-events
-  .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-  .forEach(e => {
-    const selected = (ENERGY_EVENT && e.ID === ENERGY_EVENT) || (!ENERGY_EVENT && upcoming && e.ID === upcoming.ID) ? "selected" : ""
-    html += `<option value="${escapeHtml(e.ID)}" ${selected}>${escapeHtml(e.NAME)} · ${formatDate(e.DATE)}</option>`
-  })
-
-html += `</select></label>`
+    html += `</select></label>
 
       <div class="btn-group" style="margin-bottom:16px">
         <button onclick="setEnergyPhase('start')" id="btnPhaseStart" style="background:#007aff;color:#fff">Začátek zkoušky</button>
@@ -2247,10 +2249,11 @@ async function saveEnergyPhase(phase){
     if(!start){ alert("Zadej stav na začátku"); return }
     try{
       showSaving()
+      window.ENERGY_EVENT = eventId
       await api("setenergy", {event: eventId, start, end: null, phase: "start"})
       invalidateCache("energy")
       hideSaving("Stav na začátku uložen ✓")
-      renderEnergy()
+      setEnergyPhase("end")
     }catch(err){
       hideSaving("Chyba ✗")
       alert("Chyba: " + (err?.message || err))
@@ -2258,12 +2261,11 @@ async function saveEnergyPhase(phase){
   }else{
     const end = document.getElementById("energyEnd")?.value
     if(!end){ alert("Zadej stav na konci"); return }
-
-    // najdi existující záznam pro tuto akci
     try{
       showSaving()
       await api("setenergy", {event: eventId, end, phase: "end"})
       invalidateCache("energy")
+      window.ENERGY_EVENT = null
       hideSaving("Stav na konci uložen ✓")
       renderEnergy()
     }catch(err){
@@ -2283,7 +2285,7 @@ function editEnergyRow(id, start, end){
     {key: "start", label: "Stav na začátku (kWh)", type: "number", value: start},
     {key: "end",   label: "Stav na konci (kWh)",   type: "number", value: end}
   ], async (values) => {
-    if(!values.start || !values.end){ alert("Vyplň obě hodnoty"); return }
+    if(!values.start){ alert("Vyplň stav na začátku"); return }
     try{
       closeFormModal()
       showSaving()
