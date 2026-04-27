@@ -2080,6 +2080,8 @@ async function saveCollection(name, amount, deadline){
    ENERGIE
 ================================ */
 
+let ENERGY_SELECTED = null
+
 async function renderEnergy(){
   setLoading()
   try{
@@ -2089,7 +2091,8 @@ async function renderEnergy(){
       .filter(e => new Date(e.DATE) >= now)
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
-    let html = "<h2>Energie</h2>"
+    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
+    html += "<h2>Energie</h2>"
     html += `<div class="card">
       <label>Akce:<br>
         <select id="energyEvent" style="width:100%;margin:6px 0 12px">
@@ -2103,30 +2106,97 @@ async function renderEnergy(){
       })
 
     html += `</select></label>
-  <label>Stav na začátku:<br>
-    <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-  </label>
-  <label>Stav na konci:<br>
-    <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
-  </label>
-  <div class="btn-group" style="margin-top:8px">
-    <button onclick="saveEnergy()">Uložit</button>
-  </div>
-</div>`
+      <label>Stav na začátku:<br>
+        <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+      </label>
+      <label>Stav na konci:<br>
+        <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="kWh">
+      </label>
+      <div class="btn-group" style="margin-top:8px">
+        <button onclick="saveEnergy()">Uložit</button>
+      </div>
+    </div>`
 
     const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
-      html += "<h3>Historie</h3>"
-      history.reverse().forEach(r => {
-        html += `<div class="card small">
-          ${formatDate(r.DATE)} · start: ${escapeHtml(String(r.START))} · konec: ${escapeHtml(String(r.END))}
+      html += `<h3 style="margin:16px 0 8px">Historie</h3>`
+      html += `<div class="small" style="color:var(--muted);margin-bottom:10px">Klepni na záznam pro výběr</div>`
+      html += `<div id="energyList">`
+
+      history.slice().reverse().forEach(r => {
+        const isSelected = ENERGY_SELECTED === r.ID
+        html += `<div
+          class="card energy-row"
+          data-id="${escapeHtml(r.ID)}"
+          onclick="selectEnergyRow('${escapeHtml(r.ID)}')"
+          style="margin-bottom:8px;cursor:pointer;transition:all 0.15s;${isSelected ? "border:2px solid #007aff;background:#f0f6ff" : ""}"
+        >
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;font-weight:600">${formatDate(r.DATE)}</div>
+              <div class="small">Start: ${escapeHtml(String(r.START))} · Konec: ${escapeHtml(String(r.END))}</div>
+              <div class="small">Spotřeba: <b>${(Number(r.END) - Number(r.START)).toFixed(2)} kWh</b></div>
+            </div>
+            ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
+          </div>
+          ${isSelected ? `
+            <div class="btn-group" style="margin-top:10px">
+              <button onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END})" style="background:#e8f0fe;color:#007aff">Upravit</button>
+              <button onclick="event.stopPropagation();deleteEnergyRow('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+            </div>
+          ` : ""}
         </div>`
       })
+
+      html += `</div>`
     }
 
+    if(isDesktop) html += `</div>`
     container().innerHTML = html
+
   }catch(err){
     setError("Chyba při načítání energie: " + (err?.message || err))
+  }
+}
+
+function selectEnergyRow(id){
+  ENERGY_SELECTED = ENERGY_SELECTED === id ? null : id
+  renderEnergy()
+}
+
+function editEnergyRow(id, start, end){
+  openFormModal("Upravit záznam", [
+    {key: "start", label: "Stav na začátku (kWh)", type: "number", value: start},
+    {key: "end",   label: "Stav na konci (kWh)",   type: "number", value: end}
+  ], async (values) => {
+    if(!values.start || !values.end){ alert("Vyplň obě hodnoty"); return }
+    try{
+      closeFormModal()
+      showSaving()
+      await api("updateenergie", {id, start: values.start, end: values.end})
+      lsDel("energy")
+      ENERGY_SELECTED = null
+      hideSaving("Záznam upraven ✓")
+      renderEnergy()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
+async function deleteEnergyRow(id){
+  if(!confirm("Smazat tento záznam?")) return
+  try{
+    showSaving()
+    await api("deleteenergie", {id})
+    lsDel("energy")
+    ENERGY_SELECTED = null
+    hideSaving("Záznam smazán ✓")
+    renderEnergy()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
   }
 }
 
@@ -2668,6 +2738,9 @@ window.saveEvent            = saveEvent
 window.deleteEvent          = deleteEvent
 window.saveNote             = saveNote
 window.saveProgram          = saveProgram
+window.selectEnergyRow      = selectEnergyRow
+window.editEnergyRow        = editEnergyRow
+window.deleteEnergyRow      = deleteEnergyRow
 window.saveEnergy           = saveEnergy
 window.uploadDocUrl         = uploadDocUrl
 window.toggleProgSong       = toggleProgSong
