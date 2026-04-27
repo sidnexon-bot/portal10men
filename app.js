@@ -2787,11 +2787,14 @@ function closeFormModal(){
 
 function initRealtime(){
   if(typeof watchChanges === "function"){
+    console.log("initRealtime: watchChanges found")
     watchChanges((changed) => {
       console.log("Firebase change:", changed)
       invalidateAllCache()
       silentRefresh()
     })
+  }else{
+    console.log("initRealtime: watchChanges NOT found")
   }
 }
 
