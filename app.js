@@ -2246,6 +2246,50 @@ function setEnergyMode(mode){
   document.getElementById("btnEnergyScan").style.color        = mode === "scan"   ? "#fff"    : ""
 }
 
+let METER_TARGET = null
+
+function scanMeter(targetId){
+  METER_TARGET = targetId
+  const input = document.getElementById("meterInput")
+  if(input) input.click()
+}
+
+async function processMeterPhoto(input){
+  const file = input.files[0]
+  if(!file) return
+
+  showSaving()
+  showToast("Rozpoznávám číslice…", 10000)
+
+  try{
+    const result = await Tesseract.recognize(file, "eng", {
+      tessedit_char_whitelist: "0123456789.",
+      psm: 7
+    })
+
+    let text = result.data.text.trim()
+    text = text.replace(/[^0-9.,]/g, "")
+    text = text.replace(",", ".")
+    const value = parseFloat(text)
+
+    if(isNaN(value)){
+      hideSaving("Nepodařilo se přečíst ✗")
+      alert("Nepodařilo se rozpoznat číslo. Zkus lepší osvětlení nebo zadej ručně.")
+      return
+    }
+
+    const targetInput = document.getElementById(METER_TARGET)
+    if(targetInput) targetInput.value = value
+    hideSaving("Přečteno: " + value + " kWh ✓")
+
+  }catch(err){
+    hideSaving("Chyba OCR ✗")
+    alert("Chyba při rozpoznávání: " + (err?.message || err))
+  }finally{
+    input.value = ""
+  }
+}
+
 function selectEnergyRow(id){
   ENERGY_SELECTED = ENERGY_SELECTED === id ? null : id
   renderEnergy()
