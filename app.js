@@ -2268,6 +2268,8 @@ async function processMeterPhoto(input){
     })
 
     let text = result.data.text.trim()
+    console.log("OCR raw:", text)
+
     text = text.replace(/[^0-9.,]/g, "")
     text = text.replace(",", ".")
     const value = parseFloat(text)
@@ -2279,13 +2281,19 @@ async function processMeterPhoto(input){
     }
 
     const targetInput = document.getElementById(METER_TARGET + "Scan") || document.getElementById(METER_TARGET)
-if(targetInput) targetInput.value = value
+    if(targetInput) targetInput.value = value
+    hideSaving("Přečteno: " + value + " kWh ✓")
 
   }catch(err){
     hideSaving("Chyba OCR ✗")
     alert("Chyba při rozpoznávání: " + (err?.message || err))
   }finally{
     input.value = ""
+    // záchranný reset overlay pro případ že hideSaving selže
+    setTimeout(() => {
+      const overlay = document.getElementById("saving-overlay")
+      if(overlay) overlay.remove()
+    }, 3000)
   }
 }
 
