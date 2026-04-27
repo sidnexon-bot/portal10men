@@ -1601,38 +1601,6 @@ async function saveProgram(eventId){
   }
 }
 
-async function saveEvent(id){
-  const name   = document.getElementById("fName")?.value.trim()
-  const date   = document.getElementById("fDate")?.value
-  const start  = document.getElementById("fStart")?.value
-  const end    = document.getElementById("fEnd")?.value
-  const place  = document.getElementById("fPlace")?.value.trim()
-  const note   = document.getElementById("fNote")?.value.trim()
-  const status = document.getElementById("fStatus")?.value
-
-  if(!name){ alert("Zadej název akce"); return }
-  if(!date){ alert("Zadej datum"); return }
-
-  try{
-    showSaving()
-    if(id){
-      await api("updateevent", {id, name, date, start, end, place, note, status})
-      invalidateCache("events")
-      invalidateCache("eventdetail", id)
-      hideSaving("Akce upravena ✓")
-      openEvent(id)
-    }else{
-      const result = await api("addevent", {name, date, start, end, place, note, status})
-      invalidateCache("events")
-      hideSaving("Akce vytvořena ✓")
-      renderEvents()
-    }
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
 function renderAttendanceStatus(status){
   if(!status){
     return `<p class="notice"><span class="icon">${iconQuestion()}</span> Docházka nevyplněna</p>`
