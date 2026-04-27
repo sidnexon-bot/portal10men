@@ -463,6 +463,11 @@ async function updateAktualita(params){
   return {status: "saved"}
 }
 
+async function deleteAktualita(id){
+  await dbRemove("/aktuality/" + id)
+  return {status: "deleted"}
+}
+
 async function addAktualita(params){
   const aRef = push(ref(DB, "/aktuality"))
   await dbSet("/aktuality/" + aRef.key, {
@@ -531,6 +536,7 @@ async function api(action, params = {}){
     case "lastmodified": return await getLastModified()
     case "aktuality":        return await getAktuality()
     case "updateaktualita":  return await updateAktualita(params)
+    case "deleteaktualita": return await deleteAktualita(params.id)
     case "addaktualita": return await addAktualita(params)
     case "todos":            return await getTodos()
     case "addtodo":          return await addTodo(params)
