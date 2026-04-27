@@ -691,61 +691,76 @@ async function renderDashboard(){
     }
 
     // --- AKTUALITY ---
-    const aktuality = await cachedApi("aktuality")
-    const todos     = await cachedApi("todos")
+const aktuality = await cachedApi("aktuality")
+const todos     = await cachedApi("todos")
 
-    html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
-    html += `<div class="card" style="padding:0">`
+html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
+html += `<div class="card">`
 
-    if(Array.isArray(aktuality) && aktuality.length){
-      aktuality.forEach((a, idx) => {
-        const border = "border-bottom:1px solid rgba(128,128,128,0.1);"
-        html += `<div style="${border}">
-          <div onclick="toggleAktualita('${escapeHtml(a.id)}')" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-size:15px">${escapeHtml((a.text||"").split("\n")[0].substring(0,60))}${(a.text||"").length > 60 ? "…" : ""}</div>
-              <div class="small" style="margin-top:2px">${a.date ? formatDate(a.date) : ""}</div>
-            </div>
-            <span style="color:var(--muted);font-size:18px" id="chevronAkt_${escapeHtml(a.id)}">›</span>
-          </div>
-          <div id="detailAkt_${escapeHtml(a.id)}" style="display:none;padding:0 16px 14px">
-            <div style="font-size:15px;white-space:pre-wrap;margin-bottom:12px">${escapeHtml(a.text||"")}</div>
-            ${MEMBER_ROLE === "ADMIN" ? `<button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text).replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>` : ""}
-          </div>
-        </div>`
-      })
-    }else{
-      html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`
-    }
+if(Array.isArray(aktuality) && aktuality.length){
+  aktuality.forEach((a, idx) => {
+    const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);padding-bottom:10px;margin-bottom:10px;" : ""
+    html += `<div style="${border}">
+      <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
+      ${a.date ? `<div class="small" style="margin-top:4px">${formatDate(a.date)}</div>` : ""}
+      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="margin-top:8px;padding:4px 10px;font-size:12px">Upravit</button>` : ""}
+    </div>`
+  })
+}else{
+  html += `<p class="notice" style="margin:0">Žádné aktuality</p>`
+}
 
-    // TODO LIST
-    html += `<div style="padding:14px 16px;border-top:1px solid rgba(128,128,128,0.1)">`
-    html += `<div style="font-weight:600;font-size:13px;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Úkoly</div>`
+if(MEMBER_ROLE === "ADMIN"){
+  html += `<div class="btn-group" style="margin-top:12px">
+    <button onclick="addAktualita()">+ Přidat aktualitu</button>
+  </div>`
+}
 
-    if(Array.isArray(todos) && todos.length){
-      todos.forEach(t => {
-        const done = t.done === true
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-          <div onclick="toggleTodo('${escapeHtml(t.id)}',${!done})"
-            style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
-            ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-          </div>
-          <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-          ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
-          ${MEMBER_ROLE === "ADMIN" ? `<button onclick="deleteTodoItem('${escapeHtml(t.id)}')" style="padding:2px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
-        </div>`
-      })
-    }else{
-      html += `<p class="notice" style="margin:0">Žádné úkoly</p>`
-    }
+html += `</div>`
 
-    if(MEMBER_ROLE === "ADMIN"){
-      html += `<div class="btn-group" style="margin-top:10px">
-        <button onclick="addTodoItem()">+ Přidat úkol</button>
-      </div>`
-    }
+// --- TO-DO LIST ---
+html += `<h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>`
+html += `<div class="card">`
 
-    html += `</div></div>`
+if(Array.isArray(todos) && todos.length){
+  todos.forEach(t => {
+    const done = t.done === true
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+      <div onclick="toggleTodo('${escapeHtml(t.id)}',${!done})"
+        style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+      </div>
+      <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+      ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+      ${MEMBER_ROLE === "ADMIN" ? `<button onclick="deleteTodoItem('${escapeHtml(t.id)}')" style="padding:2px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>` : ""}
+    </div>`
+  })
+}else{
+  html += `<p class="notice" style="margin:0">Žádné úkoly</p>`
+}
+
+if(MEMBER_ROLE === "ADMIN"){
+  html += `<div class="btn-group" style="margin-top:10px">
+    <button onclick="addTodoItem()">+ Přidat úkol</button>
+  </div>`
+}
+
+html += `</div>`
+
+     async function addAktualita(){
+  const text = prompt("Text aktuality:")
+  if(!text) return
+  const date = prompt("Datum (YYYY-MM-DD, nebo prázdné):")
+  try{
+    const newRef = push(ref(database, "/aktuality"))
+    // potřebujeme přistoupit k Firebase přímo
+    await api("addaktualita", {text, date: date || ""})
+    lsDel("aktuality")
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
 
     // --- KONCERTY JARO/LÉTO ---
     html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
