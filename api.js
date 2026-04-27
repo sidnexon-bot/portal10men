@@ -308,6 +308,24 @@ async function getEnergy(){
   })
 }
 
+async function getFavorites(email){
+  const data = await dbGet("/favorites/" + email.replace(/\./g,"_").replace(/@/g,"_at_"))
+  return data || {}
+}
+
+async function toggleFavorite(params){
+  const key  = params.email.replace(/\./g,"_").replace(/@/g,"_at_")
+  const path = "/favorites/" + key + "/" + params.songId
+  const existing = await dbGet(path)
+  if(existing){
+    await dbRemove(path)
+    return {status: "removed"}
+  }else{
+    await dbSet(path, true)
+    return {status: "added"}
+  }
+}
+
 async function setEnergy(params){
   const akce  = await dbGet("/akce/" + params.event)
   const eRef  = push(ref(DB, "/energie"))
@@ -539,6 +557,8 @@ async function api(action, params = {}){
     case "setprogram":    return await setProgram(params)
     case "updatenote":    return await updateNote(params)
     case "repertoar":     return await getRepertoar()
+    case "favorites":     return await getFavorites(params.email)
+    case "togglefavorite":  return await toggleFavorite(params)
     case "energy":        return await getEnergy()
     case "setenergy":     return await setEnergy(params)
     case "updateenergie": return await updateEnergie(params)
@@ -548,7 +568,7 @@ async function api(action, params = {}){
     case "addcollection": return await addCollection(params)
     case "deletecollection": return await deleteCollection(params.id)
     case "verifypin":     return await verifyPin(params)
-    case "lastmodified": return await getLastModified()
+    case "lastmodified":  return await getLastModified()
     case "aktuality":        return await getAktuality()
     case "updateaktualita":  return await updateAktualita(params)
     case "deleteaktualita": return await deleteAktualita(params.id)
