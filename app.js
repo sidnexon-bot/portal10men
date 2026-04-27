@@ -2195,15 +2195,6 @@ html += `</select></label>
 
 <input type="file" id="meterInput" accept="image/*" capture="environment" style="display:none" onchange="processMeterPhoto(this)">`
 
-function setEnergyMode(mode){
-  document.getElementById("energyManual").style.display = mode === "manual" ? "block" : "none"
-  document.getElementById("energyScan").style.display   = mode === "scan"   ? "block" : "none"
-  document.getElementById("btnEnergyManual").style.background = mode === "manual" ? "#007aff" : ""
-  document.getElementById("btnEnergyManual").style.color      = mode === "manual" ? "#fff"    : ""
-  document.getElementById("btnEnergyScan").style.background   = mode === "scan"   ? "#007aff" : ""
-  document.getElementById("btnEnergyScan").style.color        = mode === "scan"   ? "#fff"    : ""
-}
-
     const history = await cachedApi("energy")
     if(Array.isArray(history) && history.length){
       html += `<h3 style="margin:16px 0 8px">Historie</h3>`
@@ -2244,6 +2235,15 @@ function setEnergyMode(mode){
   }catch(err){
     setError("Chyba při načítání energie: " + (err?.message || err))
   }
+}
+
+function setEnergyMode(mode){
+  document.getElementById("energyManual").style.display = mode === "manual" ? "block" : "none"
+  document.getElementById("energyScan").style.display   = mode === "scan"   ? "block" : "none"
+  document.getElementById("btnEnergyManual").style.background = mode === "manual" ? "#007aff" : ""
+  document.getElementById("btnEnergyManual").style.color      = mode === "manual" ? "#fff"    : ""
+  document.getElementById("btnEnergyScan").style.background   = mode === "scan"   ? "#007aff" : ""
+  document.getElementById("btnEnergyScan").style.color        = mode === "scan"   ? "#fff"    : ""
 }
 
 function selectEnergyRow(id){
