@@ -2317,47 +2317,8 @@ async function deleteEnergyRow(id){
 }
 
 async function saveEnergy(){
-  const eventId = document.getElementById("energyEvent")?.value
-  const start   = document.getElementById("energyStart")?.value
-  const end     = document.getElementById("energyEnd")?.value
-  if(!eventId){ alert("Vyber akci"); return }
-  if(!start)  { alert("Zadej stav na začátku"); return }
-  if(!end)    { alert("Zadej stav na konci"); return }
-  try{
-    showSaving()
-    await api("setenergy", {event: eventId, start, end})
-    invalidateCache("energy")
-    hideSaving("Energie uložena ✓")
-    if(phase === "start"){
-    const start = document.getElementById("energyStart")?.value
-    if(!start){ alert("Zadej stav na začátku"); return }
-    try{
-      showSaving()
-      ENERGY_EVENT = eventId
-      await api("setenergy", {event: eventId, start, end: null, phase: "start"})
-      invalidateCache("energy")
-      hideSaving("Stav na začátku uložen ✓")
-      // automaticky přepni na konec
-      setEnergyPhase("end")
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  }else{
-    const end = document.getElementById("energyEnd")?.value
-    if(!end){ alert("Zadej stav na konci"); return }
-    try{
-      showSaving()
-      await api("setenergy", {event: eventId, end, phase: "end"})
-      invalidateCache("energy")
-      ENERGY_EVENT = null
-      hideSaving("Stav na konci uložen ✓")
-      renderEnergy()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  }
+  // nahrazeno saveEnergyPhase
+}
 
 /* ===============================
    REPERTOAR
