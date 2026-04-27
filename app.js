@@ -2785,18 +2785,112 @@ function closeFormModal(){
    REALTIME
 ================================ */
 
+let REALTIME_DEBOUNCE = null
+
 function initRealtime(){
   const tryInit = setInterval(() => {
     if(typeof window.watchChanges === "function"){
       clearInterval(tryInit)
-      console.log("initRealtime: watchChanges found")
       window.watchChanges((changed) => {
-        console.log("Firebase change:", changed)
-        invalidateAllCache()
-        silentRefresh()
+        clearTimeout(REALTIME_DEBOUNCE)
+        REALTIME_DEBOUNCE = setTimeout(() => {
+          handleRealtimeChange(changed)
+        }, 500)
       })
     }
   }, 100)
+}
+
+async function handleRealtimeChange(changed){
+  if(changed === "dochazka"){
+    // invaliduj jen cache docházky
+    lsDel("myattendance_" + MEMBER_EMAIL)
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("cache_detail_"))
+      .forEach(k => localStorage.removeItem(k))
+    CACHE.detail = {}
+    CACHE.ts     = {}
+
+    // aktualizuj UI podle aktivního tabu
+    if(ACTIVE_TAB === "dashboard"){
+      updateDashboardAttendance()
+    }else if(ACTIVE_TAB === "events"){
+      updateEventsAttendance()
+    }
+  }else if(changed === "akce"){
+    lsDel("events")
+    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    else if(ACTIVE_TAB === "events") renderEvents()
+  }else if(changed === "program"){
+    CACHE.detail = {}
+    CACHE.ts     = {}
+    // program se mění jen v detailu — pokud je otevřený, aktualizuj
+    const detailSlot = document.getElementById("detail-panel-slot")
+    if(detailSlot && detailSlot.innerHTML.trim() !== ""){
+      // zjisti které ID je otevřené
+      const card = document.querySelector(".swipe-card.active, .card[data-open='true']")
+      if(card?.dataset?.id) openEvent(card.dataset.id)
+    }
+  }
+}
+
+async function updateDashboardAttendance(){
+  try{
+    const events = await cachedApi("events")
+    const today  = new Date()
+    today.setHours(0,0,0,0)
+    const upcoming = events
+      .filter(e => { const d = new Date(e.DATE); d.setHours(0,0,0,0); return d >= today })
+      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
+    if(!upcoming) return
+
+    const detail = await api("eventdetail", {id: upcoming.ID})
+    lsSet("detail_" + upcoming.ID, detail)
+
+    // aktualizuj počet přítomných
+    const count   = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
+    const countEl = document.querySelector(".dash-attendance-count")
+    if(countEl) countEl.textContent = `✓ Přijdu: ${count}`
+
+    // aktualizuj heatmapu
+    lsDel("heatmap")
+    const heatmapEl = document.getElementById("heatmap-container") || document.querySelector(".desktop-col-right")
+    if(heatmapEl){
+      heatmapEl.innerHTML = await renderHeatmap()
+    }
+  }catch(e){ console.error("updateDashboardAttendance:", e) }
+}
+
+async function updateEventsAttendance(){
+  try{
+    // aktualizuj badge na kartách v seznamu
+    const myAttendance = await api("myattendance", {email: MEMBER_EMAIL})
+    lsSet("myattendance_" + MEMBER_EMAIL, myAttendance)
+
+    document.querySelectorAll(".swipe-card[data-id]").forEach(card => {
+      const id = card.dataset.id
+      const a  = myAttendance[id]
+      if(!a || !a.status) return
+
+      // smaž starý badge
+      card.querySelectorAll(".attendance-badge, div[style*='text-transform:uppercase']").forEach(el => el.remove())
+
+      // přidej nový
+      const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+      const badge = document.createElement("div")
+      badge.className = "attendance-badge"
+      badge.style.cssText = `margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em`
+      badge.textContent = a.status
+      card.appendChild(badge)
+    })
+
+    // pokud je otevřený detail, aktualizuj docházkový přehled
+    const detailSlot = document.getElementById("detail-panel-slot")
+    if(detailSlot && detailSlot.innerHTML.trim() !== ""){
+      const openCard = document.querySelector(".swipe-card[data-open='true']")
+      if(openCard?.dataset?.id) openEvent(openCard.dataset.id)
+    }
+  }catch(e){ console.error("updateEventsAttendance:", e) }
 }
 
 function invalidateAllCache(){
