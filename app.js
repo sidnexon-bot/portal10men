@@ -703,13 +703,13 @@ async function renderDashboard(){
         html += `<div style="${border}">
           <div onclick="toggleAktualita('${escapeHtml(a.id)}')" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-size:15px">${escapeHtml(a.text.split("\n")[0].substring(0,60))}${a.text.length > 60 ? "…" : ""}</div>
+              <div style="font-size:15px">${escapeHtml((a.text||"").split("\n")[0].substring(0,60))}${(a.text||"").length > 60 ? "…" : ""}</div>
               <div class="small" style="margin-top:2px">${a.date ? formatDate(a.date) : ""}</div>
             </div>
             <span style="color:var(--muted);font-size:18px" id="chevronAkt_${escapeHtml(a.id)}">›</span>
           </div>
           <div id="detailAkt_${escapeHtml(a.id)}" style="display:none;padding:0 16px 14px">
-            <div style="font-size:15px;white-space:pre-wrap;margin-bottom:12px">${escapeHtml(a.text)}</div>
+            <div style="font-size:15px;white-space:pre-wrap;margin-bottom:12px">${escapeHtml(a.text||"")}</div>
             ${MEMBER_ROLE === "ADMIN" ? `<button onclick="editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text).replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>` : ""}
           </div>
         </div>`
