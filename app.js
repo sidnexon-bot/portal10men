@@ -439,6 +439,8 @@ async function start(){
     }
     document.getElementById("btnPayments").onclick  = () => { setActiveTab("payments");  renderPayments() }
     document.getElementById("btnEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy() }
+    document.getElementById("btnRepertoar").onclick = () => { setActiveTab("repertoar"); renderRepertoar() }
+
 
     setActiveTab("dashboard")
     renderDashboard()
