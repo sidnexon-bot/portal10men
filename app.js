@@ -721,8 +721,7 @@ if(Array.isArray(aktuality) && aktuality.length){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
-          ${a.date ? `<div class="small" style="margin-top:4px">${formatDate(a.date)}</div>` : ""}
-        </div>
+          ${a.date ? `<div class="small" style="margin-top:4px">Přidáno dne: ${formatDate(a.date)}</div>` : ""}
         ${isSelected ? `<div style="color:#007aff;font-size:20px;margin-left:10px">✓</div>` : ""}
       </div>
       ${isSelected ? `
