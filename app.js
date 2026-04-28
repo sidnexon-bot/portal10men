@@ -91,6 +91,16 @@ function cacheValid(key){
   return CACHE.ts[key] && (Date.now() - CACHE.ts[key] < CACHE_TTL)
 }
 
+function toggleAccordion(bodyId, chevronId){
+  const el      = document.getElementById(bodyId)
+  const chevron = document.getElementById(chevronId)
+  if(!el) return
+  const isOpen = el.classList.contains("open")
+  el.classList.toggle("open", !isOpen)
+  el.style.display = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
 async function cachedApi(action, params){
 
   if(action === "eventdetail" && params?.id){
@@ -991,21 +1001,11 @@ html += `</div>`
 }
 
 function toggleDashboardEvent(){
-  const el      = document.getElementById("dashEventDetail")
-  const chevron = document.getElementById("chevronDashEvent")
-  if(!el) return
-  const isOpen  = el.style.display !== "none"
-  el.style.display = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  toggleAccordion("dashEventDetail", "chevronDashEvent")
 }
 
 function toggleDashAttendance(){
-  const el      = document.getElementById("dashAttendanceButtons")
-  const chevron = document.getElementById("chevronDashAttendance")
-  if(!el) return
-  const isOpen  = el.style.display !== "none"
-  el.style.display = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  toggleAccordion("dashAttendanceButtons", "chevronDashAttendance")
 }
 
 function editDashNote(eventId, currentNote){
@@ -1031,12 +1031,7 @@ let AKTUALITA_SELECTED = null
 let TODO_SELECTED = null
 
 function toggleAktualita(id){
-  const el      = document.getElementById("detailAkt_" + id)
-  const chevron = document.getElementById("chevronAkt_" + id)
-  if(!el) return
-  const isOpen  = el.style.display !== "none"
-  el.style.display  = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  toggleAccordion("detailAkt_" + id, "chevronAkt_" + id)
 }
 
 async function toggleTodo(id, done){
@@ -1594,12 +1589,7 @@ async function openEvent(id){
 }
 
 function toggleAttendanceAccordion(id){
-  const el      = document.getElementById("attendanceDetail_" + id)
-  const chevron = document.getElementById("chevronAttendance_" + id)
-  if(!el) return
-  const isOpen  = el.style.display !== "none"
-  el.style.display  = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  toggleAccordion("attendanceDetail_" + id, "chevronAttendance_" + id)
 }
 
 async function uploadDocUrl(eventId){
@@ -2288,12 +2278,7 @@ async function renderPayments(){
 }
 
 function toggleCollection(id){
-  const detail  = document.getElementById("detail_" + id)
-  const chevron = document.getElementById("chevron_" + id)
-  if(!detail) return
-  const isOpen = detail.style.display !== "none"
-  detail.style.display  = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  toggleAccordion("detail_" + id, "chevron_" + id)
 }
 
 async function deleteCollection(id){
@@ -3308,4 +3293,5 @@ window.Auth                 = Auth
 window.toggleDarkMode       = toggleDarkMode
 window.setActiveTab         = setActiveTab
 window.enablePush           = enablePush
+window.toggleAccordion      = toggleAccordion
 
