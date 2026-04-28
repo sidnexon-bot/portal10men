@@ -45,14 +45,15 @@ function updateProfileBtn(){
 
   // Přepínač jen pro admina
   const switchBtn = document.getElementById("profileMenuSwitchBtn")
-  if(switchBtn){
-    if(AUTH_ROLE === 'ADMIN'){
-      switchBtn.classList.remove('hidden');
-      switchBtn.onclick = () => { closeProfileMenu(); openMemberModal(); }
-    } else {
-      switchBtn.classList.add('hidden');
-    }
+if(switchBtn){
+  if(AUTH_ROLE === 'ADMIN'){
+    switchBtn.classList.remove('hidden')
+    switchBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Přepnout člena`
+    switchBtn.onclick = () => { closeProfileMenu(); openMemberModal() }
+  }else{
+    switchBtn.classList.add('hidden')
   }
+ }
 }
 
 /* ===============================
@@ -489,7 +490,14 @@ function initSidebar(){
   const driveBtn = document.createElement("button")
   driveBtn.className = "sidebar-action"
   driveBtn.style.cssText = "color:#007aff"
-  driveBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/><path d="M16 19h6M19 16v6"/></svg></span> Google Drive`
+  driveBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 87.3 78" fill="currentColor" style="width:20px;height:20px">
+  <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0a15.6 15.6 0 0 0 2.1 7.85z" fill="#0066da"/>
+  <path d="M43.65 25L29.9 1.2a15.6 15.6 0 0 0-3.3 3.3L2.1 45.5A15.6 15.6 0 0 0 0 53.35h27.5z" fill="#00ac47"/>
+  <path d="M73.55 76.8a15.6 15.6 0 0 0 3.3-3.3l1.6-2.75 7.65-13.25a15.6 15.6 0 0 0 2.1-7.85H60.8l5.85 11.5z" fill="#ea4335"/>
+  <path d="M43.65 25L57.4 1.2A15.6 15.6 0 0 0 49.55 0h-11.8a15.6 15.6 0 0 0-7.85 2.1z" fill="#00832d"/>
+  <path d="M60.8 53.35H27.5L13.75 77.1a15.6 15.6 0 0 0 7.85 2.1h40.1a15.6 15.6 0 0 0 7.85-2.1z" fill="#2684fc"/>
+  <path d="M73.4 26.95l-13.2-22.85a15.6 15.6 0 0 0-2.8-2.9L43.65 25l17.15 28.35H87.3a15.6 15.6 0 0 0-2.1-7.85z" fill="#ffba00"/>
+</svg></span> Google Drive`
   driveBtn.onclick = () => window.open("https://drive.google.com/drive/folders/0B23cZAlYDWOndmtIZU45WWJrbWM?resourcekey=0-0z_Lh-UavGxU38cz60Bi2Q&usp=share_link")
   document.querySelector(".sidebar-bottom").prepend(driveBtn)
 
