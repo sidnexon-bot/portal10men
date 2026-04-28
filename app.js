@@ -268,10 +268,10 @@ function setActiveTab(name){
     payments:  "btnPayments",
     energy:    "btnEnergy",
     repertoar: "btnRepertoar"
-
   }
   const btn = document.getElementById(map[name])
   if(btn) btn.classList.add("active")
+  updateSidebarActive(name)
 }
 
 function setStatus(msg){
