@@ -67,6 +67,14 @@ jobs:
             const dochazka = await fbGet('/dochazka');
             const members = await fbGet('/members');
 
+            // TESTOVACÍ NOTIFIKACE — smaž po ověření
+            await sendNotification(
+            'Test 10base 🎵',
+            'Notifikace fungují správně!',
+            ['All']
+            );
+            console.log('Test notification sent');
+
             if(!akce || !members) return;
 
             const now = new Date();
