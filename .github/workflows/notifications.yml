@@ -81,24 +81,31 @@ jobs:
               const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
 
               // 3 dny před akcí
-              if(daysUntil === 3){
-                // zkontroluj program
-                const hasProgram = progEntries.some(p => p.id_akce === event.id);
-                if(!hasProgram){
-                  await sendNotification(
-                    'Program chybí 📋',
-                    'Akce ' + event.name + ' je za 3 dny a nemá program.',
-                    ['All']
-                  );
-                }
+              
+              // akce které nevyžadují program
+const noProgram = ['schůzk', 'grilov', 'plánov', 'výlet', 'teambuilding', 'sraz']
+const requiresProgram = !noProgram.some(k => event.name.toLowerCase().includes(k))
 
-                // připomínka docházky
-                await sendNotification(
-                  'Vyplň docházku ✋',
-                  'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
-                  ['All']
-                );
-              }
+if(daysUntil === 3){
+  // zkontroluj program jen pro zpívací akce
+  if(requiresProgram){
+    const hasProgram = progEntries.some(p => p.id_akce === event.id);
+    if(!hasProgram){
+      await sendNotification(
+        'Program chybí 📋',
+        'Akce ' + event.name + ' je za 3 dny a nemá program.',
+        ['All']
+      );
+    }
+  }
+  // připomínka docházky pro všechny akce
+  await sendNotification(
+    'Vyplň docházku ✋',
+    'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
+    ['All']
+  );
+}
+
 
               // 1 den před akcí — ping nevyplněných
               if(daysUntil === 1){
