@@ -708,7 +708,7 @@ async function renderDashboard(){
 const aktuality = await cachedApi("aktuality")
 const todos     = await cachedApi("todos")
 html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
-html += `<div class="card" style="padding:0">`
+html += `<div class="card dash-aktuality" style="padding:0">`
 
 if(Array.isArray(aktuality) && aktuality.length){
   aktuality.forEach((a, idx) => {
@@ -747,7 +747,7 @@ html += `</div>`
 
 // --- TO-DO LIST ---
 html += `<h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>`
-html += `<div class="card" style="padding:0">`
+html += `<div class="card dash-todos" style="padding:0">`
 
 if(Array.isArray(todos) && todos.length){
   todos.forEach((t, idx) => {
@@ -2802,36 +2802,137 @@ function initRealtime(){
 }
 
 async function handleRealtimeChange(changed){
+
   if(changed === "dochazka"){
-    // invaliduj jen cache docházky
     lsDel("myattendance_" + MEMBER_EMAIL)
     Object.keys(localStorage)
       .filter(k => k.startsWith("cache_detail_"))
       .forEach(k => localStorage.removeItem(k))
     CACHE.detail = {}
     CACHE.ts     = {}
+    if(ACTIVE_TAB === "dashboard")   updateDashboardAttendance()
+    else if(ACTIVE_TAB === "events") updateEventsAttendance()
 
-    // aktualizuj UI podle aktivního tabu
-    if(ACTIVE_TAB === "dashboard"){
-      updateDashboardAttendance()
-    }else if(ACTIVE_TAB === "events"){
-      updateEventsAttendance()
-    }
   }else if(changed === "akce"){
     lsDel("events")
-    if(ACTIVE_TAB === "dashboard") renderDashboard()
+    CACHE.detail = {}
+    CACHE.ts     = {}
+    if(ACTIVE_TAB === "dashboard")   renderDashboard()
     else if(ACTIVE_TAB === "events") renderEvents()
+
   }else if(changed === "program"){
     CACHE.detail = {}
     CACHE.ts     = {}
-    // program se mění jen v detailu — pokud je otevřený, aktualizuj
-    const detailSlot = document.getElementById("detail-panel-slot")
-    if(detailSlot && detailSlot.innerHTML.trim() !== ""){
-      // zjisti které ID je otevřené
-      const card = document.querySelector(".swipe-card.active, .card[data-open='true']")
-      if(card?.dataset?.id) openEvent(card.dataset.id)
+    // aktualizuj detail akce pokud je otevřený
+    if(ACTIVE_TAB === "events"){
+      const detailSlot = document.getElementById("detail-panel-slot")
+      if(isDesktop && detailSlot && detailSlot.innerHTML.trim() !== ""){
+        // najdi otevřenou akci podle aktivní karty
+        const activeCard = document.querySelector(".swipe-card.next")
+        if(activeCard?.dataset?.id) openEvent(activeCard.dataset.id)
+      }
+    }else if(ACTIVE_TAB === "dashboard"){
+      // aktualizuj program v dashboardu
+      updateDashboardAttendance()
     }
+
+  }else if(changed === "aktuality"){
+    lsDel("aktuality")
+    if(ACTIVE_TAB === "dashboard"){
+      // aktualizuj jen sekci aktualit
+      updateDashboardAktuality()
+    }
+
+  }else if(changed === "todos"){
+    lsDel("todos")
+    if(ACTIVE_TAB === "dashboard"){
+      updateDashboardTodos()
+    }
+
+  }else if(changed === "members"){
+    lsDel("members")
+    window.MEMBERS = await api("members")
   }
+
+}
+
+async function updateDashboardAktuality(){
+  try{
+    const aktuality = await api("aktuality")
+    lsSet("aktuality", aktuality)
+
+    const container = document.querySelector(".dash-aktuality")
+    if(!container) return
+
+    if(!Array.isArray(aktuality) || !aktuality.length){
+      container.innerHTML = `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`
+      return
+    }
+
+    container.innerHTML = aktuality.map((a, idx) => {
+      const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
+      const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+      return `<div
+        style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+        onclick="${MEMBER_ROLE === "ADMIN" ? `selectAktualita('${escapeHtml(a.id)}')` : ""}"
+      >
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
+            ${a.date ? `<div class="small" style="margin-top:4px">Přidáno dne: ${formatDate(a.date)}</div>` : ""}
+          </div>
+          ${isSelected ? `<div style="color:#007aff;font-size:20px;margin-left:10px">✓</div>` : ""}
+        </div>
+        ${isSelected ? `
+          <div class="btn-group" style="margin-top:10px">
+            <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+            <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+          </div>
+        ` : ""}
+      </div>`
+    }).join("")
+  }catch(e){ console.error("updateDashboardAktuality:", e) }
+}
+
+async function updateDashboardTodos(){
+  try{
+    const todos = await api("todos")
+    lsSet("todos", todos)
+
+    const container = document.querySelector(".dash-todos")
+    if(!container) return
+
+    if(!Array.isArray(todos) || !todos.length){
+      container.innerHTML = `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`
+      return
+    }
+
+    container.innerHTML = todos.map((t, idx) => {
+      const done       = t.done === true
+      const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
+      const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
+      return `<div
+        style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+        onclick="${MEMBER_ROLE === "ADMIN" ? `selectTodo('${escapeHtml(t.id)}')` : ""}"
+      >
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+          </div>
+          <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+          ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+          ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
+        </div>
+        ${isSelected ? `
+          <div class="btn-group" style="margin-top:10px">
+            <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+            <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+            <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+          </div>
+        ` : ""}
+      </div>`
+    }).join("")
+  }catch(e){ console.error("updateDashboardTodos:", e) }
 }
 
 async function updateDashboardAttendance(){
