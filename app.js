@@ -3221,4 +3221,5 @@ window.eventsMonthNext      = eventsMonthNext
 window.prefetchProgramPdfs  = prefetchProgramPdfs
 window.Auth                 = Auth
 window.toggleDarkMode       = toggleDarkMode
+window.setActiveTab         = setActiveTab
 
