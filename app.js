@@ -394,6 +394,63 @@ function toggleDarkMode(){
   closeProfileMenu()
 }
 
+/* ===============================
+   NOTIFIKACE
+================================ */
+
+async function initPushNotifications(){
+  try{
+    if(!window.OneSignal) return
+
+    const permission = await OneSignal.Notifications.permission
+
+    if(!permission){
+      // zobraz nenápadnou výzvu po 3 sekundách
+      setTimeout(() => {
+        showPushPrompt()
+      }, 3000)
+    }
+  }catch(e){
+    console.error("OneSignal init:", e)
+  }
+}
+
+function showPushPrompt(){
+  const existing = document.getElementById("pushPrompt")
+  if(existing) return
+
+  const prompt = document.createElement("div")
+  prompt.id = "pushPrompt"
+  prompt.style.cssText = `
+    position:fixed;bottom:90px;left:16px;right:16px;
+    background:var(--card);
+    border-radius:16px;
+    padding:14px 16px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.15);
+    display:flex;align-items:center;gap:12px;
+    z-index:200;
+    animation:fadeInUp 0.3s ease;
+  `
+  prompt.innerHTML = `
+    <div style="flex:1">
+      <div style="font-weight:600;font-size:14px">Povolit notifikace</div>
+      <div class="small">Dostávej upozornění na nové akce a změny</div>
+    </div>
+    <button onclick="enablePush()" style="background:#007aff;color:#fff;padding:8px 14px;font-size:13px">Povolit</button>
+    <button onclick="document.getElementById('pushPrompt').remove()" style="background:none;color:var(--muted);padding:8px;font-size:13px">✕</button>
+  `
+  document.body.appendChild(prompt)
+}
+
+async function enablePush(){
+  try{
+    await OneSignal.Notifications.requestPermission()
+    document.getElementById("pushPrompt")?.remove()
+    showToast("Notifikace povoleny ✓")
+  }catch(e){
+    console.error("Push permission:", e)
+  }
+}
 
 /* ===============================
    START
@@ -448,6 +505,9 @@ async function start(){
     initPullToRefresh()
     initSidebar()
     initRealtime()
+     // inicializuj push notifikace
+    initPushNotifications()
+
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
@@ -3239,4 +3299,5 @@ window.prefetchProgramPdfs  = prefetchProgramPdfs
 window.Auth                 = Auth
 window.toggleDarkMode       = toggleDarkMode
 window.setActiveTab         = setActiveTab
+window.enablePush           = enablePush
 
