@@ -5,6 +5,9 @@
   --muted:#8e8e93;
   --accent:#000;
   --card-selected: #f0f6ff;
+  --btn-bg: #e8e8ed;
+  --btn-color: #007aff;
+
 }
 
 *{
@@ -379,8 +382,8 @@ button{
   font-weight: 600;
   font-family: inherit;
 
-  background: #e8e8ed;
-  color: #007aff;
+  background: var(--btn-bg);
+  color: var(--btn-color);
 
   cursor: pointer;
   transition: transform 0.12s ease, opacity 0.12s ease;
@@ -896,6 +899,8 @@ body.dark {
   --text: #ffffff;
   --muted:#8e8e93;
   --accent:#ffffff;
+  --btn-bg: #3a3a3c;
+  --btn-color: #0a84ff;
 }
 
 body.dark header{
@@ -1491,8 +1496,6 @@ main{
 
 @media (min-width: 768px) and (max-width: 1024px){
 
-  @media (min-width: 768px) and (max-width: 1024px){
-
   main{
     margin-left: 220px;
     width: calc(100vw - 220px);
@@ -1500,7 +1503,6 @@ main{
     padding: 24px 16px 60px;
   }
 
-  /* jeden sloupec na tabletu */
   .events-layout,
   .events-layout.two-col,
   .events-layout.three-col{
@@ -1510,14 +1512,12 @@ main{
     gap: 16px;
   }
 
-  /* detail a edit panel pod sebou */
   #detail-panel-slot,
   #edit-panel-slot{
     position: static;
     max-height: none;
   }
 
-  /* heatmapa přes celou šířku */
   .desktop-grid{
     grid-template-columns: 1fr;
   }
