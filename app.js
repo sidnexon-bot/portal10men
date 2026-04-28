@@ -1371,6 +1371,10 @@ async function openEventForm(id){
         <option value="Proběhlá"  ${event.STATUS === "Proběhlá"  ? "selected" : ""}>Proběhlá</option>
       </select>
     </label>
+    <label style="display:flex;align-items:center;gap:10px;margin-top:16px">
+  <input type="checkbox" id="fRequiresProgram" ${event.REQUIRES_PROGRAM !== false ? "checked" : ""} style="width:auto;margin:0">
+  <span>Vyžaduje program</span>
+</label>
     <div class="btn-group" style="margin-top:16px">
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
@@ -2121,6 +2125,8 @@ async function saveEvent(id){
   const place  = document.getElementById("fPlace")?.value.trim()
   const note   = document.getElementById("fNote")?.value.trim()
   const status = document.getElementById("fStatus")?.value
+  const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
+
 
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
