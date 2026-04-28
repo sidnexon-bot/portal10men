@@ -614,6 +614,7 @@ async function renderDashboard(){
       html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
 
       let myStatus = ""
+      let myReason = ""
       let attendanceCount = 0
       let detail = {attendance:[], program:[]}
 
@@ -622,6 +623,7 @@ async function renderDashboard(){
           detail = await cachedApi("eventdetail", {id: upcoming.ID})
           const myRow = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
           myStatus = myRow?.STATUS || ""
+          myReason = myRow?.REASON || ""
           attendanceCount = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
         }catch(e){ console.error("eventdetail fail", e) }
       }
@@ -629,67 +631,140 @@ async function renderDashboard(){
       const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
       const statusText  = myStatus || "Nevyplněno"
 
+      const mainProgram   = (detail.program || []).filter(p => !p.ENCORE)
+      const encoreProgram = (detail.program || []).filter(p => p.ENCORE)
+
+      const yes  = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
+      const maybe= (detail.attendance || []).filter(a => a.STATUS === "Možná").length
+      const no   = (detail.attendance || []).filter(a => a.STATUS === "Nepřijdu").length
+      const open = (detail.attendance || []).filter(a => !a.STATUS).length
+
       html += `<div class="card" style="padding:0">
-        <div onclick="toggleDashboardEvent()" style="padding:16px;cursor:pointer">
+
+        <!-- HLAVIČKA — vždy viditelná -->
+        <div style="padding:16px;cursor:pointer" onclick="toggleDashboardEvent()">
           <b style="font-size:18px;display:block;margin-bottom:6px">${escapeHtml(upcoming.NAME)}</b>
           <div class="small">${formatDate(upcoming.DATE)}${upcoming.START ? " · " + formatTime(upcoming.START) : ""}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</div>
           <div class="small">${escapeHtml(upcoming.PLACE)}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
             <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
-            <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
+              <span style="color:var(--muted);font-size:18px" id="chevronDashEvent">›</span>
+            </div>
           </div>
         </div>
 
+        <!-- DETAIL — accordion -->
         <div id="dashEventDetail" style="display:none;border-top:1px solid rgba(128,128,128,0.15)">
           <div style="padding:16px">
 
-            <div class="btn-group" style="margin-bottom:16px">
-              <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-              <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
-              <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+        <!-- POZNÁMKA -->
+${upcoming.NOTE || MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART" ? `
+  <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(128,128,128,0.1)">
+    <div class="event-label">Poznámka</div>
+    ${upcoming.NOTE ? `<div style="font-size:15px;white-space:pre-wrap;margin-bottom:8px">${escapeHtml(upcoming.NOTE)}</div>` : `<p class="notice" style="margin:0 0 8px">Žádná poznámka</p>`}
+    ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+      <div class="btn-group">
+        <button onclick="editDashNote('${upcoming.ID}','${escapeHtml(upcoming.NOTE||"").replaceAll("'","\\'")}')">Upravit poznámku</button>
+      </div>
+    ` : ""}
+  </div>
+` : ""}
+
+            <!-- DOCHÁZKA -->
+            <div style="margin-bottom:16px">
+              <div class="event-label">Docházka</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleDashAttendance()">
+                <div>
+                  <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+                  ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+                </div>
+                <span style="color:var(--muted);font-size:18px" id="chevronDashAttendance">›</span>
+              </div>
+              <div id="dashAttendanceButtons" style="display:none;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+                <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+                <div class="btn-group">
+                  <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
+                  <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
+                  <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+                </div>
+              </div>
+              <div style="margin-top:10px">
+                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+                  <span class="small">✓ Přijdu: <b>${yes}</b></span>
+                  <span class="small">? Možná: <b>${maybe}</b></span>
+                  <span class="small">✗ Nepřijdu: <b>${no}</b></span>
+                  <span class="small">— Nevyplněno: <b>${open}</b></span>
+                </div>
+                ${(detail.attendance || []).map(a => {
+                  const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                                a.STATUS === "Možná"    ? iconMaybe() :
+                                a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+                  const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                                a.STATUS === "Možná"    ? "#ff9f0a" :
+                                a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+                  return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
+                    <span class="icon" style="color:${color}">${icon}</span>
+                    ${escapeHtml(a.NAME)}
+                    ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+                  </div>`
+                }).join("")}
+              </div>
             </div>
 
-            ${upcoming.NOTE ? `<div style="margin-bottom:12px"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(upcoming.NOTE)}</div></div>` : ""}
+            <!-- PROGRAM -->
+${mainProgram.length ? `
+  <div style="margin-bottom:16px">
+    <div class="event-label">Program</div>
+    ${mainProgram.map((p,i) => `
+      <div class="event-row">
+        <div>
+          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+        </div>
+        ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
+      </div>
+    `).join("")}
+    ${encoreProgram.length ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
+        <div class="event-label">Přídavky</div>
+        ${encoreProgram.map((p,i) => `
+          <div class="event-row">
+            <div>
+              <b>${i+1}. ${escapeHtml(p.NAME)}</b>
+              ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
+            </div>
+            ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
+        <button onclick="openProgramEditor('${upcoming.ID}')" style="width:100%">Upravit program</button>
+      </div>
+    ` : ""}
+  </div>
+` : `
+  <div style="margin-bottom:16px">
+    <div class="event-label">Program</div>
+    <p class="notice" style="margin:0 0 8px">Program není k dispozici</p>
+    ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+      <button onclick="openProgramEditor('${upcoming.ID}')" style="width:100%">Vytvořit program</button>
+    ` : ""}
+  </div>
+`}
 
-            ${(()=>{
-              const mainProgram   = (detail.program || []).filter(p => !p.ENCORE)
-              const encoreProgram = (detail.program || []).filter(p => p.ENCORE)
-              if(!mainProgram.length) return `<p class="notice">Program není k dispozici</p>`
-              return `<div class="event-card">
-                <div class="event-label">Program</div>
-                ${mainProgram.map((p,i) => `
-                  <div class="event-row">
-                    <div>
-                      <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-                      ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-                    </div>
-                    ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
-                  </div>
-                `).join("")}
-                ${encoreProgram.length ? `
-                  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-                    <div class="event-label" style="margin-bottom:6px">Přídavky</div>
-                    ${encoreProgram.map((p,i) => `
-                      <div class="event-row">
-                        <div>
-                          <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-                          ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-                        </div>
-                        ${p.PDF ? `<a href="${escapeHtml(p.PDF)}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none">📄 Noty</a>` : ""}
-                      </div>
-                    `).join("")}
-                  </div>
-                ` : ""}
-              </div>`
-            })()}
-
+            <!-- INFODOKUMENT -->
             ${upcoming.DOC_URL ? `
               <a href="${escapeHtml(upcoming.DOC_URL)}" target="_blank"
-                style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-top:12px">
+                style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
                 Otevřít infodokument
               </a>
             ` : ""}
 
+            <!-- ADMIN PANEL -->
             ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
               <hr style="margin:16px 0;border:none;border-top:1px solid rgba(128,128,128,0.15)">
               <div class="btn-group">
@@ -840,10 +915,40 @@ html += `</div>`
 
 function toggleDashboardEvent(){
   const el      = document.getElementById("dashEventDetail")
+  const chevron = document.getElementById("chevronDashEvent")
   if(!el) return
   const isOpen  = el.style.display !== "none"
   el.style.display = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
 }
+
+function toggleDashAttendance(){
+  const el      = document.getElementById("dashAttendanceButtons")
+  const chevron = document.getElementById("chevronDashAttendance")
+  if(!el) return
+  const isOpen  = el.style.display !== "none"
+  el.style.display = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
+function editDashNote(eventId, currentNote){
+  openFormModal("Upravit poznámku", [
+    {key: "note", label: "Poznámka", type: "textarea", value: currentNote}
+  ], async (values) => {
+    try{
+      closeFormModal()
+      showSaving()
+      await api("updatenote", {id: eventId, note: values.note})
+      invalidateCache("eventdetail", eventId)
+      hideSaving("Poznámka uložena ✓")
+      renderDashboard()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
 
 let AKTUALITA_SELECTED = null
 let TODO_SELECTED = null
@@ -3068,7 +3173,9 @@ window.addTodoItem          = addTodoItem
 window.toggleTodo           = toggleTodo
 window.deleteTodoItem       = deleteTodoItem
 window.openAddCollection    = openAddCollection
-window.toggleDashboardEvent = toggleDashboardEvent
+window.toggleDashboardEvent  = toggleDashboardEvent
+window.toggleDashAttendance  = toggleDashAttendance
+window.editDashNote         = editDashNote
 window.toggleAktualita      = toggleAktualita
 window.toggleCollection     = toggleCollection
 window.recordPayment        = recordPayment
