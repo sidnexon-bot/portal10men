@@ -2666,7 +2666,7 @@ async function renderHeatmap(){
       filtered.forEach(e => {
         html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
         html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
-          <div style="font-weight:600">${escapeHtml(e.NAME)}</div>
+          <div style="font-weight:600;cursor:pointer;color:#007aff" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>
           <div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>
         </td>`
         members.forEach(m => {
@@ -2700,7 +2700,7 @@ async function renderHeatmap(){
         html += `<div style="padding:14px 16px;${border}">`
 
         // název a datum
-        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px">${escapeHtml(e.NAME)}</div>`
+        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px;cursor:pointer;color:#007aff" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>`
         html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
 
         // avatary
