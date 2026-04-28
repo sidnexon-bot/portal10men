@@ -9,7 +9,19 @@
   <title>10base</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="apple-touch-icon" href="icon.png">
-
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "01477d89-1329-43f6-91f2-bb597d5a681e",
+      safari_web_id: "web.onesignal.auto.38b1a4de-a361-440e-ae28-b71c05790af2",
+      notifyButton: {
+        enable: false,
+      },
+    });
+  });
+</script>
 </head>
 <body>
   <!-- SIDEBAR (desktop only) -->
