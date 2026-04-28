@@ -1,0 +1,125 @@
+name: Daily Notifications
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # každý den v 7:00 UTC (9:00 Praha)
+  workflow_dispatch:      # možnost spustit ručně
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notifications
+        env:
+          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+        run: |
+          node -e "
+          const https = require('https');
+
+          const FIREBASE_URL = 'https://base-39f52-default-rtdb.europe-west1.firebasedatabase.app';
+          const ONESIGNAL_APP_ID = '01477d89-1329-43f6-91f2-bb597d5a681e';
+
+          function fbGet(path){
+            return new Promise((resolve, reject) => {
+              const url = FIREBASE_URL + path + '.json?auth=' + process.env.FIREBASE_SECRET;
+              https.get(url, res => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve(JSON.parse(data)));
+              }).on('error', reject);
+            });
+          }
+
+          function sendNotification(title, message, segments){
+            return new Promise((resolve, reject) => {
+              const body = JSON.stringify({
+                app_id: ONESIGNAL_APP_ID,
+                included_segments: segments || ['All'],
+                headings: { en: title, cs: title },
+                contents: { en: message, cs: message }
+              });
+
+              const options = {
+                hostname: 'onesignal.com',
+                path: '/api/v1/notifications',
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Key ' + process.env.ONESIGNAL_API_KEY
+                }
+              };
+
+              const req = https.request(options, res => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => { console.log('Notification sent:', data); resolve(data); });
+              });
+              req.on('error', reject);
+              req.write(body);
+              req.end();
+            });
+          }
+
+          async function main(){
+            const akce    = await fbGet('/akce');
+            const program = await fbGet('/program');
+            const dochazka = await fbGet('/dochazka');
+            const members = await fbGet('/members');
+
+            if(!akce || !members) return;
+
+            const now = new Date();
+            const events = Object.values(akce);
+            const progEntries = program ? Object.values(program) : [];
+            const dochazkaEntries = dochazka ? Object.values(dochazka) : [];
+            const memberList = Object.values(members);
+
+            for(const event of events){
+              if(!event.date) continue;
+              const eventDate = new Date(event.date);
+              const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
+
+              // 3 dny před akcí
+              if(daysUntil === 3){
+                // zkontroluj program
+                const hasProgram = progEntries.some(p => p.id_akce === event.id);
+                if(!hasProgram){
+                  await sendNotification(
+                    'Program chybí 📋',
+                    'Akce ' + event.name + ' je za 3 dny a nemá program.',
+                    ['All']
+                  );
+                }
+
+                // připomínka docházky
+                await sendNotification(
+                  'Vyplň docházku ✋',
+                  'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
+                  ['All']
+                );
+              }
+
+              // 1 den před akcí — ping nevyplněných
+              if(daysUntil === 1){
+                const nevyplneni = memberList.filter(m => {
+                  const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
+                  return !zaznam || !zaznam.status;
+                });
+
+                if(nevyplneni.length > 0){
+                  const jmena = nevyplneni.map(m => m.name).join(', ');
+                  await sendNotification(
+                    'Nevyplněná docházka ⚠️',
+                    'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
+                    ['All']
+                  );
+                }
+              }
+            }
+
+            console.log('Done');
+          }
+
+          main().catch(console.error);
+          "
