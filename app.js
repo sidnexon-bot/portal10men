@@ -715,7 +715,7 @@ if(Array.isArray(aktuality) && aktuality.length){
     const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
     const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
     html += `<div
-      style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+      style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:var(--card-selected);" : ""}
       onclick="${MEMBER_ROLE === "ADMIN" ? `selectAktualita('${escapeHtml(a.id)}')` : ""}"
     >
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -755,7 +755,7 @@ if(Array.isArray(todos) && todos.length){
     const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
     const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
     html += `<div
-      style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+      style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:var(--card-selected);" : ""}
       onclick="${MEMBER_ROLE === "ADMIN" ? `selectTodo('${escapeHtml(t.id)}')` : ""}"
     >
       <div style="display:flex;align-items:center;gap:10px">
@@ -2873,7 +2873,7 @@ async function updateDashboardAktuality(){
       const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
       const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
       return `<div
-        style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+        style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:var(--card-selected);" : ""}
         onclick="${MEMBER_ROLE === "ADMIN" ? `selectAktualita('${escapeHtml(a.id)}')` : ""}"
       >
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -2912,7 +2912,7 @@ async function updateDashboardTodos(){
       const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
       const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
       return `<div
-        style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:#f0f6ff;" : ""}"
+        style="padding:10px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"};${isSelected ? "background:var(--card-selected);" : ""}
         onclick="${MEMBER_ROLE === "ADMIN" ? `selectTodo('${escapeHtml(t.id)}')` : ""}"
       >
         <div style="display:flex;align-items:center;gap:10px">
