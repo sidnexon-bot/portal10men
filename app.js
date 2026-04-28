@@ -2200,7 +2200,7 @@ async function renderEnergy(){
           class="card energy-row"
           data-id="${escapeHtml(r.ID)}"
           onclick="selectEnergyRow('${escapeHtml(r.ID)}')"
-          style="margin-bottom:8px;cursor:pointer;${isSelected ? "border:2px solid #007aff;background:#f0f6ff" : ""}"
+          style="margin-bottom:8px;cursor:pointer;${isSelected ? "border:2px solid #007aff;background:var(--card-selected, #f0f6ff)" : ""}"
         >
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
