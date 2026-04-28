@@ -672,48 +672,7 @@ ${upcoming.NOTE || MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART" ? `
   </div>
 ` : ""}
 
-            <!-- DOCHÁZKA -->
-            <div style="margin-bottom:16px">
-              <div class="event-label">Docházka</div>
-              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleDashAttendance()">
-                <div>
-                  <div style="font-weight:600;color:${statusColor}">${statusText}</div>
-                  ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
-                </div>
-                <span style="color:var(--muted);font-size:18px" id="chevronDashAttendance">›</span>
-              </div>
-              <div id="dashAttendanceButtons" style="display:none;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-                <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-                <div class="btn-group">
-                  <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
-                  <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
-                  <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
-                </div>
-              </div>
-              <div style="margin-top:10px">
-                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-                  <span class="small">✓ Přijdu: <b>${yes}</b></span>
-                  <span class="small">? Možná: <b>${maybe}</b></span>
-                  <span class="small">✗ Nepřijdu: <b>${no}</b></span>
-                  <span class="small">— Nevyplněno: <b>${open}</b></span>
-                </div>
-                ${(detail.attendance || []).map(a => {
-                  const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                                a.STATUS === "Možná"    ? iconMaybe() :
-                                a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-                  const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                                a.STATUS === "Možná"    ? "#ff9f0a" :
-                                a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-                  return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
-                    <span class="icon" style="color:${color}">${icon}</span>
-                    ${escapeHtml(a.NAME)}
-                    ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-                  </div>`
-                }).join("")}
-              </div>
-            </div>
-
-            <!-- PROGRAM -->
+<!-- PROGRAM -->
 ${mainProgram.length ? `
   <div style="margin-bottom:16px">
     <div class="event-label">Program</div>
@@ -755,6 +714,47 @@ ${mainProgram.length ? `
     ` : ""}
   </div>
 `}
+
+            <!-- DOCHÁZKA -->
+            <div style="margin-bottom:16px">
+              <div class="event-label">Docházka</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleDashAttendance()">
+                <div>
+                  <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+                  ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+                </div>
+                <span style="color:var(--muted);font-size:18px" id="chevronDashAttendance">›</span>
+              </div>
+              <div id="dashAttendanceButtons" style="display:none;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+                <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+                <div class="btn-group">
+                  <button onclick="doAttendance('${upcoming.ID}','Přijdu')">Přijdu</button>
+                  <button onclick="doAttendanceMozna('${upcoming.ID}')">Možná</button>
+                  <button onclick="doAttendanceWithReason('${upcoming.ID}','Nepřijdu')">Nepřijdu</button>
+                </div>
+              </div>
+              <div style="margin-top:10px">
+                <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+                  <span class="small">✓ Přijdu: <b>${yes}</b></span>
+                  <span class="small">? Možná: <b>${maybe}</b></span>
+                  <span class="small">✗ Nepřijdu: <b>${no}</b></span>
+                  <span class="small">— Nevyplněno: <b>${open}</b></span>
+                </div>
+                ${(detail.attendance || []).map(a => {
+                  const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                                a.STATUS === "Možná"    ? iconMaybe() :
+                                a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+                  const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                                a.STATUS === "Možná"    ? "#ff9f0a" :
+                                a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+                  return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
+                    <span class="icon" style="color:${color}">${icon}</span>
+                    ${escapeHtml(a.NAME)}
+                    ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+                  </div>`
+                }).join("")}
+              </div>
+            </div>
 
             <!-- INFODOKUMENT -->
             ${upcoming.DOC_URL ? `
