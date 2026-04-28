@@ -4,6 +4,7 @@
   --text:#111;
   --muted:#8e8e93;
   --accent:#000;
+  --card-selected: #f0f6ff;
 }
 
 *{
@@ -891,6 +892,7 @@ select:focus{
 body.dark {
   --bg:   #1c1c1e;
   --card: #2c2c2e;
+  --card-selected: #1c2a3a;
   --text: #ffffff;
   --muted:#8e8e93;
   --accent:#ffffff;
