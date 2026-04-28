@@ -1538,4 +1538,88 @@ main{
 
 }
 
+/* ===============================
+   ANIMACE
+================================ */
+
+/* Fade in při přepnutí sekce */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+main > * {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+/* Accordion — plynulé rozbalení */
+.accordion-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
+  opacity: 0;
+}
+
+.accordion-body.open {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* Karty — fade in při načtení */
+.card {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* Skeleton fade out */
+.skeleton-card {
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* Přechod barev a pozadí */
+.card,
+.sidebar,
+header,
+.bottom,
+button,
+input,
+select {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Sidebar nav položky */
+.sidebar-nav-item,
+.sidebar-action {
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.sidebar-nav-item:active,
+.sidebar-action:active {
+  transform: scale(0.97);
+}
+
+/* Swipe karty */
+.swipe-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Bottom nav ikony */
+.bottom button .icon svg {
+  transition: transform 0.2s ease, stroke 0.2s ease;
+}
+
+.bottom button.active .icon svg {
+  transform: scale(1.15);
+}
+
+/* Modal */
+.modal-content {
+  transition: transform 0.3s ease;
+  transform: translateY(0);
+}
+
+.modal.hidden .modal-content {
+  transform: translateY(100%);
+}
+
+
 
