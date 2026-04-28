@@ -83,50 +83,50 @@ jobs:
               // 3 dny před akcí
               
               // akce které nevyžadují program
-const noProgram = ['schůzk', 'grilov', 'plánov', 'výlet', 'teambuilding', 'sraz']
-const requiresProgram = !noProgram.some(k => event.name.toLowerCase().includes(k))
-
-if(daysUntil === 3){
-  // zkontroluj program jen pro zpívací akce
-  if(requiresProgram){
-    const hasProgram = progEntries.some(p => p.id_akce === event.id);
-    if(!hasProgram){
-      await sendNotification(
-        'Program chybí 📋',
-        'Akce ' + event.name + ' je za 3 dny a nemá program.',
-        ['All']
-      );
-    }
-  }
-  // připomínka docházky pro všechny akce
-  await sendNotification(
-    'Vyplň docházku ✋',
-    'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
-    ['All']
-  );
-}
-
-
-              // 1 den před akcí — ping nevyplněných
-              if(daysUntil === 1){
-                const nevyplneni = memberList.filter(m => {
-                  const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
-                  return !zaznam || !zaznam.status;
-                });
-
-                if(nevyplneni.length > 0){
-                  const jmena = nevyplneni.map(m => m.name).join(', ');
+            const noProgram = ['schůzk', 'grilov', 'plánov', 'výlet', 'teambuilding', 'sraz']
+            const requiresProgram = !noProgram.some(k => event.name.toLowerCase().includes(k))
+            
+            if(daysUntil === 3){
+              // zkontroluj program jen pro zpívací akce
+              if(requiresProgram){
+                const hasProgram = progEntries.some(p => p.id_akce === event.id);
+                if(!hasProgram){
                   await sendNotification(
-                    'Nevyplněná docházka ⚠️',
-                    'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
+                    'Program chybí 📋',
+                    'Akce ' + event.name + ' je za 3 dny a nemá program.',
                     ['All']
                   );
                 }
               }
+              // připomínka docházky pro všechny akce
+              await sendNotification(
+                'Vyplň docházku ✋',
+                'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
+                ['All']
+              );
             }
-
-            console.log('Done');
-          }
-
-          main().catch(console.error);
-          "
+            
+            
+                          // 1 den před akcí — ping nevyplněných
+                          if(daysUntil === 1){
+                            const nevyplneni = memberList.filter(m => {
+                              const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
+                              return !zaznam || !zaznam.status;
+                            });
+            
+                            if(nevyplneni.length > 0){
+                              const jmena = nevyplneni.map(m => m.name).join(', ');
+                              await sendNotification(
+                                'Nevyplněná docházka ⚠️',
+                                'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
+                                ['All']
+                              );
+                            }
+                          }
+                        }
+            
+                        console.log('Done');
+                      }
+            
+                      main().catch(console.error);
+                      "
