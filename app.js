@@ -483,7 +483,15 @@ function initSidebar(){
   switchBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Přepnout člena`
   switchBtn.onclick = () => openMemberModal()
   document.querySelector(".sidebar-bottom").prepend(switchBtn)
+
 }
+
+  const driveBtn = document.createElement("button")
+  driveBtn.className = "sidebar-action"
+  driveBtn.style.cssText = "color:#007aff"
+  driveBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9"/><path d="M16 19h6M19 16v6"/></svg></span> Google Drive`
+  driveBtn.onclick = () => window.open("https://drive.google.com/drive/folders/0B23cZAlYDWOndmtIZU45WWJrbWM?resourcekey=0-0z_Lh-UavGxU38cz60Bi2Q&usp=share_link")
+  document.querySelector(".sidebar-bottom").prepend(driveBtn)
 
   // navigace
   document.getElementById("sidebarDashboard").onclick = () => { setActiveTab("dashboard"); renderDashboard(); updateSidebarActive("dashboard") }
