@@ -420,6 +420,7 @@ button[onclick*="'Přijdu'"]{
   color: #1a7a3a;
 }
 
+button[onclick*="Mozna"],
 button[onclick*="'Možná'"]{
   background: #fff4dc;
   color: #b07800;
@@ -469,6 +470,7 @@ body.dark button[onclick*="'Přijdu'"]{
   color: #30d158;
 }
 
+body.dark button[onclick*="Mozna"],
 body.dark button[onclick*="'Možná'"]{
   background: #3d3220;
   color: #ffd60a;
