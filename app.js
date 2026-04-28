@@ -2134,13 +2134,13 @@ async function saveEvent(id){
   try{
     showSaving()
     if(id){
-      await api("updateevent", {id, name, date, start, end, place, note, status})
+      await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram})
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, start, end, place, note, status})
+      const result = await api("addevent", {name, date, start, end, place, note, status, requires_program: requiresProgram})
       invalidateCache("events")
       hideSaving("Akce vytvořena ✓")
       renderEvents()
