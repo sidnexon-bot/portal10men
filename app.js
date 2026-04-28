@@ -1287,7 +1287,7 @@ async function openEvent(id){
 
       <!-- Souhrn skupiny — vždy viditelný -->
       <div style="margin-top:12px">
-        <div style="display:flex;gap:16px;margin-bottom:10px">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
           <span class="small">✓ Přijdu: <b>${yes}</b></span>
           <span class="small">? Možná: <b>${maybe}</b></span>
           <span class="small">✗ Nepřijdu: <b>${no}</b></span>
