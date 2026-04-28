@@ -54,15 +54,16 @@ async function getMembers(){
 async function getEvents(){
   const data = await dbGet("/akce")
   return objToArray(data).map(e => ({
-    ID:     e.id,
-    NAME:   e.name,
-    DATE:   e.date,
-    START:  e.start,
-    END:    e.end,
-    PLACE:  e.place,
-    NOTE:   e.note,
-    STATUS: e.status,
-    DOC_URL: e.doc_url || ""
+    ID:               e.id,
+    NAME:             e.name,
+    DATE:             e.date,
+    START:            e.start,
+    END:              e.end,
+    PLACE:            e.place,
+    NOTE:             e.note,
+    STATUS:           e.status,
+    DOC_URL:          e.doc_url || "",
+    REQUIRES_PROGRAM: e.requires_program !== false
   }))
 }
 
@@ -181,14 +182,15 @@ async function addEvent(params){
 
   await dbSet("/akce/" + id, {
     id,
-    name:    params.name,
-    date:    params.date,
-    start:   params.start   || "",
-    end:     params.end     || "",
-    place:   params.place   || "",
-    note:    params.note    || "",
-    status:  params.status  || "Plánovaná",
-    doc_url: ""
+    name:             params.name,
+    date:             params.date,
+    start:            params.start   || "",
+    end:              params.end     || "",
+    place:            params.place   || "",
+    note:             params.note    || "",
+    status:           params.status  || "Plánovaná",
+    requires_program: params.requires_program !== false,
+    doc_url:          ""
   })
 
   // vytvoř záznamy docházky pro všechny členy
@@ -211,13 +213,14 @@ async function addEvent(params){
 
 async function updateEvent(params){
   await dbUpdate("/akce/" + params.id, {
-    name:   params.name,
-    date:   params.date,
-    start:  params.start  || "",
-    end:    params.end    || "",
-    place:  params.place  || "",
-    note:   params.note   || "",
-    status: params.status || "Plánovaná"
+    name:             params.name,
+    date:             params.date,
+    start:            params.start  || "",
+    end:              params.end    || "",
+    place:            params.place  || "",
+    note:             params.note   || "",
+    status:           params.status || "Plánovaná",
+    requires_program: params.requires_program !== false
   })
   return {status: "updated"}
 }
