@@ -2364,8 +2364,10 @@ async function renderEnergy(){
 
     html += `<option value="">Vyber akci</option>`
     events
-      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-      .forEach(e => {
+       events
+         .filter(e => (e.PLACE || "").includes("Smetanovo"))
+         .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+         .forEach(e => {
         const selected = (window.ENERGY_EVENT && e.ID === window.ENERGY_EVENT) ||
                          (!window.ENERGY_EVENT && upcoming && e.ID === upcoming.ID) ? "selected" : ""
         if(selected) window.ENERGY_EVENT = e.ID
