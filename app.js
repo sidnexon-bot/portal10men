@@ -1253,46 +1253,58 @@ async function openEvent(id){
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
-
-    html += `<div class="event-card">
-      <div class="event-label">Docházka</div>
-      ${MEMBER_EMAIL ? `
-        <div class="attendance-status">${renderAttendanceStatus(myStatus)}</div>
-        <div class="btn-group">
-          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-          <button onclick="doAttendanceMozna('${id}')">Možná</button>
-          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-        </div>
-      ` : `<div class="muted">Vyber člena</div>`}
-    </div>`
+    const myReason = myRow?.REASON || ""
 
     const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
     const maybe = attendance.filter(a => a.STATUS === "Možná").length
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
     const open  = attendance.filter(a => !a.STATUS).length
 
-    html += `<div class="card attendance-summary">
-      <div class="summary-item"><span class="icon">${iconCheck()}</span> Přijdu <b>${yes}</b></div>
-      <div class="summary-item"><span class="icon">${iconMaybe()}</span> Možná <b>${maybe}</b></div>
-      <div class="summary-item"><span class="icon">${iconClose()}</span> Nepřijdu <b>${no}</b></div>
-      <div class="summary-item"><span class="icon">${iconQuestion()}</span> Nevyplněno <b>${open}</b></div>
-    </div>`
+    const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+    const statusText  = myStatus || "Nevyplněno"
 
-    html += `<div style="margin-bottom:20px">`
-    attendance.forEach(a => {
-      const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                    a.STATUS === "Možná"    ? iconMaybe() :
-                    a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-      const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                    a.STATUS === "Možná"    ? "#ff9f0a" :
-                    a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-      html += `<div class="small" style="padding:3px 0;color:${color}">
-        <span class="icon" style="color:${color}">${icon}</span>
-        ${escapeHtml(a.NAME)}
-        ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-      </div>`
-    })
-    html += `</div>`
+    html += `<div class="event-card" style="cursor:pointer" onclick="toggleAttendanceAccordion('${id}')">
+      <div class="event-label">Docházka</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+          ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="small">✓ ${yes} · ? ${maybe} · ✗ ${no} · — ${open}</div>
+          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
+        </div>
+      </div>
+
+      <div id="attendanceDetail_${id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+
+        ${MEMBER_EMAIL ? `
+          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+          <div class="btn-group" style="margin-bottom:12px">
+            <button onclick="event.stopPropagation();doAttendance('${id}','Přijdu')">Přijdu</button>
+            <button onclick="event.stopPropagation();doAttendanceMozna('${id}')">Možná</button>
+            <button onclick="event.stopPropagation();doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+          </div>
+        ` : ""}
+
+        <div style="margin-bottom:8px">
+          ${attendance.map(a => {
+            const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                          a.STATUS === "Možná"    ? iconMaybe() :
+                          a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+            const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                          a.STATUS === "Možná"    ? "#ff9f0a" :
+                          a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+            return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
+              <span class="icon" style="color:${color}">${icon}</span>
+              ${escapeHtml(a.NAME)}
+              ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+            </div>`
+          }).join("")}
+        </div>
+
+      </div>
+    </div>`
 
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
@@ -1389,6 +1401,15 @@ async function openEvent(id){
     }
   }
 
+}
+
+function toggleAttendanceAccordion(id){
+  const el      = document.getElementById("attendanceDetail_" + id)
+  const chevron = document.getElementById("chevronAttendance_" + id)
+  if(!el) return
+  const isOpen  = el.style.display !== "none"
+  el.style.display  = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
 }
 
 async function uploadDocUrl(eventId){
@@ -3060,6 +3081,7 @@ window.toggleFav            = toggleFav
 window.doAttendance         = doAttendance
 window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
+window.toggleAttendanceAccordion = toggleAttendanceAccordion
 window.confirmMozna         = confirmMozna
 window.closeMoznaModal      = closeMoznaModal
 window.saveEvent            = saveEvent
