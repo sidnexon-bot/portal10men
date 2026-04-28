@@ -4,11 +4,13 @@ import { database, ref, get, set, update, remove, push, onValue } from "./fireba
 const DB = database
 
 export function watchChanges(callback){
-  onValue(ref(DB, "/dochazka"), () => callback("dochazka"))
-  onValue(ref(DB, "/akce"),     () => callback("akce"))
-  onValue(ref(DB, "/program"),  () => callback("program"))
+  onValue(ref(DB, "/dochazka"),  () => callback("dochazka"))
+  onValue(ref(DB, "/akce"),      () => callback("akce"))
+  onValue(ref(DB, "/program"),   () => callback("program"))
+  onValue(ref(DB, "/aktuality"), () => callback("aktuality"))
+  onValue(ref(DB, "/todos"),     () => callback("todos"))
+  onValue(ref(DB, "/members"),   () => callback("members"))
 }
-
 window.watchChanges = watchChanges
 
 // ===============================
