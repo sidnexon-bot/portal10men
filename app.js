@@ -1263,47 +1263,51 @@ async function openEvent(id){
     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
     const statusText  = myStatus || "Nevyplněno"
 
-    html += `<div class="event-card" style="cursor:pointer" onclick="toggleAttendanceAccordion('${id}')">
+    html += `<div class="event-card">
       <div class="event-label">Docházka</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
+
+      <!-- Tvůj stav — kliknutím rozbalí změnu účasti -->
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
         <div>
           <div style="font-weight:600;color:${statusColor}">${statusText}</div>
           ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="small">✓ ${yes} · ? ${maybe} · ✗ ${no} · — ${open}</div>
-          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
+        <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
+      </div>
+
+      <!-- Změna účasti — accordion -->
+      <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+        <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+        <div class="btn-group">
+          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+          <button onclick="doAttendanceMozna('${id}')">Možná</button>
+          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
         </div>
       </div>
 
-      <div id="attendanceDetail_${id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-
-        ${MEMBER_EMAIL ? `
-          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-          <div class="btn-group" style="margin-bottom:12px">
-            <button onclick="event.stopPropagation();doAttendance('${id}','Přijdu')">Přijdu</button>
-            <button onclick="event.stopPropagation();doAttendanceMozna('${id}')">Možná</button>
-            <button onclick="event.stopPropagation();doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-          </div>
-        ` : ""}
-
-        <div style="margin-bottom:8px">
-          ${attendance.map(a => {
-            const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                          a.STATUS === "Možná"    ? iconMaybe() :
-                          a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-            const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                          a.STATUS === "Možná"    ? "#ff9f0a" :
-                          a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-            return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
-              <span class="icon" style="color:${color}">${icon}</span>
-              ${escapeHtml(a.NAME)}
-              ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-            </div>`
-          }).join("")}
+      <!-- Souhrn skupiny — vždy viditelný -->
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:16px;margin-bottom:10px">
+          <span class="small">✓ Přijdu: <b>${yes}</b></span>
+          <span class="small">? Možná: <b>${maybe}</b></span>
+          <span class="small">✗ Nepřijdu: <b>${no}</b></span>
+          <span class="small">— Nevyplněno: <b>${open}</b></span>
         </div>
-
+        ${attendance.map(a => {
+          const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                        a.STATUS === "Možná"    ? iconMaybe() :
+                        a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+          const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                        a.STATUS === "Možná"    ? "#ff9f0a" :
+                        a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+          return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
+            <span class="icon" style="color:${color}">${icon}</span>
+            ${escapeHtml(a.NAME)}
+            ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+          </div>`
+        }).join("")}
       </div>
+
     </div>`
 
     // --- PROGRAM ---
