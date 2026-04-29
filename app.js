@@ -331,6 +331,25 @@ function updateAttendanceBadge(eventId, status){
   card.appendChild(badge)
 }
 
+function confirmModal(text, onConfirm){
+  openFormModal(text, [], (values) => {
+    closeFormModal()
+    onConfirm()
+  })
+  // nahraď tlačítko Uložit za Potvrdit
+  const btn = document.getElementById("formModalSubmit")
+  if(btn) btn.textContent = "Potvrdit"
+}
+
+function promptModal(label, defaultValue, onConfirm){
+  openFormModal(label, [
+    {key: "value", label: "", type: "text", value: defaultValue || ""}
+  ], (values) => {
+    closeFormModal()
+    onConfirm(values.value)
+  })
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -3298,4 +3317,6 @@ window.toggleDarkMode       = toggleDarkMode
 window.setActiveTab         = setActiveTab
 window.enablePush           = enablePush
 window.toggleAccordion      = toggleAccordion
+window.confirmModal         = confirmModal
+window.promptModal          = promptModal
 
