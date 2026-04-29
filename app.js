@@ -1464,6 +1464,28 @@ async function openEvent(id){
 
     </div>`
 
+      ${MEMBER_EMAIL ? `
+        ${event.STATUS === "Zrušená" ? `
+          <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
+        ` : `
+          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
+            <div>
+              <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+              ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+            </div>
+            <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
+          </div>
+          <div id="attendanceDetail_${id}" style="display:none;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+            <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+            <div class="btn-group">
+              <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+              <button onclick="doAttendanceMozna('${id}')">Možná</button>
+              <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+            </div>
+          </div>
+        `}
+      ` : `<div class="muted">Vyber člena</div>`}
+
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
     const encoreProgram = program.filter(p => p.ENCORE)
@@ -2109,6 +2131,17 @@ async function saveEvent(id){
       hideSaving("Akce vytvořena ✓")
       renderEvents()
     }
+     
+     if(status === "Zrušená"){
+        await api("cancelevent", {id})
+      }else{
+        await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+      }
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce upravena ✓")
+      openEvent(id)
+
   }catch(err){
     hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
