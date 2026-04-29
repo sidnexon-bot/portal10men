@@ -865,10 +865,11 @@ html += `</div>`
         const past   = new Date(e.DATE) < now
         const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
         html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-          <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-          <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-          ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-        </div>`
+           ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
+           <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+           <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+           ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+         </div>`
       })
       html += `</div>`
     }else{
@@ -1143,17 +1144,20 @@ const futureEvents = filtered.filter(e => {
 
 // nejdřív budoucí akce
 futureEvents.forEach(e => {
-  const isNext    = nextEvent && e.ID === nextEvent.ID
-  const highlight = isNext ? "border-left:3px solid #007aff;" : ""
+  const isNext      = nextEvent && e.ID === nextEvent.ID
+  const isCancelled = e.STATUS === "Zrušená"
+  const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
+  const opacity     = isCancelled ? "0.5" : "1"
 
-  html += `<div class="swipe-wrapper">
+  html += `<div class="swipe-wrapper" style="opacity:${opacity}">
     <div class="swipe-bg">
       <span class="swipe-bg-left">✓ Přijdu</span>
       <span class="swipe-bg-right">✗ Nepřijdu</span>
     </div>
     <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
       ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
-      <b>${escapeHtml(e.NAME)}</b><br>
+      ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
+      <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
       <span class="small">
         ${formatDate(e.DATE)}
         ${e.START ? "· " + formatTime(e.START) : ""}
@@ -1306,6 +1310,7 @@ async function openEventForm(id){
       <select id="fStatus">
         <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
         <option value="Proběhlá"  ${event.STATUS === "Proběhlá"  ? "selected" : ""}>Proběhlá</option>
+        <option value="Zrušená"   ${event.STATUS === "Zrušená"   ? "selected" : ""}>Zrušená</option>
       </select>
     </label>
     <label style="display:flex;align-items:center;gap:10px;margin-top:16px">
