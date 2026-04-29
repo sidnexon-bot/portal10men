@@ -342,7 +342,6 @@ h3{
   overflow: hidden;
   background: transparent;
   transition: background 0.1s;
-  touch-action: none;
 }
 
 .swipe-bg{
@@ -398,7 +397,7 @@ h3{
   margin-bottom: 0;
   border-radius: 18px;
   cursor: pointer;
-  touch-action: none;
+  touch-action: pan-y;
   background: #fff;
   will-change: transform;
 }
@@ -1659,6 +1658,5 @@ select {
 .modal.hidden .modal-content {
   transform: translateY(100%);
 }
-
 
 
