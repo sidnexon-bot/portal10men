@@ -1371,7 +1371,7 @@ async function openEventForm(id){
       <input id="fPlace" value="${escapeHtml(event.PLACE || "")}" placeholder="Místo konání">
     </label>
     <label>Odkaz na online call<br>
-      <input id="fCallUrl" value="${escapeHtml(event.CALL_URL || "")}" placeholder="https://meet.google.com/...">
+      <input id="fCallUrl" value="${escapeHtml(event.CALL_URL || "")}" placeholder="https://discord.gg/...">
     </label>
     <label>Poznámka<br>
       <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
