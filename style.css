@@ -342,6 +342,7 @@ h3{
   overflow: hidden;
   background: transparent;
   transition: background 0.1s;
+  touch-action: none;
 }
 
 .swipe-bg{
