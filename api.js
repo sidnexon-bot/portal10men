@@ -609,7 +609,7 @@ async function api(action, params = {}){
     case "addevent":      return await addEvent(params)
     case "updateevent":   return await updateEvent(params)
     case "deleteevent":   return await deleteEvent(params.id)
-    case "cancelevent":   return await cancelEvent(params.id)
+    case "cancelevent":   return await cancelEvent(params)
     case "setdocurl":     return await setDocUrl(params)
     case "setprogram":    return await setProgram(params)
     case "updatenote":    return await updateNote(params)
