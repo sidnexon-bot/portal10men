@@ -1910,20 +1910,21 @@ async function doAttendance(eventId, status){
 
 async function doAttendanceWithReason(eventId, status){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena nahoře"); return }
-  const reason = prompt("Důvod nepřítomnosti:")
-  if(reason === null) return
-  try{
-    showSaving()
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
-    invalidateCache("eventdetail", eventId)
-    lsDel("myattendance_" + MEMBER_EMAIL)
-    hideSaving("Docházka uložena ✓")
-    if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
-    else openEvent(eventId)
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba při ukládání docházky: " + (err?.message || err))
-  }
+  promptModal("Důvod nepřítomnosti:", "", async (reason) => {
+    if(reason === null) return
+    try{
+      showSaving()
+      await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status, reason})
+      invalidateCache("eventdetail", eventId)
+      lsDel("myattendance_" + MEMBER_EMAIL)
+      hideSaving("Docházka uložena ✓")
+      if(ACTIVE_TAB === "dashboard") setTimeout(() => renderDashboard(), 800)
+      else openEvent(eventId)
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba při ukládání docházky: " + (err?.message || err))
+    }
+  })
 }
 
 let MOZNA_EVENT_ID = null
@@ -2104,25 +2105,24 @@ async function confirmSwipe(eventId, status, el){
 
 async function confirmSwipeWithReason(eventId, el){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
-
-  const reason = prompt("Důvod nepřítomnosti:")
-  if(reason === null){
-    el.style.transition = "transform 0.2s ease"
-    el.style.transform = ""
-    return
-  }
-
-  try{
-    showSaving()
-    await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
-    invalidateCache("eventdetail", eventId)
-    lsDel("myattendance_" + MEMBER_EMAIL)
-    hideSaving("Nepřijdu ✓")
-    updateAttendanceBadge(eventId, "Nepřijdu")
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba: " + (err?.message || err))
-  }
+  promptModal("Důvod nepřítomnosti:", "", async (reason) => {
+    if(reason === null){
+      el.style.transition = "transform 0.2s ease"
+      el.style.transform = ""
+      return
+    }
+    try{
+      showSaving()
+      await api("setattendance", {event: eventId, member: MEMBER_EMAIL, status: "Nepřijdu", reason})
+      invalidateCache("eventdetail", eventId)
+      lsDel("myattendance_" + MEMBER_EMAIL)
+      hideSaving("Nepřijdu ✓")
+      updateAttendanceBadge(eventId, "Nepřijdu")
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 async function saveEvent(id){
