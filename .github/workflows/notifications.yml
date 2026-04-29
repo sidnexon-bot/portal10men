@@ -77,6 +77,7 @@ jobs:
 
             for(const event of events){
               if(!event.date) continue;
+              if(event.status === "Zrušená") continue;
               const eventDate = new Date(event.date);
               const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
 
