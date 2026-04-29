@@ -189,7 +189,7 @@ async function addEvent(params){
     start:            params.start   || "",
     end:              params.end     || "",
     place:            params.place   || "",
-    call_url:         params.call_url || ""
+    call_url:         params.call_url || "",
     note:             params.note    || "",
     status:           params.status  || "Plánovaná",
     requires_program: params.requires_program !== false,
@@ -221,7 +221,7 @@ async function updateEvent(params){
     start:            params.start  || "",
     end:              params.end    || "",
     place:            params.place  || "",
-    call_url:         params.call_url || ""
+    call_url:         params.call_url || "",
     note:             params.note   || "",
     status:           params.status || "Plánovaná",
     requires_program: params.requires_program !== false
