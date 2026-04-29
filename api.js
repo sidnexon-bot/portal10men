@@ -246,20 +246,30 @@ async function deleteEvent(id){
   return {status: "deleted"}
 }
 
-async function cancelEvent(id){
+async function cancelEvent(params){
   const members  = await dbGet("/members")
   const dochazka = await dbGet("/dochazka")
   const memberList = objToArray(members)
   const dochazkaList = objToArray(dochazka)
 
-  // nastav status akce na Zrušená
-  await dbUpdate("/akce/" + id, {status: "Zrušená"})
+  // aktualizuj akci včetně statusu Zrušená
+  await dbUpdate("/akce/" + params.id, {
+    name:             params.name    || "",
+    date:             params.date    || "",
+    start:            params.start   || "",
+    end:              params.end     || "",
+    place:            params.place   || "",
+    note:             params.note    || "",
+    call_url:         params.call_url || "",
+    requires_program: params.requires_program !== false,
+    status:           "Zrušená"
+  })
 
   // nastav Nepřijdu všem členům
   for(const m of memberList){
-    const existing = dochazkaList.find(d => d.id_akce === id && d.email === m.email)
+    const existing = dochazkaList.find(d => d.id_akce === params.id && d.email === m.email)
     const data = {
-      id_akce:    id,
+      id_akce:    params.id,
       email:      m.email,
       status:     "Nepřijdu",
       reason:     "Zrušeno",
@@ -276,42 +286,6 @@ async function cancelEvent(id){
   }
 
   return {status: "cancelled"}
-}
-
-async function setDocUrl(params){
-  await dbUpdate("/akce/" + params.id, {doc_url: params.url})
-  return {status: "saved"}
-}
-
-async function setProgram(params){
-  const program = await dbGet("/program")
-  const toDelete = objToArray(program).filter(p => p.id_akce === params.id)
-  for(const p of toDelete) await dbRemove("/program/" + p.id)
-
-  const songs  = params.songs  ? JSON.parse(params.songs)  : []
-  const encore = params.encore ? JSON.parse(params.encore) : []
-
-  for(let i = 0; i < songs.length; i++){
-    const pRef = push(ref(DB, "/program"))
-    await dbSet("/program/" + pRef.key, {
-      id:      pRef.key,
-      id_akce: params.id,
-      order:   i + 1,
-      song_id: songs[i]
-    })
-  }
-
-  for(let i = 0; i < encore.length; i++){
-    const pRef = push(ref(DB, "/program"))
-    await dbSet("/program/" + pRef.key, {
-      id:      pRef.key,
-      id_akce: params.id,
-      order:   901 + i,
-      song_id: encore[i]
-    })
-  }
-
-  return {status: "saved"}
 }
 
 async function updateNote(params){
