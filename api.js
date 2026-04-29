@@ -60,6 +60,7 @@ async function getEvents(){
     START:            e.start,
     END:              e.end,
     PLACE:            e.place,
+    CALL_URL:         e.call_url || ""
     NOTE:             e.note,
     STATUS:           e.status,
     DOC_URL:          e.doc_url || "",
@@ -187,6 +188,7 @@ async function addEvent(params){
     start:            params.start   || "",
     end:              params.end     || "",
     place:            params.place   || "",
+    call_url:         params.call_url || ""
     note:             params.note    || "",
     status:           params.status  || "Plánovaná",
     requires_program: params.requires_program !== false,
@@ -218,6 +220,7 @@ async function updateEvent(params){
     start:            params.start  || "",
     end:              params.end    || "",
     place:            params.place  || "",
+    call_url:         params.call_url || ""
     note:             params.note   || "",
     status:           params.status || "Plánovaná",
     requires_program: params.requires_program !== false
