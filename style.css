@@ -111,15 +111,14 @@ header .subtitle{
 }
 
 .modal-content{
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  bottom: auto;
   border-radius: 20px;
-  width: calc(100% - 32px);
+  width: 90%;
   max-width: 420px;
-  max-height: 85vh;
+  max-height: 80vh;
   overflow-y: auto;
   background: #fff;
   padding: 20px;
