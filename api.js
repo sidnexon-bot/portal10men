@@ -115,6 +115,7 @@ async function getEventDetail(id){
       START:   akce.start,
       END:     akce.end,
       PLACE:   akce.place,
+      CALL_URL: e.call_url || "",
       NOTE:    akce.note,
       STATUS:  akce.status,
       DOC_URL: akce.doc_url || ""
