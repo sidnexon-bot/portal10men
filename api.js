@@ -246,6 +246,38 @@ async function deleteEvent(id){
   return {status: "deleted"}
 }
 
+async function cancelEvent(id){
+  const members  = await dbGet("/members")
+  const dochazka = await dbGet("/dochazka")
+  const memberList = objToArray(members)
+  const dochazkaList = objToArray(dochazka)
+
+  // nastav status akce na Zrušená
+  await dbUpdate("/akce/" + id, {status: "Zrušená"})
+
+  // nastav Nepřijdu všem členům
+  for(const m of memberList){
+    const existing = dochazkaList.find(d => d.id_akce === id && d.email === m.email)
+    const data = {
+      id_akce:    id,
+      email:      m.email,
+      status:     "Nepřijdu",
+      reason:     "Zrušeno",
+      updated_by: "system",
+      updated_at: new Date().toISOString()
+    }
+    if(existing){
+      await dbUpdate("/dochazka/" + existing.id, data)
+    }else{
+      const dRef = push(ref(DB, "/dochazka"))
+      data.id = dRef.key
+      await dbSet("/dochazka/" + dRef.key, data)
+    }
+  }
+
+  return {status: "cancelled"}
+}
+
 async function setDocUrl(params){
   await dbUpdate("/akce/" + params.id, {doc_url: params.url})
   return {status: "saved"}
@@ -602,6 +634,7 @@ async function api(action, params = {}){
     case "addevent":      return await addEvent(params)
     case "updateevent":   return await updateEvent(params)
     case "deleteevent":   return await deleteEvent(params.id)
+    case "cancelevent":   return await cancelEvent(params.id)
     case "setdocurl":     return await setDocUrl(params)
     case "setprogram":    return await setProgram(params)
     case "updatenote":    return await updateNote(params)
