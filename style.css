@@ -101,11 +101,25 @@ header .subtitle{
   display: flex;
   align-items: center;
   justify-content: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
+.modal:not(.hidden){
+  visibility: visible;
+  opacity: 1;
+}
 
 .hidden{
   display:none;
+}
+
+.modal.hidden{
+  display: flex;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .modal-backdrop{
@@ -127,6 +141,12 @@ header .subtitle{
   background: #fff;
   padding: 20px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  transform: scale(0.92);
+  transition: transform 0.2s ease;
+}
+
+.modal:not(.hidden) .modal-content{
+  transform: scale(1);
 }
 
 body.dark .modal-content{
