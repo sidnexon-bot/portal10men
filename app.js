@@ -2082,16 +2082,15 @@ async function confirmSwipeWithReason(eventId, el){
 
 async function saveEvent(id){
 
-  const name   = document.getElementById("fName")?.value.trim()
-  const date   = document.getElementById("fDate")?.value
-  const start  = document.getElementById("fStart")?.value
-  const end    = document.getElementById("fEnd")?.value
-  const place  = document.getElementById("fPlace")?.value.trim()
-  const callUrl = document.getElementById("fCallUrl")?.value.trim()
-  const note   = document.getElementById("fNote")?.value.trim()
-  const status = document.getElementById("fStatus")?.value
+  const name            = document.getElementById("fName")?.value.trim()
+  const date            = document.getElementById("fDate")?.value
+  const start           = document.getElementById("fStart")?.value
+  const end             = document.getElementById("fEnd")?.value
+  const place           = document.getElementById("fPlace")?.value.trim()
+  const callUrl         = document.getElementById("fCallUrl")?.value.trim()
+  const note            = document.getElementById("fNote")?.value.trim()
+  const status          = document.getElementById("fStatus")?.value
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
-
 
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
@@ -2099,20 +2098,8 @@ async function saveEvent(id){
   try{
     showSaving()
     if(id){
-      await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
-      invalidateCache("events")
-      invalidateCache("eventdetail", id)
-      hideSaving("Akce upravena ✓")
-      openEvent(id)
-    }else{
-      const result = await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
-      invalidateCache("events")
-      hideSaving("Akce vytvořena ✓")
-      renderEvents()
-    }
-     
-     if(status === "Zrušená"){
-        await api("cancelevent", {id})
+      if(status === "Zrušená"){
+        await api("cancelevent", {id, name, date, start, end, place, note, requires_program: requiresProgram, call_url: callUrl})
       }else{
         await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
       }
@@ -2120,7 +2107,12 @@ async function saveEvent(id){
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
-
+    }else{
+      const result = await api("addevent", {name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+      invalidateCache("events")
+      hideSaving("Akce vytvořena ✓")
+      renderEvents()
+    }
   }catch(err){
     hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
