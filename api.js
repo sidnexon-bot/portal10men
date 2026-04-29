@@ -247,6 +247,7 @@ async function deleteEvent(id){
 }
 
 async function cancelEvent(params){
+  console.log("cancelEvent params:", JSON.stringify(params))
   const members  = await dbGet("/members")
   const dochazka = await dbGet("/dochazka")
   const memberList = objToArray(members)
