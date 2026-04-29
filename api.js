@@ -247,9 +247,8 @@ async function deleteEvent(id){
 }
 
 async function cancelEvent(params){
-  console.log("params type:", typeof params)
-  console.log("params.id:", params.id)
-  console.log("params:", params)
+  const id = typeof params === "string" ? params : params.id
+  if(!id){ console.error("cancelEvent: missing id"); return {error: "missing id"} }
   const members  = await dbGet("/members")
   const dochazka = await dbGet("/dochazka")
   const memberList = objToArray(members)
