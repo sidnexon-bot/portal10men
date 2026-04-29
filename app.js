@@ -2715,7 +2715,7 @@ async function renderHeatmap(){
       filtered.forEach(e => {
         html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
         html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
-          <div style="font-weight:600;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</div>
+          <div style="font-weight:600;cursor:pointer;color:#007aff;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>
           ${e.STATUS === "Zrušená" ? `<div style="color:#ff3b30;font-size:11px;font-weight:600">Zrušená</div>` : `<div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}</div>`}
 
         </td>`
@@ -2750,7 +2750,7 @@ async function renderHeatmap(){
         html += `<div style="padding:14px 16px;${border}">`
 
         // název a datum
-        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</div>`
+        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px;cursor:pointer;color:#007aff;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>`
         html += `${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase">Zrušená</div>` : ""}`
         html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}</div>`
 
