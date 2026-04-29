@@ -1443,7 +1443,7 @@ async function openEvent(id){
     const program    = data.program    || []
     const attendance = data.attendance || []
 
-    html += `
+    let html = `
      ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
      <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
    
