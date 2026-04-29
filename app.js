@@ -1420,24 +1420,25 @@ async function openEvent(id){
     html += `<div class="event-card">
       <div class="event-label">Docházka</div>
 
-      <!-- Tvůj stav — kliknutím rozbalí změnu účasti -->
-      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
-        <div>
-          <div style="font-weight:600;color:${statusColor}">${statusText}</div>
-          ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+      ${event.STATUS === "Zrušená" ? `
+        <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
+      ` : MEMBER_EMAIL ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
+          <div>
+            <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+            ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+          </div>
+          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
         </div>
-        <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
-      </div>
-
-      <!-- Změna účasti — accordion -->
-      <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-        <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-        <div class="btn-group">
-          <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-          <button onclick="doAttendanceMozna('${id}')">Možná</button>
-          <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+        <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+          <div class="btn-group">
+            <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+            <button onclick="doAttendanceMozna('${id}')">Možná</button>
+            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+          </div>
         </div>
-      </div>
+      ` : `<div class="muted">Vyber člena</div>`}
 
       <!-- Souhrn skupiny — vždy viditelný -->
       <div style="margin-top:12px">
@@ -1463,28 +1464,6 @@ async function openEvent(id){
       </div>
 
     </div>`
-
-      ${MEMBER_EMAIL ? `
-        ${event.STATUS === "Zrušená" ? `
-          <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
-        ` : `
-          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
-            <div>
-              <div style="font-weight:600;color:${statusColor}">${statusText}</div>
-              ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
-            </div>
-            <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
-          </div>
-          <div id="attendanceDetail_${id}" style="display:none;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-            <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-            <div class="btn-group">
-              <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-              <button onclick="doAttendanceMozna('${id}')">Možná</button>
-              <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-            </div>
-          </div>
-        `}
-      ` : `<div class="muted">Vyber člena</div>`}
 
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
