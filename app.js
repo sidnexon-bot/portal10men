@@ -847,7 +847,8 @@ html += `</div>`
         const past   = new Date(e.DATE) < now
         const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
         html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-          <b style="font-size:15px;display:block">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+          ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
+          <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
           <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
           ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
         </div>`
