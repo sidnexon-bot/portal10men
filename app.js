@@ -675,14 +675,14 @@ async function renderDashboard(){
     })
 
     const spring = concerts.filter(e => {
-    const m = new Date(e.DATE).getMonth() + 1
-    return m >= 1 && m <= 6
-   }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
-   
+      const m = new Date(e.DATE).getMonth() + 1
+      return m >= 1 && m <= 6
+    }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+
     const autumn = concerts.filter(e => {
-    const m = new Date(e.DATE).getMonth() + 1
-    return m >= 7 && m <= 12
-   }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+      const m = new Date(e.DATE).getMonth() + 1
+      return m >= 7 && m <= 12
+    }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
 
     const today = new Date()
     today.setHours(0,0,0,0)
@@ -695,197 +695,218 @@ async function renderDashboard(){
       })
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
-    let html = isDesktop ? `<div class="desktop-grid"><div class="desktop-col-left">` : ""
+    const aktuality = await cachedApi("aktuality")
+    const todos     = await cachedApi("todos")
 
-    // --- NEJBLIŽŠÍ AKCE ---
-    if(upcoming){
-     html += `<h3 class="season-title">📅 Nejbližší akce</h3>`
-   
-     let myStatus = ""
-     let attendanceCount = 0
-   
-     if(MEMBER_EMAIL){
-       try{
-         const detail = await cachedApi("eventdetail", {id: upcoming.ID})
-         const myRow  = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
-         myStatus      = myRow?.STATUS || ""
-         attendanceCount = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
-       }catch(e){ console.error("eventdetail fail", e) }
-     }
-   
-     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-     const statusText  = myStatus || "Nevyplněno"
-   
-     html += `<div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${escapeHtml(upcoming.ID)}')">
-       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-         <b style="font-size:18px">${escapeHtml(upcoming.NAME)}</b>
-         <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}</b></div>
-         <div><span class="small">Čas</span><br><b>${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</b></div>
-         <div><span class="small">Místo</span><br><b>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</b></div>
-       </div>
-   
-       ${(upcoming.PLACE || upcoming.CALL_URL) ? `
-         <div class="btn-group" style="margin-bottom:16px">
-           ${upcoming.PLACE ? `
-             <a href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank"
-               onclick="event.stopPropagation()"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
-               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                 <circle cx="12" cy="9" r="2.5"/>
-               </svg>
-               Navigovat
-             </a>
-           ` : ""}
-           ${upcoming.CALL_URL ? `
-             <a href="${escapeHtml(upcoming.CALL_URL)}" target="_blank"
-               onclick="event.stopPropagation()"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
-               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                 <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-               </svg>
-               Připojit se
-             </a>
-           ` : ""}
-         </div>
-       ` : ""}
-   
-       <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-         <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
-         <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
-       </div>
-     </div>`
-   }
+    // --- NEJBLIŽŠÍ AKCE data ---
+    let myStatus = ""
+    let attendanceCount = 0
 
-    // --- AKTUALITY ---
-const aktuality = await cachedApi("aktuality")
-const todos     = await cachedApi("todos")
-html += `<h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>`
-html += `<div class="card dash-aktuality" style="padding:0">`
-
-if(Array.isArray(aktuality) && aktuality.length){
-  aktuality.forEach((a, idx) => {
-    const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
-    const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
-    html += `<div
-      style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "')" : ""}"
-    >
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div style="flex:1">
-          <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
-          ${a.date ? `<div class="small" style="margin-top:4px">Přidáno dne: ${formatDate(a.date)}</div>` : ""}
-        </div>
-        ${isSelected ? `<div style="color:#007aff;font-size:20px;margin-left:10px">✓</div>` : ""}
-      </div>
-      ${isSelected ? `
-        <div class="btn-group" style="margin-top:10px">
-          <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-          <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
-        </div>
-      ` : ""}
-    </div>`
-  })
-}else{
-  html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`
-}
-
-if(MEMBER_ROLE === "ADMIN"){
-  html += `<div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
-    <button onclick="addAktualita()" style="width:100%">+ Přidat aktualitu</button>
-  </div>`
-}
-
-html += `</div>`
-
-// --- TO-DO LIST ---
-html += `<h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>`
-html += `<div class="card dash-todos" style="padding:0">`
-
-if(Array.isArray(todos) && todos.length){
-  todos.forEach((t, idx) => {
-    const done       = t.done === true
-    const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
-    const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
-    html += `<div
-      style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
-    >
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-        </div>
-        <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-        ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
-        ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
-      </div>
-      ${isSelected ? `
-        <div class="btn-group" style="margin-top:10px">
-          <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-          <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
-          <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
-        </div>
-      ` : ""}
-    </div>`
-  })
-}else{
-  html += `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`
-}
-
-if(MEMBER_ROLE === "ADMIN"){
-  html += `<div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
-    <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
-  </div>`
-}
-
-html += `</div>`
-
-    // --- KONCERTY JARO/LÉTO ---
-    html += `<h3 class="season-title">🌿 Jaro / Léto</h3>`
-    if(spring.length){
-      html += `<div class="card" style="padding:0">`
-      spring.forEach((e, i) => {
-        const past   = new Date(e.DATE) < now
-        const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-        html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-          ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
-          <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-          <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-          ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-        </div>`
-      })
-      html += `</div>`
-    }else{
-      html += "<p class='notice'>Žádné koncerty</p>"
+    if(upcoming && MEMBER_EMAIL){
+      try{
+        const detail = await cachedApi("eventdetail", {id: upcoming.ID})
+        const myRow  = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
+        myStatus        = myRow?.STATUS || ""
+        attendanceCount = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
+      }catch(e){ console.error("eventdetail fail", e) }
     }
 
-    // --- KONCERTY PODZIM/ZIMA ---
-    html += `<h3 class="season-title">🍂 Podzim / Zima</h3>`
-    if(autumn.length){
-      html += `<div class="card" style="padding:0">`
-      autumn.forEach((e, i) => {
-        const past   = new Date(e.DATE) < now
-        const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
-        html += `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
-           ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
-           <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
-           <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
-           ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
-         </div>`
-      })
-      html += `</div>`
-    }else{
-      html += "<p class='notice'>Žádné koncerty</p>"
-    }
+    const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+    const statusText  = myStatus || "Nevyplněno"
 
+    // --- HTML sestavení ---
+
+    // pomocná funkce pro kartu nejbližší akce
+    const nearestEventHtml = upcoming ? `
+      <h3 class="season-title">📅 Nejbližší akce</h3>
+      <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${escapeHtml(upcoming.ID)}')">
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          <b style="font-size:18px">${escapeHtml(upcoming.NAME)}</b>
+          <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}</b></div>
+          <div><span class="small">Čas</span><br><b>${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</b></div>
+          <div><span class="small">Místo</span><br><b>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</b></div>
+        </div>
+        ${(upcoming.PLACE || upcoming.CALL_URL) ? `
+          <div class="btn-group" style="margin-bottom:16px">
+            ${upcoming.PLACE ? `
+              <a href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank"
+                onclick="event.stopPropagation()"
+                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+                Navigovat
+              </a>
+            ` : ""}
+            ${upcoming.CALL_URL ? `
+              <a href="${escapeHtml(upcoming.CALL_URL)}" target="_blank"
+                onclick="event.stopPropagation()"
+                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Připojit se
+              </a>
+            ` : ""}
+          </div>
+        ` : ""}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+          <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
+          <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
+        </div>
+      </div>
+    ` : ""
+
+    // pomocná funkce pro Jaro/Léto
+    const springHtml = `
+      <h3 class="season-title">🌿 Jaro / Léto</h3>
+      ${spring.length ? `
+        <div class="card" style="padding:0">
+          ${spring.map((e, i) => {
+            const past   = new Date(e.DATE) < now
+            const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+            return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+              ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
+              <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+              <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+              ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+            </div>`
+          }).join("")}
+        </div>
+      ` : "<p class='notice'>Žádné koncerty</p>"}
+    `
+
+    // pomocná funkce pro Podzim/Zima
+    const autumnHtml = `
+      <h3 class="season-title">🍂 Podzim / Zima</h3>
+      ${autumn.length ? `
+        <div class="card" style="padding:0">
+          ${autumn.map((e, i) => {
+            const past   = new Date(e.DATE) < now
+            const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+            return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+              ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
+              <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
+              <div class="small" style="margin-top:3px">${formatDate(e.DATE)}</div>
+              ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
+            </div>`
+          }).join("")}
+        </div>
+      ` : "<p class='notice'>Žádné koncerty</p>"}
+    `
+
+    // pomocná funkce pro Aktuality
+    const aktualityHtml = `
+      <h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>
+      <div class="card dash-aktuality" style="padding:0">
+        ${Array.isArray(aktuality) && aktuality.length ? `
+          ${aktuality.map((a, idx) => {
+            const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
+            const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+            return `<div
+              style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
+              onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "')" : ""}"
+            >
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div style="flex:1">
+                  <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(a.text||"")}</div>
+                  ${a.date ? `<div class="small" style="margin-top:4px">Přidáno dne: ${formatDate(a.date)}</div>` : ""}
+                </div>
+                ${isSelected ? `<div style="color:#007aff;font-size:20px;margin-left:10px">✓</div>` : ""}
+              </div>
+              ${isSelected ? `
+                <div class="btn-group" style="margin-top:10px">
+                  <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+                  <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+                </div>
+              ` : ""}
+            </div>`
+          }).join("")}
+        ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`}
+        ${MEMBER_ROLE === "ADMIN" ? `
+          <div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+            <button onclick="addAktualita()" style="width:100%">+ Přidat aktualitu</button>
+          </div>
+        ` : ""}
+      </div>
+    `
+
+    // pomocná funkce pro Úkoly
+    const todosHtml = `
+      <h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>
+      <div class="card dash-todos" style="padding:0">
+        ${Array.isArray(todos) && todos.length ? `
+          ${todos.map((t, idx) => {
+            const done       = t.done === true
+            const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
+            const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
+            return `<div
+              style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
+              onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
+            >
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+                </div>
+                <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+                ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+                ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
+              </div>
+              ${isSelected ? `
+                <div class="btn-group" style="margin-top:10px">
+                  <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+                  <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+                  <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+                </div>
+              ` : ""}
+            </div>`
+          }).join("")}
+        ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`}
+        ${MEMBER_ROLE === "ADMIN" ? `
+          <div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+            <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
+          </div>
+        ` : ""}
+      </div>
+    `
+
+    // --- SESTAVENÍ HTML ---
     const heatmapHtml = await renderHeatmap()
-    if(isDesktop){
-      html += `</div><div class="desktop-col-right">${heatmapHtml}</div></div>`
-    }else{
-      html += `<div id="heatmap-container">${heatmapHtml}</div>`
-    }
 
-    container().innerHTML = html
+    if(isDesktop){
+      // DESKTOP LAYOUT
+      let html = ""
+
+      // Horní řada — Nejbližší akce + Jaro/Léto
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
+      html += `<div>${nearestEventHtml}</div>`
+      html += `<div>${springHtml}</div>`
+      html += `</div>`
+
+      // Dolní řada — Aktuality+Úkoly + Podzim/Zima
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
+      html += `<div>${aktualityHtml}${todosHtml}</div>`
+      html += `<div>${autumnHtml}</div>`
+      html += `</div>`
+
+      // Heatmapa přes celou šířku
+      html += `<div id="heatmap-container">${heatmapHtml}</div>`
+
+      container().innerHTML = html
+
+    }else{
+      // MOBIL LAYOUT
+      let html = ""
+      html += nearestEventHtml
+      html += aktualityHtml
+      html += todosHtml
+      html += springHtml
+      html += autumnHtml
+      html += `<div id="heatmap-container">${heatmapHtml}</div>`
+
+      container().innerHTML = html
+    }
 
   }catch(err){
     setError("Chyba při načítání přehledu: " + (err?.message || err))
