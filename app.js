@@ -978,14 +978,16 @@ async function toggleTodo(id, done){
 }
 
 async function deleteTodoItem(id){
-  if(!confirm("Smazat úkol?")) return
-  try{
-    await api("deletetodo", {id})
-    lsDel("todos")
-    renderDashboard()
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
+  confirmModal("Smazat úkol?", async () => {
+    try{
+      await api("deletetodo", {id})
+      lsDel("todos")
+      TODO_SELECTED = null
+      renderDashboard()
+    }catch(err){
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 function concertRow(e, now){
@@ -1027,14 +1029,16 @@ async function editAktualita(id, text, date){
 }
 
 async function deleteAktualita(id){
-  if(!confirm("Smazat aktualitu?")) return
-  try{
-    await api("deleteaktualita", {id})
-    lsDel("aktuality")
-    renderDashboard()
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
+  confirmModal("Smazat aktualitu?", async () => {
+    try{
+      await api("deleteaktualita", {id})
+      lsDel("aktuality")
+      AKTUALITA_SELECTED = null
+      renderDashboard()
+    }catch(err){
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 function selectAktualita(id){
@@ -1609,18 +1613,17 @@ function toggleAttendanceAccordion(id){
 }
 
 async function uploadDocUrl(eventId){
-  const url = prompt("Vlož odkaz na infodokument:")
-  if(!url || !url.startsWith("http")){ 
-    if(url !== null) alert("Neplatný odkaz — musí začínat http")
-    return 
-  }
-  try{
-    await api("setdocurl", {id: eventId, url})
-    invalidateCache("eventdetail", eventId)
-    openEvent(eventId)
-  }catch(err){
-    alert("Chyba: " + (err?.message || err))
-  }
+  promptModal("Vlož odkaz na infodokument:", "", async (url) => {
+    if(!url) return
+    if(!url.startsWith("http")){ alert("Neplatný odkaz — musí začínat http"); return }
+    try{
+      await api("setdocurl", {id: eventId, url})
+      invalidateCache("eventdetail", eventId)
+      openEvent(eventId)
+    }catch(err){
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 async function openProgramEditor(eventId){
@@ -2163,18 +2166,19 @@ async function saveEvent(id){
 }
 
 async function deleteEvent(id){
-  if(!confirm("Opravdu smazat tuto akci?")) return
-  try{
-    showSaving()
-    await api("deleteevent", {id})
-    invalidateCache("events")
-    invalidateCache("eventdetail", id)
-    hideSaving("Akce smazána ✓")
-    renderEvents()
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba při mazání: " + (err?.message || err))
-  }
+  confirmModal("Opravdu smazat tuto akci?", async () => {
+    try{
+      showSaving()
+      await api("deleteevent", {id})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce smazána ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba při mazání: " + (err?.message || err))
+    }
+  })
 }
 
 /* ===============================
@@ -2302,17 +2306,18 @@ function toggleCollection(id){
 }
 
 async function deleteCollection(id){
-  if(!confirm("Opravdu smazat tento výběr včetně všech plateb?")) return
-  try{
-    showSaving()
-    await api("deletecollection", {id})
-    lsDel("payments_" + MEMBER_EMAIL)
-    hideSaving("Výběr smazán ✓")
-    renderPayments()
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba: " + (err?.message || err))
-  }
+  confirmModal("Opravdu smazat tento výběr včetně všech plateb?", async () => {
+    try{
+      showSaving()
+      await api("deletecollection", {id})
+      lsDel("payments_" + MEMBER_EMAIL)
+      hideSaving("Výběr smazán ✓")
+      renderPayments()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 async function recordPayment(vyberuvId){
