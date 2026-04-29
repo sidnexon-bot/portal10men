@@ -178,6 +178,11 @@ body.dark .modal-content{
   font-weight:600;
 }
 
+body.dark .active-member{
+  background: #3a3a3c;
+  color: #fff;
+}
+
 .profile-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -494,6 +499,11 @@ body.dark button[style*="#c00"]{
 body.dark button[style*="#e8f0fe"]{
   background: #1c2a3a !important;
   color: #0a84ff !important;
+}
+
+body.dark button[style*="#e8e8ed"]{
+  background: #3a3a3c !important;
+  color: #8e8e93 !important;
 }
 
 body.dark button[onclick*="'Přijdu'"]{
