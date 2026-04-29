@@ -1134,37 +1134,77 @@ async function renderEvents(){
       return
     }
 
-    filtered.forEach(e => {
-      const d = new Date(e.DATE)
-      d.setHours(0,0,0,0)
-      const isPast    = d < now
-      const isNext    = nextEvent && e.ID === nextEvent.ID
-      const opacity   = isPast ? "0.4" : "1"
-      const highlight = isNext ? "border-left:3px solid #007aff;" : ""
+    const pastEvents   = filtered.filter(e => {
+  const d = new Date(e.DATE); d.setHours(0,0,0,0); return d < now
+})
+const futureEvents = filtered.filter(e => {
+  const d = new Date(e.DATE); d.setHours(0,0,0,0); return d >= now
+})
 
-      html += `<div class="swipe-wrapper" style="opacity:${opacity}">
-        <div class="swipe-bg">
-          <span class="swipe-bg-left">✓ Přijdu</span>
-          <span class="swipe-bg-right">✗ Nepřijdu</span>
-        </div>
-        <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
-          ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
-          <b>${escapeHtml(e.NAME)}</b><br>
-          <span class="small">
-            ${formatDate(e.DATE)}
-            ${e.START ? "· " + formatTime(e.START) : ""}
-            ${e.END   ? "– " + formatTime(e.END)   : ""}
-          </span><br>
-          <span class="small">${escapeHtml(e.PLACE)}</span>
-          ${(()=>{
-            const a = myAttendance[e.ID]
-            if(!a || !a.status) return ""
-            const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
-            return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
-          })()}
-        </div>
-      </div>`
-    })
+// nejdřív budoucí akce
+futureEvents.forEach(e => {
+  const isNext    = nextEvent && e.ID === nextEvent.ID
+  const highlight = isNext ? "border-left:3px solid #007aff;" : ""
+
+  html += `<div class="swipe-wrapper">
+    <div class="swipe-bg">
+      <span class="swipe-bg-left">✓ Přijdu</span>
+      <span class="swipe-bg-right">✗ Nepřijdu</span>
+    </div>
+    <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
+      ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
+      <b>${escapeHtml(e.NAME)}</b><br>
+      <span class="small">
+        ${formatDate(e.DATE)}
+        ${e.START ? "· " + formatTime(e.START) : ""}
+        ${e.END   ? "– " + formatTime(e.END)   : ""}
+      </span><br>
+      <span class="small">${escapeHtml(e.PLACE)}</span>
+      ${(()=>{
+        const a = myAttendance[e.ID]
+        if(!a || !a.status) return ""
+        const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+        return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
+      })()}
+    </div>
+  </div>`
+})
+
+// pak proběhlé akce schované pod tlačítkem
+if(pastEvents.length){
+  html += `<div style="margin:8px 0">
+    <button onclick="togglePastEvents()" id="btnPastEvents" style="width:100%;background:transparent;color:var(--muted);font-size:13px">
+      ↓ Starší akce (${pastEvents.length})
+    </button>
+  </div>
+  <div id="pastEventsList" style="display:none">`
+
+  pastEvents.forEach(e => {
+    html += `<div class="swipe-wrapper" style="opacity:0.4">
+      <div class="swipe-bg">
+        <span class="swipe-bg-left">✓ Přijdu</span>
+        <span class="swipe-bg-right">✗ Nepřijdu</span>
+      </div>
+      <div class="card swipe-card" data-id="${escapeHtml(e.ID)}">
+        <b>${escapeHtml(e.NAME)}</b><br>
+        <span class="small">
+          ${formatDate(e.DATE)}
+          ${e.START ? "· " + formatTime(e.START) : ""}
+          ${e.END   ? "– " + formatTime(e.END)   : ""}
+        </span><br>
+        <span class="small">${escapeHtml(e.PLACE)}</span>
+        ${(()=>{
+          const a = myAttendance[e.ID]
+          if(!a || !a.status) return ""
+          const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+          return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
+        })()}
+      </div>
+    </div>`
+  })
+
+  html += `</div>`
+}
 
     if(isDesktop){
       container().innerHTML = `<div class="events-layout" id="events-layout">
@@ -1185,6 +1225,15 @@ async function renderEvents(){
     setError("Chyba při načítání akcí: " + (err?.message || err))
   }
 
+}
+
+function togglePastEvents(){
+  const list = document.getElementById("pastEventsList")
+  const btn  = document.getElementById("btnPastEvents")
+  if(!list) return
+  const isOpen = list.style.display !== "none"
+  list.style.display = isOpen ? "none" : "block"
+  if(btn) btn.textContent = isOpen ? `↓ Starší akce` : `↑ Skrýt starší akce`
 }
 
 async function openEventForm(id){
@@ -3174,6 +3223,7 @@ window.openEvent            = openEvent
 window.openEventForm        = openEventForm
 window.openProgramEditor    = openProgramEditor
 window.renderEvents         = renderEvents
+window.togglePastEvents     = togglePastEvents
 window.renderDashboard      = renderDashboard
 window.renderPayments       = renderPayments
 window.renderEnergy         = renderEnergy
