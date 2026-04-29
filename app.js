@@ -732,7 +732,20 @@ async function renderDashboard(){
         <div style="padding:16px;cursor:pointer" onclick="toggleDashboardEvent()">
           <b style="font-size:18px;display:block;margin-bottom:6px">${escapeHtml(upcoming.NAME)}</b>
           <div class="small">${formatDate(upcoming.DATE)}${upcoming.START ? " · " + formatTime(upcoming.START) : ""}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</div>
-          <div class="small">${escapeHtml(upcoming.PLACE)}</div>
+          <div>
+           <span class="small" style="display:block;margin-bottom:2px">Místo</span>
+           <b>${escapeHtml(upcoming.PLACE) || "—"}</b>
+           ${upcoming.PLACE ? `
+             <a href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:13px;color:#007aff;text-decoration:none">
+               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                 <circle cx="12" cy="9" r="2.5"/>
+               </svg>
+               Navigovat
+             </a>
+           ` : ""}
+        </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
             <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
             <div style="display:flex;align-items:center;gap:8px">
@@ -1426,7 +1439,21 @@ async function openEvent(id){
         <div style="display:flex;flex-direction:column;gap:8px">
           <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}</b></div>
           <div><span class="small" style="display:block;margin-bottom:2px">Čas</span><b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b></div>
-          <div><span class="small" style="display:block;margin-bottom:2px">Místo</span><b>${escapeHtml(event.PLACE) || "—"}</b></div>
+          <div>
+           <span class="small" style="display:block;margin-bottom:2px">Místo</span>
+           <b>${escapeHtml(event.PLACE) || "—"}</b>
+           ${event.PLACE ? `
+             <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
+               style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:13px;color:#007aff;text-decoration:none">
+               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                 <circle cx="12" cy="9" r="2.5"/>
+               </svg>
+               Navigovat
+             </a>
+           ` : ""}
+        </div>
+
           ${event.NOTE ? `<div style="padding-top:8px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
         </div>
       </div>`
