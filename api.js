@@ -167,7 +167,7 @@ async function getHeatmap(){
   const dochazka = await dbGet("/dochazka")
 
   return {
-    events:  objToArray(akce).map(e => ({ID: e.id, NAME: e.name, DATE: e.date})),
+    events: objToArray(akce).map(e => ({ID: e.id, NAME: e.name, DATE: e.date, STATUS: e.status || ""})),
     members: objToArray(members).map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
     rows:    objToArray(dochazka).map(d => ({
       ID_AKCE: d.id_akce,
