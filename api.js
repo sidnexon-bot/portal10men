@@ -60,7 +60,7 @@ async function getEvents(){
     START:            e.start,
     END:              e.end,
     PLACE:            e.place,
-    CALL_URL:         e.call_url || ""
+    CALL_URL:         e.call_url || "",
     NOTE:             e.note,
     STATUS:           e.status,
     DOC_URL:          e.doc_url || "",
