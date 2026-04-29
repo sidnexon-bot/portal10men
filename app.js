@@ -1370,6 +1370,9 @@ async function openEventForm(id){
     <label>Místo<br>
       <input id="fPlace" value="${escapeHtml(event.PLACE || "")}" placeholder="Místo konání">
     </label>
+    <label>Odkaz na online call<br>
+      <input id="fCallUrl" value="${escapeHtml(event.CALL_URL || "")}" placeholder="https://meet.google.com/...">
+    </label>
     <label>Poznámka<br>
       <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
     </label>
@@ -1443,17 +1446,24 @@ async function openEvent(id){
            <span class="small" style="display:block;margin-bottom:2px">Místo</span>
            <b>${escapeHtml(event.PLACE) || "—"}</b>
            ${event.PLACE ? `
-             <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
-               style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:13px;color:#007aff;text-decoration:none">
-               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                 <circle cx="12" cy="9" r="2.5"/>
-               </svg>
-               Navigovat
-             </a>
-           ` : ""}
-        </div>
-
+              <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
+                style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:13px;color:#007aff;text-decoration:none">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                  <circle cx="12" cy="9" r="2.5"/>
+                </svg>
+                Navigovat
+              </a>
+            ` : ""}
+            ${event.CALL_URL ? `
+              <a href="${escapeHtml(event.CALL_URL)}" target="_blank"
+                style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:13px;color:#007aff;text-decoration:none">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Připojit se
+              </a>
+            ` : ""}
           ${event.NOTE ? `<div style="padding-top:8px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
         </div>
       </div>`
@@ -2140,6 +2150,7 @@ async function saveEvent(id){
   const start  = document.getElementById("fStart")?.value
   const end    = document.getElementById("fEnd")?.value
   const place  = document.getElementById("fPlace")?.value.trim()
+  const callUrl = document.getElementById("fCallUrl")?.value.trim()
   const note   = document.getElementById("fNote")?.value.trim()
   const status = document.getElementById("fStatus")?.value
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
@@ -2151,13 +2162,13 @@ async function saveEvent(id){
   try{
     showSaving()
     if(id){
-      await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram})
+      await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, start, end, place, note, status, requires_program: requiresProgram})
+      const result = await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
       invalidateCache("events")
       hideSaving("Akce vytvořena ✓")
       renderEvents()
