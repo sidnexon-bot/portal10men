@@ -675,13 +675,14 @@ async function renderDashboard(){
     })
 
     const spring = concerts.filter(e => {
-      const m = new Date(e.DATE).getMonth() + 1
-      return m >= 1 && m <= 6
-    })
+    const m = new Date(e.DATE).getMonth() + 1
+    return m >= 1 && m <= 6
+   }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+   
     const autumn = concerts.filter(e => {
-      const m = new Date(e.DATE).getMonth() + 1
-      return m >= 7 && m <= 12
-    })
+    const m = new Date(e.DATE).getMonth() + 1
+    return m >= 7 && m <= 12
+   }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
 
     const today = new Date()
     today.setHours(0,0,0,0)
