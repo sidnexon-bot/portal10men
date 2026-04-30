@@ -1152,37 +1152,20 @@ async function renderEvents(){
 
     let html = `<h2 style="margin:0 0 12px">Akce</h2>`
 
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">`
-
-      if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-        html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
-        if(MEMBER_ROLE === "ADMIN"){
-          html += `<button onclick="openEventForm()">+ Přidat akci</button>`
-        }
+    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+      html += `<div class="btn-group" style="margin-bottom:16px">`
+      html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
+      if(MEMBER_ROLE === "ADMIN"){
+        html += `<button onclick="openEventForm()">+ Přidat novou akci</button>`
       }
-      
-      html += `<button onclick="toggleBulkSelect()" id="btnBulkSelect" style="padding:12px 14px;flex-shrink:0">${BULK_SELECT ? "Hotovo" : "Vybrat"}</button>`
-
       html += `</div>`
+    }
 
-      if(BULK_SELECT && BULK_SELECTED.size > 0){
-      html += `<div style="background:var(--card);border-radius:14px;padding:12px 16px;margin-bottom:12px">
-       <div class="small" style="margin-bottom:8px">Označeno: <b>${BULK_SELECTED.size} akcí</b></div>
-       <div class="btn-group">
-         <button onclick="bulkSetAttendance('Přijdu')" style="background:#d4f5e2;color:#1a7a3a">Přijdu</button>
-         <button onclick="bulkSetAttendance('Možná')">Možná</button>
-         <button onclick="bulkSetAttendance('Nepřijdu')" style="background:#fde8e8;color:#c00">Nepřijdu</button>
-       </div>
-     </div>`
-   }
-
-      html += `</div>`
-
-      html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
-        <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
-        <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
-      </div>`
+    html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
+      <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
+      <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
+    </div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
@@ -1211,44 +1194,30 @@ futureEvents.forEach(e => {
   const isCancelled = e.STATUS === "Zrušená"
   const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
   const opacity     = isCancelled ? "0.5" : "1"
-  const isChecked   = BULK_SELECTED.has(e.ID)
 
-  const myA  = myAttendance[e.ID]
-  const badge = myA?.status ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${myA.status === "Přijdu" ? "#34c759" : myA.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(myA.status)}</div>` : ""
-
-  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;width:100%">`
-
-  if(BULK_SELECT){
-    html += `<div
-      onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
-      data-bulk="${escapeHtml(e.ID)}"
-      style="width:26px;height:26px;border-radius:50%;border:2px solid ${isChecked ? "#007aff" : "#c7c7cc"};background:${isChecked ? "#007aff" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
-      ${isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-    </div>`
-  }
-
-  html += `<div style="flex:1;min-width:0">
-    <div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">
-      <div class="swipe-bg">
-        <span class="swipe-bg-left">✓ Přijdu</span>
-        <span class="swipe-bg-right">✗ Nepřijdu</span>
-      </div>
-      <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
-        ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
-        ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
-        <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
-        <span class="small">
-          ${formatDate(e.DATE)}
-          ${e.START ? "· " + formatTime(e.START) : ""}
-          ${e.END   ? "– " + formatTime(e.END)   : ""}
-        </span><br>
-        <span class="small">${escapeHtml(e.PLACE)}</span>
-        ${badge}
-      </div>
+  html += `<div class="swipe-wrapper" style="opacity:${opacity}">
+    <div class="swipe-bg">
+      <span class="swipe-bg-left">✓ Přijdu</span>
+      <span class="swipe-bg-right">✗ Nepřijdu</span>
+    </div>
+    <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
+      ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
+      ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
+      <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
+      <span class="small">
+        ${formatDate(e.DATE)}
+        ${e.START ? "· " + formatTime(e.START) : ""}
+        ${e.END   ? "– " + formatTime(e.END)   : ""}
+      </span><br>
+      <span class="small">${escapeHtml(e.PLACE)}</span>
+      ${(()=>{
+        const a = myAttendance[e.ID]
+        if(!a || !a.status) return ""
+        const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
+        return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
+      })()}
     </div>
   </div>`
-
-  html += `</div>`
 })
 
 // pak proběhlé akce schované pod tlačítkem
@@ -1308,48 +1277,6 @@ if(pastEvents.length){
 
 }
 
-async function bulkSetAttendance(status){
-  if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
-  if(BULK_SELECTED.size === 0) return
-
-  if(status === "Nepřijdu"){
-    promptModal("Důvod nepřítomnosti:", "", async (reason) => {
-      if(reason === null) return
-      await doBulkAttendance(status, reason)
-    })
-  }else if(status === "Možná"){
-    openFormModal("Upřesni docházku", [
-      {key: "choice", label: "Spíše ano nebo ne?", type: "text", placeholder: "Spíše ano / Spíše ne"},
-      {key: "reason", label: "Důvod (povinné)", type: "text"}
-    ], async (values) => {
-      if(!values.reason){ alert("Zadej důvod"); return }
-      closeFormModal()
-      const detail = (values.choice || "Spíše ano") + ": " + values.reason
-      await doBulkAttendance(status, detail)
-    })
-  }else{
-    await doBulkAttendance(status, "")
-  }
-}
-
-async function doBulkAttendance(status, reason){
-  try{
-    showSaving()
-    for(const id of BULK_SELECTED){
-      await api("setattendance", {event: id, member: MEMBER_EMAIL, status, reason})
-      lsDel("myattendance_" + MEMBER_EMAIL)
-      invalidateCache("eventdetail", id)
-    }
-    hideSaving(`Docházka nastavena pro ${BULK_SELECTED.size} akcí ✓`)
-    BULK_SELECT   = false
-    BULK_SELECTED = new Set()
-    renderEvents()
-  }catch(err){
-    hideSaving("Chyba ✗")
-    alert("Chyba: " + (err?.message || err))
-  }
-}
-
 function togglePastEvents(){
   const list = document.getElementById("pastEventsList")
   const btn  = document.getElementById("btnPastEvents")
@@ -1357,31 +1284,6 @@ function togglePastEvents(){
   const isOpen = list.style.display !== "none"
   list.style.display = isOpen ? "none" : "block"
   if(btn) btn.textContent = isOpen ? `↓ Starší akce` : `↑ Skrýt starší akce`
-}
-
-function toggleEventsMenu(){
-  const menu = document.getElementById("eventsMenu")
-  if(!menu) return
-  const isOpen = menu.style.display !== "none"
-  menu.style.display = isOpen ? "none" : "block"
-}
-
-let BULK_SELECT   = false
-let BULK_SELECTED = new Set()
-
-function toggleBulkSelect(){
-  BULK_SELECT = !BULK_SELECT
-  BULK_SELECTED = new Set()
-  renderEvents()
-}
-
-function toggleBulkItem(id){
-  if(BULK_SELECTED.has(id)){
-    BULK_SELECTED.delete(id)
-  }else{
-    BULK_SELECTED.add(id)
-  }
-  renderEvents()
 }
 
 async function openEventForm(id){
@@ -3381,8 +3283,6 @@ window.openEventForm        = openEventForm
 window.openProgramEditor    = openProgramEditor
 window.renderEvents         = renderEvents
 window.togglePastEvents     = togglePastEvents
-window.toggleBulkSelect     = toggleBulkSelect
-window.toggleBulkItem       = toggleBulkItem
 window.renderDashboard      = renderDashboard
 window.renderPayments       = renderPayments
 window.renderEnergy         = renderEnergy
@@ -3392,8 +3292,6 @@ window.doAttendance         = doAttendance
 window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
 window.toggleAttendanceAccordion = toggleAttendanceAccordion
-window.bulkSetAttendance    = bulkSetAttendance
-window.doBulkAttendance     = doBulkAttendance
 window.confirmMozna         = confirmMozna
 window.closeMoznaModal      = closeMoznaModal
 window.saveEvent            = saveEvent
