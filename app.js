@@ -1163,6 +1163,8 @@ async function renderEvents(){
       
       html += `<button onclick="toggleBulkSelect()" id="btnBulkSelect" style="padding:12px 14px;flex-shrink:0">${BULK_SELECT ? "Hotovo" : "Vybrat"}</button>`
 
+      html += `</div>`
+
       if(BULK_SELECT && BULK_SELECTED.size > 0){
       html += `<div style="background:var(--card);border-radius:14px;padding:12px 16px;margin-bottom:12px">
        <div class="small" style="margin-bottom:8px">Označeno: <b>${BULK_SELECTED.size} akcí</b></div>
