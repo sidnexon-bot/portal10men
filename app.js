@@ -2004,7 +2004,8 @@ function addSwipe(el, eventId){
   }, {passive: true})
 
   el.addEventListener("touchmove", e => {
-    if(!isDragging) return
+  if(!isDragging) return
+  console.log("touchmove dx:", e.touches[0].clientX - startX)
 
     const dx = e.touches[0].clientX - startX
     const dy = e.touches[0].clientY - startY
