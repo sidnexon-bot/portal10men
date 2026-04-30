@@ -1152,13 +1152,27 @@ async function renderEvents(){
 
     let html = `<h2 style="margin:0 0 12px">Akce</h2>`
 
-    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-      html += `<div class="btn-group" style="margin-bottom:16px">`
-      html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
-      if(MEMBER_ROLE === "ADMIN"){
-        html += `<button onclick="openEventForm()">+ Přidat novou akci</button>`
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;position:relative">`
+
+      if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+        html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
+        if(MEMBER_ROLE === "ADMIN"){
+          html += `<button onclick="openEventForm()">+ Přidat akci</button>`
+        }
       }
+      
+      html += `<button onclick="toggleEventsMenu()" id="btnEventsMenu" style="padding:12px 14px;flex-shrink:0">☰</button>`
+      
+      html += `<div id="eventsMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:50;min-width:260px">
+        <div class="small" style="font-weight:600;margin-bottom:8px">Filtr akcí</div>
+        <input id="eventsFilterName" placeholder="Název akce…" oninput="filterEvents()" style="margin-bottom:8px">
+        <input id="eventsFilterPlace" placeholder="Místo…" oninput="filterEvents()" style="margin-bottom:12px">
+        <div class="small" style="font-weight:600;margin-bottom:8px">Hromadný výběr</div>
+        <button onclick="toggleBulkSelect()" id="btnBulkSelect" style="width:100%">Označit akce</button>
+      </div>`
+      
       html += `</div>`
+
     }
 
     html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
@@ -1285,6 +1299,40 @@ function togglePastEvents(){
   list.style.display = isOpen ? "none" : "block"
   if(btn) btn.textContent = isOpen ? `↓ Starší akce` : `↑ Skrýt starší akce`
 }
+
+function toggleEventsMenu(){
+  const menu = document.getElementById("eventsMenu")
+  if(!menu) return
+  const isOpen = menu.style.display !== "none"
+  menu.style.display = isOpen ? "none" : "block"
+}
+
+function filterEvents(){
+  const name  = (document.getElementById("eventsFilterName")?.value  || "").toLowerCase()
+  const place = (document.getElementById("eventsFilterPlace")?.value || "").toLowerCase()
+
+  document.querySelectorAll(".swipe-wrapper").forEach(wrapper => {
+    const card  = wrapper.querySelector(".swipe-card")
+    if(!card) return
+    const cardName  = (card.querySelector("b")?.textContent  || "").toLowerCase()
+    const cardPlace = (card.querySelector(".small:last-of-type")?.textContent || "").toLowerCase()
+    const match = (!name  || cardName.includes(name)) &&
+                  (!place || cardPlace.includes(place))
+    wrapper.style.display = match ? "" : "none"
+  })
+}
+
+let BULK_SELECT = false
+let BULK_SELECTED = new Set()
+
+function toggleBulkSelect(){
+  BULK_SELECT = !BULK_SELECT
+  BULK_SELECTED = new Set()
+  const btn = document.getElementById("btnBulkSelect")
+  if(btn) btn.textContent = BULK_SELECT ? "Zrušit výběr" : "Označit akce"
+  renderEvents()
+}
+
 
 async function openEventForm(id){
 
@@ -3283,6 +3331,9 @@ window.openEventForm        = openEventForm
 window.openProgramEditor    = openProgramEditor
 window.renderEvents         = renderEvents
 window.togglePastEvents     = togglePastEvents
+window.toggleEventsMenu     = toggleEventsMenu
+window.filterEvents         = filterEvents
+window.toggleBulkSelect     = toggleBulkSelect
 window.renderDashboard      = renderDashboard
 window.renderPayments       = renderPayments
 window.renderEnergy         = renderEnergy
