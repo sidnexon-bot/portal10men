@@ -1210,7 +1210,8 @@ futureEvents.forEach(e => {
      </div>`
    }
 
-   html += `<div style="flex:1;min-width:0"><div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">`
+   html += `<div style="flex:1;min-width:0">`
+   html += `<div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">`
     <div class="swipe-bg">
       <span class="swipe-bg-left">✓ Přijdu</span>
       <span class="swipe-bg-right">✗ Nepřijdu</span>
