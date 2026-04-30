@@ -1360,14 +1360,7 @@ function toggleBulkItem(id){
   }else{
     BULK_SELECTED.add(id)
   }
-  // aktualizuj jen kroužek bez re-renderu
-  const circle = document.querySelector(`[data-bulk="${id}"]`)
-  if(circle){
-    const isChecked = BULK_SELECTED.has(id)
-    circle.style.border = `2px solid ${isChecked ? "#007aff" : "#c7c7cc"}`
-    circle.style.background = isChecked ? "#007aff" : "transparent"
-    circle.innerHTML = isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""
-  }
+  renderEvents()
 }
 
 async function openEventForm(id){
