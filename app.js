@@ -1173,13 +1173,11 @@ async function renderEvents(){
       
       html += `</div>`
 
-    }
-
-    html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
-      <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
-      <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
-    </div>`
+      html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
+        <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
+        <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
+      </div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
