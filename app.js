@@ -1332,10 +1332,6 @@ function toggleBulkItem(id){
   }
 }
 
-html += `<div onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
-  data-bulk="${escapeHtml(e.ID)}"
-  style="...">`
-
 async function openEventForm(id){
 
   const editSlot = document.getElementById("edit-panel-slot")
