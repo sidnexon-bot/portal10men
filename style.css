@@ -1635,9 +1635,14 @@ select {
   transform: scale(0.97);
 }
 
-/* Swipe karty */
+/* Swipe karty — bez transition aby JS mohl ovládat transform */
 .swipe-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: none;
+}
+
+/* Karty — fade in při načtení — ale ne swipe karty */
+.card:not(.swipe-card) {
+  animation: fadeIn 0.2s ease forwards;
 }
 
 /* Bottom nav ikony */
@@ -1649,14 +1654,14 @@ select {
   transform: scale(1.15);
 }
 
-/* Modal */
-.modal-content {
+/* Modal (zatím deaktivováno, kolize se swipe) */
+/* -- .modal-content {
   transition: transform 0.3s ease;
   transform: translateY(0);
 }
 
 .modal.hidden .modal-content {
   transform: translateY(100%);
-}
+} */
 
 
