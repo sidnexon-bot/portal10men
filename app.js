@@ -1198,45 +1198,45 @@ futureEvents.forEach(e => {
   const isCancelled = e.STATUS === "Zrušená"
   const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
   const opacity     = isCancelled ? "0.5" : "1"
+  const isChecked   = BULK_SELECTED.has(e.ID)
+
+  const myA  = myAttendance[e.ID]
+  const badge = myA?.status ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${myA.status === "Přijdu" ? "#34c759" : myA.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(myA.status)}</div>` : ""
 
   html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;width:100%">`
 
-   if(BULK_SELECT){
-     const isChecked = BULK_SELECTED.has(e.ID)
-     html += `<div onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
-       data-bulk="${escapeHtml(e.ID)}"
-       style="width:26px;height:26px;border-radius:50%;border:2px solid ${isChecked ? "#007aff" : "#c7c7cc"};background:${isChecked ? "#007aff" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
-       ${isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-     </div>`
-   }
+  if(BULK_SELECT){
+    html += `<div
+      onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
+      data-bulk="${escapeHtml(e.ID)}"
+      style="width:26px;height:26px;border-radius:50%;border:2px solid ${isChecked ? "#007aff" : "#c7c7cc"};background:${isChecked ? "#007aff" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+      ${isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+    </div>`
+  }
 
-   html += `<div style="flex:1;min-width:0">`
-   html += `<div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">`
-    <div class="swipe-bg">
-      <span class="swipe-bg-left">✓ Přijdu</span>
-      <span class="swipe-bg-right">✗ Nepřijdu</span>
+  html += `<div style="flex:1;min-width:0">
+    <div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">
+      <div class="swipe-bg">
+        <span class="swipe-bg-left">✓ Přijdu</span>
+        <span class="swipe-bg-right">✗ Nepřijdu</span>
+      </div>
+      <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
+        ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
+        ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
+        <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
+        <span class="small">
+          ${formatDate(e.DATE)}
+          ${e.START ? "· " + formatTime(e.START) : ""}
+          ${e.END   ? "– " + formatTime(e.END)   : ""}
+        </span><br>
+        <span class="small">${escapeHtml(e.PLACE)}</span>
+        ${badge}
+      </div>
     </div>
-    <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
-      ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
-      ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
-      <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
-      <span class="small">
-        ${formatDate(e.DATE)}
-        ${e.START ? "· " + formatTime(e.START) : ""}
-        ${e.END   ? "– " + formatTime(e.END)   : ""}
-      </span><br>
-      <span class="small">${escapeHtml(e.PLACE)}</span>
-           ${(()=>{
-              const a = myAttendance[e.ID]
-              if(!a || !a.status) return ""
-              const color = a.status === "Přijdu" ? "#34c759" : a.status === "Nepřijdu" ? "#ff3b30" : "#ff9f0a"
-              return `<div style="margin-top:6px;font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.05em">${escapeHtml(a.status)}</div>`
-            })()}
-          </div>
-        </div></div>` // zavře swipe-wrapper a flex:1
-        html += `</div>` // zavře outer flex wrapper
-      })
+  </div>`
 
+  html += `</div>`
+})
 
 // pak proběhlé akce schované pod tlačítkem
 if(pastEvents.length){
