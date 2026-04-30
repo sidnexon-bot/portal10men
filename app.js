@@ -1152,7 +1152,7 @@ async function renderEvents(){
 
     let html = `<h2 style="margin:0 0 12px">Akce</h2>`
 
-    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;position:relative">`
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">`
 
       if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
         html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
@@ -1161,15 +1161,7 @@ async function renderEvents(){
         }
       }
       
-      html += `<button onclick="toggleEventsMenu()" id="btnEventsMenu" style="padding:12px 14px;flex-shrink:0">☰</button>`
-      
-      html += `<div id="eventsMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:50;min-width:260px">
-        <div class="small" style="font-weight:600;margin-bottom:8px">Filtr akcí</div>
-        <input id="eventsFilterName" placeholder="Název akce…" oninput="filterEvents()" style="margin-bottom:8px">
-        <input id="eventsFilterPlace" placeholder="Místo…" oninput="filterEvents()" style="margin-bottom:12px">
-        <div class="small" style="font-weight:600;margin-bottom:8px">Hromadný výběr</div>
-        <button onclick="toggleBulkSelect()" id="btnBulkSelect" style="width:100%">Označit akce</button>
-      </div>`
+      html += `<button onclick="toggleBulkSelect()" id="btnBulkSelect" style="padding:12px 14px;flex-shrink:0">${BULK_SELECT ? "Hotovo" : "Vybrat"}</button>`
       
       html += `</div>`
 
@@ -1206,6 +1198,16 @@ futureEvents.forEach(e => {
   const isCancelled = e.STATUS === "Zrušená"
   const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
   const opacity     = isCancelled ? "0.5" : "1"
+
+  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">`
+
+   if(BULK_SELECT){
+     const isChecked = BULK_SELECTED.has(e.ID)
+     html += `<div onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
+       style="width:26px;height:26px;border-radius:50%;border:2px solid ${isChecked ? "#007aff" : "#c7c7cc"};background:${isChecked ? "#007aff" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer">
+       ${isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+     </div>`
+   }
 
   html += `<div class="swipe-wrapper" style="opacity:${opacity}">
     <div class="swipe-bg">
@@ -1305,32 +1307,34 @@ function toggleEventsMenu(){
   menu.style.display = isOpen ? "none" : "block"
 }
 
-function filterEvents(){
-  const name  = (document.getElementById("eventsFilterName")?.value  || "").toLowerCase()
-  const place = (document.getElementById("eventsFilterPlace")?.value || "").toLowerCase()
-
-  document.querySelectorAll(".swipe-wrapper").forEach(wrapper => {
-    const card  = wrapper.querySelector(".swipe-card")
-    if(!card) return
-    const cardName  = (card.querySelector("b")?.textContent  || "").toLowerCase()
-    const cardPlace = (card.querySelector(".small:last-of-type")?.textContent || "").toLowerCase()
-    const match = (!name  || cardName.includes(name)) &&
-                  (!place || cardPlace.includes(place))
-    wrapper.style.display = match ? "" : "none"
-  })
-}
-
-let BULK_SELECT = false
+let BULK_SELECT   = false
 let BULK_SELECTED = new Set()
 
 function toggleBulkSelect(){
   BULK_SELECT = !BULK_SELECT
   BULK_SELECTED = new Set()
-  const btn = document.getElementById("btnBulkSelect")
-  if(btn) btn.textContent = BULK_SELECT ? "Zrušit výběr" : "Označit akce"
   renderEvents()
 }
 
+function toggleBulkItem(id){
+  if(BULK_SELECTED.has(id)){
+    BULK_SELECTED.delete(id)
+  }else{
+    BULK_SELECTED.add(id)
+  }
+  // aktualizuj jen kroužek bez re-renderu
+  const circle = document.querySelector(`[data-bulk="${id}"]`)
+  if(circle){
+    const isChecked = BULK_SELECTED.has(id)
+    circle.style.border = `2px solid ${isChecked ? "#007aff" : "#c7c7cc"}`
+    circle.style.background = isChecked ? "#007aff" : "transparent"
+    circle.innerHTML = isChecked ? `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>` : ""
+  }
+}
+
+html += `<div onclick="toggleBulkItem('${escapeHtml(e.ID)}')"
+  data-bulk="${escapeHtml(e.ID)}"
+  style="...">`
 
 async function openEventForm(id){
 
@@ -3329,9 +3333,8 @@ window.openEventForm        = openEventForm
 window.openProgramEditor    = openProgramEditor
 window.renderEvents         = renderEvents
 window.togglePastEvents     = togglePastEvents
-window.toggleEventsMenu     = toggleEventsMenu
-window.filterEvents         = filterEvents
 window.toggleBulkSelect     = toggleBulkSelect
+window.toggleBulkItem       = toggleBulkItem
 window.renderDashboard      = renderDashboard
 window.renderPayments       = renderPayments
 window.renderEnergy         = renderEnergy
