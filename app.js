@@ -1162,7 +1162,18 @@ async function renderEvents(){
       }
       
       html += `<button onclick="toggleBulkSelect()" id="btnBulkSelect" style="padding:12px 14px;flex-shrink:0">${BULK_SELECT ? "Hotovo" : "Vybrat"}</button>`
-      
+
+      if(BULK_SELECT && BULK_SELECTED.size > 0){
+      html += `<div style="background:var(--card);border-radius:14px;padding:12px 16px;margin-bottom:12px">
+       <div class="small" style="margin-bottom:8px">Označeno: <b>${BULK_SELECTED.size} akcí</b></div>
+       <div class="btn-group">
+         <button onclick="bulkSetAttendance('Přijdu')" style="background:#d4f5e2;color:#1a7a3a">Přijdu</button>
+         <button onclick="bulkSetAttendance('Možná')">Možná</button>
+         <button onclick="bulkSetAttendance('Nepřijdu')" style="background:#fde8e8;color:#c00">Nepřijdu</button>
+       </div>
+     </div>`
+   }
+
       html += `</div>`
 
       html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
@@ -1293,6 +1304,27 @@ if(pastEvents.length){
     setError("Chyba při načítání akcí: " + (err?.message || err))
   }
 
+}
+
+async function bulkSetAttendance(status){
+  if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
+  if(BULK_SELECTED.size === 0) return
+
+  try{
+    showSaving()
+    for(const id of BULK_SELECTED){
+      await api("setattendance", {event: id, member: MEMBER_EMAIL, status})
+      lsDel("myattendance_" + MEMBER_EMAIL)
+      invalidateCache("eventdetail", id)
+    }
+    hideSaving(`Docházka nastavena pro ${BULK_SELECTED.size} akcí ✓`)
+    BULK_SELECT   = false
+    BULK_SELECTED = new Set()
+    renderEvents()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 function togglePastEvents(){
@@ -3344,6 +3376,7 @@ window.doAttendance         = doAttendance
 window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
 window.toggleAttendanceAccordion = toggleAttendanceAccordion
+window.bulkSetAttendance    = bulkSetAttendance
 window.confirmMozna         = confirmMozna
 window.closeMoznaModal      = closeMoznaModal
 window.saveEvent            = saveEvent
