@@ -889,7 +889,7 @@ select:focus{
 }
 
 /* ANIMACE */
-
+/*
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -899,7 +899,7 @@ select:focus{
     opacity: 1;
     transform: translateY(0);
   }
-}
+} */ 
 
 /* SKELETON */
 @keyframes shimmer {
