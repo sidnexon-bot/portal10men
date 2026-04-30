@@ -1199,7 +1199,7 @@ futureEvents.forEach(e => {
   const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
   const opacity     = isCancelled ? "0.5" : "1"
 
-  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">`
+  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;width:100%">`
 
    if(BULK_SELECT){
      const isChecked = BULK_SELECTED.has(e.ID)
@@ -1209,7 +1209,7 @@ futureEvents.forEach(e => {
      </div>`
    }
 
-  html += `<div class="swipe-wrapper" style="opacity:${opacity}">
+   html += `<div style="flex:1;min-width:0"><div class="swipe-wrapper" style="opacity:${opacity};margin-bottom:0">`
     <div class="swipe-bg">
       <span class="swipe-bg-left">✓ Přijdu</span>
       <span class="swipe-bg-right">✗ Nepřijdu</span>
