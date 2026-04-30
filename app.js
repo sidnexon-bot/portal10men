@@ -1312,10 +1312,31 @@ async function bulkSetAttendance(status){
   if(!MEMBER_EMAIL){ alert("Nejdřív vyber člena"); return }
   if(BULK_SELECTED.size === 0) return
 
+  if(status === "Nepřijdu"){
+    promptModal("Důvod nepřítomnosti:", "", async (reason) => {
+      if(reason === null) return
+      await doBulkAttendance(status, reason)
+    })
+  }else if(status === "Možná"){
+    openFormModal("Upřesni docházku", [
+      {key: "choice", label: "Spíše ano nebo ne?", type: "text", placeholder: "Spíše ano / Spíše ne"},
+      {key: "reason", label: "Důvod (povinné)", type: "text"}
+    ], async (values) => {
+      if(!values.reason){ alert("Zadej důvod"); return }
+      closeFormModal()
+      const detail = (values.choice || "Spíše ano") + ": " + values.reason
+      await doBulkAttendance(status, detail)
+    })
+  }else{
+    await doBulkAttendance(status, "")
+  }
+}
+
+async function doBulkAttendance(status, reason){
   try{
     showSaving()
     for(const id of BULK_SELECTED){
-      await api("setattendance", {event: id, member: MEMBER_EMAIL, status})
+      await api("setattendance", {event: id, member: MEMBER_EMAIL, status, reason})
       lsDel("myattendance_" + MEMBER_EMAIL)
       invalidateCache("eventdetail", id)
     }
@@ -3372,6 +3393,7 @@ window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
 window.toggleAttendanceAccordion = toggleAttendanceAccordion
 window.bulkSetAttendance    = bulkSetAttendance
+window.doBulkAttendance     = doBulkAttendance
 window.confirmMozna         = confirmMozna
 window.closeMoznaModal      = closeMoznaModal
 window.saveEvent            = saveEvent
