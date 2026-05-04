@@ -1989,6 +1989,10 @@ function addSwipe(el, eventId){
   let moved        = false
   const THRESHOLD  = 80
 
+  function setTransform(val){
+    el.setAttribute("style", val ? `transform: translateX(${val})` : "")
+  }
+
   el.addEventListener("click", () => {
     if(!moved) openEvent(eventId)
   })
@@ -2000,12 +2004,10 @@ function addSwipe(el, eventId){
     isDragging   = true
     isHorizontal = null
     moved        = false
-    el.style.transition = "none"
   }, {passive: true})
 
   el.addEventListener("touchmove", e => {
-  if(!isDragging) return
-  console.log("touchmove dx:", e.touches[0].clientX - startX)
+    if(!isDragging) return
 
     const dx = e.touches[0].clientX - startX
     const dy = e.touches[0].clientY - startY
@@ -2026,9 +2028,9 @@ function addSwipe(el, eventId){
     currentX = dx
     if(Math.abs(dx) > 8) moved = true
 
-    el.style.transform = `translateX(${currentX}px)`
+    setTransform(currentX + "px")
 
-    let wrapper = el.parentElement
+    const wrapper = el.parentElement
     if(currentX > 20){
       wrapper.classList.add("swiping-right")
       wrapper.classList.remove("swiping-left")
@@ -2052,35 +2054,35 @@ function addSwipe(el, eventId){
     const totalMove = Math.abs(currentX) + Math.abs(endY - startY)
 
     if(!moved && totalMove < 12){
-      el.style.transform = ""
+      setTransform("")
       el.parentElement.classList.remove("swiping-right", "swiping-left")
       return
     }
 
     if(!isHorizontal){
-      el.style.transform = ""
+      setTransform("")
       el.parentElement.classList.remove("swiping-right", "swiping-left")
       return
     }
 
-    el.style.transition = "transform 0.2s ease"
+    el.setAttribute("style", "transition: transform 0.2s ease")
 
     if(currentX > THRESHOLD){
-      el.style.transform = `translateX(110%)`
+      setTransform("110%")
       setTimeout(() => {
-        el.style.transform = ""
+        setTransform("")
         el.parentElement.classList.remove("swiping-right", "swiping-left")
         confirmSwipe(eventId, "Přijdu", el)
       }, 200)
     }else if(currentX < -THRESHOLD){
-      el.style.transform = `translateX(-110%)`
+      setTransform("-110%")
       setTimeout(() => {
-        el.style.transform = ""
+        setTransform("")
         el.parentElement.classList.remove("swiping-right", "swiping-left")
         confirmSwipeWithReason(eventId, el)
       }, 200)
     }else{
-      el.style.transform = ""
+      setTransform("")
       el.parentElement.classList.remove("swiping-right", "swiping-left")
     }
   })
