@@ -401,6 +401,7 @@ h3{
   background: #fff;
   will-change: transform;
   transition: none !important;
+  transform: translateZ(0);
 }
 
 /* BUTTONS */
