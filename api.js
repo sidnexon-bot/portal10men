@@ -290,6 +290,42 @@ async function cancelEvent(params){
   return {status: "cancelled"}
 }
 
+async function setProgram(params){
+  const id     = params.id
+  const songs  = JSON.parse(params.songs  || "[]")
+  const encore = JSON.parse(params.encore || "[]")
+
+  // smaž starý program
+  const program  = await dbGet("/program")
+  const toDelete = objToArray(program).filter(p => p.id_akce === id)
+  for(const p of toDelete) await dbRemove("/program/" + p.id)
+
+  // přidej nový program
+  for(let i = 0; i < songs.length; i++){
+    const pRef = push(ref(DB, "/program"))
+    await dbSet("/program/" + pRef.key, {
+      id:      pRef.key,
+      id_akce: id,
+      order:   i + 1,
+      song_id: songs[i]
+    })
+  }
+
+  // přidej přídavky
+  for(let i = 0; i < encore.length; i++){
+    const pRef = push(ref(DB, "/program"))
+    await dbSet("/program/" + pRef.key, {
+      id:      pRef.key,
+      id_akce: id,
+      order:   901 + i,
+      song_id: encore[i]
+    })
+  }
+
+  return {status: "saved"}
+}
+
+
 async function updateNote(params){
   await dbUpdate("/akce/" + params.id, {note: params.note})
   return {status: "saved"}
