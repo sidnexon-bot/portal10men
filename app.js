@@ -350,6 +350,11 @@ function promptModal(label, defaultValue, onConfirm){
   })
 }
 
+function toggleRecurrenceUntil(val){
+  const wrap = document.getElementById("recurrenceUntilWrap")
+  if(wrap) wrap.style.display = val !== "none" ? "block" : "none"
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -1123,6 +1128,9 @@ async function renderEvents(){
 
     events.sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
 
+    // skryj šablony opakujících se sérií
+    const visibleEvents = events.filter(e => !e.IS_TEMPLATE)
+
     const now = new Date()
     now.setHours(0,0,0,0)
 
@@ -1139,16 +1147,16 @@ async function renderEvents(){
     const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
     const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
 
-    const filtered = events.filter(e => {
-      const d = new Date(e.DATE)
-      return d.getFullYear() === year && d.getMonth() + 1 === month
-    })
+    const filtered = visibleEvents.filter(e => {
+    const d = new Date(e.DATE)
+    return d.getFullYear() === year && d.getMonth() + 1 === month
+  })
 
-    const nextEvent = events.find(e => {
-      const d = new Date(e.DATE)
-      d.setHours(0,0,0,0)
-      return d >= now
-    })
+    const nextEvent = visibleEvents.find(e => {
+    const d = new Date(e.DATE)
+    d.setHours(0,0,0,0)
+    return d >= now
+  })
 
     let html = `<h2 style="margin:0 0 12px">Akce</h2>`
 
@@ -1363,6 +1371,21 @@ async function openEventForm(id){
   <input type="checkbox" id="fRequiresProgram" ${event.REQUIRES_PROGRAM !== false ? "checked" : ""} style="width:auto;margin:0">
   <span>Vyžaduje program</span>
 </label>
+    ${!isEdit ? `
+    <label style="margin-top:16px;display:block">
+      <span class="small" style="text-transform:uppercase;letter-spacing:0.05em">Opakování</span><br>
+      <select id="fRecurrence" style="margin-top:6px" onchange="toggleRecurrenceUntil(this.value)">
+        <option value="none">Jednorázová akce</option>
+        <option value="weekly">Každý týden</option>
+        <option value="biweekly">Každé dva týdny</option>
+      </select>
+    </label>
+    <div id="recurrenceUntilWrap" style="display:none;margin-top:12px">
+      <label>Opakovat do:<br>
+        <input id="fRecurrenceUntil" type="date" style="margin-top:6px">
+      </label>
+    </div>
+    ` : ""}
     <div class="btn-group" style="margin-top:16px">
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
@@ -1414,7 +1437,8 @@ async function openEvent(id){
     let html = `
      ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
      <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
-   
+     ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">🔁 OPAKUJÍCÍ SE AKCE</div>` : ""}
+
      <div class="card" style="margin-bottom:20px">
        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
          <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}</b></div>
@@ -2143,9 +2167,33 @@ async function saveEvent(id){
   const note            = document.getElementById("fNote")?.value.trim()
   const status          = document.getElementById("fStatus")?.value
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
+  const recurrenceType  = document.getElementById("fRecurrence")?.value || "none"
+  const recurrenceUntil = document.getElementById("fRecurrenceUntil")?.value || ""
 
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
+
+     // Opakující se akce — jen při vytváření nové
+  if(!id && recurrenceType !== "none"){
+    if(!recurrenceUntil){ alert("Zadej datum konce opakování"); return }
+    try{
+      showSaving()
+      const result = await api("addrecurring", {
+        name, date, start, end, place, note, status,
+        requires_program: requiresProgram,
+        call_url: callUrl,
+        recurrence_type: recurrenceType,
+        recurrence_until: recurrenceUntil
+      })
+      invalidateCache("events")
+      hideSaving(`Vytvořeno ${result.instances} akcí ✓`)
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+    return
+  }
 
   try{
     showSaving()
@@ -2173,19 +2221,75 @@ async function saveEvent(id){
 }
 
 async function deleteEvent(id){
-  confirmModal("Opravdu smazat tuto akci?", async () => {
+  const events    = await cachedApi("events")
+  const thisEvent = events.find(e => e.ID === id)
+  const isSeries  = !!(thisEvent?.TEMPLATE_ID)
+
+  if(isSeries){
+    openDeleteSeriesModal(id)
+  }else{
+    confirmModal("Opravdu smazat tuto akci?", async () => {
+      try{
+        showSaving()
+        await api("deleteevent", {id})
+        invalidateCache("events")
+        invalidateCache("eventdetail", id)
+        hideSaving("Akce smazána ✓")
+        renderEvents()
+      }catch(err){
+        hideSaving("Chyba ✗")
+        alert("Chyba při mazání: " + (err?.message || err))
+      }
+    })
+  }
+}
+
+function openDeleteSeriesModal(id){
+  openFormModal("Smazat akci", [], () => {})
+
+  const body   = document.getElementById("formModalBody")
+  const submit = document.getElementById("formModalSubmit")
+
+  body.innerHTML = `
+    <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
+    <p class="small">Chceš smazat jen tuto akci, nebo celou sérii?</p>`
+
+  submit.textContent        = "Jen tuto akci"
+  submit.style.background   = "#fde8e8"
+  submit.style.color        = "#c00"
+  submit.onclick = async () => {
+    closeFormModal()
     try{
       showSaving()
-      await api("deleteevent", {id})
+      await api("deleterecurring", {id, mode: "single"})
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce smazána ✓")
       renderEvents()
     }catch(err){
       hideSaving("Chyba ✗")
-      alert("Chyba při mazání: " + (err?.message || err))
+      alert("Chyba: " + (err?.message || err))
     }
-  })
+  }
+
+  const btnGroup  = document.querySelector("#formModal .btn-group")
+  const seriesBtn = document.createElement("button")
+  seriesBtn.textContent     = "Celou sérii"
+  seriesBtn.style.cssText   = "background:#ff3b30;color:#fff;flex:1"
+  seriesBtn.onclick = async () => {
+    closeFormModal()
+    try{
+      showSaving()
+      await api("deleterecurring", {id, mode: "series"})
+      invalidateCache("events")
+      hideSaving("Série smazána ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }
+  btnGroup.appendChild(seriesBtn)
 }
 
 /* ===============================
@@ -3331,3 +3435,5 @@ window.enablePush           = enablePush
 window.toggleAccordion      = toggleAccordion
 window.confirmModal         = confirmModal
 window.promptModal          = promptModal
+window.toggleRecurrenceUntil  = toggleRecurrenceUntil
+window.openDeleteSeriesModal  = openDeleteSeriesModal
