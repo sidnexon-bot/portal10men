@@ -15,10 +15,9 @@ const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3Y
 const isDesktop = window.innerWidth >= 1025
 
 // Inicializace identity z Google session (přihlášení přes login.html)
-function initMemberFromSession()
-   console.log("MEMBER_ROLE:", MEMBER_ROLE)
-   console.log("user z localStorage:", JSON.parse(localStorage.getItem('10base_user')))
-   {
+function initMemberFromSession(){
+  console.log("MEMBER_ROLE:", MEMBER_ROLE)
+  console.log("user z localStorage:", JSON.parse(localStorage.getItem('10base_user')))
   const user = JSON.parse(localStorage.getItem('10base_user') || 'null');
   if(!user){
     window.location.href = 'login.html';
