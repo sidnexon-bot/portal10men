@@ -3669,22 +3669,29 @@ function invalidateAllCache(){
   CACHE.detail = {}
   CACHE.ts     = {}
 }
+
 async function silentRefresh(){
   if(MEMBER_ROLE === "GUEST"){
     renderGuestView()
     return
   }
-  if(ACTIVE_TAB === "dashboard")     renderDashboard()
-  else if(ACTIVE_TAB === "events"){
+  if(ACTIVE_TAB === "dashboard"){
+    renderDashboard()
+  }else if(ACTIVE_TAB === "events"){
+    await renderEvents()
     if(ACTIVE_DETAIL_ID){
-      renderEvents()
-      openEvent(ACTIVE_DETAIL_ID)
-    }else{
-      renderEvents()
+      try{
+        await openEvent(ACTIVE_DETAIL_ID)
+      }catch(e){
+        console.warn("silentRefresh openEvent failed:", e)
+        ACTIVE_DETAIL_ID = null
+      }
     }
+  }else if(ACTIVE_TAB === "payments"){
+    renderPayments()
+  }else if(ACTIVE_TAB === "energy"){
+    renderEnergy()
   }
-  else if(ACTIVE_TAB === "payments") renderPayments()
-  else if(ACTIVE_TAB === "energy")   renderEnergy()
 }
 
 document.addEventListener("visibilitychange", () => {
