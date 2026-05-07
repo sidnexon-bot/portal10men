@@ -814,6 +814,7 @@ async function api(action, params = {}){
     case "deletetodo":       return await deleteTodo(params.id)
     case "addrecurring":     return await addRecurring(params)
     case "deleterecurring":  return await deleteRecurring(params)
+    case "getrawakce":       return await dbGet("/akce/" + params.id)
     default: throw new Error("Unknown action: " + action)
   }
 }
