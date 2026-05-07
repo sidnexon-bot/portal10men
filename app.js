@@ -570,8 +570,13 @@ async function start(){
 
    if(MEMBER_ROLE === "GUEST"){
      document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
-     document.getElementById("sidebar")?.style.setProperty("display", "none", "important")
-   }
+     
+     // Logout panel pro guesta
+     const logoutBar = document.createElement("div")
+     logoutBar.style.cssText = "position:fixed;top:16px;right:16px;z-index:100"
+     logoutBar.innerHTML = `<button onclick="Auth.logout()" style="background:#fde8e8;color:#c00;padding:8px 14px;font-size:13px">Odhlásit se</button>`
+     document.body.appendChild(logoutBar)
+    }
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
