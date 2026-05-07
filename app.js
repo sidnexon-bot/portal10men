@@ -2063,7 +2063,7 @@ async function openEditSeriesFrom(id){
     if(btnGroup){
       const saveBtn = btnGroup.querySelector("button:first-child")
       if(saveBtn){
-        saveBtn.textContent = "Uložit sérii od této akce"
+        saveBtn.textContent = "Uložit změny"
         saveBtn.style.background = "#007aff"
         saveBtn.style.color = "#fff"
         saveBtn.removeAttribute("onclick")
