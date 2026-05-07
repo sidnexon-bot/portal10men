@@ -727,26 +727,32 @@ async function addRecurring(params){
 }
 
 async function deleteRecurring(params){
-  // mode: "single" | "series"
+  // mode: "single" | "series" | "from_this"
 
-  if(params.mode === "series"){
+  if(params.mode === "series" || params.mode === "from_this"){
     const akce = await dbGet("/akce/" + params.id)
     const templateId = akce?.template_id
 
     if(!templateId){
-      // fallback — smaž jen tuto
       await deleteEvent(params.id)
       return { status: "single_deleted_no_template" }
     }
 
     const vsechnyAkce = await dbGet("/akce")
-    // instance série + šablona samotná
-    const toDelete = objToArray(vsechnyAkce).filter(e =>
+    const dochazka    = await dbGet("/dochazka")
+    const program     = await dbGet("/program")
+
+    let toDelete = objToArray(vsechnyAkce).filter(e =>
       e.template_id === templateId || e.id === templateId
     )
 
-    const dochazka = await dbGet("/dochazka")
-    const program  = await dbGet("/program")
+    if(params.mode === "from_this"){
+      // zachovej šablonu a instance PŘED touto akcí
+      const thisDate = akce.date
+      toDelete = toDelete.filter(e =>
+        e.is_template !== true && e.date >= thisDate
+      )
+    }
 
     for(const inst of toDelete){
       await dbRemove("/akce/" + inst.id)
@@ -758,7 +764,7 @@ async function deleteRecurring(params){
       for(const p of pDel) await dbRemove("/program/" + p.id)
     }
 
-    return { status: "series_deleted", count: toDelete.length }
+    return { status: params.mode === "from_this" ? "from_this_deleted" : "series_deleted", count: toDelete.length }
 
   }else{
     await deleteEvent(params.id)
