@@ -773,6 +773,7 @@ async function deleteRecurring(params){
 }
 
 async function updateSeriesFrom(params){
+  console.log("params:", params)
   const akce = await dbGet("/akce/" + params.id)
   const templateId = akce?.template_id
   if(!templateId) return { status: "no_template" }
