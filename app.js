@@ -1609,6 +1609,9 @@ async function openEvent(id){
       if(MEMBER_ROLE === "ADMIN"){
         html += `<div class="btn-group">
           <button onclick="openEventForm('${id}')">Upravit akci</button>
+          ${event.TEMPLATE_ID ? `
+           <button onclick="openEditSeriesFrom('${id}')">Upravit sérii od této akce</button>
+         ` : ""}
           <button onclick="deleteEvent('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
         </div>`
       }
@@ -1910,6 +1913,68 @@ function prefetchProgramPdfs(program){
   if(!pdfs.length){ showToast("Program nemá žádné noty"); return }
   pdfs.forEach(p => window.open(p.PDF, "_blank"))
   showToast(`Otevřeno ${pdfs.length} PDF ✓`)
+}
+
+async function openEditSeriesFrom(id){
+  // Otevři formulář pro editaci — předvyplněný hodnotami aktuální akce
+  await openEventForm(id)
+
+  // Přepiš nadpis a tlačítko
+  const h2 = container().querySelector("h2") ||
+             document.querySelector("#edit-panel-slot h2")
+  if(h2) h2.textContent = "Upravit sérii od této akce"
+
+  const saveBtn = document.getElementById("fSaveBtn") ||
+                  container().querySelector("button[onclick*='saveEvent']")
+
+  // Přepiš saveEvent aby volal editSeries
+  const oldSave = document.querySelector("button[onclick*=\"saveEvent('\"+id+\"'\"]") ||
+                  container().querySelector(".btn-group button:first-child")
+  if(oldSave){
+    oldSave.textContent = "Uložit sérii od této akce"
+    oldSave.onclick = () => saveSeriesFrom(id)
+  }
+}
+
+async function saveSeriesFrom(id){
+  const name            = document.getElementById("fName")?.value.trim()
+  const date            = document.getElementById("fDate")?.value
+  const start           = document.getElementById("fStart")?.value
+  const end             = document.getElementById("fEnd")?.value
+  const place           = document.getElementById("fPlace")?.value.trim()
+  const callUrl         = document.getElementById("fCallUrl")?.value.trim()
+  const note            = document.getElementById("fNote")?.value.trim()
+  const status          = document.getElementById("fStatus")?.value
+  const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
+
+  if(!name){ alert("Zadej název akce"); return }
+  if(!date){ alert("Zadej datum"); return }
+
+  try{
+    showSaving()
+    // 1. smaž tuto a všechny následující
+    await api("deleterecurring", {id, mode: "from_this"})
+    // 2. vytvoř novou sérii od tohoto data
+    // zjisti until z šablony
+    const detail     = await api("eventdetail", {id})
+    const templateId = detail.event.TEMPLATE_ID
+    const tmpl       = templateId ? await dbGet("/akce/" + templateId) : null
+    const until      = tmpl?.recurrence_until || date
+
+    await api("addrecurring", {
+      name, date, start, end, place, note, status,
+      requires_program: requiresProgram,
+      call_url: callUrl,
+      recurrence_type:  tmpl?.recurrence_type || "weekly",
+      recurrence_until: until
+    })
+    invalidateCache("events")
+    hideSaving("Série upravena ✓")
+    renderEvents()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 /* ===============================
@@ -2252,11 +2317,11 @@ function openDeleteSeriesModal(id){
 
   body.innerHTML = `
     <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
-    <p class="small">Chceš smazat jen tuto akci, nebo celou sérii?</p>`
+    <p class="small">Chceš smazat jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
 
-  submit.textContent        = "Jen tuto akci"
-  submit.style.background   = "#fde8e8"
-  submit.style.color        = "#c00"
+  submit.textContent      = "Jen tuto akci"
+  submit.style.background = "#fde8e8"
+  submit.style.color      = "#c00"
   submit.onclick = async () => {
     closeFormModal()
     try{
@@ -2272,12 +2337,35 @@ function openDeleteSeriesModal(id){
     }
   }
 
-  const btnGroup  = document.querySelector("#formModal .btn-group")
-  btnGroup.querySelectorAll(".btn-delete-series").forEach(b => b.remove())
+  const btnGroup = document.querySelector("#formModal .btn-group")
+  btnGroup.querySelectorAll(".btn-delete-series, .btn-delete-from").forEach(b => b.remove())
+
+  // "Tuto a následující"
+  const fromBtn = document.createElement("button")
+  fromBtn.className     = "btn-delete-from"
+  fromBtn.textContent   = "Tuto a následující"
+  fromBtn.style.cssText = "background:#ff9f0a;color:#fff;flex:1"
+  fromBtn.onclick = async () => {
+    closeFormModal()
+    try{
+      showSaving()
+      await api("deleterecurring", {id, mode: "from_this"})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce smazány ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }
+  btnGroup.appendChild(fromBtn)
+
+  // "Celou sérii"
   const seriesBtn = document.createElement("button")
-  seriesBtn.className       = "btn-delete-series"
-  seriesBtn.textContent     = "Celou sérii"
-  seriesBtn.style.cssText   = "background:#ff3b30;color:#fff;flex:1"
+  seriesBtn.className     = "btn-delete-series"
+  seriesBtn.textContent   = "Celou sérii"
+  seriesBtn.style.cssText = "background:#ff3b30;color:#fff;flex:1"
   seriesBtn.onclick = async () => {
     closeFormModal()
     try{
@@ -3439,3 +3527,5 @@ window.confirmModal         = confirmModal
 window.promptModal          = promptModal
 window.toggleRecurrenceUntil  = toggleRecurrenceUntil
 window.openDeleteSeriesModal  = openDeleteSeriesModal
+window.openEditSeriesFrom   = openEditSeriesFrom
+window.saveSeriesFrom       = saveSeriesFrom
