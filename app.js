@@ -1942,7 +1942,6 @@ async function openEditSeriesFrom(id){
 
 async function saveSeriesFrom(id){
   const name            = document.getElementById("fName")?.value.trim()
-  const date            = document.getElementById("fDate")?.value
   const start           = document.getElementById("fStart")?.value
   const end             = document.getElementById("fEnd")?.value
   const place           = document.getElementById("fPlace")?.value.trim()
@@ -1952,25 +1951,13 @@ async function saveSeriesFrom(id){
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
 
   if(!name){ alert("Zadej název akce"); return }
-  if(!date){ alert("Zadej datum"); return }
 
   try{
     showSaving()
-    // 1. smaž tuto a všechny následující
-    await api("deleterecurring", {id, mode: "from_this"})
-    // 2. vytvoř novou sérii od tohoto data
-    // zjisti until z šablony
-    const detail     = await api("eventdetail", {id})
-    const templateId = detail.event.TEMPLATE_ID
-    const tmpl       = templateId ? await api("getrawakce", {id: templateId}) : null
-    const until      = tmpl?.recurrence_until || date
-
-    await api("addrecurring", {
-      name, date, start, end, place, note, status,
+    await api("updateseriesfrom", {
+      id, name, start, end, place, note, status,
       requires_program: requiresProgram,
-      call_url: callUrl,
-      recurrence_type:  tmpl?.recurrence_type || "weekly",
-      recurrence_until: until
+      call_url: callUrl
     })
     invalidateCache("events")
     hideSaving("Série upravena ✓")
