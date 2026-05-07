@@ -795,6 +795,11 @@ async function updateSeriesFrom(params){
     .filter(e => e.template_id === templateId && normalizeDate(e.date) >= thisDate)
     .sort((a,b) => normalizeDate(a.date) > normalizeDate(b.date) ? 1 : -1)
 
+  console.log("templateId:", templateId)
+  console.log("thisDate:", thisDate)
+  console.log("toUpdate.length:", toUpdate.length)
+  console.log("vsechnyAkce s template_id:", objToArray(vsechnyAkce).filter(e => e.template_id === templateId).map(e => ({id: e.id, date: e.date})))
+
   if(!toUpdate.length) return { status: "nothing_to_update" }
 
   const oldFirst = new Date(normalizeDate(toUpdate[0].date))
