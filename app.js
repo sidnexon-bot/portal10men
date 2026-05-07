@@ -3459,6 +3459,11 @@ function initRealtime(){
 
 async function handleRealtimeChange(changed){
 
+   if(MEMBER_ROLE === "GUEST"){
+    renderGuestView()
+    return
+  }
+
   if(changed === "dochazka"){
     lsDel("myattendance_" + MEMBER_EMAIL)
     Object.keys(localStorage)
