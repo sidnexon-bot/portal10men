@@ -592,8 +592,9 @@ async function renderGuestView(){
     now.setHours(0,0,0,0)
 
     const smetanovo = events
-      .filter(e => (e.PLACE || "").includes("Smetanovo nábřeží 330/16") && !e.IS_TEMPLATE)
-      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+     .filter(e => (e.PLACE || "").includes("Smetanovo") && !e.IS_TEMPLATE)
+     .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+
 
     const upcoming = smetanovo.filter(e => {
       const d = new Date(e.DATE); d.setHours(0,0,0,0); return d >= now
