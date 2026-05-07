@@ -535,18 +535,28 @@ async function start(){
 
 
     setActiveTab("dashboard")
-    if(MEMBER_ROLE === "GUEST"){
-     setActiveTab("events")
-     renderGuestView()
-   }else{
-     setActiveTab("dashboard")
-     renderDashboard()
-   }
-    initPullToRefresh()
-    initSidebar()
-    initRealtime()
-     // inicializuj push notifikace
-    initPushNotifications()
+        if(MEMBER_ROLE === "GUEST"){
+      // Skryj navigaci
+      document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
+      // Sidebar neinicializuj vůbec
+      // Přepiš všechna nav tlačítka aby nefungovala
+      document.getElementById("btnDashboard").onclick = () => {}
+      document.getElementById("btnEvents").onclick    = () => {}
+      document.getElementById("btnPayments").onclick  = () => {}
+      document.getElementById("btnEnergy").onclick    = () => {}
+      document.getElementById("btnRepertoar").onclick = () => {}
+      setActiveTab("events")
+      renderGuestView()
+      initPullToRefresh()
+      initRealtime()
+    }else{
+      setActiveTab("dashboard")
+      renderDashboard()
+      initPullToRefresh()
+      initSidebar()
+      initRealtime()
+      initPushNotifications()
+    }
 
    if(MEMBER_ROLE === "GUEST"){
      document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
