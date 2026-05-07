@@ -797,9 +797,15 @@ async function updateSeriesFrom(params){
 
   if(!toUpdate.length) return { status: "nothing_to_update" }
 
-  const oldFirst = new Date(toUpdate[0].date)
+  const oldFirst = new Date(normalizeDate(toUpdate[0].date))
   const newFirst = new Date(params.date)
   const diffMs   = newFirst - oldFirst
+
+  console.log("oldFirst raw:", toUpdate[0].date)
+  console.log("oldFirst normalized:", normalizeDate(toUpdate[0].date))
+  console.log("oldFirst parsed:", new Date(normalizeDate(toUpdate[0].date)))
+  console.log("newFirst:", newFirst)
+  console.log("diffMs:", diffMs)
 
   for(const inst of toUpdate){
     const origDate = new Date(inst.date)
