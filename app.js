@@ -1437,7 +1437,7 @@ async function openEvent(id){
     let html = `
      ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
      <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
-     ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">🔁 OPAKUJÍCÍ SE AKCE</div>` : ""}
+     ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">OPAKUJÍCÍ SE AKCE</div>` : ""}
 
      <div class="card" style="margin-bottom:20px">
        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
