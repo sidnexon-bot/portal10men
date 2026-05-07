@@ -88,9 +88,12 @@ jobs:
 
             for(const event of events){
               if(!event.date) continue;
-              if(event.status === "Zrušená") continue;
+              if(event.status === "Zru\u0161en\u00E1") continue;
               const eventDate = new Date(event.date);
-              const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
+              eventDate.setHours(0,0,0,0);
+              const todayDate = new Date(now);
+              todayDate.setHours(0,0,0,0);
+              const daysUntil = Math.round((eventDate - todayDate) / (1000 * 60 * 60 * 24));
 
               // 3 dny před akcí
               if(daysUntil === 3){
