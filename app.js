@@ -535,18 +535,92 @@ async function start(){
 
 
     setActiveTab("dashboard")
-    renderDashboard()
+    if(MEMBER_ROLE === "GUEST"){
+     setActiveTab("events")
+     renderGuestView()
+   }else{
+     setActiveTab("dashboard")
+     renderDashboard()
+   }
     initPullToRefresh()
     initSidebar()
     initRealtime()
      // inicializuj push notifikace
     initPushNotifications()
 
+   if(MEMBER_ROLE === "GUEST"){
+     document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
+     document.getElementById("sidebar")?.style.setProperty("display", "none", "important")
+   }
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
 
+}
+
+async function renderGuestView(){
+  setLoading()
+  try{
+    const events = await cachedApi("events")
+    const now    = new Date()
+    now.setHours(0,0,0,0)
+
+    const smetanovo = events
+      .filter(e => (e.PLACE || "").includes("Smetanovo nábřeží 330/16") && !e.IS_TEMPLATE)
+      .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+
+    const upcoming = smetanovo.filter(e => {
+      const d = new Date(e.DATE); d.setHours(0,0,0,0); return d >= now
+    })
+    const past = smetanovo.filter(e => {
+      const d = new Date(e.DATE); d.setHours(0,0,0,0); return d < now
+    })
+
+    const statusColor = s =>
+      s === "Plánovaná" ? "#34c759" :
+      s === "Zrušená"   ? "#ff3b30" :
+      s === "Proběhlá"  ? "#8e8e93" : "#8e8e93"
+
+    const renderRow = (e, i, arr) => {
+      const border  = i < arr.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+      const crossed = e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted);" : ""
+      return `<div style="padding:14px 16px;${border}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <b style="font-size:15px;${crossed}">${escapeHtml(e.NAME)}</b>
+            <div class="small" style="margin-top:3px">${formatDate(e.DATE)}${e.START ? " · " + formatTime(e.START) : ""}${e.END ? " – " + formatTime(e.END) : ""}</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:${statusColor(e.STATUS)};text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap">${escapeHtml(e.STATUS || "")}</div>
+        </div>
+      </div>`
+    }
+
+    let html = `<h2 style="margin:0 0 16px">Zkoušky 10men</h2>`
+
+    if(upcoming.length){
+      html += `<h3 class="season-title">Nadcházející</h3>
+        <div class="card" style="padding:0">
+          ${upcoming.map((e,i) => renderRow(e, i, upcoming)).join("")}
+        </div>`
+    }
+
+    if(past.length){
+      html += `<h3 class="season-title" style="margin-top:20px">Proběhlé</h3>
+        <div class="card" style="padding:0;opacity:0.5">
+          ${past.map((e,i) => renderRow(e, i, past)).join("")}
+        </div>`
+    }
+
+    if(!smetanovo.length){
+      html += `<p class="notice">Žádné akce</p>`
+    }
+
+    container().innerHTML = html
+
+  }catch(err){
+    setError("Chyba při načítání: " + (err?.message || err))
+  }
 }
 
 /* ===============================
@@ -3661,3 +3735,4 @@ window.saveSeriesFrom       = saveSeriesFrom
 window.openEditEventModal   = openEditEventModal
 window.openDeleteEventModal = openDeleteEventModal
 window.saveEntireSeries     = saveEntireSeries
+window.renderGuestView      = renderGuestView
