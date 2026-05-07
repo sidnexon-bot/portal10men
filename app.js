@@ -1916,24 +1916,28 @@ function prefetchProgramPdfs(program){
 }
 
 async function openEditSeriesFrom(id){
-  // Otevři formulář pro editaci — předvyplněný hodnotami aktuální akce
   await openEventForm(id)
 
-  // Přepiš nadpis a tlačítko
-  const h2 = container().querySelector("h2") ||
-             document.querySelector("#edit-panel-slot h2")
-  if(h2) h2.textContent = "Upravit sérii od této akce"
+  // Počkej na vyrendering formuláře
+  setTimeout(() => {
+    const target = document.getElementById("edit-panel-slot") || container()
 
-  const saveBtn = document.getElementById("fSaveBtn") ||
-                  container().querySelector("button[onclick*='saveEvent']")
+    const h2 = target.querySelector("h2")
+    if(h2) h2.textContent = "Upravit sérii od této akce"
 
-  // Přepiš saveEvent aby volal editSeries
-  const oldSave = document.querySelector("button[onclick*=\"saveEvent('\"+id+\"'\"]") ||
-                  container().querySelector(".btn-group button:first-child")
-  if(oldSave){
-    oldSave.textContent = "Uložit sérii od této akce"
-    oldSave.onclick = () => saveSeriesFrom(id)
-  }
+    // Najdi první tlačítko v btn-group (Uložit změny)
+    const btnGroup = target.querySelector(".btn-group")
+    if(btnGroup){
+      const saveBtn = btnGroup.querySelector("button:first-child")
+      if(saveBtn){
+        saveBtn.textContent = "Uložit sérii od této akce"
+        saveBtn.style.background = "#007aff"
+        saveBtn.style.color = "#fff"
+        saveBtn.removeAttribute("onclick")
+        saveBtn.onclick = () => saveSeriesFrom(id)
+      }
+    }
+  }, 100)
 }
 
 async function saveSeriesFrom(id){
