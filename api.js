@@ -780,13 +780,25 @@ async function updateSeriesFrom(params){
   const vsechnyAkce = await dbGet("/akce")
   const thisDate    = akce.date
 
-  const toUpdate = objToArray(vsechnyAkce).filter(e =>
-    e.template_id === templateId && e.date >= thisDate
-  )
+  // Seřaď instance od této akce podle data
+  const toUpdate = objToArray(vsechnyAkce)
+    .filter(e => e.template_id === templateId && e.date >= thisDate)
+    .sort((a,b) => a.date > b.date ? 1 : -1)
+
+  // Vypočítej posun v ms mezi starým a novým datem první instance
+  const oldFirst = new Date(toUpdate[0]?.date)
+  const newFirst = new Date(params.date)
+  const diffMs   = newFirst - oldFirst
 
   for(const inst of toUpdate){
+    const newDate = new Date(new Date(inst.date).getTime() + diffMs)
+    const y = newDate.getFullYear()
+    const m = String(newDate.getMonth() + 1).padStart(2, "0")
+    const d = String(newDate.getDate()).padStart(2, "0")
+
     await dbUpdate("/akce/" + inst.id, {
       name:             params.name,
+      date:             `${y}-${m}-${d}`,
       start:            params.start            || "",
       end:              params.end              || "",
       place:            params.place            || "",
@@ -794,7 +806,6 @@ async function updateSeriesFrom(params){
       note:             params.note             || "",
       status:           params.status           || "Plánovaná",
       requires_program: params.requires_program !== false
-      // date záměrně NEměníme — každá instance má své datum
     })
   }
 
