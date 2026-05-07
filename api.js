@@ -356,6 +356,31 @@ async function getRepertoar(){
   }))
 }
 
+async function updateEntireSeries(params){
+  const akce = await dbGet("/akce/" + params.id)
+  const templateId = akce?.template_id
+  if(!templateId) return { status: "no_template" }
+
+  const vsechnyAkce = await dbGet("/akce")
+  const toUpdate = objToArray(vsechnyAkce).filter(e => e.template_id === templateId)
+
+  for(const inst of toUpdate){
+    await dbUpdate("/akce/" + inst.id, {
+      name:             params.name,
+      start:            params.start            || "",
+      end:              params.end              || "",
+      place:            params.place            || "",
+      call_url:         params.call_url         || "",
+      note:             params.note             || "",
+      status:           params.status           || "Plánovaná",
+      requires_program: params.requires_program !== false
+      // date záměrně NEměníme u celé série
+    })
+  }
+
+  return { status: "entire_series_updated", count: toUpdate.length }
+}
+
 async function getEnergy(){
   const energie = await dbGet("/energie")
   const akce    = await dbGet("/akce")
@@ -885,6 +910,7 @@ async function api(action, params = {}){
     case "deleterecurring":  return await deleteRecurring(params)
     case "getrawakce":       return await dbGet("/akce/" + params.id)
     case "updateseriesfrom": return await updateSeriesFrom(params)
+    case "updateentireseriesfrom": return await updateEntireSeries(params)
     default: throw new Error("Unknown action: " + action)
   }
 }
