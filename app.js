@@ -1633,8 +1633,8 @@ async function openEvent(id){
 }
 
 function openEditEventModal(id){
-  const events    = window._cachedEvents || []
-  const thisEvent = (lsGet("detail_" + id) || {}).event || {}
+  const cached    = lsGet("detail_" + id)
+  const thisEvent = cached?.event || {}
   const isSeries  = !!(thisEvent?.TEMPLATE_ID)
 
   if(!isSeries){
@@ -1642,53 +1642,36 @@ function openEditEventModal(id){
     return
   }
 
-  openFormModal("Upravit akci", [], () => {})
+  const modal   = document.getElementById("formModal")
+  const titleEl = document.getElementById("formModalTitle")
+  const bodyEl  = document.getElementById("formModalBody")
+  const btnGroup = document.querySelector("#formModal .btn-group")
 
-  const body   = document.getElementById("formModalBody")
-  const submit = document.getElementById("formModalSubmit")
-
-  body.innerHTML = `
+  titleEl.textContent = "Upravit akci"
+  bodyEl.innerHTML = `
     <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
     <p class="small">Chceš upravit jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
 
-  submit.textContent      = "Jen tuto akci"
-  submit.style.background = "#e8e8ed"
-  submit.style.color      = "#007aff"
-  submit.onclick = () => { closeFormModal(); openEventForm(id) }
+  btnGroup.innerHTML = `
+    <button onclick="closeFormModal();openEventForm('${id}')" style="flex:1">Jen tuto akci</button>
+    <button onclick="closeFormModal();openEditSeriesFrom('${id}')" style="flex:1;background:#e8e8ed;color:#007aff">Tuto a následující</button>`
 
-  const btnGroup = document.querySelector("#formModal .btn-group")
-  btnGroup.querySelectorAll(".btn-edit-series, .btn-edit-from, .btn-cancel-edit").forEach(b => b.remove())
-
-  const fromBtn = document.createElement("button")
-  fromBtn.className     = "btn-edit-from"
-  fromBtn.textContent   = "Tuto a následující"
-  fromBtn.style.cssText = "background:#e8e8ed;color:#007aff;flex:1"
-  fromBtn.onclick = () => { closeFormModal(); openEditSeriesFrom(id) }
-  btnGroup.appendChild(fromBtn)
-
-  // druhý řádek — 2x2 mřížka
   const row2 = document.createElement("div")
   row2.style.cssText = "display:flex;gap:8px;margin-top:8px;width:100%"
+  row2.innerHTML = `
+    <button onclick="closeFormModal();openEditSeriesFrom('all_${id}')" style="flex:1;background:#e8e8ed;color:#007aff">Celou sérii</button>
+    <button onclick="closeFormModal()" style="flex:1;background:#f2f2f7;color:#8e8e93">Zrušit</button>`
 
-  const seriesBtn = document.createElement("button")
-  seriesBtn.className     = "btn-edit-series"
-  seriesBtn.textContent   = "Celou sérii"
-  seriesBtn.style.cssText = "background:#e8e8ed;color:#007aff;flex:1"
-  seriesBtn.onclick = () => { closeFormModal(); openEditSeriesFrom("all_" + id) }
-
-  const cancelBtn = document.createElement("button")
-  cancelBtn.className     = "btn-cancel-edit"
-  cancelBtn.textContent   = "Zrušit"
-  cancelBtn.style.cssText = "background:#f2f2f7;color:#8e8e93;flex:1"
-  cancelBtn.onclick = () => closeFormModal()
-
-  row2.appendChild(seriesBtn)
-  row2.appendChild(cancelBtn)
+  btnGroup.parentElement.querySelectorAll(".modal-row2").forEach(r => r.remove())
+  row2.className = "modal-row2"
   btnGroup.parentElement.appendChild(row2)
+
+  modal.classList.remove("hidden")
 }
 
 function openDeleteEventModal(id){
-  const thisEvent = (lsGet("detail_" + id) || {}).event || {}
+  const cached    = lsGet("detail_" + id)
+  const thisEvent = cached?.event || {}
   const isSeries  = !!(thisEvent?.TEMPLATE_ID)
 
   if(!isSeries){
@@ -1708,86 +1691,52 @@ function openDeleteEventModal(id){
     return
   }
 
-  openFormModal("Smazat akci", [], () => {})
+  const modal    = document.getElementById("formModal")
+  const titleEl  = document.getElementById("formModalTitle")
+  const bodyEl   = document.getElementById("formModalBody")
+  const btnGroup = document.querySelector("#formModal .btn-group")
 
-  const body   = document.getElementById("formModalBody")
-  const submit = document.getElementById("formModalSubmit")
-
-  body.innerHTML = `
+  titleEl.textContent = "Smazat akci"
+  bodyEl.innerHTML = `
     <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
     <p class="small">Chceš smazat jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
 
-  submit.textContent      = "Jen tuto akci"
-  submit.style.background = "#fde8e8"
-  submit.style.color      = "#c00"
-  submit.onclick = async () => {
-    closeFormModal()
-    try{
-      showSaving()
-      await api("deleterecurring", {id, mode: "single"})
-      invalidateCache("events")
-      invalidateCache("eventdetail", id)
-      hideSaving("Akce smazána ✓")
-      renderEvents()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  }
-
-  const btnGroup = document.querySelector("#formModal .btn-group")
-  btnGroup.querySelectorAll(".btn-delete-series, .btn-delete-from, .btn-cancel-del").forEach(b => b.remove())
-
-  const fromBtn = document.createElement("button")
-  fromBtn.className     = "btn-delete-from"
-  fromBtn.textContent   = "Tuto a následující"
-  fromBtn.style.cssText = "background:#ff9f0a;color:#fff;flex:1"
-  fromBtn.onclick = async () => {
-    closeFormModal()
-    try{
-      showSaving()
-      await api("deleterecurring", {id, mode: "from_this"})
-      invalidateCache("events")
-      invalidateCache("eventdetail", id)
-      hideSaving("Akce smazány ✓")
-      renderEvents()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  }
-  btnGroup.appendChild(fromBtn)
+  btnGroup.innerHTML = `
+    <button class="btn-series-action" style="flex:1;background:#fde8e8;color:#c00">Jen tuto akci</button>
+    <button class="btn-series-action" style="flex:1;background:#ff9f0a;color:#fff">Tuto a následující</button>`
 
   const row2 = document.createElement("div")
   row2.style.cssText = "display:flex;gap:8px;margin-top:8px;width:100%"
+  row2.innerHTML = `
+    <button class="btn-series-action" style="flex:1;background:#ff3b30;color:#fff">Celou sérii</button>
+    <button class="btn-series-action" style="flex:1;background:#f2f2f7;color:#8e8e93">Zrušit</button>`
 
-  const seriesBtn = document.createElement("button")
-  seriesBtn.className     = "btn-delete-series"
-  seriesBtn.textContent   = "Celou sérii"
-  seriesBtn.style.cssText = "background:#ff3b30;color:#fff;flex:1"
-  seriesBtn.onclick = async () => {
-    closeFormModal()
-    try{
-      showSaving()
-      await api("deleterecurring", {id, mode: "series"})
-      invalidateCache("events")
-      hideSaving("Série smazána ✓")
-      renderEvents()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  }
-
-  const cancelBtn = document.createElement("button")
-  cancelBtn.className     = "btn-cancel-del"
-  cancelBtn.textContent   = "Zrušit"
-  cancelBtn.style.cssText = "background:#f2f2f7;color:#8e8e93;flex:1"
-  cancelBtn.onclick = () => closeFormModal()
-
-  row2.appendChild(seriesBtn)
-  row2.appendChild(cancelBtn)
+  btnGroup.parentElement.querySelectorAll(".modal-row2").forEach(r => r.remove())
+  row2.className = "modal-row2"
   btnGroup.parentElement.appendChild(row2)
+
+  // Přiřaď handlery až po vložení do DOM
+  const btns = [...btnGroup.querySelectorAll(".btn-series-action"),
+                ...row2.querySelectorAll(".btn-series-action")]
+
+  btns[0].onclick = async () => {
+    closeFormModal()
+    try{ showSaving(); await api("deleterecurring", {id, mode: "single"}); invalidateCache("events"); invalidateCache("eventdetail", id); hideSaving("Akce smazána ✓"); renderEvents() }
+    catch(err){ hideSaving("Chyba ✗"); alert("Chyba: " + (err?.message || err)) }
+  }
+  btns[1].onclick = async () => {
+    closeFormModal()
+    try{ showSaving(); await api("deleterecurring", {id, mode: "from_this"}); invalidateCache("events"); invalidateCache("eventdetail", id); hideSaving("Akce smazány ✓"); renderEvents() }
+    catch(err){ hideSaving("Chyba ✗"); alert("Chyba: " + (err?.message || err)) }
+  }
+  btns[2].onclick = async () => {
+    closeFormModal()
+    try{ showSaving(); await api("deleterecurring", {id, mode: "series"}); invalidateCache("events"); hideSaving("Série smazána ✓"); renderEvents() }
+    catch(err){ hideSaving("Chyba ✗"); alert("Chyba: " + (err?.message || err)) }
+  }
+  btns[3].onclick = () => closeFormModal()
+
+  modal.classList.remove("hidden")
 }
 
 async function saveEntireSeries(id){
