@@ -9,6 +9,7 @@ let MEMBER_NAME  = null
 let ACTIVE_TAB   = "dashboard"
 let MEMBER_ROLE  = "MEMBER"
 let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
+let ACTIVE_DETAIL_ID = null
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -1209,6 +1210,8 @@ function openAddCollection(){
 
 async function renderEvents(){
 
+  ACTIVE_DETAIL_ID = null
+
   setLoading()
 
   try{
@@ -1504,7 +1507,9 @@ async function openEventForm(id){
 
 async function openEvent(id){
 
-  const slotEl = document.getElementById("detail-panel-slot")
+   ACTIVE_DETAIL_ID = id
+  
+   const slotEl = document.getElementById("detail-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
 
   if(target){
@@ -3664,14 +3669,20 @@ function invalidateAllCache(){
   CACHE.detail = {}
   CACHE.ts     = {}
 }
-
 async function silentRefresh(){
   if(MEMBER_ROLE === "GUEST"){
     renderGuestView()
     return
   }
   if(ACTIVE_TAB === "dashboard")     renderDashboard()
-  else if(ACTIVE_TAB === "events")   renderEvents()
+  else if(ACTIVE_TAB === "events"){
+    if(ACTIVE_DETAIL_ID){
+      renderEvents()
+      openEvent(ACTIVE_DETAIL_ID)
+    }else{
+      renderEvents()
+    }
+  }
   else if(ACTIVE_TAB === "payments") renderPayments()
   else if(ACTIVE_TAB === "energy")   renderEnergy()
 }
