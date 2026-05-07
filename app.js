@@ -2069,7 +2069,7 @@ function addSwipe(el, eventId){
       return
     }
 
-    el.setAttribute("style", "transition: transform 0.2s ease")
+    el.style.setProperty("transition", "transform 0.2s ease", "important")
 
     if(currentX > THRESHOLD){
       setTransform("110%")
