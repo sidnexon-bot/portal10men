@@ -778,23 +778,40 @@ async function updateSeriesFrom(params){
   if(!templateId) return { status: "no_template" }
 
   const vsechnyAkce = await dbGet("/akce")
-  const thisDate    = akce.date
 
-  // Seřaď instance od této akce podle data
+  function normalizeDate(d){
+    if(!d) return ""
+    const parsed = new Date(d)
+    if(isNaN(parsed)) return ""
+    const y   = parsed.getFullYear()
+    const m   = String(parsed.getMonth() + 1).padStart(2, "0")
+    const day = String(parsed.getDate()).padStart(2, "0")
+    return `${y}-${m}-${day}`
+  }
+
+  const thisDate = normalizeDate(akce.date)
+
   const toUpdate = objToArray(vsechnyAkce)
-    .filter(e => e.template_id === templateId && e.date >= thisDate)
-    .sort((a,b) => a.date > b.date ? 1 : -1)
+    .filter(e => e.template_id === templateId && normalizeDate(e.date) >= thisDate)
+    .sort((a,b) => normalizeDate(a.date) > normalizeDate(b.date) ? 1 : -1)
 
-  // Vypočítej posun v ms mezi starým a novým datem první instance
-  const oldFirst = new Date(toUpdate[0]?.date)
+  if(!toUpdate.length) return { status: "nothing_to_update" }
+
+  const oldFirst = new Date(toUpdate[0].date)
   const newFirst = new Date(params.date)
   const diffMs   = newFirst - oldFirst
 
   for(const inst of toUpdate){
-    const newDate = new Date(new Date(inst.date).getTime() + diffMs)
-    const y = newDate.getFullYear()
-    const m = String(newDate.getMonth() + 1).padStart(2, "0")
-    const d = String(newDate.getDate()).padStart(2, "0")
+    const origDate = new Date(inst.date)
+    if(isNaN(origDate)){
+      console.warn("Preskakuji akci s neplatnym datem:", inst.id, inst.date)
+      continue
+    }
+
+    const newDate = new Date(origDate.getTime() + diffMs)
+    const y   = newDate.getFullYear()
+    const m   = String(newDate.getMonth() + 1).padStart(2, "0")
+    const d   = String(newDate.getDate()).padStart(2, "0")
 
     await dbUpdate("/akce/" + inst.id, {
       name:             params.name,
