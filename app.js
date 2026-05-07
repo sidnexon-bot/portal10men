@@ -1942,6 +1942,7 @@ async function openEditSeriesFrom(id){
 
 async function saveSeriesFrom(id){
   const name            = document.getElementById("fName")?.value.trim()
+  const date            = document.getElementById("fDate")?.value
   const start           = document.getElementById("fStart")?.value
   const end             = document.getElementById("fEnd")?.value
   const place           = document.getElementById("fPlace")?.value.trim()
