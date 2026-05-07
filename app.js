@@ -3709,3 +3709,6 @@ window.toggleRecurrenceUntil  = toggleRecurrenceUntil
 window.openDeleteSeriesModal  = openDeleteSeriesModal
 window.openEditSeriesFrom   = openEditSeriesFrom
 window.saveSeriesFrom       = saveSeriesFrom
+window.openEditEventModal   = openEditEventModal
+window.openDeleteEventModal = openDeleteEventModal
+window.saveEntireSeries     = saveEntireSeries
