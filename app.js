@@ -3665,6 +3665,10 @@ function invalidateAllCache(){
 }
 
 async function silentRefresh(){
+  if(MEMBER_ROLE === "GUEST"){
+    renderGuestView()
+    return
+  }
   if(ACTIVE_TAB === "dashboard")     renderDashboard()
   else if(ACTIVE_TAB === "events")   renderEvents()
   else if(ACTIVE_TAB === "payments") renderPayments()
