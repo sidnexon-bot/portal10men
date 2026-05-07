@@ -540,6 +540,14 @@ async function start(){
         if(MEMBER_ROLE === "GUEST"){
       // Skryj navigaci
       document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
+           // Pro guesta zobraz jen tlačítko odhlásit v headeru
+      const profileBtn = document.getElementById("profileBtn")
+      if(profileBtn){
+        profileBtn.onclick = (e) => {
+          e.stopPropagation()
+          Auth.logout()
+        }
+      }
       // Sidebar neinicializuj vůbec
       // Přepiš všechna nav tlačítka aby nefungovala
       document.getElementById("btnDashboard").onclick = () => {}
