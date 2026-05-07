@@ -3387,17 +3387,18 @@ function initPullToRefresh(){
     }
 
     if(dy >= THRESHOLD && window.scrollY === 0){
-      // invaliduj cache a refresh
-      Object.keys(localStorage)
-        .filter(k => k.startsWith("cache_"))
-        .forEach(k => localStorage.removeItem(k))
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("cache_"))
+    .forEach(k => localStorage.removeItem(k))
 
-      // obnov aktuální tab
-      if(ACTIVE_TAB === "dashboard")  renderDashboard()
-      else if(ACTIVE_TAB === "events") renderEvents()
-      else if(ACTIVE_TAB === "payments") renderPayments()
-      else if(ACTIVE_TAB === "energy") renderEnergy()
-    }
+  if(MEMBER_ROLE === "GUEST"){
+    renderGuestView()
+  } else if(ACTIVE_TAB === "dashboard")  renderDashboard()
+  else if(ACTIVE_TAB === "events") renderEvents()
+  else if(ACTIVE_TAB === "payments") renderPayments()
+  else if(ACTIVE_TAB === "energy") renderEnergy()
+}
+
   })
 }
 
@@ -3672,9 +3673,12 @@ async function silentRefresh(){
 
 document.addEventListener("visibilitychange", () => {
   if(!document.hidden){
-    // při návratu na stránku jen invaliduj cache a refreshni
     invalidateAllCache()
-    silentRefresh()
+    if(MEMBER_ROLE === "GUEST"){
+      renderGuestView()
+    }else{
+      silentRefresh()
+    }
   }
 })
 
