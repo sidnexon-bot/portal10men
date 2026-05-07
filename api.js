@@ -772,6 +772,35 @@ async function deleteRecurring(params){
   }
 }
 
+async function updateSeriesFrom(params){
+  const akce = await dbGet("/akce/" + params.id)
+  const templateId = akce?.template_id
+  if(!templateId) return { status: "no_template" }
+
+  const vsechnyAkce = await dbGet("/akce")
+  const thisDate    = akce.date
+
+  const toUpdate = objToArray(vsechnyAkce).filter(e =>
+    e.template_id === templateId && e.date >= thisDate
+  )
+
+  for(const inst of toUpdate){
+    await dbUpdate("/akce/" + inst.id, {
+      name:             params.name,
+      start:            params.start            || "",
+      end:              params.end              || "",
+      place:            params.place            || "",
+      call_url:         params.call_url         || "",
+      note:             params.note             || "",
+      status:           params.status           || "Plánovaná",
+      requires_program: params.requires_program !== false
+      // date záměrně NEměníme — každá instance má své datum
+    })
+  }
+
+  return { status: "series_updated", count: toUpdate.length }
+}
+
 // ===============================
 // HLAVNÍ API FUNKCE
 // ===============================
@@ -815,6 +844,7 @@ async function api(action, params = {}){
     case "addrecurring":     return await addRecurring(params)
     case "deleterecurring":  return await deleteRecurring(params)
     case "getrawakce":       return await dbGet("/akce/" + params.id)
+    case "updateseriesfrom": return await updateSeriesFrom(params)
     default: throw new Error("Unknown action: " + action)
   }
 }
