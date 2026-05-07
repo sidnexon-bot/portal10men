@@ -1608,11 +1608,8 @@ async function openEvent(id){
 
       if(MEMBER_ROLE === "ADMIN"){
         html += `<div class="btn-group">
-          <button onclick="openEventForm('${id}')">Upravit akci</button>
-          ${event.TEMPLATE_ID ? `
-           <button onclick="openEditSeriesFrom('${id}')">Upravit sérii od této akce</button>
-         ` : ""}
-          <button onclick="deleteEvent('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
+          <button onclick="openEditEventModal('${id}')">Upravit akci</button>
+          <button onclick="openDeleteEventModal('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
         </div>`
       }
 
@@ -1633,6 +1630,193 @@ async function openEvent(id){
     }
   }
 
+}
+
+function openEditEventModal(id){
+  const events    = window._cachedEvents || []
+  const thisEvent = (lsGet("detail_" + id) || {}).event || {}
+  const isSeries  = !!(thisEvent?.TEMPLATE_ID)
+
+  if(!isSeries){
+    openEventForm(id)
+    return
+  }
+
+  openFormModal("Upravit akci", [], () => {})
+
+  const body   = document.getElementById("formModalBody")
+  const submit = document.getElementById("formModalSubmit")
+
+  body.innerHTML = `
+    <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
+    <p class="small">Chceš upravit jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
+
+  submit.textContent      = "Jen tuto akci"
+  submit.style.background = "#e8e8ed"
+  submit.style.color      = "#007aff"
+  submit.onclick = () => { closeFormModal(); openEventForm(id) }
+
+  const btnGroup = document.querySelector("#formModal .btn-group")
+  btnGroup.querySelectorAll(".btn-edit-series, .btn-edit-from, .btn-cancel-edit").forEach(b => b.remove())
+
+  const fromBtn = document.createElement("button")
+  fromBtn.className     = "btn-edit-from"
+  fromBtn.textContent   = "Tuto a následující"
+  fromBtn.style.cssText = "background:#e8e8ed;color:#007aff;flex:1"
+  fromBtn.onclick = () => { closeFormModal(); openEditSeriesFrom(id) }
+  btnGroup.appendChild(fromBtn)
+
+  // druhý řádek — 2x2 mřížka
+  const row2 = document.createElement("div")
+  row2.style.cssText = "display:flex;gap:8px;margin-top:8px;width:100%"
+
+  const seriesBtn = document.createElement("button")
+  seriesBtn.className     = "btn-edit-series"
+  seriesBtn.textContent   = "Celou sérii"
+  seriesBtn.style.cssText = "background:#e8e8ed;color:#007aff;flex:1"
+  seriesBtn.onclick = () => { closeFormModal(); openEditSeriesFrom("all_" + id) }
+
+  const cancelBtn = document.createElement("button")
+  cancelBtn.className     = "btn-cancel-edit"
+  cancelBtn.textContent   = "Zrušit"
+  cancelBtn.style.cssText = "background:#f2f2f7;color:#8e8e93;flex:1"
+  cancelBtn.onclick = () => closeFormModal()
+
+  row2.appendChild(seriesBtn)
+  row2.appendChild(cancelBtn)
+  btnGroup.parentElement.appendChild(row2)
+}
+
+function openDeleteEventModal(id){
+  const thisEvent = (lsGet("detail_" + id) || {}).event || {}
+  const isSeries  = !!(thisEvent?.TEMPLATE_ID)
+
+  if(!isSeries){
+    confirmModal("Opravdu smazat tuto akci?", async () => {
+      try{
+        showSaving()
+        await api("deleteevent", {id})
+        invalidateCache("events")
+        invalidateCache("eventdetail", id)
+        hideSaving("Akce smazána ✓")
+        renderEvents()
+      }catch(err){
+        hideSaving("Chyba ✗")
+        alert("Chyba: " + (err?.message || err))
+      }
+    })
+    return
+  }
+
+  openFormModal("Smazat akci", [], () => {})
+
+  const body   = document.getElementById("formModalBody")
+  const submit = document.getElementById("formModalSubmit")
+
+  body.innerHTML = `
+    <p style="color:var(--text);margin:0 0 4px">Tato akce je součástí opakující se série.</p>
+    <p class="small">Chceš smazat jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
+
+  submit.textContent      = "Jen tuto akci"
+  submit.style.background = "#fde8e8"
+  submit.style.color      = "#c00"
+  submit.onclick = async () => {
+    closeFormModal()
+    try{
+      showSaving()
+      await api("deleterecurring", {id, mode: "single"})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce smazána ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }
+
+  const btnGroup = document.querySelector("#formModal .btn-group")
+  btnGroup.querySelectorAll(".btn-delete-series, .btn-delete-from, .btn-cancel-del").forEach(b => b.remove())
+
+  const fromBtn = document.createElement("button")
+  fromBtn.className     = "btn-delete-from"
+  fromBtn.textContent   = "Tuto a následující"
+  fromBtn.style.cssText = "background:#ff9f0a;color:#fff;flex:1"
+  fromBtn.onclick = async () => {
+    closeFormModal()
+    try{
+      showSaving()
+      await api("deleterecurring", {id, mode: "from_this"})
+      invalidateCache("events")
+      invalidateCache("eventdetail", id)
+      hideSaving("Akce smazány ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }
+  btnGroup.appendChild(fromBtn)
+
+  const row2 = document.createElement("div")
+  row2.style.cssText = "display:flex;gap:8px;margin-top:8px;width:100%"
+
+  const seriesBtn = document.createElement("button")
+  seriesBtn.className     = "btn-delete-series"
+  seriesBtn.textContent   = "Celou sérii"
+  seriesBtn.style.cssText = "background:#ff3b30;color:#fff;flex:1"
+  seriesBtn.onclick = async () => {
+    closeFormModal()
+    try{
+      showSaving()
+      await api("deleterecurring", {id, mode: "series"})
+      invalidateCache("events")
+      hideSaving("Série smazána ✓")
+      renderEvents()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  }
+
+  const cancelBtn = document.createElement("button")
+  cancelBtn.className     = "btn-cancel-del"
+  cancelBtn.textContent   = "Zrušit"
+  cancelBtn.style.cssText = "background:#f2f2f7;color:#8e8e93;flex:1"
+  cancelBtn.onclick = () => closeFormModal()
+
+  row2.appendChild(seriesBtn)
+  row2.appendChild(cancelBtn)
+  btnGroup.parentElement.appendChild(row2)
+}
+
+async function saveEntireSeries(id){
+  const name            = document.getElementById("fName")?.value.trim()
+  const date            = document.getElementById("fDate")?.value
+  const start           = document.getElementById("fStart")?.value
+  const end             = document.getElementById("fEnd")?.value
+  const place           = document.getElementById("fPlace")?.value.trim()
+  const callUrl         = document.getElementById("fCallUrl")?.value.trim()
+  const note            = document.getElementById("fNote")?.value.trim()
+  const status          = document.getElementById("fStatus")?.value
+  const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
+
+  if(!name){ alert("Zadej název akce"); return }
+
+  try{
+    showSaving()
+    await api("updateentireseriesfrom", {
+      id, name, start, end, place, note, status,
+      requires_program: requiresProgram,
+      call_url: callUrl
+    })
+    invalidateCache("events")
+    hideSaving("Série upravena ✓")
+    renderEvents()
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 function toggleAttendanceAccordion(id){
