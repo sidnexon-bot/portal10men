@@ -1958,7 +1958,7 @@ async function saveSeriesFrom(id){
   try{
     showSaving()
     await api("updateseriesfrom", {
-      id, name, start, end, place, note, status,
+      id, name, date, start, end, place, note, status,
       requires_program: requiresProgram,
       call_url: callUrl
     })
