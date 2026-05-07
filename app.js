@@ -1958,7 +1958,7 @@ async function saveSeriesFrom(id){
     // zjisti until z šablony
     const detail     = await api("eventdetail", {id})
     const templateId = detail.event.TEMPLATE_ID
-    const tmpl       = templateId ? await dbGet("/akce/" + templateId) : null
+    const tmpl       = templateId ? await api("getrawakce", {id: templateId}) : null
     const until      = tmpl?.recurrence_until || date
 
     await api("addrecurring", {
