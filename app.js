@@ -1990,8 +1990,12 @@ function addSwipe(el, eventId){
   const THRESHOLD  = 80
 
   function setTransform(val){
-    el.setAttribute("style", val ? `transform: translateX(${val})` : "")
-  }
+     if(val){
+       el.style.setProperty("transform", `translateX(${val})`, "important")
+     }else{
+       el.style.removeProperty("transform")
+     }
+   }
 
   el.addEventListener("click", () => {
     if(!moved) openEvent(eventId)
