@@ -2273,7 +2273,9 @@ function openDeleteSeriesModal(id){
   }
 
   const btnGroup  = document.querySelector("#formModal .btn-group")
+  btnGroup.querySelectorAll(".btn-delete-series").forEach(b => b.remove())
   const seriesBtn = document.createElement("button")
+  seriesBtn.className       = "btn-delete-series"
   seriesBtn.textContent     = "Celou sérii"
   seriesBtn.style.cssText   = "background:#ff3b30;color:#fff;flex:1"
   seriesBtn.onclick = async () => {
