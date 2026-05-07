@@ -83,20 +83,24 @@ async function getEventDetail(id){
   const members   = await dbGet("/members")
 
   const attendance = objToArray(dochazka)
-    .filter(d => d.id_akce === id)
-    .map(d => {
-      const m = objToArray(members).find(m => m.email === d.email) || {}
-      return {
-        ID:         d.id,
-        ID_AKCE:    d.id_akce,
-        EMAIL:      d.email,
-        NAME:       m.name || d.email,
-        VOICE:      m.voice || "",
-        STATUS:     d.status || "",
-        REASON:     d.reason || "",
-        UPDATED_AT: d.updated_at || ""
-      }
-    })
+  .filter(d => d.id_akce === id)
+  .filter(d => {
+    const m = objToArray(members).find(m => m.email === d.email)
+    return !m || (m.role || "").toUpperCase() !== "GUEST"
+  })
+  .map(d => {
+    const m = objToArray(members).find(m => m.email === d.email) || {}
+    return {
+      ID:         d.id,
+      ID_AKCE:    d.id_akce,
+      EMAIL:      d.email,
+      NAME:       m.name || d.email,
+      VOICE:      m.voice || "",
+      STATUS:     d.status || "",
+      REASON:     d.reason || "",
+      UPDATED_AT: d.updated_at || ""
+    }
+  })
 
   const prog = objToArray(program)
     .filter(p => p.id_akce === id)
@@ -179,7 +183,9 @@ async function getHeatmap(){
     events: objToArray(akce)
       .filter(e => !e.is_template)
       .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, STATUS: e.status || ""})),
-    members: objToArray(members).map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
+    members: objToArray(members)
+      .filter(m => (m.role || "").toUpperCase() !== "GUEST")
+      .map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
     rows:    objToArray(dochazka).map(d => ({
       ID_AKCE: d.id_akce,
       EMAIL:   d.email,
@@ -211,7 +217,7 @@ async function addEvent(params){
   })
 
   // vytvoř záznamy docházky pro všechny členy
-  const memberList = objToArray(members)
+  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
   for(const m of memberList){
     const dRef = push(ref(DB, "/dochazka"))
     await dbSet("/dochazka/" + dRef.key, {
@@ -262,7 +268,7 @@ async function cancelEvent(params){
   if(!id){ console.error("cancelEvent: missing id"); return {error: "missing id"} }
   const members  = await dbGet("/members")
   const dochazka = await dbGet("/dochazka")
-  const memberList = objToArray(members)
+  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
   const dochazkaList = objToArray(dochazka)
 
   await dbUpdate("/akce/" + params.id, {
@@ -487,18 +493,21 @@ async function getPayments(email){
     const vsechnyPlatby = objToArray(platby).filter(p => p.id_vyberu === v.id)
     const mojePlatba   = vsechnyPlatby.find(p => p.email === email)
 
-    const memberStatus = objToArray(members).map(m => {
-      const p = vsechnyPlatby.find(x => x.email === m.email)
-      return {
-        name:  m.name,
-        email: m.email,
-        paid:  p ? Number(p.paid) || 0 : 0,
-        date:  p ? p.date : null
-      }
-    })
+    const memberStatus = objToArray(members)
+  .filter(m => (m.role || "").toUpperCase() !== "GUEST")
+  .map(m => {
+    const p = vsechnyPlatby.find(x => x.email === m.email)
+    return {
+      name:  m.name,
+      email: m.email,
+      paid:  p ? Number(p.paid) || 0 : 0,
+      date:  p ? p.date : null
+    }
+  })
 
     const totalPaid = vsechnyPlatby.reduce((sum, p) => sum + (Number(p.paid) || 0), 0)
-    const remaining = (Number(v.amount) * objToArray(members).length) - totalPaid
+    const remaining = (Number(v.amount) * objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST").length)
+ - totalPaid
 
     return {
       id:           v.id,
@@ -551,7 +560,7 @@ async function addCollection(params){
     active:   "YES"
   })
 
-  const memberList = objToArray(members)
+  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
   for(const m of memberList){
     const pRef = push(ref(DB, "/platby"))
     await dbSet("/platby/" + pRef.key, {
@@ -681,7 +690,7 @@ function generateRecurrenceDates(startDate, type, until){
 
 async function addRecurring(params){
   const members    = await dbGet("/members")
-  const memberList = objToArray(members)
+  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
 
   const templateId = "tmpl_" + Date.now()
 
