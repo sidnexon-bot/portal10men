@@ -76,7 +76,8 @@ async function getEvents(){
 }
 
 async function getEventDetail(id){
-  const akce      = await dbGet("/akce/" + id)
+  const akce = await dbGet("/akce/" + id)
+  if(!akce) throw new Error("Akce nenalezena: " + id)
   const dochazka  = await dbGet("/dochazka")
   const program   = await dbGet("/program")
   const repertoar = await dbGet("/repertoar")
