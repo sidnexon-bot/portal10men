@@ -1957,11 +1957,13 @@ async function saveSeriesFrom(id){
 
   try{
     showSaving()
-    await api("updateseriesfrom", {
-      id, name, date, start, end, place, note, status,
-      requires_program: requiresProgram,
-      call_url: callUrl
-    })
+    console.log("date před odesláním:", date)
+    const payload = { id, name, date, start, end, place, note, status,
+       requires_program: requiresProgram,
+       call_url: callUrl
+    }
+    console.log("payload:", payload)
+    await api("updateseriesfrom", payload)
     invalidateCache("events")
     hideSaving("Série upravena ✓")
     renderEvents()
