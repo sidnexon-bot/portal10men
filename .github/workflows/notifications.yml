@@ -71,6 +71,17 @@ jobs:
 
             const now = new Date();
             const events = Object.values(akce);
+
+            // DEBUG
+            console.log('Today:', now.toISOString());
+            console.log('Events count:', events.length);
+            events.forEach(e => {
+              const eventDate = new Date(e.date);
+              const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
+              console.log(e.name, '- days:', daysUntil, '- date:', e.date);
+            });
+            // END DEBUG
+            
             const progEntries = program ? Object.values(program) : [];
             const dochazkaEntries = dochazka ? Object.values(dochazka) : [];
             const memberList = Object.values(members);
