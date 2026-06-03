@@ -3016,6 +3016,11 @@ async function renderRepertoar(){
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += `<h2 style="margin:0 0 16px">Repertoár</h2>`
+      if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+        html += `<div class="btn-group" style="margin-bottom:16px">
+          <button onclick="openAddSong()">+ Přidat skladbu</button>
+        </div>`
+      }
 
     html += `<div class="card" style="margin-bottom:16px">
       <input
@@ -3064,6 +3069,12 @@ async function renderRepertoar(){
               ${r.LENGTH ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
               <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
               ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
+              ${MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART" ? `
+              <div class="btn-group" style="margin-top:10px">
+                <button onclick="event.stopPropagation();openEditSong('${escapeHtml(r.ID)}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+                <button onclick="event.stopPropagation();deleteSongItem('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+              </div>
+            ` : ""}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
@@ -3092,6 +3103,79 @@ async function renderRepertoar(){
   }catch(err){
     setError("Chyba při načítání repertoáru: " + (err?.message || err))
   }
+}
+
+function openAddSong(){
+  openFormModal("Nová skladba", [
+    {key: "name",        label: "Název",        type: "text"},
+    {key: "author",      label: "Skladatel",    type: "text"},
+    {key: "arranged_by", label: "Aranžmá",      type: "text"},
+    {key: "text_by",     label: "Text",         type: "text"},
+    {key: "status",      label: "Status",       type: "select", value: song?.STATUS || "Aktivní", options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
+    {key: "version",     label: "Verze",        type: "select", value: song?.VERSION || "", options: ["", "TTBB", "SATB"]},
+    {key: "pdf",         label: "Odkaz na noty (URL)", type: "text"},
+    {key: "code",        label: "Kód",          type: "text"},
+    {key: "note",        label: "Poznámka",     type: "textarea"}
+  ], async (values) => {
+    if(!values.name){ alert("Zadej název skladby"); return }
+    try{
+      closeFormModal()
+      showSaving()
+      await api("addsong", values)
+      lsDel("repertoar")
+      hideSaving("Skladba přidána ✓")
+      renderRepertoar()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
+async function openEditSong(id){
+  const data = await cachedApi("repertoar")
+  const song = data.find(r => r.ID === id)
+  if(!song) return
+
+  openFormModal("Upravit skladbu", [
+    {key: "name",        label: "Název",        type: "text",     value: song.NAME},
+    {key: "author",      label: "Skladatel",    type: "text",     value: song.AUTHOR},
+    {key: "arranged_by", label: "Aranžmá",      type: "text",     value: song.ARRANGED_BY},
+    {key: "text_by",     label: "Text",         type: "text",     value: song.TEXT_BY},
+    {key: "status",      label: "Status",       type: "select", value: song?.STATUS || "Aktivní", options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
+    {key: "version",     label: "Verze",        type: "select", value: song?.VERSION || "", options: ["", "TTBB", "SATB"]},
+    {key: "pdf",         label: "Odkaz na noty (URL)", type: "text", value: song.PDF},
+    {key: "code",        label: "Kód",          type: "text",     value: song.CODE},
+    {key: "note",        label: "Poznámka",     type: "textarea", value: song.NOTE}
+  ], async (values) => {
+    if(!values.name){ alert("Zadej název skladby"); return }
+    try{
+      closeFormModal()
+      showSaving()
+      await api("updatesong", {id, ...values})
+      lsDel("repertoar")
+      hideSaving("Skladba upravena ✓")
+      renderRepertoar()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
+async function deleteSongItem(id){
+  confirmModal("Opravdu smazat tuto skladbu?", async () => {
+    try{
+      showSaving()
+      await api("deletesong", {id})
+      lsDel("repertoar")
+      hideSaving("Skladba smazána ✓")
+      renderRepertoar()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
 }
 
 async function toggleFav(songId){
@@ -3440,6 +3524,10 @@ function openFormModal(title, fields, onSubmit){
       ${f.label}<br>
       ${f.type === "textarea"
         ? `<textarea id="fModal_${f.key}" style="width:100%;min-height:80px;margin-top:4px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${f.value||""}</textarea>`
+        : f.type === "select"
+        ? `<select id="fModal_${f.key}" style="margin-top:4px">
+            ${(f.options||[]).map(o => `<option value="${o}" ${f.value === o ? "selected" : ""}>${o}</option>`).join("")}
+           </select>`
         : `<input id="fModal_${f.key}" type="${f.type||"text"}" value="${f.value||""}" placeholder="${f.placeholder||""}" style="margin-top:4px">`
       }
     </label>
@@ -3455,6 +3543,7 @@ function openFormModal(title, fields, onSubmit){
 
   modal.classList.remove("hidden")
 }
+
 
 function closeFormModal(){
   document.getElementById("formModal").classList.add("hidden")
@@ -3788,6 +3877,9 @@ window.setProgSection       = setProgSection
 window.filterProgSongs      = filterProgSongs
 window.filterRepertoar      = filterRepertoar
 window.filterRepertoarStatus = filterRepertoarStatus
+window.openAddSong          = openAddSong
+window.openEditSong         = openEditSong
+window.deleteSongItem       = deleteSongItem
 window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext
 window.heatmapInfo          = heatmapInfo
