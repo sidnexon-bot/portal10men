@@ -379,6 +379,19 @@ function buildSongDetail(id){
   </div>`
 }
 
+function saveScroll(){
+  const main = document.getElementById("main")
+  return main ? main.scrollTop : window.scrollY
+}
+
+function restoreScroll(pos){
+  requestAnimationFrame(() => {
+    const main = document.getElementById("main")
+    if(main) main.scrollTop = pos
+    else window.scrollTo(0, pos)
+  })
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -806,7 +819,7 @@ function selectMember(m){
 ================================ */
 
 async function renderDashboard(){
-
+  const scroll = saveScroll()
   setLoading()
 
   try{
@@ -1060,6 +1073,7 @@ async function renderDashboard(){
       html += `<div id="heatmap-container">${heatmapHtml}</div>`
 
       container().innerHTML = html
+      restoreScroll(scroll)
     }
 
   }catch(err){
@@ -1240,7 +1254,7 @@ function openAddCollection(){
 async function renderEvents(){
 
   ACTIVE_DETAIL_ID = null
-
+  const scroll = saveScroll()
   setLoading()
 
   try{
@@ -1410,6 +1424,7 @@ if(pastEvents.length){
       const id = card.dataset.id
       addSwipe(card, id)
     })
+     restoreScroll(scroll)
 
   }catch(err){
     setError("Chyba při načítání akcí: " + (err?.message || err))
@@ -2671,6 +2686,7 @@ async function saveNote(eventId){
 ================================ */
 
 async function renderPayments(){
+  const scroll = saveScroll()
   setLoading()
   try{
     const data = await cachedApi("payments", {email: MEMBER_EMAIL})
@@ -2763,6 +2779,7 @@ async function renderPayments(){
 
     if(isDesktop) html += `</div>`
     container().innerHTML = html
+    restoreScroll(scroll)
 
   }catch(err){
     setError("Chyba při načítání plateb: " + (err?.message || err))
@@ -3018,6 +3035,7 @@ async function saveEnergy(){
 ================================ */
 
 async function renderRepertoar(){
+  const scroll = saveScroll()
   setLoading()
   try{
     const data      = await cachedApi("repertoar")
@@ -3164,7 +3182,8 @@ async function renderRepertoar(){
     html += `</div>`
     if(isDesktop) html += `</div>`
     container().innerHTML = html
-
+    restoreScroll(scroll)
+     
   }catch(err){
     setError("Chyba při načítání repertoáru: " + (err?.message || err))
   }
