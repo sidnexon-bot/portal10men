@@ -83,7 +83,7 @@ async function getEventDetail(id){
   const repertoar = await dbGet("/repertoar")
   const members   = await dbGet("/members")
 
-  const voiceOrder = ["TENOR 1", "TENOR 2", "BAS 1", "BAS 2"]
+  const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
 
 const attendance = objToArray(dochazka)
   .filter(d => d.id_akce === id)
