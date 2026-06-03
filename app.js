@@ -3164,11 +3164,10 @@ async function renderHeatmap(){
     today.setHours(0,0,0,0)
 
     const filtered = events.filter(e => {
-      const d = new Date(e.DATE)
-      d.setHours(0,0,0,0)
-      return d.getFullYear() === year && d.getMonth() + 1 === month && d >= today
-    })
-
+     const d = new Date(e.DATE)
+     d.setHours(0,0,0,0)
+     return d.getFullYear() === year && d.getMonth() + 1 === month && d >= today
+   }).sort((a, b) => new Date(a.DATE) - new Date(b.DATE))
 
     const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
 
