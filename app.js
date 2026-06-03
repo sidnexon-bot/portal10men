@@ -361,6 +361,24 @@ function toggleRecurrenceUntil(val){
   if(wrap) wrap.style.display = val !== "none" ? "block" : "none"
 }
 
+function buildSongDetail(id){
+  const card = document.querySelector(`.repertoar-row[data-id="${id}"]`)
+  if(!card) return ""
+  // potřebujeme data ze skladby — uložíme je do data atributů
+  const note = card.dataset.note || ""
+  const canEdit = MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"
+
+  return `<div class="song-detail" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+    ${note ? `<div class="small" style="margin-bottom:10px;white-space:pre-wrap">${escapeHtml(note)}</div>` : ""}
+    ${canEdit ? `
+      <div class="btn-group">
+        <button onclick="event.stopPropagation();openEditSong('${id}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+        <button onclick="event.stopPropagation();deleteSongItem('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
+      </div>
+    ` : ""}
+  </div>`
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -3090,6 +3108,8 @@ async function renderRepertoar(){
         data-status="${escapeHtml(r.STATUS)}"
         data-fav="${isFav ? "1" : "0"}"
         data-version="${escapeHtml(r.VERSION||"").toLowerCase()}"
+        data-id="${escapeHtml(r.ID)}"
+        data-note="${escapeHtml(r.NOTE||"")}"
         style="margin-bottom:10px;cursor:pointer"
         onclick="selectSong('${escapeHtml(r.ID)}')"
       >
@@ -3151,11 +3171,25 @@ async function renderRepertoar(){
 }
 
 function selectSong(id){
+  const prev = SONG_SELECTED
   SONG_SELECTED = SONG_SELECTED === id ? null : id
-  renderRepertoar()
-}
-window.selectSong = selectSong
 
+  // aktualizuj starou kartu
+  if(prev){
+    const oldCard = document.querySelector(`.repertoar-row[data-id="${prev}"]`)
+    if(oldCard) oldCard.querySelector(".song-detail")?.remove()
+  }
+
+  // aktualizuj novou kartu
+  const card = document.querySelector(`.repertoar-row[data-id="${id}"]`)
+  if(!card) return
+
+  if(SONG_SELECTED === id){
+    // přidej detail
+    const detailHtml = buildSongDetail(id)
+    card.insertAdjacentHTML("beforeend", detailHtml)
+  }
+}
 
 function openAddSong(){
   openFormModal("Nová skladba", [
@@ -3936,6 +3970,7 @@ window.filterRepertoar      = filterRepertoar
 window.toggleRepertoarFilter = toggleRepertoarFilter
 window.setRepertoarFilter    = setRepertoarFilter
 window.applyRepertoarFilter  = applyRepertoarFilter
+window.selectSong           = selectSong
 window.openAddSong          = openAddSong
 window.openEditSong         = openEditSong
 window.deleteSongItem       = deleteSongItem
