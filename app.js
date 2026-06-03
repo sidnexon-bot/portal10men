@@ -3139,7 +3139,13 @@ async function renderHeatmap(){
   try{
     const data    = await cachedApi("heatmap")
     const events  = data.events  || []
-    const members = data.members || []
+    const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+    const members = (data.members || []).sort((a, b) => {
+     const ai = voiceOrder.indexOf(a.VOICE)
+     const bi = voiceOrder.indexOf(b.VOICE)
+     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+    })
+
     const rows    = data.rows    || []
 
     if(!events.length || !members.length) return ""
