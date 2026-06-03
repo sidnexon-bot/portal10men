@@ -1449,7 +1449,7 @@ async function openEventForm(id){
       <input id="fDate" type="date" value="${dateVal}">
     </label>
     <label>Datum konce (pouze pro vícedenní akce)<br>
-     <input id="fDateEnd" type="date" value="${akce.DATE_END ? new Date(akce.DATE_END).toISOString().substring(0,10) : ''}">
+     <input id="fDateEnd" type="date" value="${event.DATE_END ? new Date(event.DATE_END).toISOString().substring(0,10) : ''}">
     </label>
     <label>Čas začátku<br>
       <input id="fStart" type="time" value="${escapeHtml(event.START || "")}">
