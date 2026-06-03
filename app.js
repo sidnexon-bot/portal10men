@@ -3073,7 +3073,7 @@ async function renderRepertoar(){
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
           ${["Vše", "Aktivní", "Neaktuální", "Mimo repertoár", "Oblíbené"].map(s => `
             <button onclick="setRepertoarFilter('status','${s}')"
-              style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.status === s ? "background:#007aff;color:#fff" : ""}">
+              style="padding:10px 16px;font-size:14px;${REPERTOAR_ACTIVE_FILTERS.status === s ? "background:#007aff;color:#fff" : ""}">
               ${s}
             </button>
           `).join("")}
@@ -3083,7 +3083,7 @@ async function renderRepertoar(){
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${["Vše", "TTBB", "SATB"].map(v => `
             <button onclick="setRepertoarFilter('version','${v}')"
-              style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.version === v ? "background:#007aff;color:#fff" : ""}">
+              style="padding:10px 16px;font-size:14px;${REPERTOAR_ACTIVE_FILTERS.version === v ? "background:#007aff;color:#fff" : ""}">
               ${v}
             </button>
           `).join("")}
