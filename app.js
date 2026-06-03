@@ -889,7 +889,11 @@ async function renderDashboard(){
       ${spring.length ? `
         <div class="card" style="padding:0">
           ${spring.map((e, i) => {
-            const past   = new Date(e.DATE) < now
+            const todayCheck = new Date(e.DATE)
+            todayCheck.setHours(0,0,0,0)
+            const nowCheck = new Date()
+            nowCheck.setHours(0,0,0,0)
+            const past = todayCheck < nowCheck
             const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
@@ -908,7 +912,11 @@ async function renderDashboard(){
       ${autumn.length ? `
         <div class="card" style="padding:0">
           ${autumn.map((e, i) => {
-            const past   = new Date(e.DATE) < now
+            const todayCheck = new Date(e.DATE)
+            todayCheck.setHours(0,0,0,0)
+            const nowCheck = new Date()
+            nowCheck.setHours(0,0,0,0)
+            const past = todayCheck < nowCheck
             const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
