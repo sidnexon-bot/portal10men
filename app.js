@@ -3017,13 +3017,22 @@ async function renderRepertoar(){
       return String(a.NAME).localeCompare(String(b.NAME), "cs")
     })
 
+    const filtered = sorted.filter(r => {
+      const status  = REPERTOAR_ACTIVE_FILTERS.status
+      const version = REPERTOAR_ACTIVE_FILTERS.version
+      const isFav   = !!favorites[r.ID]
+      const matchStatus  = status  === "Vše" ? true : status === "Oblíbené" ? isFav : r.STATUS === status
+      const matchVersion = version === "Vše" ? true : (r.VERSION||"").toLowerCase() === version.toLowerCase()
+      return matchStatus && matchVersion
+    })
+
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += `<h2 style="margin:0 0 16px">Repertoár</h2>`
-      if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
-        html += `<div class="btn-group" style="margin-bottom:16px">
-          <button onclick="openAddSong()">+ Přidat skladbu</button>
-        </div>`
-      }
+    if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
+      html += `<div class="btn-group" style="margin-bottom:16px">
+        <button onclick="openAddSong()">+ Přidat skladbu</button>
+      </div>`
+    }
 
     html += `<div class="card" style="margin-bottom:16px">
       <input
@@ -3035,102 +3044,104 @@ async function renderRepertoar(){
     </div>`
 
     html += `<div style="margin-bottom:8px">
-     <button onclick="toggleRepertoarFilter()" style="width:100%;display:flex;justify-content:space-between;align-items:center">
-       <span>Filtr</span>
-       <span id="chevronRepertoarFilter">${REPERTOAR_FILTER_OPEN ? "‹" : "›"}</span>
-     </button>
-   
-     <div id="repertoarFilterPanel" style="display:${REPERTOAR_FILTER_OPEN ? "block" : "none"};margin-top:8px;padding:12px;background:var(--card);border-radius:14px">
-       
-       <div class="small" style="font-weight:600;margin-bottom:6px">Status</div>
-       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-         ${["Vše", "Aktivní", "Neaktuální", "Mimo repertoár", "Oblíbené"].map(s => `
-           <button onclick="setRepertoarFilter('status','${s}')"
-             style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.status === s ? "background:#007aff;color:#fff" : ""}">
-             ${s}
-           </button>
-         `).join("")}
-       </div>
-   
-       <div class="small" style="font-weight:600;margin-bottom:6px">Verze</div>
-       <div style="display:flex;gap:6px;flex-wrap:wrap">
-         ${["Vše", "TTBB", "SATB"].map(v => `
-           <button onclick="setRepertoarFilter('version','${v}')"
-             style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.version === v ? "background:#007aff;color:#fff" : ""}">
-             ${v}
-           </button>
-         `).join("")}
-       </div>
-   
-     </div>
-   </div>`
+      <button onclick="toggleRepertoarFilter()" style="width:100%;display:flex;justify-content:space-between;align-items:center">
+        <span>Filtr</span>
+        <span id="chevronRepertoarFilter">${REPERTOAR_FILTER_OPEN ? "‹" : "›"}</span>
+      </button>
+    
+      <div id="repertoarFilterPanel" style="display:${REPERTOAR_FILTER_OPEN ? "block" : "none"};margin-top:8px;padding:12px;background:var(--card);border-radius:14px">
+        
+        <div class="small" style="font-weight:600;margin-bottom:6px">Status</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          ${["Vše", "Aktivní", "Neaktuální", "Mimo repertoár", "Oblíbené"].map(s => `
+            <button onclick="setRepertoarFilter('status','${s}')"
+              style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.status === s ? "background:#007aff;color:#fff" : ""}">
+              ${s}
+            </button>
+          `).join("")}
+        </div>
+    
+        <div class="small" style="font-weight:600;margin-bottom:6px">Verze</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${["Vše", "TTBB", "SATB"].map(v => `
+            <button onclick="setRepertoarFilter('version','${v}')"
+              style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.version === v ? "background:#007aff;color:#fff" : ""}">
+              ${v}
+            </button>
+          `).join("")}
+        </div>
+    
+      </div>
+    </div>`
 
     html += `<div id="repertoarList" style="margin-top:12px">`
-      sorted.forEach(r => {
-        const isFav = !!favorites[r.ID]
-        const statusColor = r.STATUS === "Aktivní"    ? "#34c759" :
-                            r.STATUS === "Neaktuální" ? "#ff9f0a" :
-                            r.STATUS === "Mimo rep"   ? "#ff3b30" : "#8e8e93"
-      
-        html += `<div class="repertoar-row card"
-          data-name="${escapeHtml(r.NAME).toLowerCase()}"
-          data-author="${escapeHtml(r.AUTHOR||"").toLowerCase()}"
-          data-arranged="${escapeHtml(r.ARRANGED_BY||"").toLowerCase()}"
-          data-text="${escapeHtml(r.TEXT_BY||"").toLowerCase()}"
-          data-status="${escapeHtml(r.STATUS)}"
-          data-fav="${isFav ? "1" : "0"}"
-          data-version="${escapeHtml(r.VERSION||"").toLowerCase()}"
-          style="margin-bottom:10px;cursor:pointer"
-          onclick="selectSong('${escapeHtml(r.ID)}')"
-        >
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;margin-bottom:4px">
-                 ${escapeHtml(r.NAME)}${r.VERSION ? ` <span style="font-weight:400;color:var(--muted)">· ${escapeHtml(r.VERSION)}</span>` : ""}
-               </div>
-              ${r.AUTHOR      ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>`     : ""}
-              ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
-              ${r.TEXT_BY     ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>`         : ""}
-              <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
-                ${r.LENGTH  ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
-                <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
-                ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
-              </div>
+
+    filtered.forEach(r => {
+      const isFav = !!favorites[r.ID]
+      const statusColor = r.STATUS === "Aktivní"    ? "#34c759" :
+                          r.STATUS === "Neaktuální" ? "#ff9f0a" :
+                          r.STATUS === "Mimo rep"   ? "#ff3b30" : "#8e8e93"
+    
+      html += `<div class="repertoar-row card"
+        data-name="${escapeHtml(r.NAME).toLowerCase()}"
+        data-author="${escapeHtml(r.AUTHOR||"").toLowerCase()}"
+        data-arranged="${escapeHtml(r.ARRANGED_BY||"").toLowerCase()}"
+        data-text="${escapeHtml(r.TEXT_BY||"").toLowerCase()}"
+        data-status="${escapeHtml(r.STATUS)}"
+        data-fav="${isFav ? "1" : "0"}"
+        data-version="${escapeHtml(r.VERSION||"").toLowerCase()}"
+        style="margin-bottom:10px;cursor:pointer"
+        onclick="selectSong('${escapeHtml(r.ID)}')"
+      >
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px;margin-bottom:4px">
+              ${escapeHtml(r.NAME)}${r.VERSION ? ` <span style="font-weight:400;color:var(--muted)">· ${escapeHtml(r.VERSION)}</span>` : ""}
             </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
-              ${r.PDF ? `
-                <a href="${escapeHtml(r.PDF)}" target="_blank"
-                  onclick="event.stopPropagation()"
-                  style="padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
-                  Noty
-                </a>
-              ` : ""}
-              <button
-                onclick="event.stopPropagation();toggleFav('${escapeHtml(r.ID)}')"
-                style="background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;justify-content:center"
-              >
-                <svg viewBox="0 0 24 24" width="22" height="22" stroke="${isFav ? "#ff3b30" : "#c7c7cc"}" fill="${isFav ? "#ff3b30" : "none"}" stroke-width="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-              </button>
+            ${r.AUTHOR      ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>`     : ""}
+            ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
+            ${r.TEXT_BY     ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>`         : ""}
+            <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+              ${r.LENGTH ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
+              <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
+              ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
             </div>
           </div>
-      
-          ${SONG_SELECTED === r.ID ? `
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-              ${r.NOTE ? `<div class="small" style="margin-bottom:10px;white-space:pre-wrap">${escapeHtml(r.NOTE)}</div>` : ""}
-              ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
-                <div class="btn-group">
-                  <button onclick="event.stopPropagation();openEditSong('${escapeHtml(r.ID)}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-                  <button onclick="event.stopPropagation();deleteSongItem('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
-                </div>
-              ` : ""}
-            </div>
-          ` : ""}
-      
-        </div>`
-      })
-         html += `</div>`
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0">
+            ${r.PDF ? `
+              <a href="${escapeHtml(r.PDF)}" target="_blank"
+                onclick="event.stopPropagation()"
+                style="padding:8px 14px;background:#e8e8ed;border-radius:10px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none;white-space:nowrap">
+                Noty
+              </a>
+            ` : ""}
+            <button
+              onclick="event.stopPropagation();toggleFav('${escapeHtml(r.ID)}')"
+              style="background:none;border:none;padding:4px;cursor:pointer;display:flex;align-items:center;justify-content:center"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="${isFav ? "#ff3b30" : "#c7c7cc"}" fill="${isFav ? "#ff3b30" : "none"}" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+    
+        ${SONG_SELECTED === r.ID ? `
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+            ${r.NOTE ? `<div class="small" style="margin-bottom:10px;white-space:pre-wrap">${escapeHtml(r.NOTE)}</div>` : ""}
+            ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
+              <div class="btn-group">
+                <button onclick="event.stopPropagation();openEditSong('${escapeHtml(r.ID)}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
+                <button onclick="event.stopPropagation();deleteSongItem('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+              </div>
+            ` : ""}
+          </div>
+        ` : ""}
+    
+      </div>`
+    })
+
+    html += `</div>`
     if(isDesktop) html += `</div>`
     container().innerHTML = html
 
@@ -3239,11 +3250,8 @@ function toggleRepertoarFilter(){
 
 function setRepertoarFilter(type, value){
   REPERTOAR_ACTIVE_FILTERS[type] = value
-  applyRepertoarFilter()
-  // aktualizuj tlačítka
-  renderRepertoar()
-  // znovu otevři filtr panel
   REPERTOAR_FILTER_OPEN = true
+  renderRepertoar()
 }
 
 function applyRepertoarFilter(){
