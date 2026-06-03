@@ -3252,17 +3252,17 @@ function applyRepertoarFilter(){
   const version = REPERTOAR_ACTIVE_FILTERS.version
 
   document.querySelectorAll(".repertoar-row").forEach(row => {
-    const name     = row.dataset.name     || ""
-    const author   = row.dataset.author   || ""
-    const arranged = row.dataset.arranged || ""
-    const text     = row.dataset.text     || ""
-    const rowStatus  = row.dataset.status  || ""
-    const rowFav     = row.dataset.fav     || "0"
-    const rowVersion = row.dataset.version || ""
+    const name       = row.dataset.name     || ""
+    const author     = row.dataset.author   || ""
+    const arranged   = row.dataset.arranged || ""
+    const text       = row.dataset.text     || ""
+    const rowStatus  = row.dataset.status   || ""
+    const rowFav     = row.dataset.fav      || "0"
+    const rowVersion = row.dataset.version  || ""
 
     const matchSearch  = !search || name.includes(search) || author.includes(search) || arranged.includes(search) || text.includes(search)
     const matchStatus  = status  === "Vše" ? true : status === "Oblíbené" ? rowFav === "1" : rowStatus === status
-    const matchVersion = version === "Vše" ? true : rowVersion === version
+    const matchVersion = version === "Vše" ? true : rowVersion === version.toLowerCase()
 
     row.style.display = matchSearch && matchStatus && matchVersion ? "" : "none"
   })
