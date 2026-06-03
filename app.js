@@ -3129,8 +3129,8 @@ function openAddSong(){
     {key: "author",      label: "Skladatel",    type: "text"},
     {key: "arranged_by", label: "Aranžmá",      type: "text"},
     {key: "text_by",     label: "Text",         type: "text"},
-    {key: "status",      label: "Status",       type: "select", value: song?.STATUS || "Aktivní", options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
-    {key: "version",     label: "Verze",        type: "select", value: song?.VERSION || "", options: ["", "TTBB", "SATB"]},
+    {key: "status",      label: "Status",       type: "select",    value: "Aktivní",    options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
+    {key: "version",     label: "Verze",        type: "select",    value: "",           options: ["", "TTBB", "SATB"]},
     {key: "pdf",         label: "Odkaz na noty (URL)", type: "text"},
     {key: "code",        label: "Kód",          type: "text"},
     {key: "note",        label: "Poznámka",     type: "textarea"}
