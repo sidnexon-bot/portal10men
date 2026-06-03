@@ -1448,6 +1448,9 @@ async function openEventForm(id){
     <label>Datum<br>
       <input id="fDate" type="date" value="${dateVal}">
     </label>
+    <label>Datum konce (pouze pro vícedenní akce)<br>
+     <input id="fDateEnd" type="date" value="${akce.DATE_END ? new Date(akce.DATE_END).toISOString().substring(0,10) : ''}">
+    </label>
     <label>Čas začátku<br>
       <input id="fStart" type="time" value="${escapeHtml(event.START || "")}">
     </label>
@@ -2459,6 +2462,7 @@ async function saveEvent(id){
 
   const name            = document.getElementById("fName")?.value.trim()
   const date            = document.getElementById("fDate")?.value
+  const dateEnd         = document.getElementById("fDateEnd")?.value || ""
   const start           = document.getElementById("fStart")?.value
   const end             = document.getElementById("fEnd")?.value
   const place           = document.getElementById("fPlace")?.value.trim()
