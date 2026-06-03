@@ -847,7 +847,7 @@ async function renderDashboard(){
       <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${escapeHtml(upcoming.ID)}')">
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
           <b style="font-size:18px">${escapeHtml(upcoming.NAME)}</b>
-          <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}</b></div>
+          <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}${upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""}</b></div>
           <div><span class="small">Čas</span><br><b>${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</b></div>
           <div><span class="small">Místo</span><br><b>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</b></div>
         </div>
@@ -1315,10 +1315,10 @@ futureEvents.forEach(e => {
       ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
       ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
       <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
-      <span class="small">
-        ${formatDate(e.DATE)}
-        ${e.START ? "· " + formatTime(e.START) : ""}
-        ${e.END   ? "– " + formatTime(e.END)   : ""}
+         <span class="small">
+      ${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}
+      ${e.START ? "· " + formatTime(e.START) : ""}
+      ${e.END   ? "– " + formatTime(e.END)   : ""}
       </span><br>
       <span class="small">${escapeHtml(e.PLACE)}</span>
       ${(()=>{
@@ -1549,7 +1549,7 @@ async function openEvent(id){
 
      <div class="card" style="margin-bottom:20px">
        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-         <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}</b></div>
+         <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}${event.DATE_END ? " – " + formatDate(event.DATE_END) : ""}</b></div>
          <div><span class="small" style="display:block;margin-bottom:2px">Čas</span><b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b></div>
          <div><span class="small" style="display:block;margin-bottom:2px">Místo</span><b>${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</b></div>
        </div>
