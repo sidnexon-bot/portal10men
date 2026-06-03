@@ -3251,6 +3251,8 @@ function applyRepertoarFilter(){
   const status  = REPERTOAR_ACTIVE_FILTERS.status
   const version = REPERTOAR_ACTIVE_FILTERS.version
 
+  console.log("filter status:", status, "version:", version)
+
   document.querySelectorAll(".repertoar-row").forEach(row => {
     const name       = row.dataset.name     || ""
     const author     = row.dataset.author   || ""
