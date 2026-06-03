@@ -380,15 +380,12 @@ function buildSongDetail(id){
 }
 
 function saveScroll(){
-  const main = document.getElementById("main")
-  return main ? main.scrollTop : window.scrollY
+  return window.scrollY
 }
 
 function restoreScroll(pos){
   requestAnimationFrame(() => {
-    const main = document.getElementById("main")
-    if(main) main.scrollTop = pos
-    else window.scrollTo(0, pos)
+    window.scrollTo(0, pos)
   })
 }
 
