@@ -3062,13 +3062,14 @@ async function renderRepertoar(){
         >
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
             <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(r.NAME)}</div>
+              <div style="font-weight:600;font-size:15px;margin-bottom:4px">
+                 ${escapeHtml(r.NAME)}${r.VERSION ? ` <span style="font-weight:400;color:var(--muted)">· ${escapeHtml(r.VERSION)}</span>` : ""}
+               </div>
               ${r.AUTHOR      ? `<div class="small">Skladatel: ${escapeHtml(r.AUTHOR)}</div>`     : ""}
               ${r.ARRANGED_BY ? `<div class="small">Aranžmá: ${escapeHtml(r.ARRANGED_BY)}</div>` : ""}
               ${r.TEXT_BY     ? `<div class="small">Text: ${escapeHtml(r.TEXT_BY)}</div>`         : ""}
               <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
                 ${r.LENGTH  ? `<span class="small">⏱ ${formatLength(r.LENGTH)}</span>` : ""}
-                ${r.VERSION ? `<span class="small" style="font-weight:600">${escapeHtml(r.VERSION)}</span>` : ""}
                 <span style="font-size:11px;font-weight:600;color:${statusColor}">${escapeHtml(r.STATUS)}</span>
                 ${r.CODE ? `<span class="small" style="color:var(--muted)">${escapeHtml(r.CODE)}</span>` : ""}
               </div>
