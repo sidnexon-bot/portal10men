@@ -371,8 +371,49 @@ async function getRepertoar(){
     LENGTH:      r.length      || "",
     STATUS:      r.status      || "",
     PDF:         r.pdf         || "",
-    CODE:        r.code        || ""
+    CODE:        r.code        || "",
+    VERSION:     r.version     || "",
+    NOTE:        r.note        || ""
   }))
+}
+
+async function addSong(params){
+  const id = "r" + Date.now()
+  await dbSet("/repertoar/" + id, {
+    id,
+    name:        params.name        || "",
+    author:      params.author      || "",
+    arranged_by: params.arranged_by || "",
+    text_by:     params.text_by     || "",
+    length:      params.length      || "",
+    status:      params.status      || "Aktivní",
+    pdf:         params.pdf         || "",
+    code:        params.code        || "",
+    note:        params.note        || "",
+    version:     params.version     || ""
+  })
+  return {status: "created", id}
+}
+
+async function updateSong(params){
+  await dbUpdate("/repertoar/" + params.id, {
+    name:        params.name        || "",
+    author:      params.author      || "",
+    arranged_by: params.arranged_by || "",
+    text_by:     params.text_by     || "",
+    length:      params.length      || "",
+    status:      params.status      || "Aktivní",
+    pdf:         params.pdf         || "",
+    code:        params.code        || "",
+    note:        params.note        || "",
+    version:     params.version     || ""
+  })
+  return {status: "updated"}
+}
+
+async function deleteSong(id){
+  await dbRemove("/repertoar/" + id)
+  return {status: "deleted"}
 }
 
 async function updateEntireSeries(params){
@@ -908,6 +949,9 @@ async function api(action, params = {}){
     case "setprogram":       return await setProgram(params)
     case "updatenote":       return await updateNote(params)
     case "repertoar":        return await getRepertoar()
+    case "addsong":          return await addSong(params)
+    case "updatesong":       return await updateSong(params)
+    case "deletesong":       return await deleteSong(params.id)
     case "favorites":        return await getFavorites(params.email)
     case "togglefavorite":   return await toggleFavorite(params)
     case "energy":           return await getEnergy()
