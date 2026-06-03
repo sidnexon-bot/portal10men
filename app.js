@@ -2482,7 +2482,7 @@ async function saveEvent(id){
     try{
       showSaving()
       const result = await api("addrecurring", {
-        name, date, start, end, place, note, status,
+        name, date, date_end: dateEnd, start, end, place, note, status,
         requires_program: requiresProgram,
         call_url: callUrl,
         recurrence_type: recurrenceType,
@@ -2502,16 +2502,16 @@ async function saveEvent(id){
     showSaving()
     if(id){
       if(status === "Zrušená"){
-        await api("cancelevent", {id, name, date, start, end, place, note, requires_program: requiresProgram, call_url: callUrl})
+        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, requires_program: requiresProgram, call_url: callUrl})
       }else{
-        await api("updateevent", {id, name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+        await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
       }
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
       invalidateCache("events")
       hideSaving("Akce vytvořena ✓")
       renderEvents()
