@@ -193,7 +193,7 @@ async function getHeatmap(){
   return {
     events: objToArray(akce)
       .filter(e => !e.is_template)
-      .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, STATUS: e.status || ""})),
+      .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, DATE_END: e.date_end || "", STATUS: e.status || ""})),
     members: objToArray(members)
       .filter(m => (m.role || "").toUpperCase() !== "GUEST")
       .map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
