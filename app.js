@@ -11,6 +11,8 @@ let MEMBER_ROLE  = "MEMBER"
 let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
 let ACTIVE_DETAIL_ID = null
 let SONG_SELECTED = null
+let REPERTOAR_FILTER_OPEN = false
+let REPERTOAR_ACTIVE_FILTERS = {status: "Vše", version: "Vše"}
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -3032,16 +3034,36 @@ async function renderRepertoar(){
       >
     </div>`
 
-    html += `<div style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">`
-    const statusy = ["Vše", "Oblíbené", "Aktivní", "Neaktuální", "Mimo repertoár"]
-    statusy.forEach(s => {
-      html += `<button
-        id="filterBtn_${s}"
-        onclick="filterRepertoarStatus('${s}')"
-        style="padding:6px 14px;font-size:13px;${s === "Vše" ? "background:#007aff;color:#fff" : ""}"
-      >${s}</button>`
-    })
-    html += `</div>`
+    html += `<div style="margin-bottom:8px">
+     <button onclick="toggleRepertoarFilter()" style="width:100%;display:flex;justify-content:space-between;align-items:center">
+       <span>Filtr</span>
+       <span id="chevronRepertoarFilter">${REPERTOAR_FILTER_OPEN ? "‹" : "›"}</span>
+     </button>
+   
+     <div id="repertoarFilterPanel" style="display:${REPERTOAR_FILTER_OPEN ? "block" : "none"};margin-top:8px;padding:12px;background:var(--card);border-radius:14px">
+       
+       <div class="small" style="font-weight:600;margin-bottom:6px">Status</div>
+       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+         ${["Vše", "Aktivní", "Neaktuální", "Mimo repertoár", "Oblíbené"].map(s => `
+           <button onclick="setRepertoarFilter('status','${s}')"
+             style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.status === s ? "background:#007aff;color:#fff" : ""}">
+             ${s}
+           </button>
+         `).join("")}
+       </div>
+   
+       <div class="small" style="font-weight:600;margin-bottom:6px">Verze</div>
+       <div style="display:flex;gap:6px;flex-wrap:wrap">
+         ${["Vše", "TTBB", "SATB"].map(v => `
+           <button onclick="setRepertoarFilter('version','${v}')"
+             style="padding:6px 12px;font-size:13px;${REPERTOAR_ACTIVE_FILTERS.version === v ? "background:#007aff;color:#fff" : ""}">
+             ${v}
+           </button>
+         `).join("")}
+       </div>
+   
+     </div>
+   </div>`
 
     html += `<div id="repertoarList" style="margin-top:12px">`
       sorted.forEach(r => {
@@ -3057,6 +3079,7 @@ async function renderRepertoar(){
           data-text="${escapeHtml(r.TEXT_BY||"").toLowerCase()}"
           data-status="${escapeHtml(r.STATUS)}"
           data-fav="${isFav ? "1" : "0"}"
+          data-version="${escapeHtml(r.VERSION||"").toLowerCase()}"
           style="margin-bottom:10px;cursor:pointer"
           onclick="selectSong('${escapeHtml(r.ID)}')"
         >
@@ -3206,41 +3229,47 @@ async function toggleFav(songId){
   }
 }
 
-function filterRepertoar(query){
-  const q = query.toLowerCase().trim()
+function toggleRepertoarFilter(){
+  REPERTOAR_FILTER_OPEN = !REPERTOAR_FILTER_OPEN
+  const panel   = document.getElementById("repertoarFilterPanel")
+  const chevron = document.getElementById("chevronRepertoarFilter")
+  if(panel)   panel.style.display   = REPERTOAR_FILTER_OPEN ? "block" : "none"
+  if(chevron) chevron.textContent   = REPERTOAR_FILTER_OPEN ? "‹" : "›"
+}
+
+function setRepertoarFilter(type, value){
+  REPERTOAR_ACTIVE_FILTERS[type] = value
+  applyRepertoarFilter()
+  // aktualizuj tlačítka
+  renderRepertoar()
+  // znovu otevři filtr panel
+  REPERTOAR_FILTER_OPEN = true
+}
+
+function applyRepertoarFilter(){
+  const search  = (document.getElementById("repertoarSearch")?.value || "").toLowerCase()
+  const status  = REPERTOAR_ACTIVE_FILTERS.status
+  const version = REPERTOAR_ACTIVE_FILTERS.version
+
   document.querySelectorAll(".repertoar-row").forEach(row => {
     const name     = row.dataset.name     || ""
     const author   = row.dataset.author   || ""
     const arranged = row.dataset.arranged || ""
     const text     = row.dataset.text     || ""
-    const match = !q || name.includes(q) || author.includes(q) || arranged.includes(q) || text.includes(q)
-    row.style.display = match ? "" : "none"
+    const rowStatus  = row.dataset.status  || ""
+    const rowFav     = row.dataset.fav     || "0"
+    const rowVersion = row.dataset.version || ""
+
+    const matchSearch  = !search || name.includes(search) || author.includes(search) || arranged.includes(search) || text.includes(search)
+    const matchStatus  = status  === "Vše" ? true : status === "Oblíbené" ? rowFav === "1" : rowStatus === status
+    const matchVersion = version === "Vše" ? true : rowVersion === version
+
+    row.style.display = matchSearch && matchStatus && matchVersion ? "" : "none"
   })
 }
 
-function filterRepertoarStatus(status){
-  document.querySelectorAll("[id^='filterBtn_']").forEach(btn => {
-    btn.style.background = ""
-    btn.style.color = ""
-  })
-  const activeBtn = document.getElementById("filterBtn_" + status)
-  if(activeBtn){
-    activeBtn.style.background = "#007aff"
-    activeBtn.style.color = "#fff"
-  }
-
-  document.querySelectorAll(".repertoar-row").forEach(row => {
-    if(status === "Vše"){
-      row.style.display = ""
-    }else if(status === "Oblíbené"){
-      row.style.display = row.dataset.fav === "1" ? "" : "none"
-    }else{
-      row.style.display = row.dataset.status === status ? "" : "none"
-    }
-  })
-
-  const search = document.getElementById("repertoarSearch")
-  if(search) search.value = ""
+function filterRepertoar(query){
+  applyRepertoarFilter()
 }
 
 /* ===============================
@@ -3894,7 +3923,9 @@ window.moveProgSong         = moveProgSong
 window.setProgSection       = setProgSection
 window.filterProgSongs      = filterProgSongs
 window.filterRepertoar      = filterRepertoar
-window.filterRepertoarStatus = filterRepertoarStatus
+window.toggleRepertoarFilter = toggleRepertoarFilter
+window.setRepertoarFilter    = setRepertoarFilter
+window.applyRepertoarFilter  = applyRepertoarFilter
 window.openAddSong          = openAddSong
 window.openEditSong         = openEditSong
 window.deleteSongItem       = deleteSongItem
