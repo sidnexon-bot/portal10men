@@ -104,7 +104,8 @@ const attendance = objToArray(dochazka)
       UPDATED_AT: d.updated_at || ""
     }
   })
-  .sort((a, b) => {
+    .sort((a, b) => {
+    console.log(a.NAME, a.VOICE, b.NAME, b.VOICE)
     const ai = voiceOrder.indexOf(a.VOICE)
     const bi = voiceOrder.indexOf(b.VOICE)
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
