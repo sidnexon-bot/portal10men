@@ -83,7 +83,9 @@ async function getEventDetail(id){
   const repertoar = await dbGet("/repertoar")
   const members   = await dbGet("/members")
 
-  const attendance = objToArray(dochazka)
+  const voiceOrder = ["TENOR 1", "TENOR 2", "BAS 1", "BAS 2"]
+
+const attendance = objToArray(dochazka)
   .filter(d => d.id_akce === id)
   .filter(d => {
     const m = objToArray(members).find(m => m.email === d.email)
@@ -101,6 +103,11 @@ async function getEventDetail(id){
       REASON:     d.reason || "",
       UPDATED_AT: d.updated_at || ""
     }
+  })
+  .sort((a, b) => {
+    const ai = voiceOrder.indexOf(a.VOICE)
+    const bi = voiceOrder.indexOf(b.VOICE)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
 
   const prog = objToArray(program)
