@@ -88,12 +88,12 @@ jobs:
 
             for(const event of events){
               if(!event.date) continue;
-              if(event.status === "Zru\u0161en\u00E1") continue;
+              if(event.status && event.status.includes("Zru")) continue;
               const eventDate = new Date(event.date);
               eventDate.setHours(0,0,0,0);
               const todayDate = new Date(now);
               todayDate.setHours(0,0,0,0);
-              const daysUntil = Math.round((eventDate - todayDate) / (1000 * 60 * 60 * 24));
+              const daysUntil = Math.ceil((eventDate - todayDate) / (1000 * 60 * 60 * 24));
 
               // 3 dny před akcí
               if(daysUntil === 3){
@@ -109,7 +109,7 @@ jobs:
               }
               await sendNotification(
                 'Vyplň docházku ✋',
-                'Akce ' + event.name + ' je za 3 dny. Nezapomeň vyplnit docházku.',
+                'Akce ' + event.name + ' je za 3 dny. Zkontroluj si, prosím, docházku.',
                 ['All']
               );
             }
