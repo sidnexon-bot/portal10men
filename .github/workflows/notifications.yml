@@ -88,7 +88,7 @@ jobs:
 
             for(const event of events){
               if(!event.date) continue;
-              if(event.status && event.status.includes("Zru")) continue;
+              if(event.status && event.status.indexOf('Zru') === 0) continue;
               const eventDate = new Date(event.date);
               eventDate.setHours(0,0,0,0);
               const todayDate = new Date(now);
