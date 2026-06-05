@@ -60,6 +60,15 @@ if(switchBtn){
     switchBtn.classList.add('hidden')
   }
  }
+   // Správa členů pro ADMIN a ART
+const profileMenuMembers = document.getElementById("profileMenuMembers")
+if(profileMenuMembers){
+  if(AUTH_ROLE === "ADMIN" || AUTH_ROLE === "ART"){
+    profileMenuMembers.classList.remove("hidden")
+  }else{
+    profileMenuMembers.classList.add("hidden")
+  }
+ }
 }
 
 /* ===============================
