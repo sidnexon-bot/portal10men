@@ -1,4 +1,4 @@
-/* ==============================r
+/* ==============================
    STAV APLIKACE
 ================================ */
 
@@ -2694,6 +2694,7 @@ async function saveEvent(id){
   const place           = document.getElementById("fPlace")?.value.trim()
   const callUrl         = document.getElementById("fCallUrl")?.value.trim()
   const note            = document.getElementById("fNote")?.value.trim()
+  const type            = document.getElementById("fModal_type")?.value || "Zkouška"
   const status          = document.getElementById("fStatus")?.value
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
   const recurrenceType  = document.getElementById("fRecurrence")?.value || "none"
@@ -2728,16 +2729,16 @@ async function saveEvent(id){
     showSaving()
     if(id){
       if(status === "Zrušená"){
-        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, requires_program: requiresProgram, call_url: callUrl})
+        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl})
       }else{
-        await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+        await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl})
       }
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, status, requires_program: requiresProgram, call_url: callUrl})
+      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl})
       invalidateCache("events")
       hideSaving("Akce vytvořena ✓")
       renderEvents()
