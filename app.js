@@ -1607,6 +1607,17 @@ async function openEventForm(id){
       </label>
     </div>
     ` : ""}
+
+    <div style="margin-top:16px;border-top:1px solid rgba(128,128,128,0.15);padding-top:16px">
+     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleEventFormExtra()">
+       <span style="font-weight:600;font-size:15px">Další informace</span>
+       <span id="chevronEventFormExtra">›</span>
+     </div>
+     <div id="eventFormExtra" style="display:none;margin-top:12px">
+       <!-- sem přijdou podmíněné fieldy -->
+     </div>
+   </div>
+
     <div class="btn-group" style="margin-top:16px">
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
@@ -1621,6 +1632,111 @@ async function openEventForm(id){
     container().innerHTML = html
   }
 
+}
+
+function toggleEventFormExtra(){
+  const panel   = document.getElementById("eventFormExtra")
+  const chevron = document.getElementById("chevronEventFormExtra")
+  if(!panel) return
+  const isOpen = panel.style.display !== "none"
+  panel.style.display = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  if(!isOpen) renderEventFormExtra()
+}
+
+function renderEventFormExtra(){
+  const type  = document.getElementById("fType")?.value || "Zkouška"
+  const panel = document.getElementById("eventFormExtra")
+  if(!panel) return
+
+  const isKoncert     = type === "Koncert" || type === "Jiná akce"
+  const isSoustredeni = type === "Soustředění" || type === "Soutěž"
+
+  if(isKoncert){
+    panel.innerHTML = `
+      <label>Čas srazu<br>
+        <input id="fSraz" type="time" value="${escapeHtml(window.EDIT_EVENT?.SRAZ || "")}">
+      </label>
+      <label style="margin-top:12px">Oblečení<br>
+        <select id="fObleceni">
+          <option value="">Zatím nevíme</option>
+          <option value="Formální" ${window.EDIT_EVENT?.OBLECENI === "Formální" ? "selected" : ""}>Formální — červená kravata</option>
+          <option value="Neformální" ${window.EDIT_EVENT?.OBLECENI === "Neformální" ? "selected" : ""}>Neformální — 10men tričko</option>
+          <option value="Zimní civil" ${window.EDIT_EVENT?.OBLECENI === "Zimní civil" ? "selected" : ""}>Zimní civil</option>
+        </select>
+      </label>
+      <label style="margin-top:12px">Doprava<br>
+        <select id="fDoprava">
+          <option value="">Nezadáno</option>
+          <option value="Veřejná doprava" ${window.EDIT_EVENT?.DOPRAVA === "Veřejná doprava" ? "selected" : ""}>Veřejná doprava</option>
+          <option value="Auta" ${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "selected" : ""}>Auta</option>
+          <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
+        </select>
+      </label>
+      <label style="margin-top:12px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="fHospoda" ${window.EDIT_EVENT?.HOSPODA ? "checked" : ""} style="width:auto;margin:0">
+        <span>Rezervujeme hospodu</span>
+      </label>
+      <label style="margin-top:12px">Harmonogram<br>
+        <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
+      </label>
+    `
+  }else if(isSoustredeni){
+    panel.innerHTML = `
+      <label>Spacáky a karimatky<br>
+        <select id="fSpacaky">
+          <option value="">Nezadáno</option>
+          <option value="Ano" ${window.EDIT_EVENT?.SPACAKY === "Ano" ? "selected" : ""}>Ano</option>
+          <option value="Ne" ${window.EDIT_EVENT?.SPACAKY === "Ne" ? "selected" : ""}>Ne</option>
+          <option value="Vlastní uvážení" ${window.EDIT_EVENT?.SPACAKY === "Vlastní uvážení" ? "selected" : ""}>Vlastní uvážení</option>
+        </select>
+      </label>
+      <label style="margin-top:12px">Strava<br>
+        <select id="fStrava" onchange="toggleStravaNote(this.value)">
+          <option value="">Nezadáno</option>
+          <option value="Ano" ${window.EDIT_EVENT?.STRAVA === "Ano" ? "selected" : ""}>Ano</option>
+          <option value="Ne" ${window.EDIT_EVENT?.STRAVA === "Ne" ? "selected" : ""}>Ne</option>
+          <option value="Částečně" ${window.EDIT_EVENT?.STRAVA === "Částečně" ? "selected" : ""}>Částečně</option>
+        </select>
+      </label>
+      <div id="stravaNote" style="display:${window.EDIT_EVENT?.STRAVA === "Částečně" ? "block" : "none"};margin-top:8px">
+        <label>Specifikace stravy<br>
+          <textarea id="fStravaNota" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.STRAVA_NOTA || "")}</textarea>
+        </label>
+      </div>
+      <label style="margin-top:12px">Koncertní oblečení<br>
+        <select id="fObleceniSoustredeni" onchange="toggleObleceniSoustredeniDetail(this.value)">
+          <option value="Ne" ${window.EDIT_EVENT?.OBLECENI_S === "Ne" ? "selected" : ""}>Ne</option>
+          <option value="Ano" ${window.EDIT_EVENT?.OBLECENI_S === "Ano" ? "selected" : ""}>Ano</option>
+        </select>
+      </label>
+      <div id="obleceniSoustredeniDetail" style="display:${window.EDIT_EVENT?.OBLECENI_S === "Ano" ? "block" : "none"};margin-top:8px">
+        <label>Jaké oblečení<br>
+          <select id="fObleceniSoustredeniTyp">
+            <option value="Formální" ${window.EDIT_EVENT?.OBLECENI_S_TYP === "Formální" ? "selected" : ""}>Formální — košile & červená kravata</option>
+            <option value="Neformální" ${window.EDIT_EVENT?.OBLECENI_S_TYP === "Neformální" ? "selected" : ""}>Neformální — 10men tričko, civil kalhoty</option>
+            <option value="Zimní civil" ${window.EDIT_EVENT?.OBLECENI_S_TYP === "Zimní civil" ? "selected" : ""}>Zimní civil</option>
+            <option value="Vše" ${window.EDIT_EVENT?.OBLECENI_S_TYP === "Vše" ? "selected" : ""}>Vše</option>
+          </select>
+        </label>
+      </div>
+      <label style="margin-top:12px">Harmonogram<br>
+        <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
+      </label>
+    `
+  }else{
+    panel.innerHTML = `<p class="notice">Pro typ "${type}" nejsou k dispozici další informace.</p>`
+  }
+}
+
+function toggleStravaNote(val){
+  const el = document.getElementById("stravaNote")
+  if(el) el.style.display = val === "Částečně" ? "block" : "none"
+}
+
+function toggleObleceniSoustredeniDetail(val){
+  const el = document.getElementById("obleceniSoustredeniDetail")
+  if(el) el.style.display = val === "Ano" ? "block" : "none"
 }
 
 async function openEvent(id){
@@ -4211,6 +4327,10 @@ window.confirmMozna         = confirmMozna
 window.closeMoznaModal      = closeMoznaModal
 window.saveEvent            = saveEvent
 window.deleteEvent          = deleteEvent
+window.toggleEventFormExtra = toggleEventFormExtra
+window.renderEventFormExtra = renderEventFormExtra
+window.toggleStravaNote     = toggleStravaNote
+window.toggleObleceniSoustredeniDetail = toggleObleceniSoustredeniDetail
 window.saveNote             = saveNote
 window.saveProgram          = saveProgram
 window.selectEnergyRow      = selectEnergyRow
