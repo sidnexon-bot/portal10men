@@ -116,20 +116,36 @@ jobs:
 
             // 1 den před akcí — ping nevyplněných
             if(daysUntil === 1){
-              const nevyplneni = memberList.filter(m => {
-                const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
-                return !zaznam || !zaznam.status;
-              });
-
-              if(nevyplneni.length > 0){
-                const jmena = nevyplneni.map(m => m.name).join(', ');
-                await sendNotification(
-                  'Nevyplněná docházka ⚠️',
-                  'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
-                  ['All']
-                );
-              }
-                          }
+            // ping nevyplněných
+            const nevyplneni = memberList.filter(m => {
+              const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
+              return !zaznam || !zaznam.status;
+            });
+          
+            if(nevyplneni.length > 0){
+              const jmena = nevyplneni.map(m => m.name).join(', ');
+              await sendNotification(
+                'Nevyplněná docházka ⚠️',
+                'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
+                ['All']
+              );
+            }
+          
+            // shrnutí akce
+            let shrnuti = 'Zítra: ' + event.name;
+            if(event.start)       shrnuti += ' · ' + event.start;
+            if(event.place)       shrnuti += ' · ' + event.place;
+            if(event.sraz)        shrnuti += '\nSraz: ' + event.sraz;
+            if(event.obleceni)    shrnuti += '\nOblečení: ' + event.obleceni;
+            if(event.doprava)     shrnuti += '\nDoprava: ' + event.doprava;
+            if(event.harmonogram) shrnuti += '\n\n' + event.harmonogram;
+          
+            await sendNotification(
+              'Připomínka na zítra 📅',
+              shrnuti,
+              ['All']
+            );
+          }
                         }
             
                         console.log('Done');
