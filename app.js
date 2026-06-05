@@ -1571,7 +1571,15 @@ async function openEventForm(id){
     <label>Poznámka<br>
       <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
     </label>
-       {key: "type", label: "Typ akce", type: "select", value: event.TYPE || "Zkouška", options: ["Zkouška", "Koncert", "Soustředění", "Soutěž", "Jiná akce"]},
+       <label>Typ akce<br>
+        <select id="fType">
+          <option value="Zkouška"   ${(event.TYPE||"Zkouška") === "Zkouška"    ? "selected" : ""}>Zkouška</option>
+          <option value="Koncert"   ${event.TYPE === "Koncert"    ? "selected" : ""}>Koncert</option>
+          <option value="Soustředění" ${event.TYPE === "Soustředění" ? "selected" : ""}>Soustředění</option>
+          <option value="Soutěž"    ${event.TYPE === "Soutěž"    ? "selected" : ""}>Soutěž</option>
+          <option value="Jiná akce" ${event.TYPE === "Jiná akce" ? "selected" : ""}>Jiná akce</option>
+        </select>
+      </label>
     <label>Status<br>
       <select id="fStatus">
         <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
@@ -2694,7 +2702,7 @@ async function saveEvent(id){
   const place           = document.getElementById("fPlace")?.value.trim()
   const callUrl         = document.getElementById("fCallUrl")?.value.trim()
   const note            = document.getElementById("fNote")?.value.trim()
-  const type            = document.getElementById("fModal_type")?.value || "Zkouška"
+  const type            = document.getElementById("fType")?.value || "Zkouška"
   const status          = document.getElementById("fStatus")?.value
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
   const recurrenceType  = document.getElementById("fRecurrence")?.value || "none"
