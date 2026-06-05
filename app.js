@@ -1074,40 +1074,66 @@ async function renderDashboard(){
     // --- SESTAVENÍ HTML ---
     const heatmapHtml = await renderHeatmap()
 
-    if(isDesktop){
-      // DESKTOP LAYOUT
-      let html = ""
+    // --- KONTAKTY ---
+      const members = await cachedApi("members")
+      const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+      const sortedMembers = [...members].sort((a,b) => {
+        const ai = voiceOrder.indexOf(a.VOICE)
+        const bi = voiceOrder.indexOf(b.VOICE)
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+      })
+      
+      const contactsHtml = `
+        <h3 class="season-title">👥 Kontakty</h3>
+        <div class="card" style="padding:0">
+          ${sortedMembers.map((m, i) => {
+            const border = i < sortedMembers.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+            return `<div onclick="openContactModal('${escapeHtml(m.ID)}')"
+              style="padding:14px 16px;${border}cursor:pointer">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:600;font-size:15px">${escapeHtml(m.NAME)}</div>
+                  <div class="small">${escapeHtml(m.VOICE)}</div>
+                </div>
+                <div style="color:var(--muted)">›</div>
+              </div>
+            </div>`
+          }).join("")}
+        </div>
+      `
 
-      // Horní řada — Nejbližší akce + Jaro/Léto
-      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
-      html += `<div>${nearestEventHtml}</div>`
-      html += `<div>${springHtml}</div>`
-      html += `</div>`
-
-      // Dolní řada — Aktuality+Úkoly + Podzim/Zima
-      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
-      html += `<div>${aktualityHtml}${todosHtml}</div>`
-      html += `<div>${autumnHtml}</div>`
-      html += `</div>`
-
-      // Heatmapa přes celou šířku
-      html += `<div id="heatmap-container">${heatmapHtml}</div>`
-
-      container().innerHTML = html
-
-    }else{
-      // MOBIL LAYOUT
-      let html = ""
-      html += nearestEventHtml
-      html += aktualityHtml
-      html += todosHtml
-      html += springHtml
-      html += autumnHtml
-      html += `<div id="heatmap-container">${heatmapHtml}</div>`
-
-      container().innerHTML = html
-      restoreScroll(scroll)
-    }
+   if(isDesktop){
+     let html = ""
+   
+     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
+     html += `<div>${nearestEventHtml}</div>`
+     html += `<div>${springHtml}</div>`
+     html += `</div>`
+   
+     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
+     html += `<div>${aktualityHtml}${todosHtml}</div>`
+     html += `<div>${autumnHtml}</div>`
+     html += `</div>`
+   
+     html += `<div id="heatmap-container">${heatmapHtml}</div>`
+     html += contactsHtml
+   
+     container().innerHTML = html
+     restoreScroll(scroll)
+   
+   }else{
+     let html = ""
+     html += nearestEventHtml
+     html += aktualityHtml
+     html += todosHtml
+     html += springHtml
+     html += autumnHtml
+     html += `<div id="heatmap-container">${heatmapHtml}</div>`
+     html += contactsHtml
+   
+     container().innerHTML = html
+     restoreScroll(scroll)
+   }
 
   }catch(err){
     setError("Chyba při načítání přehledu: " + (err?.message || err))
