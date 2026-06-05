@@ -301,6 +301,7 @@ async function cancelEvent(params){
     end:              params.end     || "",
     place:            params.place   || "",
     note:             params.note    || "",
+    type:             params.type    || "Zkouška",
     call_url:         params.call_url || "",
     requires_program: params.requires_program !== false,
     status:           "Zrušená"
