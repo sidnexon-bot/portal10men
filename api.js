@@ -80,7 +80,18 @@ async function getEvents(){
     REQUIRES_PROGRAM: e.requires_program !== false,
     IS_TEMPLATE:      e.is_template === true,
     TEMPLATE_ID:      e.template_id     || "",
-    RECURRENCE_TYPE:  e.recurrence_type || ""
+    RECURRENCE_TYPE:  e.recurrence_type || "",
+    SRAZ:             e.sraz           || "",
+    OBLECENI:         e.obleceni       || "",
+    DOPRAVA:          e.doprava        || "",
+    HOSPODA:          e.hospoda        || false,
+    HARMONOGRAM:      e.harmonogram    || "",
+    SPACAKY:          e.spacaky        || "",
+    STRAVA:           e.strava         || "",
+    STRAVA_NOTA:      e.strava_nota    || "",
+    OBLECENI_S:       e.obleceni_s     || "",
+    OBLECENI_S_TYP:   e.obleceni_s_typ || "",
+
   }))
 }
 
@@ -232,6 +243,16 @@ async function addEvent(params){
     type:             params.type    || "Zkouška",
     status:           params.status  || "Plánovaná",
     requires_program: params.requires_program !== false,
+    sraz:             params.sraz           || "",
+    obleceni:         params.obleceni       || "",
+    doprava:          params.doprava        || "",
+    hospoda:          params.hospoda        || false,
+    harmonogram:      params.harmonogram    || "",
+    spacaky:          params.spacaky        || "",
+    strava:           params.strava         || "",
+    strava_nota:      params.strava_nota    || "",
+    obleceni_s:       params.obleceni_s     || "",
+    obleceni_s_typ:   params.obleceni_s_typ || "",
     doc_url:          "",
     is_template:      false,
     template_id:      "",
@@ -268,7 +289,17 @@ async function updateEvent(params){
     note:             params.note   || "",
     type:             params.type   || "Zkouška",
     status:           params.status || "Plánovaná",
-    requires_program: params.requires_program !== false
+    requires_program: params.requires_program !== false,
+    sraz:             params.sraz           || "",
+    obleceni:         params.obleceni       || "",
+    doprava:          params.doprava        || "",
+    hospoda:          params.hospoda        || false,
+    harmonogram:      params.harmonogram    || "",
+    spacaky:          params.spacaky        || "",
+    strava:           params.strava         || "",
+    strava_nota:      params.strava_nota    || "",
+    obleceni_s:       params.obleceni_s     || "",
+    obleceni_s_typ:   params.obleceni_s_typ || ""
   })
   return {status: "updated"}
 }
