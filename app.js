@@ -926,7 +926,7 @@ async function renderDashboard(){
           <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}${upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""}</b></div>
           <div><span class="small">Čas</span><br><b>${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</b></div>
           <div><span class="small">Místo</span><br><b>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</b></div>
-          <div><span class="small" style="display:block;margin-bottom:2px">Typ akce</span><b>${escapeHtml(event.TYPE) || "Zkouška"}</b></div>
+          <div><span class="small" style="display:block;margin-bottom:2px">Typ akce</span><b>${escapeHtml(upcoming.TYPE) || "Zkouška"}</b></div>
         </div>
         ${(upcoming.PLACE || upcoming.CALL_URL) ? `
           <div class="btn-group" style="margin-bottom:16px">
