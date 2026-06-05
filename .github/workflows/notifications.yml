@@ -69,14 +69,6 @@ jobs:
 
             if(!akce || !members) return;
 
-            // TEST — smaž po ověření
-            await sendNotification(
-              'Test shrnutí 📅',
-              'Zítra: Zkouška · 19:00 · Smetanovo nábřeží\nSraz: 18:45\nOblečení: Neformální — 10men tričko\n\n18:45 sraz, 19:00 zkouška, 21:00 konec',
-              ['All']
-            );
-            // END TEST
-
             const now = new Date();
             const events = Object.values(akce);
 
