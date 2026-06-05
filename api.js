@@ -930,6 +930,40 @@ async function updateSeriesFrom(params){
 }
 
 // ===============================
+// MEMBERS
+// ===============================
+
+async function addMember(params){
+  const id = "m" + Date.now()
+  await dbSet("/members/" + id, {
+    id,
+    name:  params.name  || "",
+    email: params.email || "",
+    voice: params.voice || "",
+    role:  params.role  || "MEMBER",
+    phone: params.phone || ""
+  })
+  return {status: "created", id}
+}
+
+async function updateMember(params){
+  await dbUpdate("/members/" + params.id, {
+    name:  params.name  || "",
+    email: params.email || "",
+    voice: params.voice || "",
+    role:  params.role  || "MEMBER",
+    phone: params.phone || ""
+  })
+  return {status: "updated"}
+}
+
+async function deleteMember(id){
+  await dbRemove("/members/" + id)
+  return {status: "deleted"}
+}
+
+
+// ===============================
 // HLAVNÍ API FUNKCE
 // ===============================
 
@@ -977,6 +1011,10 @@ async function api(action, params = {}){
     case "getrawakce":       return await dbGet("/akce/" + params.id)
     case "updateseriesfrom": return await updateSeriesFrom(params)
     case "updateentireseriesfrom": return await updateEntireSeries(params)
+    case "addmember":        return await addMember(params)
+    case "updatemember":     return await updateMember(params)
+    case "deletemember":     return await deleteMember(params.id)
+
     default: throw new Error("Unknown action: " + action)
   }
 }
