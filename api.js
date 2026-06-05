@@ -74,6 +74,7 @@ async function getEvents(){
     PLACE:            e.place,
     CALL_URL:         e.call_url || "",
     NOTE:             e.note,
+    TYPE:             e.type || "Zkouška",
     STATUS:           e.status,
     DOC_URL:          e.doc_url || "",
     REQUIRES_PROGRAM: e.requires_program !== false,
@@ -227,6 +228,7 @@ async function addEvent(params){
     place:            params.place   || "",
     call_url:         params.call_url || "",
     note:             params.note    || "",
+    type:             params.type    || "Zkouška",
     status:           params.status  || "Plánovaná",
     requires_program: params.requires_program !== false,
     doc_url:          "",
@@ -263,6 +265,7 @@ async function updateEvent(params){
     place:            params.place  || "",
     call_url:         params.call_url || "",
     note:             params.note   || "",
+    type:             params.type   || "Zkouška",
     status:           params.status || "Plánovaná",
     requires_program: params.requires_program !== false
   })
