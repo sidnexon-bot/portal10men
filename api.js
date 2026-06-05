@@ -52,7 +52,14 @@ function genId(prefix = "a"){
 
 async function getMembers(){
   const data = await dbGet("/members")
-  return objToArray(data)
+  return objToArray(data).map(m => ({
+    ID:    m.id    || "",
+    NAME:  m.name  || "",
+    EMAIL: m.email || "",
+    VOICE: m.voice || "",
+    ROLE:  m.role  || "MEMBER",
+    PHONE: m.phone || ""
+  }))
 }
 
 async function getEvents(){
