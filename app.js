@@ -1685,9 +1685,8 @@ function renderEventFormExtra(){
           <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
         </select>
       </label>
-      <label style="margin-top:12px;display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="fHospoda" ${window.EDIT_EVENT?.HOSPODA ? "checked" : ""} style="width:auto;margin:0">
-        <span>Rezervujeme hospodu</span>
+      <label style="margin-top:12px">Hospoda<br>
+        <textarea id="fHospoda" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px" placeholder="Název/adresa, čas rezervace, na jaké jméno...">${escapeHtml(window.EDIT_EVENT?.HOSPODA || "")}</textarea>
       </label>
       <label style="margin-top:12px">Harmonogram<br>
         <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
@@ -2853,7 +2852,7 @@ async function saveEvent(id){
   const sraz            = document.getElementById("fSraz")?.value          || ""
   const obleceni        = document.getElementById("fObleceni")?.value      || ""
   const doprava         = document.getElementById("fDoprava")?.value       || ""
-  const hospoda         = document.getElementById("fHospoda")?.checked     || false
+  const hospoda         = document.getElementById("fHospoda")?.value       || ""
   const harmonogram     = document.getElementById("fHarmonogram")?.value   || ""
   const spacaky         = document.getElementById("fSpacaky")?.value       || ""
   const strava          = document.getElementById("fStrava")?.value        || ""
