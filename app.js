@@ -1504,6 +1504,7 @@ function togglePastEvents(){
 }
 
 async function openEventForm(id){
+  window.EDIT_EVENT = {}
 
   const editSlot = document.getElementById("edit-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
@@ -1529,6 +1530,8 @@ async function openEventForm(id){
     try{
       const data = await cachedApi("eventdetail", {id})
       event = data.event || {}
+      window.EDIT_EVENT = event
+       
     }catch(e){
       if(target){
         target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
@@ -1813,6 +1816,19 @@ async function openEvent(id){
        ${event.NOTE ? `<div style="padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
      </div>`
 
+     ${event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.SPACAKY || event.STRAVA ? `
+  <div class="event-card" style="margin-top:12px">
+    <div class="event-label">Detaily akce</div>
+    ${event.SRAZ ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
+    ${event.OBLECENI ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Oblečení</span><b>${escapeHtml(event.OBLECENI)}</b></div>` : ""}
+    ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
+    ${event.HOSPODA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><b>Rezervujeme</b></div>` : ""}
+    ${event.SPACAKY ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spacáky a karimatky</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
+    ${event.STRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Strava</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
+    ${event.OBLECENI_S ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Koncertní oblečení</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(event.OBLECENI_S_TYP) : ""}</b></div>` : ""}
+    ${event.HARMONOGRAM ? `<div style="padding:8px 0"><span class="small" style="display:block;margin-bottom:4px">Harmonogram</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div>` : ""}
+  </div>
+` : ""}
 
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
