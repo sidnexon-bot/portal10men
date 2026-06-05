@@ -2825,6 +2825,16 @@ async function saveEvent(id){
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
   const recurrenceType  = document.getElementById("fRecurrence")?.value || "none"
   const recurrenceUntil = document.getElementById("fRecurrenceUntil")?.value || ""
+  const sraz            = document.getElementById("fSraz")?.value          || ""
+  const obleceni        = document.getElementById("fObleceni")?.value      || ""
+  const doprava         = document.getElementById("fDoprava")?.value       || ""
+  const hospoda         = document.getElementById("fHospoda")?.checked     || false
+  const harmonogram     = document.getElementById("fHarmonogram")?.value   || ""
+  const spacaky         = document.getElementById("fSpacaky")?.value       || ""
+  const strava          = document.getElementById("fStrava")?.value        || ""
+  const stravaNota      = document.getElementById("fStravaNota")?.value    || ""
+  const obleceniS       = document.getElementById("fObleceniSoustredeni")?.value    || ""
+  const obleceniSTyp    = document.getElementById("fObleceniSoustredeniTyp")?.value || ""
 
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
@@ -2839,7 +2849,10 @@ async function saveEvent(id){
         requires_program: requiresProgram,
         call_url: callUrl,
         recurrence_type: recurrenceType,
-        recurrence_until: recurrenceUntil
+        recurrence_until: recurrenceUntil,
+        sraz, obleceni, doprava, hospoda, harmonogram,
+        spacaky, strava, strava_nota: stravaNota,
+        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
       })
       invalidateCache("events")
       hideSaving(`Vytvořeno ${result.instances} akcí ✓`)
@@ -2855,16 +2868,28 @@ async function saveEvent(id){
     showSaving()
     if(id){
       if(status === "Zrušená"){
-        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl})
+        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl,
+        sraz, obleceni, doprava, hospoda, harmonogram,
+        spacaky, strava, strava_nota: stravaNota,
+        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+      })
       }else{
-        await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl})
+        await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
+          sraz, obleceni, doprava, hospoda, harmonogram,
+          spacaky, strava, strava_nota: stravaNota,
+          obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+        })
       }
       invalidateCache("events")
       invalidateCache("eventdetail", id)
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl})
+      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
+        sraz, obleceni, doprava, hospoda, harmonogram,
+        spacaky, strava, strava_nota: stravaNota,
+        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+      })
       invalidateCache("events")
       hideSaving("Akce vytvořena ✓")
       renderEvents()
