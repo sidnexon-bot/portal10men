@@ -158,11 +158,21 @@ const attendance = objToArray(dochazka)
       PLACE:           akce.place,
       CALL_URL:        akce.call_url      || "",
       NOTE:            akce.note,
-      TYPE:            akce.type || "Zkouška",
+      TYPE:            akce.type          || "Zkouška",
       STATUS:          akce.status,
       DOC_URL:         akce.doc_url       || "",
       TEMPLATE_ID:     akce.template_id   || "",
-      RECURRENCE_TYPE: akce.recurrence_type || ""
+      RECURRENCE_TYPE: akce.recurrence_type || "",
+      SRAZ:            akce.sraz          || "",
+      OBLECENI:        akce.obleceni      || "",
+      DOPRAVA:         akce.doprava       || "",
+      HOSPODA:         akce.hospoda       || false,
+      HARMONOGRAM:     akce.harmonogram   || "",
+      SPACAKY:         akce.spacaky       || "",
+      STRAVA:          akce.strava        || "",
+      STRAVA_NOTA:     akce.strava_nota   || "",
+      OBLECENI_S:      akce.obleceni_s    || "",
+      OBLECENI_S_TYP:  akce.obleceni_s_typ || ""
     },
     attendance,
     program: prog
