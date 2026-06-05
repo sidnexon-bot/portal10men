@@ -1,4 +1,4 @@
-/* ==============================
+/* ==============================r
    STAV APLIKACE
 ================================ */
 
@@ -1077,12 +1077,14 @@ async function renderDashboard(){
     // --- KONTAKTY ---
       const members = await cachedApi("members")
       const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
-      const sortedMembers = [...members].sort((a,b) => {
-        const ai = voiceOrder.indexOf(a.VOICE)
-        const bi = voiceOrder.indexOf(b.VOICE)
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
-      })
-      
+      const sortedMembers = [...members]
+     .filter(m => (m.ROLE || "").toUpperCase() !== "GUEST")
+     .sort((a,b) => {
+       const ai = voiceOrder.indexOf(a.VOICE)
+       const bi = voiceOrder.indexOf(b.VOICE)
+       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+     })
+     
       const contactsHtml = `
         <h3 class="season-title">👥 Kontakty</h3>
         <div class="card" style="padding:0">
