@@ -1571,6 +1571,7 @@ async function openEventForm(id){
     <label>Poznámka<br>
       <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
     </label>
+       {key: "type", label: "Typ akce", type: "select", value: event.TYPE || "Zkouška", options: ["Zkouška", "Koncert", "Soustředění", "Soutěž", "Jiná akce"]},
     <label>Status<br>
       <select id="fStatus">
         <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
