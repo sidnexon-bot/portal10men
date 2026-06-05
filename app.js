@@ -389,6 +389,15 @@ function toggleRecurrenceUntil(val){
   if(wrap) wrap.style.display = val !== "none" ? "block" : "none"
 }
 
+function formatObleceni(val){
+  const map = {
+    "Formální":    "Formální — černé kalhoty a košile, červená kravata",
+    "Neformální":  "Neformální — 10men tričko, civilní kalhoty",
+    "Zimní civil": "Zimní civil - bunda/kabát"
+  }
+  return map[val] || val
+}
+
 function buildSongDetail(id){
   const card = document.querySelector(`.repertoar-row[data-id="${id}"]`)
   if(!card) return ""
@@ -1820,12 +1829,12 @@ async function openEvent(id){
         <div class="event-card" style="margin-top:12px">
           <div class="event-label">Detaily akce</div>
           ${event.SRAZ ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
-          ${event.OBLECENI ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Oblečení</span><b>${escapeHtml(event.OBLECENI)}</b></div>` : ""}
+          ${event.OBLECENI ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Oblečení</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
           ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
           ${event.HOSPODA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><b>Rezervujeme</b></div>` : ""}
           ${event.SPACAKY ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spacáky a karimatky</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
           ${event.STRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Strava</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
-          ${event.OBLECENI_S ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Koncertní oblečení</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(event.OBLECENI_S_TYP) : ""}</b></div>` : ""}
+          ${event.OBLECENI_S ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Koncertní oblečení</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(formatObleceni(event.OBLECENI_S_TYP)) : ""}</b></div>` : ""}
           ${event.HARMONOGRAM ? `<div style="padding:8px 0"><span class="small" style="display:block;margin-bottom:4px">Harmonogram</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div>` : ""}
         </div>
       ` : ""}`
