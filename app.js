@@ -2342,6 +2342,126 @@ async function confirmMozna(choice){
 }
 
 /* ===============================
+   SPRÁVA ČLENŮ
+================================ */
+
+async function openAddMember(){
+  openFormModal("Nový člen", [
+    {key: "name",  label: "Jméno",  type: "text"},
+    {key: "email", label: "Email",  type: "text"},
+    {key: "phone", label: "Telefon", type: "text"},
+    {key: "voice", label: "Hlas", type: "select", value: "1. TENOR", options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
+    {key: "role",  label: "Role", type: "select", value: "MEMBER", options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
+  ], async (values) => {
+    if(!values.name)  { alert("Zadej jméno"); return }
+    if(!values.email) { alert("Zadej email"); return }
+    try{
+      closeFormModal()
+      showSaving()
+      await api("addmember", values)
+      invalidateCache("members")
+      hideSaving("Člen přidán ✓")
+      renderMembers()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
+async function openEditMember(id){
+  const members = await api("members")
+  const m = members.find(m => m.ID === id)
+  if(!m) return
+
+  openFormModal("Upravit člena", [
+    {key: "name",  label: "Jméno",   type: "text",   value: m.NAME},
+    {key: "email", label: "Email",   type: "text",   value: m.EMAIL},
+    {key: "phone", label: "Telefon", type: "text",   value: m.PHONE || ""},
+    {key: "voice", label: "Hlas",   type: "select", value: m.VOICE, options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
+    {key: "role",  label: "Role",   type: "select", value: m.ROLE,  options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
+  ], async (values) => {
+    if(!values.name)  { alert("Zadej jméno"); return }
+    if(!values.email) { alert("Zadej email"); return }
+    try{
+      closeFormModal()
+      showSaving()
+      await api("updatemember", {id, ...values})
+      invalidateCache("members")
+      hideSaving("Člen upraven ✓")
+      renderMembers()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + err.message)
+    }
+  })
+}
+
+async function deleteMemberItem(id){
+  confirmModal("Opravdu smazat tohoto člena?", async () => {
+    try{
+      showSaving()
+      await api("deletemember", {id})
+      invalidateCache("members")
+      hideSaving("Člen smazán ✓")
+      renderMembers()
+    }catch(err){
+      hideSaving("Chyba ✗")
+      alert("Chyba: " + (err?.message || err))
+    }
+  })
+}
+
+async function renderMembers(){
+  setLoading()
+  try{
+    const members = await api("members")
+    const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+    const sorted = [...members].sort((a, b) => {
+      const ai = voiceOrder.indexOf(a.VOICE)
+      const bi = voiceOrder.indexOf(b.VOICE)
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+    })
+
+    let html = `<h2 style="margin:0 0 16px">Členové</h2>`
+    html += `<div class="btn-group" style="margin-bottom:16px">
+      <button onclick="openAddMember()">+ Přidat člena</button>
+    </div>`
+
+    const voiceGroups = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+    voiceGroups.forEach(voice => {
+      const group = sorted.filter(m => m.VOICE === voice)
+      if(!group.length) return
+
+      html += `<h3 class="season-title">${voice}</h3>`
+      html += `<div class="card" style="padding:0">`
+      group.forEach((m, i) => {
+        const border = i < group.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+        html += `<div style="padding:14px 16px;${border}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:600;font-size:15px">${escapeHtml(m.NAME)}</div>
+              <div class="small">${escapeHtml(m.EMAIL)}</div>
+              ${m.PHONE ? `<div class="small">${escapeHtml(m.PHONE)}</div>` : ""}
+              <div class="small" style="margin-top:4px;font-weight:600;color:#007aff">${escapeHtml(m.ROLE)}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="openEditMember('${escapeHtml(m.ID)}')" style="background:#e8f0fe;color:#007aff;padding:8px 12px;font-size:13px">Upravit</button>
+              <button onclick="deleteMemberItem('${escapeHtml(m.ID)}')" style="background:#fde8e8;color:#c00;padding:8px 12px;font-size:13px">Smazat</button>
+            </div>
+          </div>
+        </div>`
+      })
+      html += `</div>`
+    })
+
+    container().innerHTML = html
+  }catch(err){
+    setError("Chyba při načítání členů: " + (err?.message || err))
+  }
+}
+
+/* ===============================
    SWIPE TO ACTION
 ================================ */
 
@@ -4011,3 +4131,7 @@ window.openEditEventModal   = openEditEventModal
 window.openDeleteEventModal = openDeleteEventModal
 window.saveEntireSeries     = saveEntireSeries
 window.renderGuestView      = renderGuestView
+window.openAddMember        = openAddMember
+window.openEditMember       = openEditMember
+window.deleteMemberItem     = deleteMemberItem
+window.renderMembers        = renderMembers
