@@ -3718,6 +3718,53 @@ function heatmapInfo(name, eventName, status, reason){
 }
 
 /* ===============================
+   KONTAKTY
+================================ */
+
+async function openContactModal(id){
+  const members = await cachedApi("members")
+  const m = members.find(m => m.ID === id)
+  if(!m) return
+
+  const canEdit = MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"
+
+  document.getElementById("contactModalContent").innerHTML = `
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:#e5e5ea;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 12px">
+        ${getInitials(m.NAME)}
+      </div>
+      <div style="font-size:20px;font-weight:700">${escapeHtml(m.NAME)}</div>
+      <div class="small">${escapeHtml(m.VOICE)}</div>
+      <div style="font-size:11px;font-weight:600;color:#007aff;margin-top:4px;text-transform:uppercase">${escapeHtml(m.ROLE)}</div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      ${m.EMAIL ? `<div style="padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+        <div class="small" style="margin-bottom:2px">Email</div>
+        <div style="font-weight:500">${escapeHtml(m.EMAIL)}</div>
+      </div>` : ""}
+      ${m.PHONE ? `<div style="padding:10px 0">
+        <div class="small" style="margin-bottom:2px">Telefon</div>
+        <div style="font-weight:500">${escapeHtml(m.PHONE)}</div>
+      </div>` : ""}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${m.PHONE ? `<a href="tel:${escapeHtml(m.PHONE)}" style="display:block;text-align:center;padding:14px;background:#d4f5e2;border-radius:14px;font-weight:600;color:#1a7a3a;text-decoration:none">📞 Zavolat</a>` : ""}
+      ${m.EMAIL ? `<a href="mailto:${escapeHtml(m.EMAIL)}" style="display:block;text-align:center;padding:14px;background:#e8f0fe;border-radius:14px;font-weight:600;color:#007aff;text-decoration:none">✉️ Napsat e-mail</a>` : ""}
+      ${canEdit ? `<button onclick="closeContactModal();openEditMember('${escapeHtml(m.ID)}')" style="width:100%">Upravit kontakt</button>` : ""}
+      <button onclick="closeContactModal()" style="width:100%;background:#e8e8ed;color:#6b6b70">Zavřít</button>
+    </div>
+  `
+
+  document.getElementById("contactModal").classList.remove("hidden")
+}
+
+function closeContactModal(){
+  document.getElementById("contactModal").classList.add("hidden")
+}
+
+/* ===============================
    PULL TO REFRESH
 ================================ */
 
