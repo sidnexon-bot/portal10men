@@ -2719,7 +2719,7 @@ async function saveEvent(id){
     try{
       showSaving()
       const result = await api("addrecurring", {
-        name, date, date_end: dateEnd, start, end, place, note, status,
+        name, date, date_end: dateEnd, start, end, place, note, type, status,
         requires_program: requiresProgram,
         call_url: callUrl,
         recurrence_type: recurrenceType,
