@@ -4197,3 +4197,5 @@ window.openAddMember        = openAddMember
 window.openEditMember       = openEditMember
 window.deleteMemberItem     = deleteMemberItem
 window.renderMembers        = renderMembers
+window.openContactModal     = openContactModal
+window.closeContactModal    = closeContactModal
