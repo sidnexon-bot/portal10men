@@ -1834,7 +1834,7 @@ async function openEvent(id){
           ${event.SPACAKY ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spacáky a karimatky</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
           ${event.STRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Strava</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
           ${event.OBLECENI_S ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Koncertní oblečení</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(formatObleceni(event.OBLECENI_S_TYP)) : ""}</b></div>` : ""}
-          ${event.HARMONOGRAM ? `<div style="padding:8px 0"><span class="small" style="display:block;margin-bottom:4px">Harmonogram</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div>` : ""}
+          ${event.HARMONOGRAM ? `<div style="padding:8px 0"><span class="small" style="display:block;margin-bottom:4px">Harmonogram</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : ""}
         </div>
       ` : ""}`
 
