@@ -1024,7 +1024,10 @@ async function sendDiscordMessage(params){
   const webhookUrl = config?.discord_webhook
   if(!webhookUrl) return {error: "Discord webhook není nastaven"}
 
-  const response = await fetch(webhookUrl, {
+  const threadId = config?.discord_thread_id
+  const url = threadId ? `${webhookUrl}?thread_id=${threadId}` : webhookUrl
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
