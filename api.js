@@ -46,6 +46,11 @@ function genId(prefix = "a"){
   return prefix + Date.now() + "_" + Math.random().toString(36).substr(2, 6)
 }
 
+function formatDateSimple(dateStr){
+  const d = new Date(dateStr)
+  return d.toLocaleDateString("cs-CZ", {day: "numeric", month: "long", year: "numeric"})
+}
+
 // ===============================
 // API FUNKCE
 // ===============================
@@ -282,6 +287,12 @@ async function addEvent(params){
       updated_by: "",
       updated_at: ""
     })
+
+    // Discord oznámení
+    await sendDiscordMessage({
+      message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
+    })
+
   }
 
   return {status: "created", id, attendanceRows: memberList.length}
@@ -367,6 +378,10 @@ async function cancelEvent(params){
       await dbSet("/dochazka/" + dRef.key, data)
     }
   }
+
+      await sendDiscordMessage({
+      message: `❌ **Tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
+    })
 
   return {status: "cancelled"}
 }
