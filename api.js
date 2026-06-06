@@ -1024,11 +1024,7 @@ async function sendDiscordMessage(params){
   const webhookUrl = config?.discord_webhook
   if(!webhookUrl) return {error: "Discord webhook není nastaven"}
 
-  const threadId = config?.discord_thread_id || null
-
-  const url = webhookUrl + (threadId ? `?thread_id=${threadId}` : "")
-
-  const response = await fetch(url, {
+  const response = await fetch(webhookUrl, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
@@ -1037,10 +1033,12 @@ async function sendDiscordMessage(params){
     })
   })
 
+  console.log("Discord response status:", response.status)
+  const text = await response.text()
+  console.log("Discord response:", text)
+
   return {status: response.ok ? "sent" : "error"}
 }
-
-
 
 // ===============================
 // HLAVNÍ API FUNKCE
