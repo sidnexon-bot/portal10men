@@ -1045,26 +1045,32 @@ async function deleteMember(id){
 // ===============================
 
 async function sendPush(title, message){
-  const config = await dbGet("/config")
-  const apiKey = config?.onesignal_api_key
-  const appId  = "01477d89-1329-43f6-91f2-bb597d5a681e"
-  if(!apiKey) return {error: "OneSignal API key není nastaven"}
+  try{
+    const config = await dbGet("/config")
+    const apiKey = config?.onesignal_api_key
+    const appId  = "01477d89-1329-43f6-91f2-bb597d5a681e"
+    if(!apiKey){ console.log("Chybí API key"); return {error: "no key"} }
 
-  const response = await fetch("https://onesignal.com/api/v1/notifications", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Key " + apiKey
-    },
-    body: JSON.stringify({
-      app_id: appId,
-      included_segments: ["All"],
-      headings: {en: title, cs: title},
-      contents: {en: message, cs: message}
+    console.log("Sending push notification...")
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Key " + apiKey
+      },
+      body: JSON.stringify({
+        app_id: appId,
+        included_segments: ["All"],
+        headings: {en: title, cs: title},
+        contents: {en: message, cs: message}
+      })
     })
-  })
-
-  return {status: response.ok ? "sent" : "error"}
+    console.log("Response status:", response.status)
+    return {status: response.ok ? "sent" : "error"}
+  }catch(err){
+    console.error("sendPush error:", err)
+    return {error: err.message}
+  }
 }
 
 // ===============================
