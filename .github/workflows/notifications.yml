@@ -95,8 +95,6 @@ jobs:
           }
 
           async function main(){
-
-            await sendDiscord('Test Discord shrnutí 🎵', config);
           
             const akce      = await fbGet('/akce');
             const program   = await fbGet('/program');
@@ -104,6 +102,8 @@ jobs:
             const members   = await fbGet('/members');
             const repertoar = await fbGet('/repertoar');
             const config    = await fbGet('/config');
+
+            await sendDiscord('Test Discord shrnutí 🎵', config);
 
             if(!akce || !members) return;
 
