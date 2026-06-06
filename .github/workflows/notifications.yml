@@ -2,8 +2,9 @@ name: Daily Notifications
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # každý den v 7:00 UTC (9:00 Praha)
-  workflow_dispatch:      # možnost spustit ručně
+    - cron: '0 7 * * *'    # každý den v 7:00 UTC (9:00 Praha)
+    - cron: '0 9 * * 0'    # každou neděli v 11:00 Praha
+  workflow_dispatch:
 
 jobs:
   notify:
@@ -13,6 +14,7 @@ jobs:
         env:
           ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           node -e "
           const https = require('https');
@@ -39,7 +41,6 @@ jobs:
                 headings: { en: title, cs: title },
                 contents: { en: message, cs: message }
               });
-
               const options = {
                 hostname: 'onesignal.com',
                 path: '/api/v1/notifications',
@@ -49,7 +50,6 @@ jobs:
                   'Authorization': 'Key ' + process.env.ONESIGNAL_API_KEY
                 }
               };
-
               const req = https.request(options, res => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
@@ -61,34 +61,65 @@ jobs:
             });
           }
 
+          function sendDiscord(message, config){
+            return new Promise((resolve, reject) => {
+              const webhookUrl = process.env.DISCORD_WEBHOOK;
+              if(!webhookUrl){ resolve(); return; }
+              
+              const threadId = config?.discord_thread_id
+                ? String(config.discord_thread_id).replace(/\"/g, '').trim()
+                : null;
+              
+              const path = '/api/webhooks/' + webhookUrl.split('/api/webhooks/')[1] + (threadId ? '?thread_id=' + threadId : '');
+              const body = JSON.stringify({username: '10base', content: message});
+              
+              const options = {
+                hostname: 'discord.com',
+                path: path,
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Content-Length': Buffer.byteLength(body)
+                }
+              };
+              
+              const req = https.request(options, res => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => { console.log('Discord sent:', res.statusCode); resolve(data); });
+              });
+              req.on('error', reject);
+              req.write(body);
+              req.end();
+            });
+          }
+
           async function main(){
-            const akce    = await fbGet('/akce');
-            const program = await fbGet('/program');
-            const dochazka = await fbGet('/dochazka');
-            const members = await fbGet('/members');
+            const akce      = await fbGet('/akce');
+            const program   = await fbGet('/program');
+            const dochazka  = await fbGet('/dochazka');
+            const members   = await fbGet('/members');
+            const repertoar = await fbGet('/repertoar');
+            const config    = await fbGet('/config');
 
             if(!akce || !members) return;
 
             const now = new Date();
             const events = Object.values(akce);
+            const progEntries      = program   ? Object.values(program)   : [];
+            const dochazkaEntries  = dochazka  ? Object.values(dochazka)  : [];
+            const memberList       = Object.values(members);
+            const repertoarList    = repertoar ? Object.values(repertoar) : [];
 
-            // DEBUG
-            console.log('Today:', now.toISOString());
-            console.log('Events count:', events.length);
-            events.forEach(e => {
-              const eventDate = new Date(e.date);
-              const daysUntil = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
-              console.log(e.name, '- days:', daysUntil, '- date:', e.date);
-            });
-            // END DEBUG
-            
-            const progEntries = program ? Object.values(program) : [];
-            const dochazkaEntries = dochazka ? Object.values(dochazka) : [];
-            const memberList = Object.values(members);
+            const eventDate2 = new Date(now);
+            eventDate2.setHours(0,0,0,0);
+
+            const isNedele = now.getDay() === 0;
 
             for(const event of events){
               if(!event.date) continue;
               if(event.status && event.status.indexOf('Zru') === 0) continue;
+              
               const eventDate = new Date(event.date);
               eventDate.setHours(0,0,0,0);
               const todayDate = new Date(now);
@@ -97,59 +128,96 @@ jobs:
 
               // 3 dny před akcí
               if(daysUntil === 3){
-              if(event.requires_program !== false){
-                const hasProgram = progEntries.some(p => p.id_akce === event.id);
-                if(!hasProgram){
+                if(event.requires_program !== false){
+                  const hasProgram = progEntries.some(p => p.id_akce === event.id);
+                  if(!hasProgram){
+                    await sendNotification(
+                      'Program chybí 📋',
+                      'Akce ' + event.name + ' je za 3 dny a nemá program.',
+                      ['All']
+                    );
+                  }
+                }
+                await sendNotification(
+                  'Vyplň docházku ✋',
+                  'Akce ' + event.name + ' je za 3 dny. Zkontroluj si, prosím, docházku.',
+                  ['All']
+                );
+              }
+
+              // 1 den před akcí
+              if(daysUntil === 1){
+                const nevyplneni = memberList.filter(m => {
+                  const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
+                  return !zaznam || !zaznam.status;
+                });
+
+                if(nevyplneni.length > 0){
+                  const jmena = nevyplneni.map(m => m.name).join(', ');
                   await sendNotification(
-                    'Program chybí 📋',
-                    'Akce ' + event.name + ' je za 3 dny a nemá program.',
+                    'Nevyplněná docházka ⚠️',
+                    'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
                     ['All']
                   );
                 }
+
+                let shrnuti = 'Zítra: ' + event.name;
+                if(event.start)       shrnuti += ' · ' + event.start;
+                if(event.place)       shrnuti += ' · ' + event.place;
+                if(event.sraz)        shrnuti += '\nSraz: ' + event.sraz;
+                if(event.obleceni)    shrnuti += '\nOblečení: ' + event.obleceni;
+                if(event.doprava)     shrnuti += '\nDoprava: ' + event.doprava;
+                if(event.harmonogram) shrnuti += '\n\n' + event.harmonogram;
+
+                await sendNotification(
+                  'Připomínka na zítra 📅',
+                  shrnuti,
+                  ['All']
+                );
               }
-              await sendNotification(
-                'Vyplň docházku ✋',
-                'Akce ' + event.name + ' je za 3 dny. Zkontroluj si, prosím, docházku.',
-                ['All']
-              );
+
+              // Nedělní shrnutí — akce za 4 dny
+              if(isNedele && daysUntil === 4){
+                const eventProg = progEntries
+                  .filter(p => p.id_akce === event.id)
+                  .sort((a,b) => Number(a.order) - Number(b.order));
+
+                let programText = '';
+                if(eventProg.length){
+                  const main   = eventProg.filter(p => Number(p.order) < 900);
+                  const encore = eventProg.filter(p => Number(p.order) >= 900);
+                  programText = main.map((p,i) => {
+                    const song = repertoarList.find(r => r.id === p.song_id);
+                    return (i+1) + '. ' + (song ? song.name : p.song_id);
+                  }).join('\n');
+                  if(encore.length){
+                    programText += '\n\nPřídavky:\n';
+                    programText += encore.map((p,i) => {
+                      const song = repertoarList.find(r => r.id === p.song_id);
+                      return (i+1) + '. ' + (song ? song.name : p.song_id);
+                    }).join('\n');
+                  }
+                }else{
+                  programText = 'Program musí Kája ještě doplnit 🎵';
+                }
+
+                const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
+                const cas   = event.start ? event.start + (event.end ? ' – ' + event.end : '') : '';
+                const misto = event.place || '—';
+
+                let zprava = '📅 **' + event.name + '**\n';
+                zprava += datum + (cas ? ' · ' + cas : '') + '\n';
+                zprava += '📍 ' + misto + '\n\n';
+                zprava += '**Program:**\n' + programText;
+                if(event.sraz)     zprava += '\n\n🕐 Sraz: ' + event.sraz;
+                if(event.obleceni) zprava += '\n👔 Oblečení: ' + event.obleceni;
+
+                await sendDiscord(zprava, config);
+              }
             }
 
-            // 1 den před akcí — ping nevyplněných
-            if(daysUntil === 1){
-            // ping nevyplněných
-            const nevyplneni = memberList.filter(m => {
-              const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
-              return !zaznam || !zaznam.status;
-            });
-          
-            if(nevyplneni.length > 0){
-              const jmena = nevyplneni.map(m => m.name).join(', ');
-              await sendNotification(
-                'Nevyplněná docházka ⚠️',
-                'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
-                ['All']
-              );
-            }
-          
-            // shrnutí akce
-            let shrnuti = 'Zítra: ' + event.name;
-            if(event.start)       shrnuti += ' · ' + event.start;
-            if(event.place)       shrnuti += ' · ' + event.place;
-            if(event.sraz)        shrnuti += '\nSraz: ' + event.sraz;
-            if(event.obleceni)    shrnuti += '\nOblečení: ' + event.obleceni;
-            if(event.doprava)     shrnuti += '\nDoprava: ' + event.doprava;
-            if(event.harmonogram) shrnuti += '\n\n' + event.harmonogram;
-          
-            await sendNotification(
-              'Připomínka na zítra 📅',
-              shrnuti,
-              ['All']
-            );
+            console.log('Done');
           }
-                        }
-            
-                        console.log('Done');
-                      }
-            
-                      main().catch(console.error);
-                      "
+
+          main().catch(console.error);
+          "
