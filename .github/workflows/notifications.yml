@@ -134,49 +134,80 @@ jobs:
                 if(event.requires_program !== false){
                   const hasProgram = progEntries.some(p => p.id_akce === event.id);
                   if(!hasProgram){
-                    await sendNotification(
-                      'Program chybí 📋',
-                      'Akce ' + event.name + ' je za 3 dny a nemá program.',
-                      ['All']
+                    await sendDiscord(
+                      '📋 Akce **' + event.name + '** je za 3 dny a nemá program. Kája, doplň ho prosím v 10base!',
+                      config
                     );
                   }
                 }
-                await sendNotification(
-                  'Vyplň docházku ✋',
-                  'Akce ' + event.name + ' je za 3 dny. Zkontroluj si, prosím, docházku.',
-                  ['All']
+                await sendDiscord(
+                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si docházku v 10base a případně ji doplňte, pokud ji ještě nemáte. @člen .',
+                  config
                 );
               }
 
+
               // 1 den před akcí
-              if(daysUntil === 1){
+             if(daysUntil === 1){
+                // urgování nevyplněných
                 const nevyplneni = memberList.filter(m => {
                   const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
                   return !zaznam || !zaznam.status;
                 });
-
+              
                 if(nevyplneni.length > 0){
-                  const jmena = nevyplneni.map(m => m.name).join(', ');
-                  await sendNotification(
-                    'Nevyplněná docházka ⚠️',
-                    'Zítra je ' + event.name + '. Docházku ještě nevyplnili: ' + jmena,
-                    ['All']
+                  const mentions = nevyplneni.map(m => {
+                    const discordId = m.discord_id
+                      ? String(m.discord_id).replace(/"/g, '').trim()
+                      : null
+                    return discordId ? '<@' + discordId + '>' : m.name
+                  }).join(' ')
+              
+                  await sendDiscord(
+                    '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' — ještě jste nevyplnili docházku. Přijdete, nebo ne? Doplňte si ji v 10base.',
+                    config
                   );
                 }
-
-                let shrnuti = 'Zítra: ' + event.name;
-                if(event.start)       shrnuti += ' · ' + event.start;
-                if(event.place)       shrnuti += ' · ' + event.place;
-                if(event.sraz)        shrnuti += '\nSraz: ' + event.sraz;
-                if(event.obleceni)    shrnuti += '\nOblečení: ' + event.obleceni;
-                if(event.doprava)     shrnuti += '\nDoprava: ' + event.doprava;
-                if(event.harmonogram) shrnuti += '\n\n' + event.harmonogram;
-
-                await sendNotification(
-                  'Připomínka na zítra 📅',
-                  shrnuti,
-                  ['All']
-                );
+              
+                // shrnutí akce do Discordu
+                const eventProg = progEntries
+                  .filter(p => p.id_akce === event.id)
+                  .sort((a,b) => Number(a.order) - Number(b.order));
+              
+                let programText = '';
+                if(eventProg.length){
+                  const main   = eventProg.filter(p => Number(p.order) < 900);
+                  const encore = eventProg.filter(p => Number(p.order) >= 900);
+                  programText = main.map((p,i) => {
+                    const song = repertoarList.find(r => r.id === p.song_id);
+                    return (i+1) + '. ' + (song ? song.name : p.song_id);
+                  }).join('\n');
+                  if(encore.length){
+                    programText += '\n\nPřídavky:\n';
+                    programText += encore.map((p,i) => {
+                      const song = repertoarList.find(r => r.id === p.song_id);
+                      return (i+1) + '. ' + (song ? song.name : p.song_id);
+                    }).join('\n');
+                  }
+                }else{
+                  programText = 'Program musí Kája ještě doplnit 🎵';
+                }
+              
+                const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
+                const cas   = event.start ? event.start + (event.end ? ' – ' + event.end : '') : '';
+                const misto = event.place || '—';
+              
+                let zprava = '📅 Zítra: **' + event.name + '**\n';
+                zprava += datum + (cas ? ' · ' + cas : '') + '\n';
+                zprava += '📍 ' + misto + '\n\n';
+                zprava += '**Program:**\n' + programText;
+                if(event.sraz)     zprava += '\n\n🕐 Sraz: ' + event.sraz;
+                if(event.obleceni) zprava += '\n👔 Dresscode: ' + event.obleceni;
+                if(event.harmonogram) zprava += '\n\n' + event.harmonogram;
+              
+                await sendDiscord(zprava, config);
+              
+                // push notifikace shrnutí — zrušeno, přesunuto do Discordu
               }
 
               // Nedělní shrnutí — akce za 4 dny
@@ -213,7 +244,7 @@ jobs:
                 zprava += '📍 ' + misto + '\n\n';
                 zprava += '**Program:**\n' + programText;
                 if(event.sraz)     zprava += '\n\n🕐 Sraz: ' + event.sraz;
-                if(event.obleceni) zprava += '\n👔 Oblečení: ' + event.obleceni;
+                if(event.obleceni) zprava += '\n👔 Dresscode: ' + event.obleceni;
 
                 await sendDiscord(zprava, config);
               }
