@@ -416,12 +416,11 @@ async function setProgram(params){
     })
   }
 
-  // push notifikace
+  // Discord oznámení
     const akceData = await dbGet("/akce/" + id)
-    await sendPush(
-      "Program vyplněn 📋",
-      "Kája právě vypsal program pro akci " + (akceData?.name || "") + " !"
-    )
+    await sendDiscordMessage({
+      message: `📋 **Program vyplněn: ${akceData?.name || ""}**\nKája právě doplnil program v 10base. Podívej se. `
+    })
 
   return {status: "saved"}
 }
