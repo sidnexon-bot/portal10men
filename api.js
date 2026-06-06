@@ -333,6 +333,8 @@ async function updateEvent(params){
 }
 
 async function deleteEvent(id){
+  const akceData = await dbGet("/akce/" + id)
+  
   await dbRemove("/akce/" + id)
 
   const dochazka = await dbGet("/dochazka")
@@ -343,10 +345,9 @@ async function deleteEvent(id){
   const progDel = objToArray(program).filter(p => p.id_akce === id)
   for(const p of progDel) await dbRemove("/program/" + p.id)
 
-  const akceData = await dbGet("/akce/" + id)
-    await sendDiscordMessage({
-      message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
-    })
+  await sendDiscordMessage({
+    message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
+  })
 
   return {status: "deleted"}
 }
