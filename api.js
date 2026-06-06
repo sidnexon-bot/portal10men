@@ -416,6 +416,13 @@ async function setProgram(params){
     })
   }
 
+  // push notifikace
+    const akceData = await dbGet("/akce/" + id)
+    await sendPush(
+      "Program vyplněn 📋",
+      "Kája právě vypsal program pro akci " + (akceData?.name || "") + " !"
+    )
+
   return {status: "saved"}
 }
 
@@ -1034,6 +1041,33 @@ async function deleteMember(id){
 }
 
 // ===============================
+// NOTIFIKACE ONESIGNAL
+// ===============================
+
+async function sendPush(title, message){
+  const config = await dbGet("/config")
+  const apiKey = config?.onesignal_api_key
+  const appId  = "01477d89-1329-43f6-91f2-bb597d5a681e"
+  if(!apiKey) return {error: "OneSignal API key není nastaven"}
+
+  const response = await fetch("https://onesignal.com/api/v1/notifications", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Key " + apiKey
+    },
+    body: JSON.stringify({
+      app_id: appId,
+      included_segments: ["All"],
+      headings: {en: title, cs: title},
+      contents: {en: message, cs: message}
+    })
+  })
+
+  return {status: response.ok ? "sent" : "error"}
+}
+
+// ===============================
 // DISCORD
 // ===============================
 
@@ -1114,8 +1148,8 @@ async function api(action, params = {}){
     case "addmember":        return await addMember(params)
     case "updatemember":     return await updateMember(params)
     case "deletemember":     return await deleteMember(params.id)
+    case "sendpush":         return await sendPush(params.title, params.message)
     case "discord":          return await sendDiscordMessage(params)
-
 
     default: throw new Error("Unknown action: " + action)
   }
