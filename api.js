@@ -61,6 +61,7 @@ async function getMembers(){
     ID:    m.id    || "",
     NAME:  m.name  || "",
     EMAIL: m.email || "",
+    DISCORD_ID: m.discord_id || "",
     VOICE: m.voice || "",
     ROLE:  m.role  || "MEMBER",
     PHONE: m.phone || ""
@@ -1007,6 +1008,7 @@ async function addMember(params){
     id,
     name:  params.name  || "",
     email: params.email || "",
+    discord_id: params.discord_id || "",
     voice: params.voice || "",
     role:  params.role  || "MEMBER",
     phone: params.phone || ""
@@ -1018,6 +1020,7 @@ async function updateMember(params){
   await dbUpdate("/members/" + params.id, {
     name:  params.name  || "",
     email: params.email || "",
+    discord_id: params.discord_id || "",
     voice: params.voice || "",
     role:  params.role  || "MEMBER",
     phone: params.phone || ""
