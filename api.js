@@ -1015,6 +1015,32 @@ async function deleteMember(id){
   return {status: "deleted"}
 }
 
+// ===============================
+// DISCORD
+// ===============================
+
+async function sendDiscordMessage(params){
+  const config = await dbGet("/config")
+  const webhookUrl = config?.discord_webhook
+  if(!webhookUrl) return {error: "Discord webhook není nastaven"}
+
+  const threadId = config?.discord_thread_id || null
+
+  const url = webhookUrl + (threadId ? `?thread_id=${threadId}` : "")
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: "10base",
+      content: params.message
+    })
+  })
+
+  return {status: response.ok ? "sent" : "error"}
+}
+
+
 
 // ===============================
 // HLAVNÍ API FUNKCE
@@ -1067,6 +1093,8 @@ async function api(action, params = {}){
     case "addmember":        return await addMember(params)
     case "updatemember":     return await updateMember(params)
     case "deletemember":     return await deleteMember(params.id)
+    case "discord":          return await sendDiscordMessage(params)
+
 
     default: throw new Error("Unknown action: " + action)
   }
