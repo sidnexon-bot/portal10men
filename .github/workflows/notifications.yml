@@ -103,8 +103,6 @@ jobs:
             const repertoar = await fbGet('/repertoar');
             const config    = await fbGet('/config');
 
-            await sendDiscord('Test Discord shrnutí 🎵', config);
-
             if(!akce || !members) return;
 
             const now = new Date();
