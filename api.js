@@ -294,7 +294,6 @@ async function addEvent(params){
     await sendDiscordMessage({
       message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
     })
-  }
 
   return {status: "created", id, attendanceRows: memberList.length}
 }
