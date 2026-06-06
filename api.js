@@ -242,6 +242,7 @@ async function getHeatmap(){
 }
 
 async function addEvent(params){
+  console.log("addEvent called:", params.name)
   const members = await dbGet("/members")
   const id = genId("a")
 
