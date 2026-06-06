@@ -323,6 +323,12 @@ async function updateEvent(params){
     obleceni_s:       params.obleceni_s     || "",
     obleceni_s_typ:   params.obleceni_s_typ || ""
   })
+
+  const akceData = await dbGet("/akce/" + params.id)
+    await sendDiscordMessage({
+      message: `✏️ **Byla upravena následující akce. Aktuální info: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
+    })
+
   return {status: "updated"}
 }
 
@@ -336,6 +342,11 @@ async function deleteEvent(id){
   const program = await dbGet("/program")
   const progDel = objToArray(program).filter(p => p.id_akce === id)
   for(const p of progDel) await dbRemove("/program/" + p.id)
+
+  const akceData = await dbGet("/akce/" + id)
+    await sendDiscordMessage({
+      message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
+    })
 
   return {status: "deleted"}
 }
@@ -381,7 +392,7 @@ async function cancelEvent(params){
   }
 
       await sendDiscordMessage({
-      message: `❌ **Tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
+      message: `❌ **Pozor, tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
     })
 
   return {status: "cancelled"}
@@ -885,6 +896,10 @@ async function addRecurring(params){
       })
     }
   }
+
+      await sendDiscordMessage({
+      message: `📅 **Nové opakující se akce: ${params.name}**\nVytvořeno ${instances} akcí`
+    })
 
   return { status: "created", templateId, instances: createdIds.length }
 }
