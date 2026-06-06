@@ -2564,6 +2564,7 @@ async function openAddMember(){
   openFormModal("Nový člen", [
     {key: "name",  label: "Jméno",  type: "text"},
     {key: "email", label: "Email",  type: "text"},
+    {key: "discord_id", label: "Discord ID", type: "text", value: m.DISCORD_ID || ""}, 
     {key: "phone", label: "Telefon", type: "text"},
     {key: "voice", label: "Hlas", type: "select", value: "1. TENOR", options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
     {key: "role",  label: "Role", type: "select", value: "MEMBER", options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
@@ -2592,6 +2593,7 @@ async function openEditMember(id){
   openFormModal("Upravit člena", [
     {key: "name",  label: "Jméno",   type: "text",   value: m.NAME},
     {key: "email", label: "Email",   type: "text",   value: m.EMAIL},
+    {key: "discord_id", label: "Discord ID", type: "text", value: m.DISCORD_ID || ""},
     {key: "phone", label: "Telefon", type: "text",   value: m.PHONE || ""},
     {key: "voice", label: "Hlas",   type: "select", value: m.VOICE, options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
     {key: "role",  label: "Role",   type: "select", value: m.ROLE,  options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
