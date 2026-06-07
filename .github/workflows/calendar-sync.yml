@@ -9,16 +9,14 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      - name: Install dependencies
+        run: npm install jsonwebtoken
+
       - name: Sync Google Calendar
         env:
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
         run: |
-          - name: Install dependencies
-            run: npm install jsonwebtoken
-    
-          - name: Sync Google Calendar
-
           node -e "
           const https = require('https');
 
