@@ -139,7 +139,7 @@ jobs:
                   }
                 }
                 await sendDiscord(
-                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si docházku v 10base a případně ji doplňte, pokud ji ještě nemáte. @člen .',
+                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si docházku v 10base a případně ji doplňte, pokud ji ještě nemáte.',
                   config
                 );
               }
