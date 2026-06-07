@@ -1,0 +1,198 @@
+name: Calendar Sync
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # každou hodinu
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync Google Calendar
+        env:
+          FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
+          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+        run: |
+          - name: Install dependencies
+            run: npm install jsonwebtoken
+    
+          - name: Sync Google Calendar
+
+          node -e "
+          const https = require('https');
+
+          const FIREBASE_URL = 'https://base-39f52-default-rtdb.europe-west1.firebasedatabase.app';
+          const SA = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+
+          function fbGet(path){
+            return new Promise((resolve, reject) => {
+              const url = FIREBASE_URL + path + '.json?auth=' + process.env.FIREBASE_SECRET;
+              https.get(url, res => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve(JSON.parse(data)));
+              }).on('error', reject);
+            });
+          }
+
+          function fbSet(path, data){
+            return new Promise((resolve, reject) => {
+              const url = FIREBASE_URL + path + '.json?auth=' + process.env.FIREBASE_SECRET;
+              const body = JSON.stringify(data);
+              const options = {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body)}
+              };
+              const req = https.request(url, options, res => {
+                let d = '';
+                res.on('data', chunk => d += chunk);
+                res.on('end', () => resolve(JSON.parse(d)));
+              });
+              req.on('error', reject);
+              req.write(body);
+              req.end();
+            });
+          }
+
+          function fbDelete(path){
+            return new Promise((resolve, reject) => {
+              const url = FIREBASE_URL + path + '.json?auth=' + process.env.FIREBASE_SECRET;
+              const req = https.request(url, {method: 'DELETE'}, res => {
+                res.on('data', () => {});
+                res.on('end', resolve);
+              });
+              req.on('error', reject);
+              req.end();
+            });
+          }
+
+          async function getAccessToken(){
+            const { google } = require('@google-cloud/local-auth') 
+            // použijeme jwt přímo
+            const jwt = require('jsonwebtoken');
+            const now = Math.floor(Date.now() / 1000);
+            const payload = {
+              iss: SA.client_email,
+              scope: 'https://www.googleapis.com/auth/calendar',
+              aud: 'https://oauth2.googleapis.com/token',
+              exp: now + 3600,
+              iat: now
+            };
+            const token = jwt.sign(payload, SA.private_key, {algorithm: 'RS256'});
+
+            return new Promise((resolve, reject) => {
+              const body = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + token;
+              const req = https.request({
+                hostname: 'oauth2.googleapis.com',
+                path: '/token',
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body)}
+              }, res => {
+                let d = '';
+                res.on('data', chunk => d += chunk);
+                res.on('end', () => resolve(JSON.parse(d).access_token));
+              });
+              req.on('error', reject);
+              req.write(body);
+              req.end();
+            });
+          }
+
+          function calendarRequest(method, path, accessToken, body){
+            return new Promise((resolve, reject) => {
+              const bodyStr = body ? JSON.stringify(body) : null;
+              const options = {
+                hostname: 'www.googleapis.com',
+                path: path,
+                method: method,
+                headers: {
+                  'Authorization': 'Bearer ' + accessToken,
+                  'Content-Type': 'application/json'
+                }
+              };
+              if(bodyStr) options.headers['Content-Length'] = Buffer.byteLength(bodyStr);
+              const req = https.request(options, res => {
+                let d = '';
+                res.on('data', chunk => d += chunk);
+                res.on('end', () => {
+                  try{ resolve(JSON.parse(d)); }catch(e){ resolve({}); }
+                });
+              });
+              req.on('error', reject);
+              if(bodyStr) req.write(bodyStr);
+              req.end();
+            });
+          }
+
+          async function main(){
+            const queue  = await fbGet('/calendar_sync_queue');
+            const config = await fbGet('/config');
+            if(!queue) { console.log('No items in queue'); return; }
+
+            const calendarId = config?.google_calendar_id;
+            if(!calendarId) { console.log('No calendar ID'); return; }
+
+            const accessToken = await getAccessToken();
+            const items = Object.values(queue).filter(i => !i.processed);
+            console.log('Items to process:', items.length);
+
+            for(const item of items){
+              try{
+                if(item.action === 'create' || item.action === 'update'){
+                  const akce = await fbGet('/akce/' + item.event_id);
+                  if(!akce) { await fbDelete('/calendar_sync_queue/' + item.id); continue; }
+
+                  const startDate = akce.date ? akce.date.substring(0,10) : null;
+                  if(!startDate) { await fbDelete('/calendar_sync_queue/' + item.id); continue; }
+
+                  const startDateTime = akce.start
+                    ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
+                    : { date: startDate };
+                  const endDateTime = akce.end
+                    ? { dateTime: startDate + 'T' + akce.end + ':00', timeZone: 'Europe/Prague' }
+                    : akce.start
+                    ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
+                    : { date: startDate };
+
+                  const calEvent = {
+                    summary:     akce.name,
+                    location:    akce.place || '',
+                    description: akce.note  || '',
+                    start:       startDateTime,
+                    end:         endDateTime
+                  };
+
+                  if(item.action === 'create' || !akce.google_event_id){
+                    const created = await calendarRequest('POST', '/calendar/v3/calendars/' + encodeURIComponent(calendarId) + '/events', accessToken, calEvent);
+                    console.log('Created event:', created.id);
+                    if(created.id){
+                      await fbSet('/akce/' + item.event_id + '/google_event_id', created.id);
+                    }
+                  }else{
+                    await calendarRequest('PUT', '/calendar/v3/calendars/' + encodeURIComponent(calendarId) + '/events/' + akce.google_event_id, accessToken, calEvent);
+                    console.log('Updated event:', akce.google_event_id);
+                  }
+
+                }else if(item.action === 'delete'){
+                  const akce = await fbGet('/akce/' + item.event_id);
+                  const googleEventId = akce?.google_event_id || item.event_data?.google_event_id;
+                  if(googleEventId){
+                    await calendarRequest('DELETE', '/calendar/v3/calendars/' + encodeURIComponent(calendarId) + '/events/' + googleEventId, accessToken, null);
+                    console.log('Deleted event:', googleEventId);
+                  }
+                }
+
+                await fbDelete('/calendar_sync_queue/' + item.id);
+                console.log('Processed:', item.action, item.event_id);
+
+              }catch(err){
+                console.error('Error processing item:', item.id, err.message);
+              }
+            }
+
+            console.log('Done');
+          }
+
+          main().catch(console.error);
+          "
