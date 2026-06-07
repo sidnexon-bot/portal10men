@@ -51,6 +51,18 @@ function formatDateSimple(dateStr){
   return d.toLocaleDateString("cs-CZ", {day: "numeric", month: "long", year: "numeric"})
 }
 
+async function addToCalendarQueue(action, eventId, eventData){
+  const qRef = push(ref(DB, "/calendar_sync_queue"))
+  await dbSet("/calendar_sync_queue/" + qRef.key, {
+    id:         qRef.key,
+    action:     action,      // "create", "update", "delete"
+    event_id:   eventId,
+    event_data: eventData || {},
+    created_at: new Date().toISOString(),
+    processed:  false
+  })
+}
+
 // ===============================
 // API FUNKCE
 // ===============================
@@ -296,6 +308,14 @@ async function addEvent(params){
       message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
     })
 
+    await addToCalendarQueue("create", id, {
+    name:  params.name,
+    date:  params.date,
+    start: params.start || "",
+    end:   params.end   || "",
+    place: params.place || ""
+  })
+
   return {status: "created", id, attendanceRows: memberList.length}
 }
 
@@ -329,6 +349,14 @@ async function updateEvent(params){
       message: `✏️ **Byla upravena následující akce. Aktuální info: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
     })
 
+    await addToCalendarQueue("update", params.id, {
+    name:  params.name,
+    date:  params.date,
+    start: params.start || "",
+    end:   params.end   || "",
+    place: params.place || ""
+  })
+
   return {status: "updated"}
 }
 
@@ -348,6 +376,8 @@ async function deleteEvent(id){
   await sendDiscordMessage({
     message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
   })
+
+  await addToCalendarQueue("delete", id, {})
 
   return {status: "deleted"}
 }
@@ -395,6 +425,8 @@ async function cancelEvent(params){
       await sendDiscordMessage({
       message: `❌ **Pozor, tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
     })
+
+      await addToCalendarQueue("delete", params.id, {})
 
   return {status: "cancelled"}
 }
