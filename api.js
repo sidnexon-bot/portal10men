@@ -63,28 +63,6 @@ async function addToCalendarQueue(action, eventId, eventData){
   })
 }
 
-async function migrateToCalendar(){
-  console.log("migrateToCalendar called")
-  const akce = await dbGet("/akce")
-  console.log("akce count:", akce ? Object.keys(akce).length : 0)
-  const events = objToArray(akce).filter(e => e.date && (!e.status || e.status !== "Zrušená"))
-  console.log("events to migrate:", events.length)
-  
-  for(const e of events){
-    const qRef = push(ref(DB, "/calendar_sync_queue"))
-    await dbSet("/calendar_sync_queue/" + qRef.key, {
-      id:         qRef.key,
-      action:     "create",
-      event_id:   e.id,
-      event_data: {},
-      created_at: new Date().toISOString(),
-      processed:  false
-    })
-  }
-  
-  return {status: "queued", count: events.length}
-}
-
 // ===============================
 // API FUNKCE
 // ===============================
@@ -1225,7 +1203,6 @@ async function api(action, params = {}){
     case "deletemember":     return await deleteMember(params.id)
     case "sendpush":         return await sendPush(params.title, params.message)
     case "discord":          return await sendDiscordMessage(params)
-    case "migratetocalendar": return await migrateToCalendar()
 
     default: throw new Error("Unknown action: " + action)
   }
