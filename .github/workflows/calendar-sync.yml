@@ -141,22 +141,61 @@ jobs:
 
                   const startDate = akce.date ? akce.date.substring(0,10) : null;
                   if(!startDate) { await fbDelete('/calendar_sync_queue/' + item.id); continue; }
-
+                  
+                  const endDate = akce.date_end ? akce.date_end.substring(0,10) : startDate;
+                  
                   const startDateTime = akce.start
+
                     ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
                     : { date: startDate };
                   const endDateTime = akce.end
                     ? { dateTime: startDate + 'T' + akce.end + ':00', timeZone: 'Europe/Prague' }
                     : akce.start
                     ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
-                    : { date: startDate };
+                    : { date: endDate };
 
+                  const programData = await fbGet('/program');
+                  const eventProg = programData 
+                   ? Object.values(programData)
+                     .filter(p => p.id_akce === item.event_id)
+                     .sort((a,b) => Number(a.order) - Number(b.order))
+                   : [];
+                  
+                  const repertoarData = await fbGet('/repertoar');
+                  const repertoarList = repertoarData ? Object.values(repertoarData) : [];
+                  
+                  let programText = '';
+                  if(eventProg.length){
+                   const main   = eventProg.filter(p => Number(p.order) < 900);
+                   const encore = eventProg.filter(p => Number(p.order) >= 900);
+                   programText = main.map((p,i) => {
+                     const song = repertoarList.find(r => r.id === p.song_id);
+                     return (i+1) + '. ' + (song ? song.name : p.song_id);
+                   }).join('\n');
+                   if(encore.length){
+                     programText += '\n\nPřídavky:\n';
+                     programText += encore.map((p,i) => {
+                       const song = repertoarList.find(r => r.id === p.song_id);
+                       return (i+1) + '. ' + (song ? song.name : p.song_id);
+                     }).join('\n');
+                   }
+                  }
+                  
+                  const descParts = [];
+                  if(akce.note)        descParts.push(akce.note);
+                  if(programText)      descParts.push('📋 Program:\n' + programText);
+                  if(akce.sraz)        descParts.push('🕐 Sraz: ' + akce.sraz);
+                  if(akce.obleceni)    descParts.push('👔 Dresscode: ' + akce.obleceni);
+                  if(akce.doprava)     descParts.push('🚗 Doprava: ' + akce.doprava);
+                  if(akce.hospoda)     descParts.push('🍺 Hospoda: ' + akce.hospoda);
+                  if(akce.harmonogram) descParts.push('\n⏱ Harmonogram:\n' + akce.harmonogram);
+                  
                   const calEvent = {
-                    summary:     akce.name,
-                    location:    akce.place || '',
-                    description: akce.note  || '',
-                    start:       startDateTime,
-                    end:         endDateTime
+                   summary:     akce.name,
+                   location:    akce.place || '',
+                   description: descParts.join('\n'),
+                   start:       startDateTime,
+                   end:         endDateTime
                   };
 
                   if(item.action === 'create' || !akce.google_event_id){
