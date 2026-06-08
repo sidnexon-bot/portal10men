@@ -440,18 +440,15 @@ function saveState(){
     scroll:       window.scrollY,
     timestamp:    Date.now()
   }
-  console.log("saveState:", JSON.stringify(state))
   sessionStorage.setItem("10base_state", JSON.stringify(state))
 }
 
 function loadState(){
   try{
     const raw = sessionStorage.getItem("10base_state")
-    console.log("loadState raw:", raw)
     if(!raw) return null
     const state = JSON.parse(raw)
     if(Date.now() - state.timestamp > SESSION_TTL) return null
-    console.log("loadState result:", JSON.stringify(state))
     return state
   }catch(e){
     return null
