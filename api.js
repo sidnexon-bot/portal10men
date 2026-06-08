@@ -377,7 +377,11 @@ async function deleteEvent(id){
   message: `🗑️ **Akce byla smazána:**\n\n- **${akceData?.name || id}**`
   })
 
-  await addToCalendarQueue("delete", id, {})
+  // deleteEvent — před return
+  const akceBeforeDelete = await dbGet("/akce/" + id)
+  await addToCalendarQueue("delete", id, {
+    google_event_id: akceBeforeDelete?.google_event_id || ""
+  })
 
   return {status: "deleted"}
 }
