@@ -2011,6 +2011,8 @@ async function openEvent(id){
       container().innerHTML = html
     }
 
+  saveState()
+     
   }catch(err){
     if(target){
       target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
