@@ -304,9 +304,9 @@ async function addEvent(params){
   }
 
   // Discord oznámení
- //     await sendDiscordMessage({
- //     message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
- //   })
+      await sendDiscordMessage({
+      message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
+    })
 
     await addToCalendarQueue("create", id, {
     name:  params.name,
@@ -345,9 +345,9 @@ async function updateEvent(params){
   })
 
   const akceData = await dbGet("/akce/" + params.id)
-//    await sendDiscordMessage({
-//      message: `✏️ **Byla upravena následující akce. Aktuální info: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
-//    })
+    await sendDiscordMessage({
+    message: `✏️ **Byla upravena následující akce. Aktuální info: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
+    })
 
     await addToCalendarQueue("update", params.id, {
     name:  params.name,
@@ -373,9 +373,9 @@ async function deleteEvent(id){
   const progDel = objToArray(program).filter(p => p.id_akce === id)
   for(const p of progDel) await dbRemove("/program/" + p.id)
 
- // await sendDiscordMessage({
- //   message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
-//  })
+  await sendDiscordMessage({
+    message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
+  })
 
   await addToCalendarQueue("delete", id, {})
 
@@ -422,9 +422,9 @@ async function cancelEvent(params){
     }
   }
 
-   //   await sendDiscordMessage({
-   //   message: `❌ **Pozor, tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
-  //  })
+      await sendDiscordMessage({
+      message: `❌ **Pozor, tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
+    })
 
       await addToCalendarQueue("delete", params.id, {})
 
