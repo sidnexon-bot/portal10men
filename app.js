@@ -673,18 +673,11 @@ async function start(){
       }
     }
 
-   document.addEventListener("visibilitychange", async () => {
-     if(document.visibilityState === "visible"){
-       const state = loadState()
-       if(state && state.eventId && state.tab === "events"){
-         await setActiveTab("events")
-         await openEvent(state.eventId)
-         setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
-       }else if(state){
-         await setActiveTab(state.tab)
-         setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
-       }
+   document.addEventListener("visibilitychange", () => {
+     if(document.visibilityState === "hidden"){
+       saveState()
      }
+     // při návratu nic nepřekreslujeme — stránka zůstane jak byla
    })
 
   }catch(err){
@@ -4386,12 +4379,8 @@ async function silentRefresh(){
 
 document.addEventListener("visibilitychange", () => {
   if(!document.hidden){
-    invalidateAllCache()
-    if(MEMBER_ROLE === "GUEST"){
-      renderGuestView()
-    }else{
-      silentRefresh()
-    }
+    saveState()
+    // silentRefresh záměrně vypnut — stav appky se obnovuje přes sessionStorage
   }
 })
 
