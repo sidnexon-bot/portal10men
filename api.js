@@ -64,8 +64,11 @@ async function addToCalendarQueue(action, eventId, eventData){
 }
 
 async function migrateToCalendar(){
+  console.log("migrateToCalendar called")
   const akce = await dbGet("/akce")
+  console.log("akce count:", akce ? Object.keys(akce).length : 0)
   const events = objToArray(akce).filter(e => e.date && (!e.status || e.status !== "Zrušená"))
+  console.log("events to migrate:", events.length)
   
   for(const e of events){
     const qRef = push(ref(DB, "/calendar_sync_queue"))
@@ -81,7 +84,6 @@ async function migrateToCalendar(){
   
   return {status: "queued", count: events.length}
 }
-
 
 // ===============================
 // API FUNKCE
