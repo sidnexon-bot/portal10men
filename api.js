@@ -52,10 +52,11 @@ function formatDateSimple(dateStr){
 }
 
 async function addToCalendarQueue(action, eventId, eventData){
+  console.log("addToCalendarQueue:", action, eventId, JSON.stringify(eventData))
   const qRef = push(ref(DB, "/calendar_sync_queue"))
   await dbSet("/calendar_sync_queue/" + qRef.key, {
     id:         qRef.key,
-    action:     action,      // "create", "update", "delete"
+    action:     action,
     event_id:   eventId,
     event_data: eventData || {},
     created_at: new Date().toISOString(),
