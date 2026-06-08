@@ -213,6 +213,9 @@ jobs:
 
                 }else if(item.action === 'delete'){
                   const googleEventId = item.event_data?.google_event_id;
+                  const googleEventId = item.event_data?.google_event_id;
+                  console.log('Deleting google event:', googleEventId);
+                  console.log('item.event_data:', JSON.stringify(item.event_data));
                   if(googleEventId){
                     await calendarRequest('DELETE', '/calendar/v3/calendars/' + encodeURIComponent(calendarId) + '/events/' + googleEventId, accessToken, null);
                     console.log('Deleted event:', googleEventId);
