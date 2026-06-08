@@ -190,6 +190,8 @@ jobs:
                   if(akce.hospoda)     descParts.push('🍺 Hospoda: ' + akce.hospoda);
                   if(akce.harmonogram) descParts.push('\n⏱ Harmonogram:\n' + akce.harmonogram);
                   
+                  console.log('startDate:', startDate, 'endDate:', endDate, 'date_end:', akce.date_end);
+
                   const calEvent = {
                    summary:     akce.name,
                    location:    akce.place || '',
