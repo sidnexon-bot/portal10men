@@ -317,6 +317,9 @@ function setActiveTab(name){
   if(name === "energy")     renderEnergy()
   if(name === "repertoar")  renderRepertoar()
   if(name === "members")    renderMembers()
+
+  saveState()
+
 }
 
 function setStatus(msg){
@@ -424,6 +427,30 @@ function restoreScroll(pos){
   requestAnimationFrame(() => {
     window.scrollTo(0, pos)
   })
+}
+
+const SESSION_TTL = 10 * 60 * 1000 // 10 minut
+
+function saveState(){
+  const state = {
+    tab:       ACTIVE_TAB,
+    eventId:   window.ACTIVE_EVENT_ID || null,
+    scroll:    window.scrollY,
+    timestamp: Date.now()
+  }
+  sessionStorage.setItem("10base_state", JSON.stringify(state))
+}
+
+function loadState(){
+  try{
+    const raw = sessionStorage.getItem("10base_state")
+    if(!raw) return null
+    const state = JSON.parse(raw)
+    if(Date.now() - state.timestamp > SESSION_TTL) return null
+    return state
+  }catch(e){
+    return null
+  }
 }
 
 /* ===============================
@@ -629,13 +656,23 @@ async function start(){
       initPullToRefresh()
       initRealtime()
     }else{
-      setActiveTab("dashboard")
-      renderDashboard()
-      initPullToRefresh()
-      initSidebar()
-      initRealtime()
-      initPushNotifications()
-    }
+     initPullToRefresh()
+     initSidebar()
+     initRealtime()
+     initPushNotifications()
+   
+     const state = loadState()
+     if(state){
+       await setActiveTab(state.tab)
+       if(state.eventId && state.tab === "events"){
+         await openEvent(state.eventId)
+       }
+       setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
+     }else{
+       setActiveTab("dashboard")
+       renderDashboard()
+     }
+   }
 
    if(MEMBER_ROLE === "GUEST"){
      document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
@@ -1751,7 +1788,7 @@ function toggleObleceniSoustredeniDetail(val){
 }
 
 async function openEvent(id){
-
+   window.ACTIVE_EVENT_ID = id
    ACTIVE_DETAIL_ID = id
   
    const slotEl = document.getElementById("detail-panel-slot")
@@ -4341,6 +4378,10 @@ document.addEventListener("DOMContentLoaded", () => {
 ================================ */
 
 // Globální funkce dostupné z HTML
+window.addEventListener("scroll", () => {
+  saveState()
+}, {passive: true})
+
 window.openFormModal        = openFormModal
 window.closeFormModal       = closeFormModal
 window.addAktualita         = addAktualita
