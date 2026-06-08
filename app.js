@@ -673,6 +673,20 @@ async function start(){
       }
     }
 
+   document.addEventListener("visibilitychange", async () => {
+     if(document.visibilityState === "visible"){
+       const state = loadState()
+       if(state && state.eventId && state.tab === "events"){
+         await setActiveTab("events")
+         await openEvent(state.eventId)
+         setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
+       }else if(state){
+         await setActiveTab(state.tab)
+         setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
+       }
+     }
+   })
+
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
