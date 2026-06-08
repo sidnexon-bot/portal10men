@@ -149,9 +149,9 @@ jobs:
                     ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
                     : { date: startDate };
                   const endDateTime = akce.end
-                    ? { dateTime: startDate + 'T' + akce.end + ':00', timeZone: 'Europe/Prague' }
+                    ? { dateTime: endDate + 'T' + akce.end + ':00', timeZone: 'Europe/Prague' }
                     : akce.start
-                    ? { dateTime: startDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
+                    ? { dateTime: endDate + 'T' + akce.start + ':00', timeZone: 'Europe/Prague' }
                     : { date: endDate };
 
                   const programData = await fbGet('/program');
