@@ -212,8 +212,7 @@ jobs:
                   }
 
                 }else if(item.action === 'delete'){
-                  const akce = await fbGet('/akce/' + item.event_id);
-                  const googleEventId = akce?.google_event_id || item.event_data?.google_event_id;
+                  const googleEventId = item.event_data?.google_event_id;
                   if(googleEventId){
                     await calendarRequest('DELETE', '/calendar/v3/calendars/' + encodeURIComponent(calendarId) + '/events/' + googleEventId, accessToken, null);
                     console.log('Deleted event:', googleEventId);
