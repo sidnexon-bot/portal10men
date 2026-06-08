@@ -361,8 +361,10 @@ async function updateEvent(params){
 }
 
 async function deleteEvent(id){
+  // načti před smazáním
   const akceData = await dbGet("/akce/" + id)
-  
+  const googleEventId = akceData?.google_event_id || ""
+
   await dbRemove("/akce/" + id)
 
   const dochazka = await dbGet("/dochazka")
@@ -374,13 +376,11 @@ async function deleteEvent(id){
   for(const p of progDel) await dbRemove("/program/" + p.id)
 
   await sendDiscordMessage({
-  message: `🗑️ **Akce byla smazána:**\n\n- **${akceData?.name || id}**`
+    message: `🗑️ **Akce byla smazána:**\n\n- **${akceData?.name || id}**`
   })
 
-  // deleteEvent — před return
-  const akceBeforeDelete = await dbGet("/akce/" + id)
   await addToCalendarQueue("delete", id, {
-    google_event_id: akceBeforeDelete?.google_event_id || ""
+    google_event_id: googleEventId
   })
 
   return {status: "deleted"}
