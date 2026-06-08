@@ -433,10 +433,12 @@ const SESSION_TTL = 10 * 60 * 1000 // 10 minut
 
 function saveState(){
   const state = {
-    tab:       ACTIVE_TAB,
-    eventId:   window.ACTIVE_EVENT_ID || null,
-    scroll:    window.scrollY,
-    timestamp: Date.now()
+    tab:          ACTIVE_TAB,
+    eventId:      window.ACTIVE_EVENT_ID || null,
+    songSelected: SONG_SELECTED || null,
+    eventsMonth:  window.EVENTS_MONTH || null,
+    scroll:       window.scrollY,
+    timestamp:    Date.now()
   }
   sessionStorage.setItem("10base_state", JSON.stringify(state))
 }
@@ -662,17 +664,20 @@ async function start(){
      initPushNotifications()
    
      const state = loadState()
-     if(state){
-       await setActiveTab(state.tab)
-       if(state.eventId && state.tab === "events"){
-         await openEvent(state.eventId)
-       }
-       setTimeout(() => window.scrollTo(0, state.scroll || 0), 300)
-     }else{
-       setActiveTab("dashboard")
-       renderDashboard()
-     }
-   }
+      if(state){
+        if(state.eventsMonth) window.EVENTS_MONTH = state.eventsMonth
+        if(state.songSelected) SONG_SELECTED = state.songSelected
+        
+        await setActiveTab(state.tab)
+        
+        if(state.eventId && state.tab === "events"){
+          await openEvent(state.eventId)
+        }
+        setTimeout(() => window.scrollTo(0, state.scroll || 0), 500)
+      }else{
+        setActiveTab("dashboard")
+        renderDashboard()
+      }
 
    if(MEMBER_ROLE === "GUEST"){
      document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
@@ -4067,9 +4072,9 @@ function initPullToRefresh(){
 ================================ */
 
 function openFormModal(title, fields, onSubmit){
-  const modal = document.getElementById("formModal")
-  const titleEl = document.getElementById("formModalTitle")
-  const bodyEl  = document.getElementById("formModalBody")
+  const modal     = document.getElementById("formModal")
+  const titleEl   = document.getElementById("formModalTitle")
+  const bodyEl    = document.getElementById("formModalBody")
   const submitBtn = document.getElementById("formModalSubmit")
 
   titleEl.textContent = title
@@ -4087,6 +4092,33 @@ function openFormModal(title, fields, onSubmit){
     </label>
   `).join("")
 
+  // obnov uložený stav formuláře
+  const savedForm = JSON.parse(sessionStorage.getItem("10base_form") || "null")
+  if(savedForm && savedForm.title === title && Date.now() - savedForm.timestamp < SESSION_TTL){
+    fields.forEach(f => {
+      const el = document.getElementById("fModal_" + f.key)
+      if(el && savedForm.fields[f.key] !== undefined) el.value = savedForm.fields[f.key]
+    })
+  }
+
+  // ukládej průběžně
+  fields.forEach(f => {
+    const el = document.getElementById("fModal_" + f.key)
+    if(el){
+      el.addEventListener("input", () => {
+        const formState = {}
+        fields.forEach(f => {
+          formState[f.key] = document.getElementById("fModal_" + f.key)?.value || ""
+        })
+        sessionStorage.setItem("10base_form", JSON.stringify({
+          title,
+          fields: formState,
+          timestamp: Date.now()
+        }))
+      })
+    }
+  })
+
   submitBtn.onclick = () => {
     const values = {}
     fields.forEach(f => {
@@ -4098,8 +4130,8 @@ function openFormModal(title, fields, onSubmit){
   modal.classList.remove("hidden")
 }
 
-
 function closeFormModal(){
+  sessionStorage.removeItem("10base_form")
   document.getElementById("formModal").classList.add("hidden")
 }
 
