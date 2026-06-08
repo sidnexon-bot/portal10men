@@ -591,14 +591,10 @@ async function enablePush(){
 ================================ */
 
 async function start(){
-
   try{
-
-    // Nejdříve ověř session – pokud není, přesměruje na login
     if(!initMemberFromSession()) return;
    
     initDarkMode()
-
     setLoading()
 
     const members = await cachedApi("members")
@@ -607,17 +603,13 @@ async function start(){
     const profileBtn = document.getElementById("profileBtn")
     if(!profileBtn){ console.error("profileBtn nenalezen"); return }
 
-    // Identita už je nastavena z initMemberFromSession()
     setStatus(MEMBER_NAME)
 
-    // Pouze admin může přepínat členy
-    // Toggle profile menu – klikatelný pro všechny (menu má logout pro každého)
     profileBtn.onclick = (e) => {
       e.stopPropagation();
       document.getElementById("profileMenu").classList.toggle("hidden");
     }
 
-    // Zavři menu kliknutím mimo
     document.addEventListener("click", () => {
       const menu = document.getElementById("profileMenu");
       if(menu) menu.classList.add("hidden");
@@ -633,12 +625,8 @@ async function start(){
     document.getElementById("btnEnergy").onclick    = () => { setActiveTab("energy");    renderEnergy() }
     document.getElementById("btnRepertoar").onclick = () => { setActiveTab("repertoar"); renderRepertoar() }
 
-
-    setActiveTab("dashboard")
-        if(MEMBER_ROLE === "GUEST"){
-      // Skryj navigaci
+    if(MEMBER_ROLE === "GUEST"){
       document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
-           // Pro guesta zobraz jen tlačítko odhlásit v headeru
       const profileBtn = document.getElementById("profileBtn")
       if(profileBtn){
         profileBtn.onclick = (e) => {
@@ -646,8 +634,6 @@ async function start(){
           Auth.logout()
         }
       }
-      // Sidebar neinicializuj vůbec
-      // Přepiš všechna nav tlačítka aby nefungovala
       document.getElementById("btnDashboard").onclick = () => {}
       document.getElementById("btnEvents").onclick    = () => {}
       document.getElementById("btnPayments").onclick  = () => {}
@@ -657,19 +643,23 @@ async function start(){
       renderGuestView()
       initPullToRefresh()
       initRealtime()
+
+      const logoutBar = document.createElement("div")
+      logoutBar.style.cssText = "position:fixed;top:16px;right:16px;z-index:100"
+      logoutBar.innerHTML = `<button onclick="Auth.logout()" style="background:#fde8e8;color:#c00;padding:8px 14px;font-size:13px">Odhlásit se</button>`
+      document.body.appendChild(logoutBar)
+
     }else{
-     initPullToRefresh()
-     initSidebar()
-     initRealtime()
-     initPushNotifications()
-   
-     const state = loadState()
+      initPullToRefresh()
+      initSidebar()
+      initRealtime()
+      initPushNotifications()
+
+      const state = loadState()
       if(state){
         if(state.eventsMonth) window.EVENTS_MONTH = state.eventsMonth
         if(state.songSelected) SONG_SELECTED = state.songSelected
-        
         await setActiveTab(state.tab)
-        
         if(state.eventId && state.tab === "events"){
           await openEvent(state.eventId)
         }
@@ -678,21 +668,11 @@ async function start(){
         setActiveTab("dashboard")
         renderDashboard()
       }
-
-   if(MEMBER_ROLE === "GUEST"){
-     document.querySelector(".bottom-wrap")?.style.setProperty("display", "none", "important")
-     
-     // Logout panel pro guesta
-     const logoutBar = document.createElement("div")
-     logoutBar.style.cssText = "position:fixed;top:16px;right:16px;z-index:100"
-     logoutBar.innerHTML = `<button onclick="Auth.logout()" style="background:#fde8e8;color:#c00;padding:8px 14px;font-size:13px">Odhlásit se</button>`
-     document.body.appendChild(logoutBar)
     }
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
   }
-
 }
 
 async function renderGuestView(){
