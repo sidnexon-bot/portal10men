@@ -305,7 +305,7 @@ async function addEvent(params){
 
   // Discord oznámení
       await sendDiscordMessage({
-      message: `📅 **V 10base byla vytvořena nová akce: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
+      message: `📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
     })
 
     await addToCalendarQueue("create", id, {
@@ -346,8 +346,8 @@ async function updateEvent(params){
 
   const akceData = await dbGet("/akce/" + params.id)
     await sendDiscordMessage({
-    message: `✏️ **Byla upravena následující akce. Aktuální info: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}${params.start ? " · " + params.start : ""}${params.place ? " · " + params.place : ""}`
-    })
+    message: `✏️ **Aktualizované info k akci:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}`
+  })
 
     await addToCalendarQueue("update", params.id, {
     name:  params.name,
@@ -374,7 +374,7 @@ async function deleteEvent(id){
   for(const p of progDel) await dbRemove("/program/" + p.id)
 
   await sendDiscordMessage({
-    message: `🗑️ **Akce smazána: ${akceData?.name || id}**`
+  message: `🗑️ **Akce byla smazána:**\n\n- **${akceData?.name || id}**`
   })
 
   await addToCalendarQueue("delete", id, {})
@@ -423,7 +423,7 @@ async function cancelEvent(params){
   }
 
       await sendDiscordMessage({
-      message: `❌ **Pozor, tato akce se RUŠÍ: ${params.name}**\n${params.date ? formatDateSimple(params.date) : ""}`
+      message: `❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
     })
 
       await addToCalendarQueue("delete", params.id, {})
@@ -463,8 +463,8 @@ async function setProgram(params){
   // Discord oznámení
     const akceData = await dbGet("/akce/" + id)
     await sendDiscordMessage({
-      message: `📋 **Program vyplněn: ${akceData?.name || ""}**\nKája právě doplnil program v 10base. Podívej se. `
-    })
+    message: `📋 **Kája právě doplnil program:**\n\n- **${akceData?.name || ""}**\n- **Kdy:** ${akceData?.date ? formatDateSimple(akceData.date) : "—"}${akceData?.start ? " · " + akceData.start : ""}${akceData?.end ? " – " + akceData.end : ""}\n- **Místo:** ${akceData?.place || "—"}\n\nPodívej se, co budeme zpívat. 🎵`
+  })
 
   return {status: "saved"}
 }
