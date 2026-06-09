@@ -321,6 +321,9 @@ async function addEvent(params){
 }
 
 async function updateEvent(params){
+  // načti stávající data před update
+  const old = await dbGet("/akce/" + params.id)
+
   await dbUpdate("/akce/" + params.id, {
     name:             params.name,
     date:             params.date,
@@ -345,12 +348,24 @@ async function updateEvent(params){
     obleceni_s_typ:   params.obleceni_s_typ || ""
   })
 
-  const akceData = await dbGet("/akce/" + params.id)
-    await sendDiscordMessage({
-    message: `✏️ **Aktualizované info k akci:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}`
-  })
+  // porovnej změny
+  const zmeny = []
+  if(old?.name  !== params.name)  zmeny.push("- **Název:** " + (old?.name || "—") + " → " + params.name)
+  if(old?.date  !== params.date)  zmeny.push("- **Datum:** " + (old?.date ? formatDateSimple(old.date) : "—") + " → " + formatDateSimple(params.date))
+  if((old?.start || "") !== (params.start || "")) zmeny.push("- **Čas začátku:** " + (old?.start || "—") + " → " + (params.start || "—"))
+  if((old?.end   || "") !== (params.end   || "")) zmeny.push("- **Čas konce:** " + (old?.end || "—") + " → " + (params.end || "—"))
+  if((old?.place || "") !== (params.place || "")) zmeny.push("- **Místo:** " + (old?.place || "—") + " → " + (params.place || "—"))
+  if((old?.status || "") !== (params.status || "")) zmeny.push("- **Status:** " + (old?.status || "—") + " → " + (params.status || "—"))
+  if((old?.sraz || "") !== (params.sraz || "")) zmeny.push("- **Sraz:** " + (old?.sraz || "—") + " → " + (params.sraz || "—"))
+  if((old?.obleceni || "") !== (params.obleceni || "")) zmeny.push("- **Oblečení:** " + (old?.obleceni || "—") + " → " + (params.obleceni || "—"))
 
-    await addToCalendarQueue("update", params.id, {
+  if(zmeny.length > 0){
+    await sendDiscordMessage({
+      message: `✏️ **Změny v akci: ${params.name}**\n\n${zmeny.join('\n')}`
+    })
+  }
+
+  await addToCalendarQueue("update", params.id, {
     name:  params.name,
     date:  params.date,
     start: params.start || "",
