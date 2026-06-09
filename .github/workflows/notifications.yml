@@ -133,13 +133,13 @@ jobs:
                   const hasProgram = progEntries.some(p => p.id_akce === event.id);
                   if(!hasProgram){
                     await sendDiscord(
-                      '📋 Akce **' + event.name + '** je za 3 dny a nemá program. Kájo, doplň ho prosím v 10base!',
+                      "📋 Akce **" + event.name + "** je za 3 dny a nemá program. Kájo, doplň ho prosím v 10base!",
                       config
                     );
                   }
                 }
                 await sendDiscord(
-                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.',
+                  "✋ Akce **" + event.name + "** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.",
                   config
                 );
               }
