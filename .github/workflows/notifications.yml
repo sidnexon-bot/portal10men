@@ -133,17 +133,16 @@ jobs:
                   const hasProgram = progEntries.some(p => p.id_akce === event.id);
                   if(!hasProgram){
                     await sendDiscord(
-                      '📋 Akce **' + event.name + '** je za 3 dny a nemá program. Kája, doplň ho prosím v 10base!',
+                      '📋 Akce **' + event.name + '** je za 3 dny a nemá program. Kájo, doplň ho prosím v 10base!',
                       config
                     );
                   }
                 }
                 await sendDiscord(
-                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si docházku v 10base a případně ji doplňte, pokud ji ještě nemáte.',
+                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.',
                   config
                 );
               }
-
 
               // 1 den před akcí
              if(daysUntil === 1){
@@ -207,6 +206,7 @@ jobs:
               
                 // push notifikace shrnutí — zrušeno, přesunuto do Discordu
               }
+            }
 
               // Nedělní přehled celého týdne
               if(isNedele){
@@ -269,7 +269,7 @@ jobs:
                   await sendDiscord(zprava, config)
                 }
               }
-
+            
             console.log('Done');
           }
 
