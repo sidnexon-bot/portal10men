@@ -65,14 +65,14 @@ jobs:
             return new Promise((resolve, reject) => {
               const webhookUrl = process.env.DISCORD_WEBHOOK;
               if(!webhookUrl){ resolve(); return; }
-              
+
               const threadId = config?.discord_thread_id
                 ? String(config.discord_thread_id).replace(/\"/g, '').trim()
                 : null;
-              
+
               const path = '/api/webhooks/' + webhookUrl.split('/api/webhooks/')[1] + (threadId ? '?thread_id=' + threadId : '');
               const body = JSON.stringify({username: '10base', content: message});
-              
+
               const options = {
                 hostname: 'discord.com',
                 path: path,
@@ -82,7 +82,7 @@ jobs:
                   'Content-Length': Buffer.byteLength(body)
                 }
               };
-              
+
               const req = https.request(options, res => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
@@ -95,7 +95,7 @@ jobs:
           }
 
           async function main(){
-          
+
             const akce      = await fbGet('/akce');
             const program   = await fbGet('/program');
             const dochazka  = await fbGet('/dochazka');
@@ -107,75 +107,71 @@ jobs:
 
             const now = new Date();
             const events = Object.values(akce);
-            const progEntries      = program   ? Object.values(program)   : [];
-            const dochazkaEntries  = dochazka  ? Object.values(dochazka)  : [];
-            const memberList       = Object.values(members);
-            const repertoarList    = repertoar ? Object.values(repertoar) : [];
+            const progEntries     = program   ? Object.values(program)   : [];
+            const dochazkaEntries = dochazka  ? Object.values(dochazka)  : [];
+            const memberList      = Object.values(members);
+            const repertoarList   = repertoar ? Object.values(repertoar) : [];
 
-            const eventDate2 = new Date(now);
-            eventDate2.setHours(0,0,0,0);
+            const todayDate = new Date(now);
+            todayDate.setHours(0,0,0,0);
 
             const isNedele = now.getDay() === 0;
 
             for(const event of events){
               if(!event.date) continue;
               if(event.status && event.status.indexOf('Zru') === 0) continue;
-              
+
               const eventDate = new Date(event.date);
               eventDate.setHours(0,0,0,0);
-              const todayDate = new Date(now);
-              todayDate.setHours(0,0,0,0);
               const daysUntil = Math.ceil((eventDate - todayDate) / (1000 * 60 * 60 * 24));
 
-              // 3 dny před akcí
+              // 3 dny pred akci
               if(daysUntil === 3){
                 if(event.requires_program !== false){
                   const hasProgram = progEntries.some(p => p.id_akce === event.id);
                   if(!hasProgram){
                     await sendDiscord(
-                      "📋 Akce **" + event.name + "** je za 3 dny a nemá program. Kájo, doplň ho prosím v 10base!",
+                      '📋 Akce **' + event.name + '** je za 3 dny a nema program. Kajo, doplň ho prosim v 10base!',
                       config
                     );
                   }
                 }
                 await sendDiscord(
-                  "✋ Akce **" + event.name + "** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.",
+                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.',
                   config
                 );
               }
 
-              // 1 den před akcí
-             if(daysUntil === 1){
-                // urgování nevyplněných
+              // 1 den pred akci
+              if(daysUntil === 1){
                 const nevyplneni = memberList.filter(m => {
                   const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
                   return !zaznam || !zaznam.status;
                 });
-              
+
                 if(nevyplneni.length > 0){
                   const mentions = nevyplneni.map(m => {
                     const discordId = m.discord_id
-                      ? String(m.discord_id).replace(/"/g, '').trim()
-                      : null
-                    return discordId ? '<@' + discordId + '>' : m.name
-                  }).join(' ')
-              
+                      ? String(m.discord_id).replace(/\"/g, '').trim()
+                      : null;
+                    return discordId ? '<@' + discordId + '>' : m.name;
+                  }).join(' ');
+
                   await sendDiscord(
-                    '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' — ještě jste nevyplnili docházku. Přijdete, nebo ne? Doplňte si ji v 10base.',
+                    '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' — jeste jste nevyplnili dochazku. Prijdete, nebo ne? Doplnte si ji v 10base.',
                     config
                   );
                 }
-              
-                // shrnutí akce do Discordu
+
                 const eventProg = progEntries
                   .filter(p => p.id_akce === event.id)
                   .sort((a,b) => Number(a.order) - Number(b.order));
-              
+
                 let programText = '';
                 if(eventProg.length){
-                  const main   = eventProg.filter(p => Number(p.order) < 900);
-                  const encore = eventProg.filter(p => Number(p.order) >= 900);
-                  programText = main.map((p,i) => {
+                  const mainProg  = eventProg.filter(p => Number(p.order) < 900);
+                  const encore    = eventProg.filter(p => Number(p.order) >= 900);
+                  programText = mainProg.map((p,i) => {
                     const song = repertoarList.find(r => r.id === p.song_id);
                     return (i+1) + '. ' + (song ? song.name : p.song_id);
                   }).join('\n');
@@ -187,89 +183,87 @@ jobs:
                     }).join('\n');
                   }
                 }else{
-                  programText = 'Program musí Kája ještě doplnit 🎵';
+                  programText = 'Program musi Kaja jeste doplnit 🎵';
                 }
-              
+
                 const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
                 const cas   = event.start ? event.start + (event.end ? ' – ' + event.end : '') : '';
                 const misto = event.place || '—';
-              
+
                 let zprava = '📅 Zítra: **' + event.name + '**\n\n';
                 zprava += '- **Kdy:** ' + datum + (cas ? ' · ' + cas : '') + '\n';
                 zprava += '- **Kde:** ' + misto + '\n';
-                if(event.sraz)     zprava += '- **Sraz:** ' + event.sraz + '\n';
-                if(event.obleceni) zprava += '- **Dresscode:** ' + event.obleceni + '\n';
+                if(event.sraz)        zprava += '- **Sraz:** ' + event.sraz + '\n';
+                if(event.obleceni)    zprava += '- **Dresscode:** ' + event.obleceni + '\n';
                 zprava += '\n**Program:**\n' + programText;
                 if(event.harmonogram) zprava += '\n\n⏱ **Harmonogram:**\n' + event.harmonogram;
-          
+
                 await sendDiscord(zprava, config);
-              
-                // push notifikace shrnutí — zrušeno, přesunuto do Discordu
               }
             }
 
-              // Nedělní přehled celého týdne
-              if(isNedele){
-                const pondeli = new Date(todayDate)
-                pondeli.setDate(pondeli.getDate() + 1)
-                const nedeleKonec = new Date(pondeli)
-                nedeleKonec.setDate(nedeleKonec.getDate() + 6)
-              
-                const akceTydne = events.filter(e => {
-                  if(!e.date) return false
-                  if(e.status && e.status.indexOf('Zru') === 0) return false
-                  const d = new Date(e.date)
-                  d.setHours(0,0,0,0)
-                  return d >= pondeli && d <= nedeleKonec
-                }).sort((a,b) => new Date(a.date) - new Date(b.date))
-              
-                if(akceTydne.length === 0){
-                  await sendDiscord('ℹ️ **Příští týden nemáme žádné akce.** Odpočívejte! 😄', config)
-                }else{
-                  let zprava = 'ℹ **Přehled akcí na příští týden:**\n\n'
-              
-                  for(const event of akceTydne){
-                    const eventProg = progEntries
-                      .filter(p => p.id_akce === event.id)
-                      .sort((a,b) => Number(a.order) - Number(b.order))
-              
-                    let programText = ''
-                    if(eventProg.length){
-                      const main   = eventProg.filter(p => Number(p.order) < 900)
-                      const encore = eventProg.filter(p => Number(p.order) >= 900)
-                      programText = main.map((p,i) => {
-                        const song = repertoarList.find(r => r.id === p.song_id)
-                        return (i+1) + '. ' + (song ? song.name : p.song_id)
-                      }).join('\n')
-                      if(encore.length){
-                        programText += '\n\nPřídavky:\n'
-                        programText += encore.map((p,i) => {
-                          const song = repertoarList.find(r => r.id === p.song_id)
-                          return (i+1) + '. ' + (song ? song.name : p.song_id)
-                        }).join('\n')
-                      }
-                    }else{
-                      programText = 'Program musí Kája ještě doplnit 🎵'
+            // Nedelni prehled celeho tydne
+            if(isNedele){
+              const pondeli = new Date(todayDate);
+              pondeli.setDate(pondeli.getDate() + 1);
+              const nedeleKonec = new Date(pondeli);
+              nedeleKonec.setDate(nedeleKonec.getDate() + 6);
+
+              const akceTydne = events.filter(e => {
+                if(!e.date) return false;
+                if(e.status && e.status.indexOf('Zru') === 0) return false;
+                const d = new Date(e.date);
+                d.setHours(0,0,0,0);
+                return d >= pondeli && d <= nedeleKonec;
+              }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+              if(akceTydne.length === 0){
+                await sendDiscord('ℹ️ **Příští týden nemáme žádné akce.** Odpočívejte! 😄', config);
+              }else{
+                let zprava = 'ℹ️ **Přehled akcí na příští týden:**\n\n';
+
+                for(const ev of akceTydne){
+                  const evProg = progEntries
+                    .filter(p => p.id_akce === ev.id)
+                    .sort((a,b) => Number(a.order) - Number(b.order));
+
+                  let progText = '';
+                  if(evProg.length){
+                    const mainProg = evProg.filter(p => Number(p.order) < 900);
+                    const encore   = evProg.filter(p => Number(p.order) >= 900);
+                    progText = mainProg.map((p,i) => {
+                      const song = repertoarList.find(r => r.id === p.song_id);
+                      return (i+1) + '. ' + (song ? song.name : p.song_id);
+                    }).join('\n');
+                    if(encore.length){
+                      progText += '\n\nPřídavky:\n';
+                      progText += encore.map((p,i) => {
+                        const song = repertoarList.find(r => r.id === p.song_id);
+                        return (i+1) + '. ' + (song ? song.name : p.song_id);
+                      }).join('\n');
                     }
-              
-                    const datum = new Date(event.date).toLocaleDateString('cs-CZ', {weekday: 'long', day: 'numeric', month: 'long'})
-                    const datumCap = datum.charAt(0).toUpperCase() + datum.slice(1)
-                    const cas   = event.start ? event.start + (event.end ? ' – ' + event.end : '') : ''
-                    const misto = event.place || (event.call_url ? event.call_url : '—')
-              
-                    zprava += '**' + event.name + '**\n'
-                    zprava += '📅 ' + datumCap + '\n'
-                    zprava += '🕓 ' + (cas || '—') + '\n'
-                    zprava += '📍 ' + misto + '\n'
-                    if(event.sraz)     zprava += '🕐 Sraz: ' + event.sraz + '\n'
-                    if(event.obleceni) zprava += '👔 ' + event.obleceni + '\n'
-                    zprava += '\n**Program:**\n' + programText + '\n\n'
+                  }else{
+                    progText = 'Program musi Kaja jeste doplnit 🎵';
                   }
-              
-                  await sendDiscord(zprava, config)
+
+                  const datum = new Date(ev.date).toLocaleDateString('cs-CZ', {weekday: 'long', day: 'numeric', month: 'long'});
+                  const datumCap = datum.charAt(0).toUpperCase() + datum.slice(1);
+                  const cas   = ev.start ? ev.start + (ev.end ? ' – ' + ev.end : '') : '';
+                  const misto = ev.place || (ev.call_url ? ev.call_url : '—');
+
+                  zprava += '**' + ev.name + '**\n';
+                  zprava += '📅 ' + datumCap + '\n';
+                  zprava += '🕓 ' + (cas || '—') + '\n';
+                  zprava += '📍 ' + misto + '\n';
+                  if(ev.sraz)     zprava += '🕐 Sraz: ' + ev.sraz + '\n';
+                  if(ev.obleceni) zprava += '👔 ' + ev.obleceni + '\n';
+                  zprava += '\n**Program:**\n' + progText + '\n\n';
                 }
+
+                await sendDiscord(zprava, config);
               }
-            
+            }
+
             console.log('Done');
           }
 
