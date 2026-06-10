@@ -1547,21 +1547,8 @@ async function openEventForm(id){
   const editSlot = document.getElementById("edit-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
 
-  if(target){
-    const layout = document.getElementById("events-layout")
-    if(layout){
-      layout.classList.remove("two-col", "three-col")
-      layout.classList.add("three-col")
-    }
-    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
-      <div class="skeleton-card" style="background:transparent">
-        <div class="skeleton skeleton-line tall"></div>
-        <div class="skeleton skeleton-line medium"></div>
-      </div>
-    </div>`
-  }else{
-    setLoading()
-  }
+  document.getElementById("eventFormModalBody").innerHTML = html
+  document.getElementById("eventFormModal").classList.remove("hidden")
 
   let event = {}
   if(id){
@@ -1663,16 +1650,14 @@ async function openEventForm(id){
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
         ${isEdit ? "Uložit změny" : "Vytvořit akci"}
       </button>
-      <button onclick="${isDesktop ? (id ? `openEvent('${id}')` : "renderEvents()") : "renderEvents()"}">Zrušit</button>
+      <button onclick="closeEventFormModal()">Zrušit</button>
     </div>
   </div>`
 
-  if(target){
-    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
-  }else{
-    container().innerHTML = html
-  }
+}
 
+function closeEventFormModal(){
+  document.getElementById("eventFormModal").classList.add("hidden")
 }
 
 function toggleEventFormExtra(){
@@ -2913,6 +2898,7 @@ async function saveEvent(id){
       })
       invalidateCache("events")
       hideSaving(`Vytvořeno ${result.instances} akcí ✓`)
+      closeEventFormModal()
       renderEvents()
     }catch(err){
       hideSaving("Chyba ✗")
@@ -4489,3 +4475,5 @@ window.deleteMemberItem     = deleteMemberItem
 window.renderMembers        = renderMembers
 window.openContactModal     = openContactModal
 window.closeContactModal    = closeContactModal
+window.closeEventFormModal  = closeEventFormModal
+
