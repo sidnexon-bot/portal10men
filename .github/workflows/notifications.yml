@@ -131,13 +131,13 @@ jobs:
                   const hasProgram = progEntries.some(p => p.id_akce === event.id);
                   if(!hasProgram){
                     await sendDiscord(
-                      '📋 Akce **' + event.name + '** je za 3 dny a nema program. Kajo, doplň ho prosim v 10base!',
+                      '📋 Akce **' + event.name + '** je za 3 dny a nemá program. Kájo, doplň ho prosím v 10base!',
                       config
                     );
                   }
                 }
                 await sendDiscord(
-                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.',
+                  '✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si prosím docházku v 10base a doplňte ji, pokud ještě není vyplněná.',
                   config
                 );
               }
@@ -145,6 +145,7 @@ jobs:
               // 1 den pred akci
               if(daysUntil === 1){
                 const nevyplneni = memberList.filter(m => {
+                  if((m.role || '').toUpperCase() === 'GUEST') return false;
                   const zaznam = dochazkaEntries.find(d => d.id_akce === event.id && d.email === m.email);
                   return !zaznam || !zaznam.status;
                 });
@@ -158,7 +159,7 @@ jobs:
                   }).join(' ');
 
                   await sendDiscord(
-                    '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' — jeste jste nevyplnili dochazku. Prijdete, nebo ne? Doplnte si ji v 10base.',
+                    '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' — ještě jste nevyplnili docházku. Přijdete, nebo ne? Doplňte si ji v 10base.',
                     config
                   );
                 }
@@ -183,7 +184,7 @@ jobs:
                     }).join('\n');
                   }
                 }else{
-                  programText = 'Program musi Kaja jeste doplnit 🎵';
+                  programText = 'Program musí Kája ještě doplnit 🎵';
                 }
 
                 const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
