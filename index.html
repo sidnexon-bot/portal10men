@@ -256,12 +256,19 @@
   </div>
 </div>
 
-  <div id="eventFormModal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closeEventFormModal()"></div>
-  <div class="modal-content" style="max-width:560px">
+<div id="eventFormModal" class="modal hidden">
+   <div class="modal-backdrop" onclick="closeEventFormModal()"></div>
+   <div class="modal-content" style="max-width:560px;max-height:90vh;overflow-y:auto">
     <div id="eventFormModalBody"></div>
   </div>
-</div>
+ </div>
+
+ <div id="programEditorModal" class="modal hidden">
+   <div class="modal-backdrop" onclick="closeProgramEditorModal()"></div>
+   <div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto">
+     <div id="programEditorModalBody"></div>
+   </div>
+ </div>
 
 </body>
 </html>
