@@ -3,7 +3,7 @@ name: Calendar Sync
 
 on:
   schedule:
-    - cron: '0 * * * *'  # každou hodinu
+    - cron: '*/15 * * * *'  # každých 15 minut
   workflow_dispatch:
 
 jobs:
