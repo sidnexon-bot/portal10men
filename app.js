@@ -1544,25 +1544,14 @@ function togglePastEvents(){
 async function openEventForm(id){
   window.EDIT_EVENT = {}
 
-  const editSlot = document.getElementById("edit-panel-slot")
-  const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
-
-  document.getElementById("eventFormModalBody").innerHTML = html
-  document.getElementById("eventFormModal").classList.remove("hidden")
-
   let event = {}
   if(id){
     try{
       const data = await cachedApi("eventdetail", {id})
       event = data.event || {}
       window.EDIT_EVENT = event
-       
     }catch(e){
-      if(target){
-        target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
-      }else{
-        setError("Chyba při načítání akce")
-      }
+      setError("Chyba při načítání akce")
       return
     }
   }
@@ -1573,7 +1562,6 @@ async function openEventForm(id){
     : ""
 
   let html = `
-  ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:12px">← Zpět</button>` : ""}
   <h2>${isEdit ? "Upravit akci" : "Nová akce"}</h2>
   <div class="card">
     <label>Název<br>
@@ -1600,15 +1588,15 @@ async function openEventForm(id){
     <label>Poznámka<br>
       <textarea id="fNote" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(event.NOTE || "")}</textarea>
     </label>
-       <label>Typ akce<br>
-        <select id="fType">
-          <option value="Zkouška"   ${(event.TYPE||"Zkouška") === "Zkouška"    ? "selected" : ""}>Zkouška</option>
-          <option value="Koncert"   ${event.TYPE === "Koncert"    ? "selected" : ""}>Koncert</option>
-          <option value="Soustředění" ${event.TYPE === "Soustředění" ? "selected" : ""}>Soustředění</option>
-          <option value="Soutěž"    ${event.TYPE === "Soutěž"    ? "selected" : ""}>Soutěž</option>
-          <option value="Jiná akce" ${event.TYPE === "Jiná akce" ? "selected" : ""}>Jiná akce</option>
-        </select>
-      </label>
+    <label>Typ akce<br>
+      <select id="fType">
+        <option value="Zkouška"     ${(event.TYPE||"Zkouška") === "Zkouška"     ? "selected" : ""}>Zkouška</option>
+        <option value="Koncert"     ${event.TYPE === "Koncert"     ? "selected" : ""}>Koncert</option>
+        <option value="Soustředění" ${event.TYPE === "Soustředění" ? "selected" : ""}>Soustředění</option>
+        <option value="Soutěž"      ${event.TYPE === "Soutěž"      ? "selected" : ""}>Soutěž</option>
+        <option value="Jiná akce"   ${event.TYPE === "Jiná akce"   ? "selected" : ""}>Jiná akce</option>
+      </select>
+    </label>
     <label>Status<br>
       <select id="fStatus">
         <option value="Plánovaná" ${event.STATUS === "Plánovaná" ? "selected" : ""}>Plánovaná</option>
@@ -1617,9 +1605,9 @@ async function openEventForm(id){
       </select>
     </label>
     <label style="display:flex;align-items:center;gap:10px;margin-top:16px">
-  <input type="checkbox" id="fRequiresProgram" ${event.REQUIRES_PROGRAM !== false ? "checked" : ""} style="width:auto;margin:0">
-  <span>Vyžaduje program</span>
-</label>
+      <input type="checkbox" id="fRequiresProgram" ${event.REQUIRES_PROGRAM !== false ? "checked" : ""} style="width:auto;margin:0">
+      <span>Vyžaduje program</span>
+    </label>
     ${!isEdit ? `
     <label style="margin-top:16px;display:block">
       <span class="small" style="text-transform:uppercase;letter-spacing:0.05em">Opakování</span><br>
@@ -1637,14 +1625,14 @@ async function openEventForm(id){
     ` : ""}
 
     <div style="margin-top:16px;border-top:1px solid rgba(128,128,128,0.15);padding-top:16px">
-     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleEventFormExtra()">
-       <span style="font-weight:600;font-size:15px">Další informace</span>
-       <span id="chevronEventFormExtra">›</span>
-     </div>
-     <div id="eventFormExtra" style="display:none;margin-top:12px">
-       <!-- sem přijdou podmíněné fieldy -->
-     </div>
-   </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleEventFormExtra()">
+        <span style="font-weight:600;font-size:15px">Další informace</span>
+        <span id="chevronEventFormExtra">›</span>
+      </div>
+      <div id="eventFormExtra" style="display:none;margin-top:12px">
+        <!-- sem přijdou podmíněné fieldy -->
+      </div>
+    </div>
 
     <div class="btn-group" style="margin-top:16px">
       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
@@ -1654,6 +1642,8 @@ async function openEventForm(id){
     </div>
   </div>`
 
+  document.getElementById("eventFormModalBody").innerHTML = html
+  document.getElementById("eventFormModal").classList.remove("hidden")
 }
 
 function closeEventFormModal(){
@@ -2168,27 +2158,7 @@ async function uploadDocUrl(eventId){
 
 async function openProgramEditor(eventId){
 
-  const editSlot = document.getElementById("edit-panel-slot")
-  const target = (isDesktop && ACTIVE_TAB === "events" && editSlot) ? editSlot : null
-
-  if(target){
-    const layout = document.getElementById("events-layout")
-    if(layout){
-      layout.classList.remove("two-col", "three-col")
-      layout.classList.add("three-col")
-    }
-    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
-      <div class="skeleton-card" style="background:transparent">
-        <div class="skeleton skeleton-line tall"></div>
-        <div class="skeleton skeleton-line medium"></div>
-      </div>
-    </div>`
-  }else{
-    setLoading()
-  }
-
   try{
-
     const repertoar = await cachedApi("repertoar")
     const detail    = await cachedApi("eventdetail", {id: eventId})
     const event     = detail.event   || {}
@@ -2212,22 +2182,18 @@ async function openProgramEditor(eventId){
 
     const html = renderProgramEditor(active, [], event)
 
-    if(target){
-      target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
-    }else{
-      container().innerHTML = `<div class="prog-wrapper">${html}</div>`
-    }
+    document.getElementById("programEditorModalBody").innerHTML = `<div class="prog-wrapper">${html}</div>`
+    document.getElementById("programEditorModal").classList.remove("hidden")
 
     refreshProgSelected()
 
   }catch(err){
-    if(target){
-      target.innerHTML = `<p class="notice">Chyba při načítání programu</p>`
-    }else{
-      setError("Chyba: " + (err?.message || err))
-    }
+    setError("Chyba: " + (err?.message || err))
   }
+}
 
+function closeProgramEditorModal(){
+  document.getElementById("programEditorModal").classList.add("hidden")
 }
 
 function renderProgramEditor(songs, currentIds, event){
@@ -2404,6 +2370,7 @@ async function saveProgram(eventId){
     })
     invalidateCache("eventdetail", eventId)
     lsDel("cache_repertoar")
+    closeProgramEditorModal()
     hideSaving("Program uložen ✓")
     openEvent(eventId)
   }catch(err){
@@ -2431,15 +2398,13 @@ function prefetchProgramPdfs(program){
 async function openEditSeriesFrom(id){
   await openEventForm(id)
 
-  // Počkej na vyrendering formuláře
   setTimeout(() => {
-    const target = document.getElementById("edit-panel-slot") || container()
+    const modal = document.getElementById("eventFormModalBody")
 
-    const h2 = target.querySelector("h2")
+    const h2 = modal.querySelector("h2")
     if(h2) h2.textContent = "Upravit sérii od této akce"
 
-    // Najdi první tlačítko v btn-group (Uložit změny)
-    const btnGroup = target.querySelector(".btn-group")
+    const btnGroup = modal.querySelector(".btn-group")
     if(btnGroup){
       const saveBtn = btnGroup.querySelector("button:first-child")
       if(saveBtn){
@@ -4476,4 +4441,4 @@ window.renderMembers        = renderMembers
 window.openContactModal     = openContactModal
 window.closeContactModal    = closeContactModal
 window.closeEventFormModal  = closeEventFormModal
-
+window.closeProgramEditorModal = closeProgramEditorModal
