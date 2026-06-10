@@ -2199,7 +2199,6 @@ function closeProgramEditorModal(){
 function renderProgramEditor(songs, currentIds, event){
 
   let html = `
-  <button onclick="openEvent('${escapeHtml(window.PROG_EVENT)}')" style="margin-bottom:12px">← Zpět</button>
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
 
   <div class="card" style="margin-bottom:12px">
@@ -2242,7 +2241,7 @@ function renderProgramEditor(songs, currentIds, event){
 
   <div class="btn-group">
     <button onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit program</button>
-    <button onclick="openEvent('${escapeHtml(window.PROG_EVENT)}')">Zrušit</button>
+    <button onclick="closeProgramEditorModal()">Zrušit</button>
   </div>`
 
   return html
