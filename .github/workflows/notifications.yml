@@ -86,7 +86,7 @@ jobs:
               const req = https.request(options, res => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
-                res.on('end', () => { console.log('Discord sent:', res.statusCode); resolve(data); });
+                res.on('end', () => { console.log('Discord sent:', res.statusCode, data); resolve(data); });
               });
               req.on('error', reject);
               req.write(body);
