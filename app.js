@@ -1634,13 +1634,15 @@ async function openEventForm(id){
       </div>
     </div>
 
-    <div class="btn-group" style="margin-top:16px">
-      <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'})" style="background:#d4f5e2;color:#1a7a3a">
-        ${isEdit ? "Uložit změny" : "Vytvořit akci"}
-      </button>
-      <button onclick="closeEventFormModal()">Zrušit</button>
-    </div>
-  </div>`
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+     <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%;background:#d4f5e2;color:#1a7a3a">
+       ${isEdit ? "Uložit a poslat do Discordu" : "Vytvořit a poslat do Discordu"}
+     </button>
+     <div class="btn-group">
+       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)" style="background:#e8e8ed;color:#000">Pouze uložit</button>
+       <button onclick="closeEventFormModal()">Zrušit</button>
+     </div>
+   </div>
 
   document.getElementById("eventFormModalBody").innerHTML = html
   document.getElementById("eventFormModal").classList.remove("hidden")
@@ -2840,7 +2842,7 @@ async function confirmSwipeWithReason(eventId, el){
   }
 }
 
-async function saveEvent(id){
+async function saveEvent(id, notify = true){
 
   const name            = document.getElementById("fName")?.value.trim()
   const date            = document.getElementById("fDate")?.value
@@ -2869,7 +2871,7 @@ async function saveEvent(id){
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
 
-     // Opakující se akce — jen při vytváření nové
+  // Opakující se akce — jen při vytváření nové
   if(!id && recurrenceType !== "none"){
     if(!recurrenceUntil){ alert("Zadej datum konce opakování"); return }
     try{
@@ -2882,7 +2884,8 @@ async function saveEvent(id){
         recurrence_until: recurrenceUntil,
         sraz, obleceni, doprava, hospoda, harmonogram,
         spacaky, strava, strava_nota: stravaNota,
-        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+        silent: !notify
       })
       invalidateCache("events")
       hideSaving(`Vytvořeno ${result.instances} akcí ✓`)
@@ -2900,28 +2903,33 @@ async function saveEvent(id){
     if(id){
       if(status === "Zrušená"){
         await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl,
-        sraz, obleceni, doprava, hospoda, harmonogram,
-        spacaky, strava, strava_nota: stravaNota,
-        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
-      })
+          sraz, obleceni, doprava, hospoda, harmonogram,
+          spacaky, strava, strava_nota: stravaNota,
+          obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+          silent: !notify
+        })
       }else{
         await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
           sraz, obleceni, doprava, hospoda, harmonogram,
           spacaky, strava, strava_nota: stravaNota,
-          obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+          obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+          silent: !notify
         })
       }
       invalidateCache("events")
       invalidateCache("eventdetail", id)
+      closeEventFormModal()
       hideSaving("Akce upravena ✓")
       openEvent(id)
     }else{
-      const result = await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
+      await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
         sraz, obleceni, doprava, hospoda, harmonogram,
         spacaky, strava, strava_nota: stravaNota,
-        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp
+        obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+        silent: !notify
       })
       invalidateCache("events")
+      closeEventFormModal()
       hideSaving("Akce vytvořena ✓")
       renderEvents()
     }
@@ -2929,7 +2937,6 @@ async function saveEvent(id){
     hideSaving("Chyba ✗")
     alert("Chyba: " + (err?.message || err))
   }
-
 }
 
 async function deleteEvent(id){
