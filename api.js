@@ -304,10 +304,12 @@ async function addEvent(params){
     })
   }
 
-  // Discord oznámení
+    // Discord oznámení
+    if(!params.silent){
       await sendDiscordMessage({
-      message: `📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
-    })
+        message: `📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
+      })
+    }
 
     await addToCalendarQueue("create", id, {
     name:  params.name,
@@ -359,7 +361,7 @@ async function updateEvent(params){
   if((old?.sraz || "") !== (params.sraz || "")) zmeny.push("- **Sraz:** " + (old?.sraz || "—") + " → " + (params.sraz || "—"))
   if((old?.obleceni || "") !== (params.obleceni || "")) zmeny.push("- **Oblečení:** " + (old?.obleceni || "—") + " → " + (params.obleceni || "—"))
 
-  if(zmeny.length > 0){
+  if(!params.silent && zmeny.length > 0){
     await sendDiscordMessage({
       message: `✏️ **Změny v akci: ${params.name}**\n\n${zmeny.join('\n')}`
     })
@@ -442,9 +444,11 @@ async function cancelEvent(params){
     }
   }
 
+  if(!params.silent){
       await sendDiscordMessage({
-      message: `❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
-    })
+        message: `❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
+      })
+    }
 
       await addToCalendarQueue("delete", params.id, {})
 
