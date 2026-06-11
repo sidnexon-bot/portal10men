@@ -1634,15 +1634,16 @@ async function openEventForm(id){
       </div>
     </div>
 
-    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
-     <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%;background:#d4f5e2;color:#1a7a3a">
-       ${isEdit ? "Uložit a poslat do Discordu" : "Vytvořit a poslat do Discordu"}
-     </button>
-     <div class="btn-group">
-       <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)" style="background:#e8e8ed;color:#000">Pouze uložit</button>
-       <button onclick="closeEventFormModal()">Zrušit</button>
-     </div>
-   </div>
+   <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+      <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%;background:#d4f5e2;color:#1a7a3a">
+        ${isEdit ? "Uložit a poslat do Discordu" : "Vytvořit a poslat do Discordu"}
+      </button>
+      <div class="btn-group">
+        <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)" style="background:#e8e8ed;color:#000">Pouze uložit</button>
+        <button onclick="closeEventFormModal()">Zrušit</button>
+      </div>
+    </div>
+  </div>`
 
   document.getElementById("eventFormModalBody").innerHTML = html
   document.getElementById("eventFormModal").classList.remove("hidden")
