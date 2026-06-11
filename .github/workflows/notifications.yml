@@ -101,12 +101,12 @@ jobs:
             const dochazka  = await fbGet('/dochazka');
             const members   = await fbGet('/members');
             const repertoar = await fbGet('/repertoar');
-            const config    = await fbGet('/config');
+            const config = await fbGet('/config');
 
-            const roleId = config?.discord_role_id
-                ? String(config.discord_role_id).replace(/"/g, '').trim()
-                : null
-            const rolePing = roleId ? "<@&" + roleId + ">" : ""
+            const roleId = config && config.discord_role_id
+              ? String(config.discord_role_id).replace(/\"/g, '').trim()
+              : null;
+            const rolePing = roleId ? ("<@&" + roleId + ">") : "";
 
             if(!akce || !members) return;
 
