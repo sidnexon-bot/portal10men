@@ -360,7 +360,17 @@ async function updateEvent(params){
   if((old?.status || "") !== (params.status || "")) zmeny.push("- **Status:** " + (old?.status || "—") + " → " + (params.status || "—"))
   if((old?.sraz || "") !== (params.sraz || "")) zmeny.push("- **Sraz:** " + (old?.sraz || "—") + " → " + (params.sraz || "—"))
   if((old?.obleceni || "") !== (params.obleceni || "")) zmeny.push("- **Oblečení:** " + (old?.obleceni || "—") + " → " + (params.obleceni || "—"))
-
+  if((old?.note        || "") !== (params.note        || "")) zmeny.push("- **Poznámka:** upravena")
+  if((old?.doprava     || "") !== (params.doprava     || "")) zmeny.push("- **Doprava:** " + (old?.doprava || "—") + " → " + (params.doprava || "—"))
+  if((old?.hospoda     || "") !== (params.hospoda     || "")) zmeny.push("- **Hospoda:** upravena")
+  if((old?.harmonogram || "") !== (params.harmonogram || "")) zmeny.push("- **Harmonogram:** upraven")
+  if((old?.spacaky     || "") !== (params.spacaky     || "")) zmeny.push("- **Spacáky:** " + (old?.spacaky || "—") + " → " + (params.spacaky || "—"))
+  if((old?.strava      || "") !== (params.strava      || "")) zmeny.push("- **Strava:** " + (old?.strava || "—") + " → " + (params.strava || "—"))
+  if((old?.obleceni_s  || "") !== (params.obleceni_s  || "")) zmeny.push("- **Koncertní oblečení:** " + (old?.obleceni_s || "—") + " → " + (params.obleceni_s || "—"))
+  if((old?.call_url    || "") !== (params.call_url    || "")) zmeny.push("- **Online call:** " + (old?.call_url || "—") + " → " + (params.call_url || "—"))
+  if((old?.type        || "") !== (params.type        || "")) zmeny.push("- **Typ akce:** " + (old?.type || "—") + " → " + (params.type || "—"))
+  if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** " + (old?.date_end ? formatDateSimple(old.date_end) : "—") + " → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
+  
   if(!params.silent && zmeny.length > 0){
     await sendDiscordMessage({
       message: `✏️ **Změny v akci: ${params.name}**\n\n${zmeny.join('\n')}`
