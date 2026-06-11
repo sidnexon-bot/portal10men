@@ -371,6 +371,9 @@ async function updateEvent(params){
   if((old?.type        || "") !== (params.type        || "")) zmeny.push("- **Typ akce:** " + (old?.type || "—") + " → " + (params.type || "—"))
   if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** " + (old?.date_end ? formatDateSimple(old.date_end) : "—") + " → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
   
+  console.log("zmeny:", zmeny.length, JSON.stringify(zmeny))
+  console.log("silent:", params.silent)
+
   if(!params.silent && zmeny.length > 0){
     await sendDiscordMessage({
       message: `✏️ **Změny v akci: ${params.name}**\n\n${zmeny.join('\n')}`
