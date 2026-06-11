@@ -106,7 +106,7 @@ jobs:
             const roleId = config?.discord_role_id
                 ? String(config.discord_role_id).replace(/"/g, '').trim()
                 : null
-            const rolePing = roleId ? '<@&' + roleId + '>' : ''
+            const rolePing = roleId ? "<@&" + roleId + ">" : ""
 
             if(!akce || !members) return;
 
