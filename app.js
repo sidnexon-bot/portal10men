@@ -1755,10 +1755,10 @@ function toggleObleceniSoustredeniDetail(val){
 }
 
 async function openEvent(id){
-   window.ACTIVE_EVENT_ID = id
-   ACTIVE_DETAIL_ID = id
-  
-   const slotEl = document.getElementById("detail-panel-slot")
+  window.ACTIVE_EVENT_ID = id
+  ACTIVE_DETAIL_ID = id
+
+  const slotEl = document.getElementById("detail-panel-slot")
   const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
 
   if(target){
@@ -1766,7 +1766,6 @@ async function openEvent(id){
     if(layout){
       layout.classList.remove("two-col", "three-col")
       layout.classList.add("two-col")
-      // smaž edit panel při otevření nového detailu
       const editSlot = document.getElementById("edit-panel-slot")
       if(editSlot) editSlot.innerHTML = ""
     }
@@ -1788,21 +1787,39 @@ async function openEvent(id){
     const program    = data.program    || []
     const attendance = data.attendance || []
 
+    // --- HLAVIČKA ---
     let html = `
      ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
-     <h2 style="margin-bottom:16px">${escapeHtml(event.NAME)}</h2>
+     <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
      ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">OPAKUJÍCÍ SE AKCE</div>` : ""}
 
-     <div class="card" style="margin-bottom:20px">
-       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-         <div><span class="small" style="display:block;margin-bottom:2px">Datum</span><b>${formatDate(event.DATE)}${event.DATE_END ? " – " + formatDate(event.DATE_END) : ""}</b></div>
-         <div><span class="small" style="display:block;margin-bottom:2px">Čas</span><b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b></div>
-         <div><span class="small" style="display:block;margin-bottom:2px">Místo</span><b>${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</b></div>
-         <div><span class="small" style="display:block;margin-bottom:2px">Typ akce</span><b>${escapeHtml(event.TYPE) || "Zkouška"}</b></div>
+     <div class="card" style="margin-bottom:16px">
+
+       <!-- Typ akce -->
+       <div style="margin-bottom:12px">
+         <span class="small" style="display:block;margin-bottom:2px">Typ akce</span>
+         <b>${escapeHtml(event.TYPE) || "Zkouška"}</b>
        </div>
-   
+
+       <!-- Datum a čas -->
+       <div style="margin-bottom:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
+         <span class="small" style="display:block;margin-bottom:2px">Datum</span>
+         <b>${formatDate(event.DATE)}${event.DATE_END ? " – " + formatDate(event.DATE_END) : ""}</b>
+       </div>
+       <div style="margin-bottom:12px">
+         <span class="small" style="display:block;margin-bottom:2px">Čas</span>
+         <b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b>
+       </div>
+
+       <!-- Místo -->
+       <div style="margin-bottom:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
+         <span class="small" style="display:block;margin-bottom:2px">Místo</span>
+         <b>${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</b>
+       </div>
+
+       <!-- Navigovat / Připojit se -->
        ${(event.PLACE || event.CALL_URL) ? `
-         <div class="btn-group" style="margin-bottom:16px">
+         <div class="btn-group" style="margin-bottom:12px">
            ${event.PLACE ? `
              <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
@@ -1824,91 +1841,38 @@ async function openEvent(id){
            ` : ""}
          </div>
        ` : ""}
-   
-     ${event.NOTE ? `<div style="padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)"><span class="small" style="display:block;margin-bottom:4px">Poznámka</span><div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div></div>` : ""}
-     </div>
 
-     ${event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.SPACAKY || event.STRAVA ? `
-        <div class="event-card" style="margin-top:12px">
-          <div class="event-label">Detaily akce</div>
-          ${event.SRAZ ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
-          ${event.OBLECENI ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
-          ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
-          ${event.HOSPODA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Rezervace v hospodě</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
-          ${event.SPACAKY ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
-          ${event.STRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Je tam zajištěná strava?</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
-          ${event.OBLECENI_S ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme koncertní oblečení?</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(formatObleceni(event.OBLECENI_S_TYP)) : ""}</b></div>` : ""}
-          ${event.HARMONOGRAM ? `<div style="padding:8px 0"><span class="small" style="display:block;margin-bottom:4px">Harmonogram</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : ""}
-        </div>
-      ` : ""}`
+       <!-- Poznámka -->
+       ${event.NOTE ? `
+         <div style="padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
+           <span class="small" style="display:block;margin-bottom:4px">Poznámka</span>
+           <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div>
+         </div>
+       ` : ""}
 
-    // --- DOCHÁZKA ---
-    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
-    const myStatus = myRow?.STATUS || ""
-    const myReason = myRow?.REASON || ""
+     </div>`
 
-    const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
-    const maybe = attendance.filter(a => a.STATUS === "Možná").length
-    const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
-    const open  = attendance.filter(a => !a.STATUS).length
-
-    const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-    const statusText  = myStatus || "Nevyplněno"
-
-    html += `<div class="event-card">
-      <div class="event-label">Docházka</div>
-
-      ${event.STATUS === "Zrušená" ? `
-        <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
-      ` : MEMBER_EMAIL ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
-          <div>
-            <div style="font-weight:600;color:${statusColor}">${statusText}</div>
-            ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
-          </div>
-          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
-        </div>
-        <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-          <div class="btn-group">
-            <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-            <button onclick="doAttendanceMozna('${id}')">Možná</button>
-            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
-          </div>
-        </div>
-      ` : `<div class="muted">Vyber člena</div>`}
-
-      <!-- Souhrn skupiny — vždy viditelný -->
-      <div style="margin-top:12px">
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-          <span class="small">✓ Přijdu: <b>${yes}</b></span>
-          <span class="small">? Možná: <b>${maybe}</b></span>
-          <span class="small">✗ Nepřijdu: <b>${no}</b></span>
-          <span class="small">— Nevyplněno: <b>${open}</b></span>
-        </div>
-        ${attendance.map(a => {
-          const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                        a.STATUS === "Možná"    ? iconMaybe() :
-                        a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-          const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                        a.STATUS === "Možná"    ? "#ff9f0a" :
-                        a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-          return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
-            <span class="icon" style="color:${color}">${icon}</span>
-            ${escapeHtml(a.NAME)}
-            ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-          </div>`
-        }).join("")}
-      </div>
-
-    </div>`
+    // --- DALŠÍ INFORMACE ---
+    if(event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.HOSPODA || event.SPACAKY || event.STRAVA || event.OBLECENI_S){
+      html += `<div class="event-card" style="margin-bottom:16px">
+        <div class="event-label">Další informace</div>
+        ${event.SRAZ      ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
+        ${event.OBLECENI  ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
+        ${event.DOPRAVA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
+        ${event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : ""}
+        ${event.HOSPODA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
+        ${event.SPACAKY   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
+        ${event.STRAVA    ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Je tam zajištěná strava?</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
+        ${event.OBLECENI_S ? `<div style="padding:8px 0"><span class="small" style="display:block">Bereme koncertní oblečení?</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(formatObleceni(event.OBLECENI_S_TYP)) : ""}</b></div>` : ""}
+      </div>`
+    }
 
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
     const encoreProgram = program.filter(p => p.ENCORE)
 
     if(mainProgram.length){
-      html += `<div class="event-card">
+      html += `<div class="event-card" style="margin-bottom:16px">
         <div class="event-label">Program</div>
         ${mainProgram.map((p, i) => `
           <div class="event-row">
@@ -1944,7 +1908,7 @@ async function openEvent(id){
         ` : ""}
       </div>`
     }else{
-      html += `<div class="event-card">
+      html += `<div class="event-card" style="margin-bottom:16px">
         <div class="event-label">Program</div>
         <p class="notice" style="margin:0">Program není k dispozici</p>
         ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
@@ -1954,6 +1918,66 @@ async function openEvent(id){
         ` : ""}
       </div>`
     }
+
+    // --- DOCHÁZKA ---
+    const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
+    const myStatus = myRow?.STATUS || ""
+    const myReason = myRow?.REASON || ""
+
+    const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
+    const maybe = attendance.filter(a => a.STATUS === "Možná").length
+    const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
+    const open  = attendance.filter(a => !a.STATUS).length
+
+    const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+    const statusText  = myStatus || "Nevyplněno"
+
+    html += `<div class="event-card" style="margin-bottom:16px">
+      <div class="event-label">Docházka</div>
+
+      ${event.STATUS === "Zrušená" ? `
+        <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
+      ` : MEMBER_EMAIL ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
+          <div>
+            <div style="font-weight:600;color:${statusColor}">${statusText}</div>
+            ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
+          </div>
+          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
+        </div>
+        <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
+          <div class="btn-group">
+            <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
+            <button onclick="doAttendanceMozna('${id}')">Možná</button>
+            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+          </div>
+        </div>
+      ` : `<div class="muted">Vyber člena</div>`}
+
+      <div style="margin-top:12px">
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <span class="small">✓ Přijdu: <b>${yes}</b></span>
+          <span class="small">? Možná: <b>${maybe}</b></span>
+          <span class="small">✗ Nepřijdu: <b>${no}</b></span>
+          <span class="small">— Nevyplněno: <b>${open}</b></span>
+        </div>
+        ${attendance.map(a => {
+          const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
+                        a.STATUS === "Možná"    ? iconMaybe() :
+                        a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
+          const color = a.STATUS === "Přijdu"   ? "#34c759" :
+                        a.STATUS === "Možná"    ? "#ff9f0a" :
+                        a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+          return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
+            <span class="icon" style="color:${color}">${icon}</span>
+            ${escapeHtml(a.NAME)}
+            ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
+          </div>`
+        }).join("")}
+      </div>
+
+    </div>`
 
     // --- INFODOKUMENT ---
     if(event.DOC_URL){
@@ -1990,8 +2014,8 @@ async function openEvent(id){
       container().innerHTML = html
     }
 
-  saveState()
-     
+    saveState()
+
   }catch(err){
     if(target){
       target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
