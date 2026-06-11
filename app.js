@@ -1606,7 +1606,7 @@ async function openEventForm(id){
     </label>
     <label style="display:flex;align-items:center;gap:10px;margin-top:16px">
       <input type="checkbox" id="fRequiresProgram" ${event.REQUIRES_PROGRAM !== false ? "checked" : ""} style="width:auto;margin:0">
-      <span>Vyžaduje program</span>
+      <span>Potřebujeme program z repertoáru?</span>
     </label>
     ${!isEdit ? `
     <label style="margin-top:16px;display:block">
@@ -1626,7 +1626,7 @@ async function openEventForm(id){
 
     <div style="margin-top:16px;border-top:1px solid rgba(128,128,128,0.15);padding-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleEventFormExtra()">
-        <span style="font-weight:600;font-size:15px">Další informace</span>
+        <span style="font-weight:600;font-size:15px">Vyplnit další podrobnosti</span>
         <span id="chevronEventFormExtra">›</span>
       </div>
       <div id="eventFormExtra" style="display:none;margin-top:12px">
