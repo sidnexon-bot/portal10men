@@ -66,11 +66,6 @@ jobs:
               const webhookUrl = process.env.DISCORD_WEBHOOK;
               if(!webhookUrl){ resolve(); return; }
 
-              const roleId = config?.discord_role_id
-                ? String(config.discord_role_id).replace(/"/g, '').trim()
-                : null
-              const rolePing = roleId ? '<@&' + roleId + '>' : ''
-
               const threadId = config?.discord_thread_id
                 ? String(config.discord_thread_id).replace(/\"/g, '').trim()
                 : null;
@@ -107,6 +102,11 @@ jobs:
             const members   = await fbGet('/members');
             const repertoar = await fbGet('/repertoar');
             const config    = await fbGet('/config');
+
+            const roleId = config?.discord_role_id
+                ? String(config.discord_role_id).replace(/"/g, '').trim()
+                : null
+            const rolePing = roleId ? '<@&' + roleId + '>' : ''
 
             if(!akce || !members) return;
 
