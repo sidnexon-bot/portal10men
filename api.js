@@ -304,12 +304,18 @@ async function addEvent(params){
     })
   }
 
-    // Discord oznámení
-    if(!params.silent){
-      await sendDiscordMessage({
-        message: `📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
-      })
-    }
+      // Discord oznámení
+      if(!params.silent){
+        const config = await dbGet("/config")
+        const roleId = config?.discord_role_id
+          ? String(config.discord_role_id).replace(/"/g, '').trim()
+          : null
+        const rolePing = roleId ? ('<@&' + roleId + '>') : ''
+    
+        await sendDiscordMessage({
+          message: `${rolePing} 📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
+        })
+      }
 
     await addToCalendarQueue("create", id, {
     name:  params.name,
@@ -374,9 +380,15 @@ async function updateEvent(params){
   console.log("zmeny:", zmeny.length, JSON.stringify(zmeny))
   console.log("silent:", params.silent)
 
-  if(!params.silent && zmeny.length > 0){
+    if(!params.silent && zmeny.length > 0){
+    const config = await dbGet("/config")
+    const roleId = config?.discord_role_id
+      ? String(config.discord_role_id).replace(/"/g, '').trim()
+      : null
+    const rolePing = roleId ? ('<@&' + roleId + '>') : ''
+
     await sendDiscordMessage({
-      message: `✏️ **Změny v akci: ${params.name}**\n\n${zmeny.join('\n')}`
+      message: `${rolePing} ✏️ **Aktualizované info k akci: ${params.name}**\n\n${zmeny.join('\n')}`
     })
   }
 
@@ -457,11 +469,17 @@ async function cancelEvent(params){
     }
   }
 
-  if(!params.silent){
-      await sendDiscordMessage({
-        message: `❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
-      })
-    }
+    if(!params.silent){
+    const config = await dbGet("/config")
+    const roleId = config?.discord_role_id
+      ? String(config.discord_role_id).replace(/"/g, '').trim()
+      : null
+    const rolePing = roleId ? ('<@&' + roleId + '>') : ''
+
+    await sendDiscordMessage({
+      message: `${rolePing} ❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
+    })
+  }
 
       await addToCalendarQueue("delete", params.id, {})
 
@@ -497,11 +515,17 @@ async function setProgram(params){
     })
   }
 
-  // Discord oznámení
-    const akceData = await dbGet("/akce/" + id)
-    await sendDiscordMessage({
-    message: `📋 **Kája právě doplnil program:**\n\n- **${akceData?.name || ""}**\n- **Kdy:** ${akceData?.date ? formatDateSimple(akceData.date) : "—"}${akceData?.start ? " · " + akceData.start : ""}${akceData?.end ? " – " + akceData.end : ""}\n- **Místo:** ${akceData?.place || "—"}\n\nPodívej se, co budeme zpívat. 🎵`
-  })
+    // Discord oznámení
+      const akceData = await dbGet("/akce/" + id)
+      const config = await dbGet("/config")
+      const roleId = config?.discord_role_id
+        ? String(config.discord_role_id).replace(/"/g, '').trim()
+        : null
+      const rolePing = roleId ? ('<@&' + roleId + '>') : ''
+    
+      await sendDiscordMessage({
+        message: `${rolePing} 📋 **Kája právě doplnil program:**\n\n- **${akceData?.name || ""}**\n- **Kdy:** ${akceData?.date ? formatDateSimple(akceData.date) : "—"}${akceData?.start ? " · " + akceData.start : ""}${akceData?.end ? " – " + akceData.end : ""}\n- **Místo:** ${akceData?.place || "—"}\n\nPodívej se, co budeme zpívat. 🎵`
+      })
 
   return {status: "saved"}
 }
