@@ -1823,18 +1823,33 @@ function renderPosadkyHtml(){
   return `
     <div class="small" style="font-weight:600;margin-bottom:8px">Posádky</div>
     <div id="posadkyList">
-      ${posadky.map((p, idx) => renderPosadkaCard(p, idx, members)).join("")}
+      ${posadky.map((p, idx) => renderPosadkaCard(p, idx, members, posadky)).join("")}
     </div>
     <button type="button" onclick="addPosadka()" style="width:100%;margin-top:8px">+ Přidat auto</button>
   `
 }
 
-function renderPosadkaCard(p, idx, members){
+function renderPosadkaCard(p, idx, members, allPosadky){
+  // zjisti kdo už je přiřazen v jiných autech
+  const obsazeniJinde = new Set()
+  allPosadky.forEach((other, otherIdx) => {
+    if(otherIdx === idx) return
+    if(other.ridic) obsazeniJinde.add(other.ridic)
+    if(Array.isArray(other.posadka)) other.posadka.forEach(id => obsazeniJinde.add(id))
+  })
+
+  const dostupniProRidice = members.filter(m => !obsazeniJinde.has(m.ID || m.id) || (m.ID || m.id) === p.ridic)
+  const dostupniProPosadku = members.filter(m => {
+    const mid = m.ID || m.id
+    if(mid === p.ridic) return false
+    return !obsazeniJinde.has(mid) || (Array.isArray(p.posadka) && p.posadka.includes(mid))
+  })
+
   return `
     <div class="card" style="margin-bottom:10px;padding:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <label style="flex:1;margin:0">Auto<br>
-          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="Název, např.: A1"
+          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
             oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
         </label>
         <button type="button" onclick="removePosadka(${idx})" style="margin-left:8px;background:#fde8e8;color:#c00;width:auto;padding:8px 12px">✕</button>
@@ -1842,19 +1857,26 @@ function renderPosadkaCard(p, idx, members){
       <label>Řidič<br>
         <select onchange="updatePosadkaField(${idx}, 'ridic', this.value)">
           <option value="">Vyber řidiče</option>
-          ${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${p.ridic === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
+          ${dostupniProRidice.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${p.ridic === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
         </select>
       </label>
-      <label style="margin-top:8px">Posádka<br>
-        <select multiple onchange="updatePosadkaMulti(${idx}, this)" style="min-height:90px">
-          ${members.map(m => {
+      <div style="margin-top:8px">
+        <span class="small">Posádka</span>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+          ${dostupniProPosadku.map(m => {
             const mid = m.ID || m.id
-            const selected = Array.isArray(p.posadka) && p.posadka.includes(mid)
-            return `<option value="${escapeHtml(mid)}" ${selected ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`
+            const checked = Array.isArray(p.posadka) && p.posadka.includes(mid)
+            return `
+              <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:normal">
+                <input type="checkbox" value="${escapeHtml(mid)}" ${checked ? "checked" : ""}
+                  onchange="togglePosadkaMember(${idx}, '${escapeHtml(mid)}', this.checked)"
+                  style="width:auto;margin:0">
+                <span>${escapeHtml(m.NAME || m.name)}</span>
+              </label>
+            `
           }).join("")}
-        </select>
-        <span class="small">Podrž Ctrl/Cmd pro výběr více členů</span>
-      </label>
+        </div>
+      </div>
     </div>
   `
 }
@@ -1887,10 +1909,18 @@ function updatePosadkaField(idx, key, value){
   if(posadky[idx]) posadky[idx][key] = value
 }
 
-function updatePosadkaMulti(idx, selectEl){
+function togglePosadkaMember(idx, memberId, checked){
   const posadky = getInitialPosadky()
   if(!posadky[idx]) return
-  posadky[idx].posadka = Array.from(selectEl.selectedOptions).map(o => o.value)
+  if(!Array.isArray(posadky[idx].posadka)) posadky[idx].posadka = []
+
+  if(checked){
+    if(!posadky[idx].posadka.includes(memberId)) posadky[idx].posadka.push(memberId)
+  }else{
+    posadky[idx].posadka = posadky[idx].posadka.filter(id => id !== memberId)
+  }
+
+  refreshPosadkyList()
 }
 
 function refreshPosadkyList(){
@@ -4632,5 +4662,5 @@ window.toggleDopravaPosadky = toggleDopravaPosadky
 window.addPosadka           = addPosadka
 window.removePosadka        = removePosadka
 window.updatePosadkaField   = updatePosadkaField
-window.updatePosadkaMulti   = updatePosadkaMulti
-window.renderPosadkyDetail = renderPosadkyDetail
+window.togglePosadkaMember  = togglePosadkaMember
+window.renderPosadkyDetail  = renderPosadkyDetail
