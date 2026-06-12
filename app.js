@@ -3839,6 +3839,7 @@ async function renderRepertoar(){
    // =============================================
    function renderKlavesyTab(){
      return `
+      <div id="klavesyLandscapeWrap">
        <div class="card" style="padding:16px">
          <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(128,128,128,0.1)">
            ${renderMetronom()}
@@ -3859,6 +3860,7 @@ async function renderRepertoar(){
              ${renderPianoKeys()}
            </div>
          `}
+         </div>
        </div>
      `
    }
