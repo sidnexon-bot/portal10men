@@ -2872,7 +2872,6 @@ async function saveEvent(id, notify = true){
   const requiresProgram = document.getElementById("fRequiresProgram")?.checked ?? true
   const recurrenceType  = document.getElementById("fRecurrence")?.value || "none"
   const recurrenceUntil = document.getElementById("fRecurrenceUntil")?.value || ""
-  const sraz            = document.getElementById("fSraz")?.value          || ""
   const sraz            = document.getElementById("fSraz")?.value          ?? window.EDIT_EVENT?.SRAZ           ?? ""
   const obleceni        = document.getElementById("fObleceni")?.value      ?? window.EDIT_EVENT?.OBLECENI       ?? ""
   const doprava         = document.getElementById("fDoprava")?.value       ?? window.EDIT_EVENT?.DOPRAVA        ?? ""
