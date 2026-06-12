@@ -3942,12 +3942,66 @@ async function renderRepertoar(){
 
    function klavesyShiftOctave(dir){
      KLAVESY_OCTAVE = Math.max(0, Math.min(7, KLAVESY_OCTAVE + dir))
-     renderRepertoar()
+     renderKlavesyOverlay()
    }
    
    window.klavesyKeyDown    = klavesyKeyDown
    window.klavesyKeyUp      = klavesyKeyUp
    window.klavesyShiftOctave = klavesyShiftOctave
+
+/* =============================================
+   KLÁVESY — FULLSCREEN OVERLAY
+============================================= */
+
+function openKlavesyOverlay(){
+  let overlay = document.getElementById("klavesyOverlay")
+  if(!overlay){
+    overlay = document.createElement("div")
+    overlay.id = "klavesyOverlay"
+    document.body.appendChild(overlay)
+  }
+  overlay.classList.remove("hidden")
+  renderKlavesyOverlay()
+}
+
+function closeKlavesyOverlay(){
+  metronomStop()
+  const overlay = document.getElementById("klavesyOverlay")
+  if(overlay) overlay.classList.add("hidden")
+}
+
+function renderKlavesyOverlay(){
+  const overlay = document.getElementById("klavesyOverlay")
+  if(!overlay) return
+
+  overlay.innerHTML = `
+    <div id="klavesyRotateWrap">
+      <div id="klavesyTopBar">
+        <button onclick="closeKlavesyOverlay()" class="klavesy-btn">✕</button>
+        ${renderMetronom()}
+        <div class="btn-group" style="width:auto">
+          <button onclick="klavesyToggleMode('klaviatura')" class="klavesy-btn ${KLAVESY_MODE === 'klaviatura' ? 'active' : ''}">Klaviatura</button>
+          <button onclick="klavesyToggleMode('akordy')" class="klavesy-btn ${KLAVESY_MODE === 'akordy' ? 'active' : ''}">Akordy</button>
+        </div>
+      </div>
+      <div id="klavesyMainArea">
+        ${KLAVESY_MODE === 'akordy' ? renderAkordyTab() : `
+          <div id="klavesyOctaveBar">
+            <button onclick="klavesyShiftOctave(-1)" class="klavesy-btn">‹</button>
+            <span class="small">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
+            <button onclick="klavesyShiftOctave(1)" class="klavesy-btn">›</button>
+          </div>
+          <div id="klavesyKeyboard">
+            ${renderPianoKeys()}
+          </div>
+        `}
+      </div>
+    </div>
+  `
+}
+
+window.openKlavesyOverlay  = openKlavesyOverlay
+window.closeKlavesyOverlay = closeKlavesyOverlay
 
 function selectSong(id){
   const prev = SONG_SELECTED
@@ -4197,12 +4251,12 @@ function renderAkordyTab(){
 
 function setAkordRoot(note){
   AKORD_ROOT = note
-  renderRepertoar()
+  renderKlavesyOverlay()
 }
 
 function setAkordMode(mode){
   AKORD_MODE = mode
-  renderRepertoar()
+  renderKlavesyOverlay()
 }
 
 function akordPadDown(el, root, quality, event){
@@ -4218,7 +4272,7 @@ function akordPadUp(el, event){
 
 function klavesyToggleMode(mode){
   KLAVESY_MODE = mode
-  renderRepertoar()
+  renderKlavesyOverlay()
 }
 
 window.setAkordRoot      = setAkordRoot
