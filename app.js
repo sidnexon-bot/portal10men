@@ -3837,10 +3837,12 @@ async function renderRepertoar(){
    // =============================================
    // VYKRESLENÍ KLAVIATURY (2 oktávy)
    // =============================================
-   
    function renderKlavesyTab(){
      return `
        <div class="card" style="padding:16px">
+         <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(128,128,128,0.1)">
+           ${renderMetronom()}
+         </div>
          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
            <button onclick="klavesyShiftOctave(-1)" style="width:auto;padding:8px 16px">‹ Oktáva</button>
            <span class="small" style="font-weight:600">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
@@ -3849,7 +3851,6 @@ async function renderRepertoar(){
          <div id="klavesyKeyboard" style="position:relative;height:180px;display:flex;background:#222;border-radius:12px;overflow:hidden;touch-action:none">
            ${renderPianoKeys()}
          </div>
-         <p class="small" style="text-align:center;margin-top:12px;color:var(--muted)">Pro celoobrazovkový režim a akordy zatím není k dispozici — připravujeme 🎹</p>
        </div>
      `
    }
@@ -3958,6 +3959,100 @@ function selectSong(id){
     card.insertAdjacentHTML("beforeend", detailHtml)
   }
 }
+
+// =============================================
+// METRONOM
+// =============================================
+
+let METRONOM_BPM = 100
+let METRONOM_PLAYING = false
+let METRONOM_INTERVAL = null
+
+function metronomTick(accent){
+  const ctx = getAudioCtx()
+  const osc  = ctx.createOscillator()
+  const gain = ctx.createGain()
+
+  osc.type = "square"
+  osc.frequency.value = accent ? 1500 : 1000
+
+  const now = ctx.currentTime
+  gain.gain.setValueAtTime(0.25, now)
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
+
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+
+  osc.start(now)
+  osc.stop(now + 0.05)
+}
+
+function metronomToggle(){
+  if(METRONOM_PLAYING){
+    metronomStop()
+  }else{
+    metronomStart()
+  }
+}
+
+function metronomStart(){
+  METRONOM_PLAYING = true
+  let beatCount = 0
+  const intervalMs = 60000 / METRONOM_BPM
+
+  metronomTick(true) // první beat hned
+
+  METRONOM_INTERVAL = setInterval(() => {
+    beatCount = (beatCount + 1) % 4
+    metronomTick(beatCount === 0)
+  }, intervalMs)
+
+  updateMetronomButton()
+}
+
+function metronomStop(){
+  METRONOM_PLAYING = false
+  if(METRONOM_INTERVAL){
+    clearInterval(METRONOM_INTERVAL)
+    METRONOM_INTERVAL = null
+  }
+  updateMetronomButton()
+}
+
+function metronomSetBpm(value){
+  METRONOM_BPM = parseInt(value)
+  const label = document.getElementById("metronomBpmLabel")
+  if(label) label.textContent = METRONOM_BPM + " BPM"
+
+  // pokud běží, restartuj s novým tempem
+  if(METRONOM_PLAYING){
+    metronomStop()
+    metronomStart()
+  }
+}
+
+function updateMetronomButton(){
+  const btn = document.getElementById("metronomToggleBtn")
+  if(!btn) return
+  btn.textContent = METRONOM_PLAYING ? "⏹ Stop" : "▶ Metronom"
+  btn.style.background = METRONOM_PLAYING ? "#ff3b30" : ""
+  btn.style.color = METRONOM_PLAYING ? "#fff" : ""
+}
+
+function renderMetronom(){
+  return `
+    <div style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button id="metronomToggleBtn" onclick="metronomToggle()" style="width:auto;padding:8px 16px">▶ Metronom</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" min="40" max="208" value="${METRONOM_BPM}" oninput="metronomSetBpm(this.value)" style="width:120px">
+        <span id="metronomBpmLabel" class="small" style="min-width:60px;text-align:right">${METRONOM_BPM} BPM</span>
+      </div>
+    </div>
+  `
+}
+
+window.metronomToggle = metronomToggle
+window.metronomSetBpm = metronomSetBpm
 
 function openAddSong(){
   openFormModal("Nová skladba", [
