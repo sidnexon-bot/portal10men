@@ -3851,6 +3851,7 @@ async function renderRepertoar(){
        osc.start(now)
        osc.stop(now + 2.3)
      })
+   }
    
    // =============================================
    // VYKRESLENÍ KLAVIATURY (2 oktávy)
