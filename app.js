@@ -3017,7 +3017,7 @@ async function saveEvent(id, notify = true){
         call_url: callUrl,
         recurrence_type: recurrenceType,
         recurrence_until: recurrenceUntil,
-        sraz, obleceni, doprava, hospoda, harmonogram,
+        sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
         silent: !notify
@@ -3038,14 +3038,14 @@ async function saveEvent(id, notify = true){
     if(id){
       if(status === "Zrušená"){
         await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl,
-          sraz, obleceni, doprava, hospoda, harmonogram,
+          sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
           spacaky, strava, strava_nota: stravaNota,
           obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
           silent: !notify
         })
       }else{
         await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
-          sraz, obleceni, doprava, hospoda, harmonogram,
+          sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
           spacaky, strava, strava_nota: stravaNota,
           obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
           silent: !notify
@@ -3058,7 +3058,7 @@ async function saveEvent(id, notify = true){
       openEvent(id)
     }else{
       await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
-        sraz, obleceni, doprava, hospoda, harmonogram,
+        sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
         silent: !notify
