@@ -14,6 +14,7 @@ let SONG_SELECTED = null
 let REPERTOAR_FILTER_OPEN = false
 let REPERTOAR_ACTIVE_FILTERS = {status: "Vše", version: "Vše"}
 let ZKUSEBNA_TAB = "repertoar" // "repertoar" | "klavesy" | "cvt"
+let CVT_SECTION_OPEN = null
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -4396,9 +4397,135 @@ function setZkusebnaTab(tab){
   renderRepertoar()
 }
 
+// =============================================
+// CVT PRŮVODCE — nahraď renderCvtTab()
+// =============================================
+
+const CVT_CONTENT = [
+  {
+    id: "modes",
+    title: "🎤 Hlasové módy",
+    items: [
+      {
+        name: "Neutral",
+        desc: "Měkký, neutrální zvuk bez výrazného tlaku na hlasivky. Podobné běžné řeči nebo lyrickému zpěvu. Vhodné pro klidné, jemné pasáže — balady, pomalé sborové linky."
+      },
+      {
+        name: "Curbing",
+        desc: "Lehce \"naříkavý\", komprimovanější zvuk. Hlasivky jsou víc semknuté než u Neutral, ale stále s měkkým nástupem. Často slyšet u popu a musicalu — emotivní, ale kontrolovaný zvuk."
+      },
+      {
+        name: "Overdrive",
+        desc: "Silný, křičivý zvuk s vysokým tlakem — podobné jako když na něco zavoláte přes ulici. Používá se pro vrcholy písní, silné výkřiky, rockové a gospelové pasáže."
+      },
+      {
+        name: "Edge",
+        desc: "Ostrý, pronikavý, \"kovový\" zvuk — typický pro vysoké tóny v rocku, metalu nebo belting v muzikálech. Vyžaduje hodně tréninku, jinak hrozí přetížení hlasu."
+      }
+    ]
+  },
+  {
+    id: "effects",
+    title: "✨ Zvukové efekty",
+    items: [
+      {
+        name: "Distortion (zkreslení)",
+        desc: "Drsný, \"chrčivý\" přídech ve zvuku — vzniká přidáním napětí ve falešných hlasivkách (nad těmi pravými). Používá se pro intenzitu a emoci, typicky v rocku."
+      },
+      {
+        name: "Growl (vrčení)",
+        desc: "Hluboké vrčivé zabarvení — falešné hlasivky kmitají spolu s pravými. Efektní, ale náročné na hlasivky — nepřehánět, hlavně bez rozezpívání."
+      },
+      {
+        name: "Rattle (chrastění)",
+        desc: "Krátké \"zachrastění\" na začátku tónu — podobné lehkému zakuckání. Dodává zpěvu syrovost a charakter, často u blues a soulu."
+      },
+      {
+        name: "Vibrato",
+        desc: "Pravidelné kolísání výšky tónu. Může být pomalé a široké (klasický sborový styl) nebo rychlé a úzké (pop/jazz). Důležité je, aby vibrato bylo řízené, ne nekontrolované třesení."
+      }
+    ]
+  },
+  {
+    id: "registers",
+    title: "🎵 Rejstříky",
+    items: [
+      {
+        name: "Chest voice (hrudní rejstřík)",
+        desc: "Plný, silný zvuk používaný v nižší a střední poloze. Cítíte vibrace v hrudi. Základní rejstřík pro mluvení i většinu zpěvu v pohodlné poloze."
+      },
+      {
+        name: "Head voice (hlavový rejstřík)",
+        desc: "Lehčí, \"vznosnější\" zvuk ve vyšší poloze, vibrace cítíte víc v hlavě. Méně tlaku na hlasivky než při tažení chest voice do výšek."
+      },
+      {
+        name: "Falzet",
+        desc: "Velmi lehký, vzdušný zvuk v nejvyšší poloze — hlasivky se nedotýkají úplně. Charakteristické pro některé pop/falzetové pasáže u mužských hlasů."
+      },
+      {
+        name: "Mix (smíšený rejstřík)",
+        desc: "Plynulý přechod mezi chest a head voice bez slyšitelného \"zlomu\". Cílem je, aby přechody mezi rejstříky byly hladké a hlas zněl konzistentně v celém rozsahu."
+      }
+    ]
+  },
+  {
+    id: "tips",
+    title: "💡 Tipy pro tenory a basy",
+    items: [
+      {
+        name: "Tenoři — vysoké tóny",
+        desc: "Při tažení do výšek nepřitlačovat víc vzduchu — naopak uvolnit a najít \"mix\" mezi chest a head voice. Příliš mnoho tlaku vede k křiklavému, nepříjemnému zvuku a rychlé únavě."
+      },
+      {
+        name: "Basy — hloubka a opora",
+        desc: "Hluboké tóny potřebují dobrou dechovou oporu (bránice), ne tlačení v krku. Uvolněná čelist a krk pomáhají dosáhnout plného, rezonujícího zvuku bez chrčení."
+      },
+      {
+        name: "Rozezpívání před zkouškou",
+        desc: "I 5-10 minut jemného rozezpívání (sirény, lehké stupnice v pohodlné dynamice) výrazně sníží riziko přetížení hlasu během dvouhodinové zkoušky."
+      },
+      {
+        name: "Pití vody",
+        desc: "Hlasivky potřebují vlhkost — pravidelné pití vody (ne ledové) během zkoušky pomáhá udržet hlas v lepší kondici, zvlášť při delším zpívání."
+      }
+    ]
+  }
+]
+
 function renderCvtTab(){
-  return `<div class="card"><p class="notice">CVT průvodce — připravujeme 📚</p></div>`
+  let html = `<p class="small" style="margin-bottom:16px;color:var(--muted)">
+    Stručný přehled technik inspirovaný metodou Complete Vocal Technique (CVT). Slouží jako rychlá připomínka, nenahrazuje práci se sbormistrem nebo pedagogem.
+  </p>`
+
+  CVT_CONTENT.forEach(section => {
+    const isOpen = CVT_SECTION_OPEN === section.id
+    html += `
+      <div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCvtSection('${section.id}')">
+          <span style="font-weight:600">${section.title}</span>
+          <span style="color:var(--muted)">${isOpen ? "‹" : "›"}</span>
+        </div>
+        <div style="display:${isOpen ? "block" : "none"};padding:0 16px 16px">
+          ${section.items.map(item => `
+            <div style="padding:10px 0;border-top:1px solid rgba(128,128,128,0.1)">
+              <div style="font-weight:600;margin-bottom:4px">${item.name}</div>
+              <div class="small" style="line-height:1.5">${item.desc}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `
+  })
+
+  return html
 }
+
+function toggleCvtSection(id){
+  CVT_SECTION_OPEN = CVT_SECTION_OPEN === id ? null : id
+  renderRepertoar()
+}
+
+window.toggleCvtSection = toggleCvtSection
 
 window.setZkusebnaTab = setZkusebnaTab
 
@@ -5173,3 +5300,5 @@ window.removePosadka        = removePosadka
 window.updatePosadkaField   = updatePosadkaField
 window.togglePosadkaMember  = togglePosadkaMember
 window.renderPosadkyDetail  = renderPosadkyDetail
+window.toggleCvtSection     = toggleCvtSection
+
