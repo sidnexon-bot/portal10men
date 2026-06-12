@@ -3816,22 +3816,55 @@ async function renderRepertoar(){
    
    function playNote(frequency){
      const ctx = getAudioCtx()
-     const osc  = ctx.createOscillator()
-     const gain = ctx.createGain()
-   
-     osc.type = "triangle" // měkčí zvuk než sine, ne tak syrový jako square
-     osc.frequency.value = frequency
-   
      const now = ctx.currentTime
-     gain.gain.setValueAtTime(0, now)
-     gain.gain.linearRampToValueAtTime(0.3, now + 0.01)   // rychlý nástup
-     gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2) // pomalý dozvuk
    
-     osc.connect(gain)
-     gain.connect(ctx.destination)
+     // Harmonické složky a jejich relativní hlasitosti (napodobuje spektrum klavíru)
+     const harmonics = [
+       { mult: 1,    gain: 0.35 },  // základní tón
+       { mult: 2,    gain: 0.18 },  // 1. harmonická (oktáva)
+       { mult: 3,    gain: 0.08 },  // 2. harmonická
+       { mult: 4,    gain: 0.05 },  // 3. harmonická
+       { mult: 5,    gain: 0.02 },  // 4. harmonická
+     ]
    
-     osc.start(now)
-     osc.stop(now + 1.2)
+     const masterGain = ctx.createGain()
+     masterGain.connect(ctx.destination)
+   
+     // ADSR-like envelope pro celkovou hlasitost
+     masterGain.gain.setValueAtTime(0, now)
+     masterGain.gain.linearRampToValueAtTime(1, now + 0.005)        // attack — velmi rychlý
+     masterGain.gain.exponentialRampToValueAtTime(0.4, now + 0.15)  // decay — rychlý pokles
+     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2) // release — dlouhý dozvuk
+   
+     harmonics.forEach(h => {
+       const osc  = ctx.createOscillator()
+       const gain = ctx.createGain()
+   
+       osc.type = "sine"
+       osc.frequency.value = frequency * h.mult
+   
+       gain.gain.value = h.gain
+   
+       osc.connect(gain)
+       gain.connect(masterGain)
+   
+       osc.start(now)
+       osc.stop(now + 2.3)
+     })
+   
+     // Lehký "úhoz" — krátký šum při náběhu pro perkusivní charakter
+     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate)
+     const noiseData = noiseBuffer.getChannelData(0)
+     for(let i = 0; i < noiseData.length; i++){
+       noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length)
+     }
+     const noise = ctx.createBufferSource()
+     noise.buffer = noiseBuffer
+     const noiseGain = ctx.createGain()
+     noiseGain.gain.value = 0.06
+     noise.connect(noiseGain)
+     noiseGain.connect(ctx.destination)
+     noise.start(now)
    }
    
    // =============================================
@@ -4166,7 +4199,6 @@ function generateScaleChords(){
 
 // Zahraje akord
 function playChord(rootNote, quality){
-  const ctx = getAudioCtx()
   const rootIdx = noteIndex(rootNote)
   const intervals = CHORD_INTERVALS[quality]
 
@@ -4174,21 +4206,7 @@ function playChord(rootNote, quality){
     const semitone = (rootIdx + interval) % 12
     const octaveShift = Math.floor((rootIdx + interval) / 12)
     const freq = noteFrequency(KLAVESY_OCTAVE + octaveShift, semitone)
-
-    const osc  = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = "triangle"
-    osc.frequency.value = freq
-
-    const now = ctx.currentTime
-    gain.gain.setValueAtTime(0, now)
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.01)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5)
-
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.start(now)
-    osc.stop(now + 1.5)
+    playNote(freq)
   })
 }
 
