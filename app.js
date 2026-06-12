@@ -1665,6 +1665,7 @@ async function openEventForm(id){
 
 function closeEventFormModal(){
   document.getElementById("eventFormModal").classList.add("hidden")
+  window.EDIT_POSADKY = null
 }
 
 function toggleEventFormExtra(){
@@ -1699,13 +1700,16 @@ function renderEventFormExtra(){
         </select>
       </label>
       <label style="margin-top:12px">Doprava<br>
-        <select id="fDoprava">
+        <select id="fDoprava" onchange="toggleDopravaPosadky(this.value)">
           <option value="">Nezadáno</option>
           <option value="Veřejná doprava" ${window.EDIT_EVENT?.DOPRAVA === "Veřejná doprava" ? "selected" : ""}>Veřejná doprava</option>
           <option value="Auta" ${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "selected" : ""}>Auta</option>
           <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
         </select>
       </label>
+      <div id="dopravaPosadky" style="display:${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "block" : "none"};margin-top:12px">
+        ${renderPosadkyHtml()}
+      </div>
       <label style="margin-top:12px">Hospoda<br>
         <textarea id="fHospoda" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px" placeholder="Název/adresa, čas rezervace, na jaké jméno...">${escapeHtml(window.EDIT_EVENT?.HOSPODA || "")}</textarea>
       </label>
@@ -1752,6 +1756,17 @@ function renderEventFormExtra(){
           </select>
         </label>
       </div>
+      <label style="margin-top:12px">Doprava<br>
+        <select id="fDoprava" onchange="toggleDopravaPosadky(this.value)">
+          <option value="">Nezadáno</option>
+          <option value="Veřejná doprava" ${window.EDIT_EVENT?.DOPRAVA === "Veřejná doprava" ? "selected" : ""}>Veřejná doprava</option>
+          <option value="Auta" ${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "selected" : ""}>Auta</option>
+          <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
+        </select>
+      </label>
+      <div id="dopravaPosadky" style="display:${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "block" : "none"};margin-top:12px">
+        ${renderPosadkyHtml()}
+      </div>
       <label style="margin-top:12px">Harmonogram<br>
         <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
       </label>
@@ -1759,6 +1774,108 @@ function renderEventFormExtra(){
   }else{
     panel.innerHTML = `<p class="notice">Pro typ "${type}" nejsou k dispozici další informace.</p>`
   }
+}
+
+// =============================================
+// POSÁDKY (Doprava: Auta)
+// =============================================
+
+function getInitialPosadky(){
+  // window.EDIT_POSADKY drží pracovní stav (array objektů)
+  if(window.EDIT_POSADKY) return window.EDIT_POSADKY
+
+  let posadky = []
+  try{
+    posadky = window.EDIT_EVENT?.DOPRAVA_POSADKY
+      ? JSON.parse(window.EDIT_EVENT.DOPRAVA_POSADKY)
+      : []
+  }catch(e){ posadky = [] }
+
+  if(!Array.isArray(posadky)) posadky = []
+  window.EDIT_POSADKY = posadky
+  return posadky
+}
+
+function renderPosadkyHtml(){
+  const posadky = getInitialPosadky()
+  const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
+
+  return `
+    <div class="small" style="font-weight:600;margin-bottom:8px">Posádky</div>
+    <div id="posadkyList">
+      ${posadky.map((p, idx) => renderPosadkaCard(p, idx, members)).join("")}
+    </div>
+    <button type="button" onclick="addPosadka()" style="width:100%;margin-top:8px">+ Přidat auto</button>
+  `
+}
+
+function renderPosadkaCard(p, idx, members){
+  return `
+    <div class="card" style="margin-bottom:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="flex:1;margin:0">Auto<br>
+          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
+            oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
+        </label>
+        <button type="button" onclick="removePosadka(${idx})" style="margin-left:8px;background:#fde8e8;color:#c00;width:auto;padding:8px 12px">✕</button>
+      </div>
+      <label>Řidič<br>
+        <select onchange="updatePosadkaField(${idx}, 'ridic', this.value)">
+          <option value="">Vyber řidiče</option>
+          ${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${p.ridic === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
+        </select>
+      </label>
+      <label style="margin-top:8px">Posádka<br>
+        <select multiple onchange="updatePosadkaMulti(${idx}, this)" style="min-height:90px">
+          ${members.map(m => {
+            const mid = m.ID || m.id
+            const selected = Array.isArray(p.posadka) && p.posadka.includes(mid)
+            return `<option value="${escapeHtml(mid)}" ${selected ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`
+          }).join("")}
+        </select>
+        <span class="small">Podrž Ctrl/Cmd pro výběr více členů</span>
+      </label>
+    </div>
+  `
+}
+
+function toggleDopravaPosadky(value){
+  const el = document.getElementById("dopravaPosadky")
+  if(!el) return
+  if(value === "Auta"){
+    el.style.display = "block"
+    el.innerHTML = renderPosadkyHtml()
+  }else{
+    el.style.display = "none"
+  }
+}
+
+function addPosadka(){
+  const posadky = getInitialPosadky()
+  posadky.push({ nazev: "", ridic: "", posadka: [] })
+  refreshPosadkyList()
+}
+
+function removePosadka(idx){
+  const posadky = getInitialPosadky()
+  posadky.splice(idx, 1)
+  refreshPosadkyList()
+}
+
+function updatePosadkaField(idx, key, value){
+  const posadky = getInitialPosadky()
+  if(posadky[idx]) posadky[idx][key] = value
+}
+
+function updatePosadkaMulti(idx, selectEl){
+  const posadky = getInitialPosadky()
+  if(!posadky[idx]) return
+  posadky[idx].posadka = Array.from(selectEl.selectedOptions).map(o => o.value)
+}
+
+function refreshPosadkyList(){
+  const wrap = document.getElementById("dopravaPosadky")
+  if(wrap) wrap.innerHTML = renderPosadkyHtml()
 }
 
 function toggleStravaNote(val){
@@ -2875,6 +2992,9 @@ async function saveEvent(id, notify = true){
   const sraz            = document.getElementById("fSraz")?.value          ?? window.EDIT_EVENT?.SRAZ           ?? ""
   const obleceni        = document.getElementById("fObleceni")?.value      ?? window.EDIT_EVENT?.OBLECENI       ?? ""
   const doprava         = document.getElementById("fDoprava")?.value       ?? window.EDIT_EVENT?.DOPRAVA        ?? ""
+  const dopravaPosadky  = doprava === "Auta" 
+  ? JSON.stringify(window.EDIT_POSADKY || [])
+  : ""
   const hospoda         = document.getElementById("fHospoda")?.value       ?? window.EDIT_EVENT?.HOSPODA        ?? ""
   const harmonogram     = document.getElementById("fHarmonogram")?.value   ?? window.EDIT_EVENT?.HARMONOGRAM    ?? ""
   const spacaky         = document.getElementById("fSpacaky")?.value       ?? window.EDIT_EVENT?.SPACAKY        ?? ""
@@ -4487,3 +4607,8 @@ window.openContactModal     = openContactModal
 window.closeContactModal    = closeContactModal
 window.closeEventFormModal  = closeEventFormModal
 window.closeProgramEditorModal = closeProgramEditorModal
+window.toggleDopravaPosadky = toggleDopravaPosadky
+window.addPosadka           = addPosadka
+window.removePosadka        = removePosadka
+window.updatePosadkaField   = updatePosadkaField
+window.updatePosadkaMulti   = updatePosadkaMulti
