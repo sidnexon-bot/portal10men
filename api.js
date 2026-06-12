@@ -103,7 +103,7 @@ async function getEvents(){
     SRAZ:             e.sraz           || "",
     OBLECENI:         e.obleceni       || "",
     DOPRAVA:          e.doprava        || "",
-    DOPRAVA_POSADKY:  e.doprava_posadky || "",
+    //DOPRAVA_POSADKY:  e.doprava_posadky || "",
     HOSPODA:          e.hospoda        || "",
     HARMONOGRAM:      e.harmonogram    || "",
     SPACAKY:          e.spacaky        || "",
