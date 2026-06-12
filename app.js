@@ -1834,7 +1834,7 @@ function renderPosadkaCard(p, idx, members){
     <div class="card" style="margin-bottom:10px;padding:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <label style="flex:1;margin:0">Auto<br>
-          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
+          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="Název, např.: A1"
             oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
         </label>
         <button type="button" onclick="removePosadka(${idx})" style="margin-left:8px;background:#fde8e8;color:#c00;width:auto;padding:8px 12px">✕</button>
