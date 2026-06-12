@@ -1665,4 +1665,37 @@ select {
   transform: translateY(100%);
 } */
 
+/* =============================================
+   KLÁVESY - LANDSCAPE ROTACE
+   Vlož do style.css
+============================================= */
 
+#klavesyLandscapeWrap {
+  display: block;
+}
+
+/* Na mobilu v portrait orientaci otočí­me obsah o 90° */
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  #klavesyLandscapeWrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+    z-index: 500;
+    background: var(--bg, #1a1a1a);
+    overflow-y: auto;
+  }
+}
+
+/* Na desktopu nebo již-landscape mobilu necháme normální­ layout */
+@media screen and (min-width: 901px), screen and (orientation: landscape) {
+  #klavesyLandscapeWrap {
+    position: relative;
+    width: 100%;
+    height: auto;
+    transform: none;
+  }
+}
