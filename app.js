@@ -4086,10 +4086,6 @@ function setZkusebnaTab(tab){
   renderRepertoar()
 }
 
-function renderKlavesyTab(){
-  return `<div class="card"><p class="notice">Klávesy — připravujeme 🎹</p></div>`
-}
-
 function renderCvtTab(){
   return `<div class="card"><p class="notice">CVT průvodce — připravujeme 📚</p></div>`
 }
