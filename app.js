@@ -3608,7 +3608,166 @@ async function renderRepertoar(){
     </div>`
 
     if(ZKUSEBNA_TAB === "klavesy"){
-      html += renderKlavesyTab()
+      // =============================================
+      // KLÁVESY — část 1: základní klaviatura + zvuk
+      // =============================================
+      
+      let KLAVESY_OCTAVE = 4 // C4 = střední C
+      let KLAVESY_AUDIO_CTX = null
+      
+      const KLAVESY_NOTES = [
+        { note: "C",  white: true,  offset: 0 },
+        { note: "C#", white: false, offset: 1 },
+        { note: "D",  white: true,  offset: 2 },
+        { note: "D#", white: false, offset: 3 },
+        { note: "E",  white: true,  offset: 4 },
+        { note: "F",  white: true,  offset: 5 },
+        { note: "F#", white: false, offset: 6 },
+        { note: "G",  white: true,  offset: 7 },
+        { note: "G#", white: false, offset: 8 },
+        { note: "A",  white: true,  offset: 9 },
+        { note: "A#", white: false, offset: 10 },
+        { note: "B",  white: true,  offset: 11 },
+      ]
+      
+      // Frekvence noty podle MIDI-like vzorce: A4 = 440Hz
+      function noteFrequency(octave, semitoneOffset){
+        // C4 = MIDI 60. A4 = MIDI 69 = 440Hz
+        const midi = (octave + 1) * 12 + semitoneOffset
+        return 440 * Math.pow(2, (midi - 69) / 12)
+      }
+      
+      function getAudioCtx(){
+        if(!KLAVESY_AUDIO_CTX){
+          KLAVESY_AUDIO_CTX = new (window.AudioContext || window.webkitAudioContext)()
+        }
+        if(KLAVESY_AUDIO_CTX.state === "suspended"){
+          KLAVESY_AUDIO_CTX.resume()
+        }
+        return KLAVESY_AUDIO_CTX
+      }
+      
+      function playNote(frequency){
+        const ctx = getAudioCtx()
+        const osc  = ctx.createOscillator()
+        const gain = ctx.createGain()
+      
+        osc.type = "triangle" // měkčí zvuk než sine, ne tak syrový jako square
+        osc.frequency.value = frequency
+      
+        const now = ctx.currentTime
+        gain.gain.setValueAtTime(0, now)
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.01)   // rychlý nástup
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2) // pomalý dozvuk
+      
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+      
+        osc.start(now)
+        osc.stop(now + 1.2)
+      }
+      
+      // =============================================
+      // VYKRESLENÍ KLAVIATURY (2 oktávy)
+      // =============================================
+      
+      function renderKlavesyTab(){
+        return `
+          <div class="card" style="padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <button onclick="klavesyShiftOctave(-1)" style="width:auto;padding:8px 16px">‹ Oktáva</button>
+              <span class="small" style="font-weight:600">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
+              <button onclick="klavesyShiftOctave(1)" style="width:auto;padding:8px 16px">Oktáva ›</button>
+            </div>
+            <div id="klavesyKeyboard" style="position:relative;height:180px;display:flex;background:#222;border-radius:12px;overflow:hidden;touch-action:none">
+              ${renderPianoKeys()}
+            </div>
+            <p class="small" style="text-align:center;margin-top:12px;color:var(--muted)">Pro celoobrazovkový režim a akordy zatím není k dispozici — připravujeme 🎹</p>
+          </div>
+        `
+      }
+      
+      function renderPianoKeys(){
+        // 2 oktávy = 24 bílých+černých kláves, ale bílých je 14 (7 na oktávu)
+        const whiteKeys = []
+        const blackKeys = []
+      
+        for(let oct = 0; oct < 2; oct++){
+          KLAVESY_NOTES.forEach(n => {
+            const octave = KLAVESY_OCTAVE + oct
+            const freq = noteFrequency(octave, n.offset)
+            if(n.white){
+              whiteKeys.push({ note: n.note, octave, freq })
+            }
+          })
+        }
+      
+        const whiteWidth = 100 / whiteKeys.length
+      
+        let html = ""
+      
+        // bílé klávesy
+        whiteKeys.forEach((k, i) => {
+          html += `
+            <div class="piano-key-white"
+              style="position:absolute;left:${i * whiteWidth}%;width:${whiteWidth}%;height:100%;background:#fff;border:1px solid #999;border-radius:0 0 6px 6px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;color:#888;cursor:pointer;user-select:none"
+              data-freq="${k.freq}"
+              onmousedown="klavesyKeyDown(this)"
+              onmouseup="klavesyKeyUp(this)"
+              onmouseleave="klavesyKeyUp(this)"
+              ontouchstart="klavesyKeyDown(this)"
+              ontouchend="klavesyKeyUp(this)"
+            >${k.note}${k.octave}</div>
+          `
+        })
+      
+        // černé klávesy — pozicujeme mezi bílé
+        let whiteIndex = 0
+        for(let oct = 0; oct < 2; oct++){
+          KLAVESY_NOTES.forEach(n => {
+            if(n.white){
+              whiteIndex++
+            }else{
+              const octave = KLAVESY_OCTAVE + oct
+              const freq = noteFrequency(octave, n.offset)
+              const leftPct = whiteIndex * whiteWidth - (whiteWidth * 0.3)
+              html += `
+                <div class="piano-key-black"
+                  style="position:absolute;left:${leftPct}%;width:${whiteWidth * 0.6}%;height:60%;background:#1a1a1a;border-radius:0 0 4px 4px;z-index:2;cursor:pointer;user-select:none"
+                  data-freq="${freq}"
+                  onmousedown="klavesyKeyDown(this)"
+                  onmouseup="klavesyKeyUp(this)"
+                  onmouseleave="klavesyKeyUp(this)"
+                  ontouchstart="klavesyKeyDown(this)"
+                  ontouchend="klavesyKeyUp(this)"
+                ></div>
+              `
+            }
+          })
+        }
+      
+        return html
+      }
+      
+      function klavesyKeyDown(el){
+        const freq = parseFloat(el.dataset.freq)
+        playNote(freq)
+        el.style.background = el.classList.contains("piano-key-black") ? "#444" : "#ddd"
+      }
+      
+      function klavesyKeyUp(el){
+        el.style.background = el.classList.contains("piano-key-black") ? "#1a1a1a" : "#fff"
+      }
+      
+      function klavesyShiftOctave(dir){
+        KLAVESY_OCTAVE = Math.max(0, Math.min(7, KLAVESY_OCTAVE + dir))
+        renderRepertoar()
+      }
+      
+      window.klavesyKeyDown    = klavesyKeyDown
+      window.klavesyKeyUp      = klavesyKeyUp
+      window.klavesyShiftOctave = klavesyShiftOctave
+
       if(isDesktop) html += `</div>`
       container().innerHTML = html
       restoreScroll(scroll)
