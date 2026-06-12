@@ -360,31 +360,28 @@ async function updateEvent(params){
     obleceni_s_typ:   params.obleceni_s_typ || ""
   })
 
-  // porovnej změny
+    // porovnej změny
   const zmeny = []
-  if(old?.name  !== params.name)  zmeny.push("- **Název:** " + (old?.name || "—") + " → " + params.name)
-  if(old?.date  !== params.date)  zmeny.push("- **Datum:** " + (old?.date ? formatDateSimple(old.date) : "—") + " → " + formatDateSimple(params.date))
-  if((old?.start || "") !== (params.start || "")) zmeny.push("- **Čas začátku:** " + (old?.start || "—") + " → " + (params.start || "—"))
-  if((old?.end   || "") !== (params.end   || "")) zmeny.push("- **Čas konce:** " + (old?.end || "—") + " → " + (params.end || "—"))
-  if((old?.place || "") !== (params.place || "")) zmeny.push("- **Místo:** " + (old?.place || "—") + " → " + (params.place || "—"))
-  if((old?.status || "") !== (params.status || "")) zmeny.push("- **Status:** " + (old?.status || "—") + " → " + (params.status || "—"))
-  if((old?.sraz || "") !== (params.sraz || "")) zmeny.push("- **Sraz:** " + (old?.sraz || "—") + " → " + (params.sraz || "—"))
-  if((old?.obleceni || "") !== (params.obleceni || "")) zmeny.push("- **Oblečení:** " + (old?.obleceni || "—") + " → " + (params.obleceni || "—"))
+  if(old?.name  !== params.name)  zmeny.push("- **Název:** ~~" + (old?.name || "—") + "~~ → " + params.name)
+  if(old?.date  !== params.date)  zmeny.push("- **Datum:** ~~" + (old?.date ? formatDateSimple(old.date) : "—") + "~~ → " + formatDateSimple(params.date))
+  if((old?.start || "") !== (params.start || "")) zmeny.push("- **Čas začátku:** ~~" + (old?.start || "—") + "~~ → " + (params.start || "—"))
+  if((old?.end   || "") !== (params.end   || "")) zmeny.push("- **Čas konce:** ~~" + (old?.end || "—") + "~~ → " + (params.end || "—"))
+  if((old?.place || "") !== (params.place || "")) zmeny.push("- **Místo:** ~~" + (old?.place || "—") + "~~ → " + (params.place || "—"))
+  if((old?.status || "") !== (params.status || "")) zmeny.push("- **Status:** ~~" + (old?.status || "—") + "~~ → " + (params.status || "—"))
+  if((old?.sraz || "") !== (params.sraz || "")) zmeny.push("- **Sraz:** ~~" + (old?.sraz || "—") + "~~ → " + (params.sraz || "—"))
+  if((old?.obleceni || "") !== (params.obleceni || "")) zmeny.push("- **Oblečení:** ~~" + (old?.obleceni || "—") + "~~ → " + (params.obleceni || "—"))
   if((old?.note        || "") !== (params.note        || "")) zmeny.push("- **Poznámka:** upravena")
-  if((old?.doprava     || "") !== (params.doprava     || "")) zmeny.push("- **Doprava:** " + (old?.doprava || "—") + " → " + (params.doprava || "—"))
+  if((old?.doprava     || "") !== (params.doprava     || "")) zmeny.push("- **Doprava:** ~~" + (old?.doprava || "—") + "~~ → " + (params.doprava || "—"))
   if((old?.hospoda     || "") !== (params.hospoda     || "")) zmeny.push("- **Hospoda:** upravena")
   if((old?.harmonogram || "") !== (params.harmonogram || "")) zmeny.push("- **Harmonogram:** upraven")
-  if((old?.spacaky     || "") !== (params.spacaky     || "")) zmeny.push("- **Spacáky:** " + (old?.spacaky || "—") + " → " + (params.spacaky || "—"))
-  if((old?.strava      || "") !== (params.strava      || "")) zmeny.push("- **Strava:** " + (old?.strava || "—") + " → " + (params.strava || "—"))
-  if((old?.obleceni_s  || "") !== (params.obleceni_s  || "")) zmeny.push("- **Koncertní oblečení:** " + (old?.obleceni_s || "—") + " → " + (params.obleceni_s || "—"))
-  if((old?.call_url    || "") !== (params.call_url    || "")) zmeny.push("- **Online call:** " + (old?.call_url || "—") + " → " + (params.call_url || "—"))
-  if((old?.type        || "") !== (params.type        || "")) zmeny.push("- **Typ akce:** " + (old?.type || "—") + " → " + (params.type || "—"))
-  if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** " + (old?.date_end ? formatDateSimple(old.date_end) : "—") + " → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
-  
-  console.log("zmeny:", zmeny.length, JSON.stringify(zmeny))
-  console.log("silent:", params.silent)
+  if((old?.spacaky     || "") !== (params.spacaky     || "")) zmeny.push("- **Spacáky:** ~~" + (old?.spacaky || "—") + "~~ → " + (params.spacaky || "—"))
+  if((old?.strava      || "") !== (params.strava      || "")) zmeny.push("- **Strava:** ~~" + (old?.strava || "—") + "~~ → " + (params.strava || "—"))
+  if((old?.obleceni_s  || "") !== (params.obleceni_s  || "")) zmeny.push("- **Koncertní oblečení:** ~~" + (old?.obleceni_s || "—") + "~~ → " + (params.obleceni_s || "—"))
+  if((old?.call_url    || "") !== (params.call_url    || "")) zmeny.push("- **Online call:** ~~" + (old?.call_url || "—") + "~~ → " + (params.call_url || "—"))
+  if((old?.type        || "") !== (params.type        || "")) zmeny.push("- **Typ akce:** ~~" + (old?.type || "—") + "~~ → " + (params.type || "—"))
+  if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** ~~" + (old?.date_end ? formatDateSimple(old.date_end) : "—") + "~~ → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
 
-    if(!params.silent && zmeny.length > 0){
+  if(!params.silent && zmeny.length > 0){
     const config = await dbGet("/config")
     const roleId = config?.discord_role_id
       ? String(config.discord_role_id).replace(/"/g, '').trim()
