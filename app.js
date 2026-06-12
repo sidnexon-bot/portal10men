@@ -3832,7 +3832,7 @@ async function renderRepertoar(){
    
      // ADSR-like envelope pro celkovou hlasitost
      masterGain.gain.setValueAtTime(0, now)
-     masterGain.gain.linearRampToValueAtTime(1, now + 0.005)        // attack — velmi rychlý
+     masterGain.gain.linearRampToValueAtTime(1, now + 0.02)        // attack — 
      masterGain.gain.exponentialRampToValueAtTime(0.4, now + 0.15)  // decay — rychlý pokles
      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2) // release — dlouhý dozvuk
    
