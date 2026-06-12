@@ -186,7 +186,7 @@ const attendance = objToArray(dochazka)
       SRAZ:            akce.sraz          || "",
       OBLECENI:        akce.obleceni      || "",
       DOPRAVA:         akce.doprava       || "",
-      //DOPRAVA_POSADKY:  e.doprava_posadky || "",
+      DOPRAVA_POSADKY:  akce.doprava_posadky || "",
       HOSPODA:         akce.hospoda       || "",
       HARMONOGRAM:     akce.harmonogram   || "",
       SPACAKY:         akce.spacaky       || "",
