@@ -3843,14 +3843,22 @@ async function renderRepertoar(){
          <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(128,128,128,0.1)">
            ${renderMetronom()}
          </div>
-         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-           <button onclick="klavesyShiftOctave(-1)" style="width:auto;padding:8px 16px">‹ Oktáva</button>
-           <span class="small" style="font-weight:600">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
-           <button onclick="klavesyShiftOctave(1)" style="width:auto;padding:8px 16px">Oktáva ›</button>
+   
+         <div class="btn-group" style="margin-bottom:16px">
+           <button onclick="klavesyToggleMode('klaviatura')" style="${KLAVESY_MODE === 'klaviatura' ? 'background:#007aff;color:#fff' : ''}">Klaviatura</button>
+           <button onclick="klavesyToggleMode('akordy')" style="${KLAVESY_MODE === 'akordy' ? 'background:#007aff;color:#fff' : ''}">Akordy</button>
          </div>
-         <div id="klavesyKeyboard" style="position:relative;height:180px;display:flex;background:#222;border-radius:12px;overflow:hidden;touch-action:none">
-           ${renderPianoKeys()}
-         </div>
+   
+         ${KLAVESY_MODE === 'akordy' ? renderAkordyTab() : `
+           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+             <button onclick="klavesyShiftOctave(-1)" style="width:auto;padding:8px 16px">‹ Oktáva</button>
+             <span class="small" style="font-weight:600">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
+             <button onclick="klavesyShiftOctave(1)" style="width:auto;padding:8px 16px">Oktáva ›</button>
+           </div>
+           <div id="klavesyKeyboard" style="position:relative;height:180px;display:flex;background:#222;border-radius:12px;overflow:hidden;touch-action:none">
+             ${renderPianoKeys()}
+           </div>
+         `}
        </div>
      `
    }
@@ -4053,6 +4061,169 @@ function renderMetronom(){
 
 window.metronomToggle = metronomToggle
 window.metronomSetBpm = metronomSetBpm
+
+// =============================================
+// AKORDY
+// =============================================
+
+let KLAVESY_MODE = "klaviatura" // "klaviatura" | "akordy"
+let AKORD_ROOT = "C"  // tónina
+let AKORD_MODE = "dur" // "dur" | "moll"
+
+// pořadí not chromaticky od C
+const CHROMATIC_NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+
+// Český zápis pro zobrazení (H místo B)
+const NOTE_DISPLAY = {
+  "C":"C", "C#":"C♯/D♭", "D":"D", "D#":"D♯/E♭", "E":"E", "F":"F",
+  "F#":"F♯/G♭", "G":"G", "G#":"G♯/A♭", "A":"A", "A#":"A♯/H♭", "B":"H"
+}
+
+function noteIndex(note){
+  return CHROMATIC_NOTES.indexOf(note)
+}
+
+// Diatonické stupně durové/mollové stupnice (v půltónech od tóniky)
+const SCALE_STEPS = {
+  dur:  [0, 2, 4, 5, 7, 9, 11],
+  moll: [0, 2, 3, 5, 7, 8, 10]
+}
+
+// Kvalita akordu pro každý stupeň
+const CHORD_QUALITY_DUR  = ["maj","min","min","maj","maj","min","dim"]
+const CHORD_QUALITY_MOLL = ["min","dim","maj","min","min","maj","maj"]
+
+// Intervaly v půltónech pro typ akordu (tercie + kvinta)
+const CHORD_INTERVALS = {
+  maj: [0,4,7],
+  min: [0,3,7],
+  dim: [0,3,6]
+}
+
+const CHORD_LABEL = {
+  maj: "",
+  min: "m",
+  dim: "dim"
+}
+
+function generateScaleChords(){
+  const rootIdx = noteIndex(AKORD_ROOT)
+  const steps = SCALE_STEPS[AKORD_MODE]
+  const qualities = AKORD_MODE === "dur" ? CHORD_QUALITY_DUR : CHORD_QUALITY_MOLL
+  const roman = AKORD_MODE === "dur"
+    ? ["I","ii","iii","IV","V","vi","vii°"]
+    : ["i","ii°","III","iv","v","VI","VII"]
+
+  return steps.map((step, idx) => {
+    const noteIdx = (rootIdx + step) % 12
+    const noteName = CHROMATIC_NOTES[noteIdx]
+    const quality = qualities[idx]
+    return {
+      roman: roman[idx],
+      root: noteName,
+      quality,
+      label: NOTE_DISPLAY[noteName] + CHORD_LABEL[quality]
+    }
+  })
+}
+
+// Zahraje akord
+function playChord(rootNote, quality){
+  const ctx = getAudioCtx()
+  const rootIdx = noteIndex(rootNote)
+  const intervals = CHORD_INTERVALS[quality]
+
+  intervals.forEach(interval => {
+    const semitone = (rootIdx + interval) % 12
+    const octaveShift = Math.floor((rootIdx + interval) / 12)
+    const freq = noteFrequency(KLAVESY_OCTAVE + octaveShift, semitone)
+
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = "triangle"
+    osc.frequency.value = freq
+
+    const now = ctx.currentTime
+    gain.gain.setValueAtTime(0, now)
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start(now)
+    osc.stop(now + 1.5)
+  })
+}
+
+function renderAkordyTab(){
+  const chords = generateScaleChords()
+
+  return `
+    <div style="margin-bottom:16px">
+      <div class="small" style="font-weight:600;margin-bottom:6px;text-align:center">Tónina</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">
+        ${CHROMATIC_NOTES.map(n => `
+          <button onclick="setAkordRoot('${n}')" style="width:auto;padding:8px 12px;font-size:13px;${AKORD_ROOT === n ? 'background:#007aff;color:#fff' : ''}">
+            ${NOTE_DISPLAY[n]}
+          </button>
+        `).join("")}
+      </div>
+      <div style="display:flex;gap:6px;justify-content:center">
+        <button onclick="setAkordMode('dur')" style="width:auto;padding:8px 16px;${AKORD_MODE === 'dur' ? 'background:#007aff;color:#fff' : ''}">Dur</button>
+        <button onclick="setAkordMode('moll')" style="width:auto;padding:8px 16px;${AKORD_MODE === 'moll' ? 'background:#007aff;color:#fff' : ''}">Moll</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(70px, 1fr));gap:10px">
+      ${chords.map(c => `
+        <button
+          class="akord-pad"
+          style="aspect-ratio:1;background:#2c2c2e;color:#fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;font-size:18px;font-weight:600;user-select:none"
+          onmousedown="akordPadDown(this,'${c.root}','${c.quality}')"
+          onmouseup="akordPadUp(this)"
+          onmouseleave="akordPadUp(this)"
+          ontouchstart="akordPadDown(this,'${c.root}','${c.quality}',event)"
+          ontouchend="akordPadUp(this,event)"
+        >
+          <span>${c.label}</span>
+          <span style="font-size:11px;font-weight:400;color:#999">${c.roman}</span>
+        </button>
+      `).join("")}
+    </div>
+  `
+}
+
+function setAkordRoot(note){
+  AKORD_ROOT = note
+  renderRepertoar()
+}
+
+function setAkordMode(mode){
+  AKORD_MODE = mode
+  renderRepertoar()
+}
+
+function akordPadDown(el, root, quality, event){
+  if(event) event.preventDefault()
+  playChord(root, quality)
+  el.style.background = "#007aff"
+}
+
+function akordPadUp(el, event){
+  if(event) event.preventDefault()
+  el.style.background = "#2c2c2e"
+}
+
+function klavesyToggleMode(mode){
+  KLAVESY_MODE = mode
+  renderRepertoar()
+}
+
+window.setAkordRoot      = setAkordRoot
+window.setAkordMode      = setAkordMode
+window.akordPadDown      = akordPadDown
+window.akordPadUp        = akordPadUp
+window.klavesyToggleMode = klavesyToggleMode
 
 function openAddSong(){
   openFormModal("Nová skladba", [
