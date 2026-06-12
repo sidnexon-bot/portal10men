@@ -3839,28 +3839,9 @@ async function renderRepertoar(){
    // =============================================
    function renderKlavesyTab(){
      return `
-      <div id="klavesyLandscapeWrap">
-       <div class="card" style="padding:16px">
-         <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(128,128,128,0.1)">
-           ${renderMetronom()}
-         </div>
-   
-         <div class="btn-group" style="margin-bottom:16px">
-           <button onclick="klavesyToggleMode('klaviatura')" style="${KLAVESY_MODE === 'klaviatura' ? 'background:#007aff;color:#fff' : ''}">Klaviatura</button>
-           <button onclick="klavesyToggleMode('akordy')" style="${KLAVESY_MODE === 'akordy' ? 'background:#007aff;color:#fff' : ''}">Akordy</button>
-         </div>
-   
-         ${KLAVESY_MODE === 'akordy' ? renderAkordyTab() : `
-           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-             <button onclick="klavesyShiftOctave(-1)" style="width:auto;padding:8px 16px">‹ Oktáva</button>
-             <span class="small" style="font-weight:600">Oktáva: C${KLAVESY_OCTAVE} – C${KLAVESY_OCTAVE+2}</span>
-             <button onclick="klavesyShiftOctave(1)" style="width:auto;padding:8px 16px">Oktáva ›</button>
-           </div>
-           <div id="klavesyKeyboard" style="position:relative;height:180px;display:flex;background:#222;border-radius:12px;overflow:hidden;touch-action:none">
-             ${renderPianoKeys()}
-           </div>
-         `}
-         </div>
+       <div class="card" style="padding:24px;text-align:center">
+         <p style="margin-bottom:16px">Klávesy se otevřou v celoobrazovkovém režimu.</p>
+         <button onclick="openKlavesyOverlay()">🎹 Otevřít klávesy</button>
        </div>
      `
    }
