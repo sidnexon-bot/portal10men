@@ -13,6 +13,7 @@ let ACTIVE_DETAIL_ID = null
 let SONG_SELECTED = null
 let REPERTOAR_FILTER_OPEN = false
 let REPERTOAR_ACTIVE_FILTERS = {status: "Vše", version: "Vše"}
+let ZKUSEBNA_TAB = "repertoar" // "repertoar" | "klavesy" | "cvt"
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -3596,11 +3597,40 @@ async function renderRepertoar(){
   const scroll = saveScroll()
   setLoading()
   try{
+    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
+    html += `<h2 style="margin:0 0 16px">Zkušebna</h2>`
+
+    // --- PODZÁLOŽKY ---
+    html += `<div class="btn-group" style="margin-bottom:16px">
+      <button onclick="setZkusebnaTab('repertoar')" style="${ZKUSEBNA_TAB === 'repertoar' ? 'background:#007aff;color:#fff' : ''}">Repertoár</button>
+      <button onclick="setZkusebnaTab('klavesy')" style="${ZKUSEBNA_TAB === 'klavesy' ? 'background:#007aff;color:#fff' : ''}">Klávesy</button>
+      <button onclick="setZkusebnaTab('cvt')" style="${ZKUSEBNA_TAB === 'cvt' ? 'background:#007aff;color:#fff' : ''}">CVT</button>
+    </div>`
+
+    if(ZKUSEBNA_TAB === "klavesy"){
+      html += renderKlavesyTab()
+      if(isDesktop) html += `</div>`
+      container().innerHTML = html
+      restoreScroll(scroll)
+      return
+    }
+
+    if(ZKUSEBNA_TAB === "cvt"){
+      html += renderCvtTab()
+      if(isDesktop) html += `</div>`
+      container().innerHTML = html
+      restoreScroll(scroll)
+      return
+    }
+
+    // --- REPERTOÁR (původní obsah) ---
     const data      = await cachedApi("repertoar")
     const favorites = MEMBER_EMAIL ? await api("favorites", {email: MEMBER_EMAIL}) : {}
 
     if(!Array.isArray(data) || !data.length){
-      container().innerHTML = `<h2>Repertoár</h2><div class="card">Žádné skladby</div>`
+      html += `<div class="card">Žádné skladby</div>`
+      if(isDesktop) html += `</div>`
+      container().innerHTML = html
       return
     }
 
@@ -3620,8 +3650,6 @@ async function renderRepertoar(){
       return matchStatus && matchVersion
     })
 
-    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
-    html += `<h2 style="margin:0 0 16px">Repertoár</h2>`
     if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       html += `<div class="btn-group" style="margin-bottom:16px">
         <button onclick="openAddSong()">+ Přidat skladbu</button>
@@ -3892,6 +3920,21 @@ function applyRepertoarFilter(){
 function filterRepertoar(query){
   applyRepertoarFilter()
 }
+
+function setZkusebnaTab(tab){
+  ZKUSEBNA_TAB = tab
+  renderRepertoar()
+}
+
+function renderKlavesyTab(){
+  return `<div class="card"><p class="notice">Klávesy — připravujeme 🎹</p></div>`
+}
+
+function renderCvtTab(){
+  return `<div class="card"><p class="notice">CVT průvodce — připravujeme 📚</p></div>`
+}
+
+window.setZkusebnaTab = setZkusebnaTab
 
 /* ===============================
    HEATMAPA
