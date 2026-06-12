@@ -455,6 +455,26 @@ function loadState(){
   }
 }
 
+function renderPosadkyDetail(json){
+  let posadky = []
+  try{ posadky = JSON.parse(json) }catch(e){ return "" }
+  if(!Array.isArray(posadky) || !posadky.length) return ""
+
+  const members = window.MEMBERS || []
+  const getName = id => {
+    const m = members.find(m => (m.ID || m.id) === id)
+    return m ? (m.NAME || m.name) : "—"
+  }
+
+  return posadky.map(p => `
+    <div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+      <span class="small" style="display:block">Auto: ${escapeHtml(p.nazev || "—")}</span>
+      <div>Řidič: <b>${escapeHtml(getName(p.ridic))}</b></div>
+      ${Array.isArray(p.posadka) && p.posadka.length ? `<div>Posádka: ${p.posadka.map(id => escapeHtml(getName(id))).join(", ")}</div>` : ""}
+    </div>
+  `).join("")
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -1992,7 +2012,8 @@ async function openEvent(id){
         <div class="event-label">Další informace</div>
         ${event.SRAZ      ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
         ${event.OBLECENI  ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
-        ${event.DOPRAVA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
+        ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
+        ${event.DOPRAVA === "Auta" && event.DOPRAVA_POSADKY ? renderPosadkyDetail(event.DOPRAVA_POSADKY) : ""}
         ${event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : ""}
         ${event.HOSPODA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
         ${event.SPACAKY   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
@@ -4612,3 +4633,4 @@ window.addPosadka           = addPosadka
 window.removePosadka        = removePosadka
 window.updatePosadkaField   = updatePosadkaField
 window.updatePosadkaMulti   = updatePosadkaMulti
+window.renderPosadkyDetail = renderPosadkyDetail
