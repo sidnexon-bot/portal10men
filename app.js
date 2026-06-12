@@ -5388,4 +5388,4 @@ window.updatePosadkaField   = updatePosadkaField
 window.togglePosadkaMember  = togglePosadkaMember
 window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
-
+window.setZkusebnaTab       = setZkusebnaTab
