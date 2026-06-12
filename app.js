@@ -14,7 +14,6 @@ let SONG_SELECTED = null
 let REPERTOAR_FILTER_OPEN = false
 let REPERTOAR_ACTIVE_FILTERS = {status: "Vše", version: "Vše"}
 let ZKUSEBNA_TAB = "repertoar" // "repertoar" | "klavesy" | "cvt"
-let CVT_SECTION_OPEN = null
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -4398,95 +4397,182 @@ function setZkusebnaTab(tab){
 }
 
 // =============================================
-// CVT PRŮVODCE — nahraď renderCvtTab()
+// CVT PRŮVODCE — rozšířená verze
+// Nahraď CVT_CONTENT a renderCvtTab (a CVT_SECTION_OPEN)
 // =============================================
+
+let CVT_SECTION_OPEN = null
+
+// --- SVG diagramy ---
+
+function svgLarynxPosition(){
+  return `
+    <svg viewBox="0 0 200 100" width="100%" height="auto" style="max-width:280px;display:block;margin:8px auto">
+      <g>
+        <line x1="40" y1="20" x2="40" y2="80" stroke="#999" stroke-width="2"/>
+        <circle cx="40" cy="60" r="10" fill="#007aff" opacity="0.7"/>
+        <text x="40" y="95" text-anchor="middle" font-size="10" fill="currentColor">Nízký hrtan</text>
+        <text x="40" y="15" text-anchor="middle" font-size="9" fill="#999">(Neutral, Curbing)</text>
+      </g>
+      <g>
+        <line x1="160" y1="20" x2="160" y2="80" stroke="#999" stroke-width="2"/>
+        <circle cx="160" cy="35" r="10" fill="#ff9f0a" opacity="0.7"/>
+        <text x="160" y="95" text-anchor="middle" font-size="10" fill="currentColor">Vysoký hrtan</text>
+        <text x="160" y="15" text-anchor="middle" font-size="9" fill="#999">(Overdrive, Edge)</text>
+      </g>
+    </svg>
+  `
+}
+
+function svgBreathSupport(){
+  return `
+    <svg viewBox="0 0 200 120" width="100%" height="auto" style="max-width:240px;display:block;margin:8px auto">
+      <ellipse cx="100" cy="40" rx="25" ry="30" fill="none" stroke="#999" stroke-width="2"/>
+      <path d="M 60 70 Q 100 55 140 70" fill="none" stroke="#ff3b30" stroke-width="2" stroke-dasharray="4 2"/>
+      <text x="100" y="50" text-anchor="middle" font-size="9" fill="#999">plíce</text>
+      <path d="M 60 85 Q 100 75 140 85" fill="none" stroke="#34c759" stroke-width="3"/>
+      <text x="155" y="88" font-size="9" fill="#34c759">nádech</text>
+      <text x="148" y="68" font-size="9" fill="#ff3b30">výdech</text>
+      <line x1="100" y1="62" x2="100" y2="80" stroke="#34c759" stroke-width="2" marker-end="url(#arrowGreen)"/>
+      <defs>
+        <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#34c759"/>
+        </marker>
+      </defs>
+      <text x="100" y="110" text-anchor="middle" font-size="10" fill="currentColor">Bránice klesá při nádechu</text>
+    </svg>
+  `
+}
+
+function svgRegisters(){
+  return `
+    <svg viewBox="0 0 200 120" width="100%" height="auto" style="max-width:240px;display:block;margin:8px auto">
+      <rect x="30" y="20" width="20" height="80" fill="#34c759" opacity="0.3" rx="4"/>
+      <text x="40" y="110" text-anchor="middle" font-size="9" fill="currentColor">Chest</text>
+      <text x="40" y="15" text-anchor="middle" font-size="9" fill="#999">nízké tóny</text>
+
+      <rect x="90" y="20" width="20" height="80" fill="#007aff" opacity="0.3" rx="4"/>
+      <text x="100" y="110" text-anchor="middle" font-size="9" fill="currentColor">Mix</text>
+      <text x="100" y="15" text-anchor="middle" font-size="9" fill="#999">přechod</text>
+
+      <rect x="150" y="20" width="20" height="80" fill="#ff9f0a" opacity="0.3" rx="4"/>
+      <text x="160" y="110" text-anchor="middle" font-size="9" fill="currentColor">Head</text>
+      <text x="160" y="15" text-anchor="middle" font-size="9" fill="#999">vysoké tóny</text>
+
+      <path d="M 30 60 Q 60 60 90 60 Q 120 60 170 60" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.5"/>
+    </svg>
+  `
+}
 
 const CVT_CONTENT = [
   {
     id: "modes",
     title: "🎤 Hlasové módy",
+    intro: "Módy popisují základní \"nastavení\" hlasu — kombinaci tlaku vzduchu, postavení hrtanu a napětí hlasivek.",
+    diagram: svgLarynxPosition,
     items: [
       {
         name: "Neutral",
-        desc: "Měkký, neutrální zvuk bez výrazného tlaku na hlasivky. Podobné běžné řeči nebo lyrickému zpěvu. Vhodné pro klidné, jemné pasáže — balady, pomalé sborové linky."
+        desc: "Měkký, neutrální zvuk bez výrazného tlaku na hlasivky. Podobné běžné řeči nebo lyrickému zpěvu. Vhodné pro klidné, jemné pasáže — balady, pomalé sborové linky.",
+        howto: "Jak na to: Zkuste tiše a klidně vyslovit \"hmm\" nebo \"nó\" — hrtan zůstává v klidové, nízké poloze, žádný tlak v krku. Zvuk by měl znít téměř jako šeptaný zpěv, ale s tónem."
       },
       {
         name: "Curbing",
-        desc: "Lehce \"naříkavý\", komprimovanější zvuk. Hlasivky jsou víc semknuté než u Neutral, ale stále s měkkým nástupem. Často slyšet u popu a musicalu — emotivní, ale kontrolovaný zvuk."
+        desc: "Lehce \"naříkavý\", komprimovanější zvuk. Hlasivky jsou víc semknuté než u Neutral, ale stále s měkkým nástupem. Často slyšet u popu a musicalu — emotivní, ale kontrolovaný zvuk.",
+        howto: "Jak na to: Zkuste napodobit tón malého kňučení nebo lítostivého \"ou\". Hrtan se mírně zvedne, ale rty a čelist zůstávají uvolněné. Pomáhá si při tom představit \"plačtivý\" emocionální podtext."
       },
       {
         name: "Overdrive",
-        desc: "Silný, křičivý zvuk s vysokým tlakem — podobné jako když na něco zavoláte přes ulici. Používá se pro vrcholy písní, silné výkřiky, rockové a gospelové pasáže."
+        desc: "Silný, křičivý zvuk s vysokým tlakem — podobné jako když na něco zavoláte přes ulici. Používá se pro vrcholy písní, silné výkřiky, rockové a gospelové pasáže.",
+        howto: "Jak na to: Zkuste zavolat \"Hej!\" na někoho přes ulici — přirozeně použijete víc tlaku vzduchu a hrtan se zvedne výš. Pro zpěv tento pocit zachovejte, ale hlídejte, aby krk nebyl sevřený — tlak by měl jít z bránice, ne z krku."
       },
       {
         name: "Edge",
-        desc: "Ostrý, pronikavý, \"kovový\" zvuk — typický pro vysoké tóny v rocku, metalu nebo belting v muzikálech. Vyžaduje hodně tréninku, jinak hrozí přetížení hlasu."
+        desc: "Ostrý, pronikavý, \"kovový\" zvuk — typický pro vysoké tóny v rocku, metalu nebo belting v muzikálech. Vyžaduje hodně tréninku, jinak hrozí přetížení hlasu.",
+        howto: "Jak na to: Zkuste imitovat zvuk klaksonu nebo houkající sirény — velmi úzký, soustředěný zvuk na \"né\" nebo \"né\". Tento mód je nejnáročnější — necvičit dlouho najednou a vždy po něm zařadit klidné Neutral cvičení."
       }
     ]
   },
   {
     id: "effects",
     title: "✨ Zvukové efekty",
+    intro: "Efekty se přidávají \"na vrch\" základního módu — dodávají charakter a emoci, ale měly by zůstat volitelné ozdoby, ne základ zvuku.",
     items: [
       {
         name: "Distortion (zkreslení)",
-        desc: "Drsný, \"chrčivý\" přídech ve zvuku — vzniká přidáním napětí ve falešných hlasivkách (nad těmi pravými). Používá se pro intenzitu a emoci, typicky v rocku."
+        desc: "Drsný, \"chrčivý\" přídech ve zvuku — vzniká přidáním napětí ve falešných hlasivkách (nad těmi pravými). Používá se pro intenzitu a emoci, typicky v rocku.",
+        howto: "Jak na to: Zkuste lehce zachrčet jako při \"naštvané\" reakci — \"Grrr\" s napětím v horní části hrdla. Začněte velmi mírně, jen náznak, a postupně (pokud to bude pohodlné) zesilte."
       },
       {
         name: "Growl (vrčení)",
-        desc: "Hluboké vrčivé zabarvení — falešné hlasivky kmitají spolu s pravými. Efektní, ale náročné na hlasivky — nepřehánět, hlavně bez rozezpívání."
+        desc: "Hluboké vrčivé zabarvení — falešné hlasivky kmitají spolu s pravými. Efektní, ale náročné na hlasivky — nepřehánět, hlavně bez rozezpívání.",
+        howto: "Jak na to: Podobné jako vrčení motorky nebo psa — nízký, drsný tón. Vždy jen krátce a po důkladném rozezpívání. Pokud cítíte škrábání v krku, okamžitě přestaňte."
       },
       {
         name: "Rattle (chrastění)",
-        desc: "Krátké \"zachrastění\" na začátku tónu — podobné lehkému zakuckání. Dodává zpěvu syrovost a charakter, často u blues a soulu."
+        desc: "Krátké \"zachrastění\" na začátku tónu — podobné lehkému zakuckání. Dodává zpěvu syrovost a charakter, často u blues a soulu.",
+        howto: "Jak na to: Zkuste na začátku tónu udělat krátké, lehké \"kch\" jako mírné zakašlání, hned přecházející do čistého tónu. Mělo by to být subtilní ozdoba, ne hlavní zvuk."
       },
       {
         name: "Vibrato",
-        desc: "Pravidelné kolísání výšky tónu. Může být pomalé a široké (klasický sborový styl) nebo rychlé a úzké (pop/jazz). Důležité je, aby vibrato bylo řízené, ne nekontrolované třesení."
+        desc: "Pravidelné kolísání výšky tónu. Může být pomalé a široké (klasický sborový styl) nebo rychlé a úzké (pop/jazz). Důležité je, aby vibrato bylo řízené, ne nekontrolované třesení.",
+        howto: "Jak na to: Začněte na pohodlném tónu a zkuste zpomaleně \"vlnit\" výšku nahoru-dolů jako sirénu o velmi malém rozsahu (čtvrttón). Postupně zrychlujte, dokud nezní jako přirozené vibrato. Cvičit pomalu a v klidném tempu."
       }
     ]
   },
   {
     id: "registers",
     title: "🎵 Rejstříky",
+    intro: "Rejstřík určuje, jakou částí hlasu zpíváte — od plného \"hrudního\" zvuku po lehký \"hlavový\".",
+    diagram: svgRegisters,
     items: [
       {
         name: "Chest voice (hrudní rejstřík)",
-        desc: "Plný, silný zvuk používaný v nižší a střední poloze. Cítíte vibrace v hrudi. Základní rejstřík pro mluvení i většinu zpěvu v pohodlné poloze."
+        desc: "Plný, silný zvuk používaný v nižší a střední poloze. Cítíte vibrace v hrudi. Základní rejstřík pro mluvení i většinu zpěvu v pohodlné poloze.",
+        howto: "Jak na to: Zazpívejte pohodlný tón ve své mluvní poloze a položte si ruku na hrudní kost — měli byste cítit slabé vibrace. Pokud žádné necítíte, zkuste tón mírně zesílit bez tlaku v krku."
       },
       {
         name: "Head voice (hlavový rejstřík)",
-        desc: "Lehčí, \"vznosnější\" zvuk ve vyšší poloze, vibrace cítíte víc v hlavě. Méně tlaku na hlasivky než při tažení chest voice do výšek."
+        desc: "Lehčí, \"vznosnější\" zvuk ve vyšší poloze, vibrace cítíte víc v hlavě. Méně tlaku na hlasivky než při tažení chest voice do výšek.",
+        howto: "Jak na to: Zazpívejte vyšší tón na slabiku \"hú\" nebo \"ní\", jako byste \"plavali\" zvukem nahoru. Měli byste cítit lehkou vibraci kolem nosu/čela, ne tlak v krku."
       },
       {
         name: "Falzet",
-        desc: "Velmi lehký, vzdušný zvuk v nejvyšší poloze — hlasivky se nedotýkají úplně. Charakteristické pro některé pop/falzetové pasáže u mužských hlasů."
+        desc: "Velmi lehký, vzdušný zvuk v nejvyšší poloze — hlasivky se nedotýkají úplně. Charakteristické pro některé pop/falzetové pasáže u mužských hlasů.",
+        howto: "Jak na to: Zkuste velmi tiše a vzdušně zazpívat vysoký tón, jako byste foukali přes hlas — měl by znít trochu \"duté\" a éterické, bez síly."
       },
       {
         name: "Mix (smíšený rejstřík)",
-        desc: "Plynulý přechod mezi chest a head voice bez slyšitelného \"zlomu\". Cílem je, aby přechody mezi rejstříky byly hladké a hlas zněl konzistentně v celém rozsahu."
+        desc: "Plynulý přechod mezi chest a head voice bez slyšitelného \"zlomu\". Cílem je, aby přechody mezi rejstříky byly hladké a hlas zněl konzistentně v celém rozsahu.",
+        howto: "Jak na to: Zazpívejte pomalé glissando (plynulý sjezd/výjezd) z nízkého do vysokého tónu na \"ú\" nebo \"ó\" a snažte se, aby zvuk neměl žádný slyšitelný \"zlom\" nebo skok kvality. Pokud zlom uslyšíte, zpomalte a projeďte tu oblast vícekrát."
       }
     ]
   },
   {
     id: "tips",
     title: "💡 Tipy pro tenory a basy",
+    intro: "Praktické rady k dechu, opoře a péči o hlas — relevantní pro všechny hlasové skupiny.",
+    diagram: svgBreathSupport,
     items: [
       {
         name: "Tenoři — vysoké tóny",
-        desc: "Při tažení do výšek nepřitlačovat víc vzduchu — naopak uvolnit a najít \"mix\" mezi chest a head voice. Příliš mnoho tlaku vede k křiklavému, nepříjemnému zvuku a rychlé únavě."
+        desc: "Při tažení do výšek nepřitlačovat víc vzduchu — naopak uvolnit a najít \"mix\" mezi chest a head voice. Příliš mnoho tlaku vede k křiklavému, nepříjemnému zvuku a rychlé únavě.",
+        howto: "Jak na to: Před vysokým tónem si představte, že zvuk \"otáčíte\" směrem nahoru a dozadu, jako by šel přes klenbu patra. Zkuste tón nejprve zazpívat tišeji než obvykle — často to pomůže najít správné nastavení."
       },
       {
         name: "Basy — hloubka a opora",
-        desc: "Hluboké tóny potřebují dobrou dechovou oporu (bránice), ne tlačení v krku. Uvolněná čelist a krk pomáhají dosáhnout plného, rezonujícího zvuku bez chrčení."
+        desc: "Hluboké tóny potřebují dobrou dechovou oporu (bránice), ne tlačení v krku. Uvolněná čelist a krk pomáhají dosáhnout plného, rezonujícího zvuku bez chrčení.",
+        howto: "Jak na to: Před nízkým tónem se nadechněte tak, aby se rozšířil pas/spodní žebra (ne jen hrudník). Při zpěvu udržujte čelist uvolněnou, jako byste mírně \"otevírali\" zívnutí."
       },
       {
         name: "Rozezpívání před zkouškou",
-        desc: "I 5-10 minut jemného rozezpívání (sirény, lehké stupnice v pohodlné dynamice) výrazně sníží riziko přetížení hlasu během dvouhodinové zkoušky."
+        desc: "I 5-10 minut jemného rozezpívání (sirény, lehké stupnice v pohodlné dynamice) výrazně sníží riziko přetížení hlasu během dvouhodinové zkoušky.",
+        howto: "Jak na to: Začněte sirénami (plynulé \"ú\" z nejnižšího do nejvyššího pohodlného tónu a zpět) v pianissimu, pak přidejte krátké stupnice na \"mama\" nebo \"nyaa\" ve středním rozsahu, postupně rozšiřujte."
       },
       {
         name: "Pití vody",
-        desc: "Hlasivky potřebují vlhkost — pravidelné pití vody (ne ledové) během zkoušky pomáhá udržet hlas v lepší kondici, zvlášť při delším zpívání."
+        desc: "Hlasivky potřebují vlhkost — pravidelné pití vody (ne ledové) během zkoušky pomáhá udržet hlas v lepší kondici, zvlášť při delším zpívání.",
+        howto: "Jak na to: Pijte vodu pokojové teploty po malých dávkách v průběhu celé zkoušky, ne jen na začátku. Vyhněte se ledové vodě a velkému množství kofeinu před zpěvem — vysušují hlasivky."
       }
     ]
   }
@@ -4494,7 +4580,7 @@ const CVT_CONTENT = [
 
 function renderCvtTab(){
   let html = `<p class="small" style="margin-bottom:16px;color:var(--muted)">
-    Stručný přehled technik inspirovaný metodou Complete Vocal Technique (CVT). Slouží jako rychlá připomínka, nenahrazuje práci se sbormistrem nebo pedagogem.
+    Stručný přehled technik inspirovaný metodou Complete Vocal Technique (CVT). Slouží jako rychlá připomínka a inspirace pro domácí cvičení, nenahrazuje práci se sbormistrem nebo pedagogem.
   </p>`
 
   CVT_CONTENT.forEach(section => {
@@ -4506,10 +4592,13 @@ function renderCvtTab(){
           <span style="color:var(--muted)">${isOpen ? "‹" : "›"}</span>
         </div>
         <div style="display:${isOpen ? "block" : "none"};padding:0 16px 16px">
+          ${section.intro ? `<p class="small" style="margin-bottom:10px;color:var(--muted)">${section.intro}</p>` : ""}
+          ${section.diagram ? section.diagram() : ""}
           ${section.items.map(item => `
             <div style="padding:10px 0;border-top:1px solid rgba(128,128,128,0.1)">
               <div style="font-weight:600;margin-bottom:4px">${item.name}</div>
-              <div class="small" style="line-height:1.5">${item.desc}</div>
+              <div class="small" style="line-height:1.5;margin-bottom:6px">${item.desc}</div>
+              ${item.howto ? `<div class="small" style="line-height:1.5;padding:8px 10px;background:rgba(0,122,255,0.08);border-radius:8px;color:var(--text)">${item.howto}</div>` : ""}
             </div>
           `).join("")}
         </div>
@@ -4526,8 +4615,6 @@ function toggleCvtSection(id){
 }
 
 window.toggleCvtSection = toggleCvtSection
-
-window.setZkusebnaTab = setZkusebnaTab
 
 /* ===============================
    HEATMAPA
