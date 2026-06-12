@@ -3879,11 +3879,12 @@ async function renderRepertoar(){
          <div class="piano-key-white"
            style="position:absolute;left:${i * whiteWidth}%;width:${whiteWidth}%;height:100%;background:#fff;border:1px solid #999;border-radius:0 0 6px 6px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:11px;color:#888;cursor:pointer;user-select:none"
            data-freq="${k.freq}"
-           onmousedown="klavesyKeyDown(this)"
-           onmouseup="klavesyKeyUp(this)"
-           onmouseleave="klavesyKeyUp(this)"
-           ontouchstart="klavesyKeyDown(this)"
-           ontouchend="klavesyKeyUp(this)"
+           ontouchstart="klavesyKeyDown(this, event)"
+           ontouchend="klavesyKeyUp(this, event)"
+           onmousedown="klavesyKeyDown(this, event)"
+           onmouseup="klavesyKeyUp(this, event)"
+           onmouseleave="klavesyKeyUp(this, event)"
+
          >${k.note}${k.octave}</div>
        `
      })
@@ -3902,11 +3903,11 @@ async function renderRepertoar(){
              <div class="piano-key-black"
                style="position:absolute;left:${leftPct}%;width:${whiteWidth * 0.6}%;height:60%;background:#1a1a1a;border-radius:0 0 4px 4px;z-index:2;cursor:pointer;user-select:none"
                data-freq="${freq}"
-               onmousedown="klavesyKeyDown(this)"
-               onmouseup="klavesyKeyUp(this)"
-               onmouseleave="klavesyKeyUp(this)"
-               ontouchstart="klavesyKeyDown(this)"
-               ontouchend="klavesyKeyUp(this)"
+               ontouchstart="klavesyKeyDown(this, event)"
+               ontouchend="klavesyKeyUp(this, event)"
+               onmousedown="klavesyKeyDown(this, event)"
+               onmouseup="klavesyKeyUp(this, event)"
+               onmouseleave="klavesyKeyUp(this, event)"
              ></div>
            `
          }
@@ -3916,16 +3917,18 @@ async function renderRepertoar(){
      return html
    }
    
-   function klavesyKeyDown(el){
+   function klavesyKeyDown(el, event){
+     if(event) event.preventDefault()
      const freq = parseFloat(el.dataset.freq)
      playNote(freq)
      el.style.background = el.classList.contains("piano-key-black") ? "#444" : "#ddd"
    }
    
-   function klavesyKeyUp(el){
+   function klavesyKeyUp(el, event){
+     if(event) event.preventDefault()
      el.style.background = el.classList.contains("piano-key-black") ? "#1a1a1a" : "#fff"
    }
-   
+
    function klavesyShiftOctave(dir){
      KLAVESY_OCTAVE = Math.max(0, Math.min(7, KLAVESY_OCTAVE + dir))
      renderRepertoar()
