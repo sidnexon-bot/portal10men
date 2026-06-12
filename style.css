@@ -1711,6 +1711,19 @@ select {
   z-index: 9999;
 }
 
+#klavesyOverlay .klavesy-btn,
+#klavesyOverlay .klavesy-btn.active {
+  color: #fff !important;
+}
+
+#klavesyOverlay .klavesy-btn {
+  background: #2c2c2e !important;
+}
+
+#klavesyOverlay .klavesy-btn.active {
+  background: #007aff !important;
+}
+
 #klavesyOverlay.hidden {
   display: none;
 }
