@@ -3852,21 +3852,6 @@ async function renderRepertoar(){
        osc.stop(now + 2.3)
      })
    
-     // Lehký "úhoz" — krátký šum při náběhu pro perkusivní charakter
-     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate)
-     const noiseData = noiseBuffer.getChannelData(0)
-     for(let i = 0; i < noiseData.length; i++){
-       noiseData[i] = (Math.random() * 2 - 1) * (1 - i / noiseData.length)
-     }
-     const noise = ctx.createBufferSource()
-     noise.buffer = noiseBuffer
-     const noiseGain = ctx.createGain()
-     noiseGain.gain.value = 0.06
-     noise.connect(noiseGain)
-     noiseGain.connect(ctx.destination)
-     noise.start(now)
-   }
-   
    // =============================================
    // VYKRESLENÍ KLAVIATURY (2 oktávy)
    // =============================================
