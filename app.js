@@ -4405,6 +4405,13 @@ let CVT_SECTION_OPEN = null
 
 // --- SVG diagramy ---
 
+// =============================================
+// CVT PRŮVODCE — verze 3, rozšířená podle CVI
+// Nahraď CVT_CONTENT a renderCvtTab (CVT_SECTION_OPEN zůstává)
+// =============================================
+
+// --- SVG diagramy ---
+
 function svgLarynxPosition(){
   return `
     <svg viewBox="0 0 200 100" width="100%" height="auto" style="max-width:280px;display:block;margin:8px auto">
@@ -4439,7 +4446,7 @@ function svgBreathSupport(){
           <path d="M0,0 L6,3 L0,6 Z" fill="#34c759"/>
         </marker>
       </defs>
-      <text x="100" y="110" text-anchor="middle" font-size="10" fill="currentColor">Bránice klesá při nádechu</text>
+      <text x="100" y="110" text-anchor="middle" font-size="10" fill="currentColor">Bránice klesá při nádechu, brání se výdechu</text>
     </svg>
   `
 }
@@ -4464,59 +4471,204 @@ function svgRegisters(){
   `
 }
 
+function svgTwang(){
+  return `
+    <svg viewBox="0 0 200 100" width="100%" height="auto" style="max-width:240px;display:block;margin:8px auto">
+      <!-- nálevka -->
+      <path d="M 60 20 L 140 20 L 110 80 L 90 80 Z" fill="none" stroke="#999" stroke-width="2"/>
+      <text x="100" y="15" text-anchor="middle" font-size="9" fill="#999">epiglottický nálevkovitý prostor</text>
+
+      <!-- zúžená verze -->
+      <path d="M 70 20 L 130 20 L 102 70 L 98 70 Z" fill="#007aff" opacity="0.25"/>
+      <text x="100" y="95" text-anchor="middle" font-size="10" fill="currentColor">Zúžením vzniká "twang" — jasnější, nosnější zvuk</text>
+    </svg>
+  `
+}
+
+function svgJawPosition(){
+  return `
+    <svg viewBox="0 0 200 100" width="100%" height="auto" style="max-width:240px;display:block;margin:8px auto">
+      <!-- špatně - vysunutá čelist -->
+      <g>
+        <path d="M 30 30 Q 50 30 60 50 L 75 50 Q 60 60 50 75 Q 35 65 30 30 Z" fill="none" stroke="#ff3b30" stroke-width="2"/>
+        <text x="50" y="92" text-anchor="middle" font-size="9" fill="#ff3b30">Vysunutá čelist ✗</text>
+      </g>
+      <!-- správně - zasunutá čelist -->
+      <g>
+        <path d="M 130 30 Q 150 30 155 50 L 165 50 Q 155 65 145 78 Q 130 70 130 30 Z" fill="none" stroke="#34c759" stroke-width="2"/>
+        <text x="150" y="92" text-anchor="middle" font-size="9" fill="#34c759">Zasunutá čelist ✓</text>
+      </g>
+    </svg>
+  `
+}
+
 const CVT_CONTENT = [
+  {
+    id: "philosophy",
+    title: "🌱 Filosofie CVT",
+    intro: null,
+    items: [
+      {
+        name: "Zpívání není těžké",
+        desc: "Hlas je nástroj, který má každý a denně ho používá. Hlas obvykle funguje perfektně, dokud ho v dětství nezačneme omezovat různými druhy napětí. Práce na technice je většinou o odstraňování tohoto napětí, aby hlas mohl fungovat volně.",
+        howto: "Co z toho plyne: Pokud něco nezní dobře, nejde primárně o to \"přidat\" nějakou novou dovednost, ale často o to uvolnit nadbytečné napětí, které tam nemusí být."
+      },
+      {
+        name: "Technika je prostředek, ne cíl",
+        desc: "Nejdůležitější je vyjádření a sdělení — technika je pouze nástroj, jak toho dosáhnout. Co a jak chcete sdělit, je vždy umělecké rozhodnutí každého zpěváka.",
+        howto: "Co z toho plyne: Při zkoušce nezapomínejte na emoci a smysl textu — technika má sloužit hudbě, ne naopak."
+      },
+      {
+        name: "Funguje to hned, nebo to není správně",
+        desc: "Pokud technika funguje správně, měla by mít okamžitý efekt. Pokud cvičení po více pokusech nepřináší žádné zlepšení nebo je nepříjemné, je pravděpodobně dělané špatně.",
+        howto: "Co z toho plyne: Pokud něco bolí, je nepříjemné nebo \"nezní správně\" — věřte svému pocitu. Vaše tělo vám dává zpětnou vazbu, kterou nikdo jiný necítí."
+      }
+    ]
+  },
+  {
+    id: "principles",
+    title: "⚓ Tři základní principy",
+    intro: "Tyto tři principy platí vždy, bez ohledu na to, v jakém módu, barvě zvuku nebo efektu zpíváte. Jsou základem zdravé techniky.",
+    diagram: svgBreathSupport,
+    items: [
+      {
+        name: "1. Opora dechu (Support)",
+        desc: "Pro zpěv potřebujete dvě věci: proud vzduchu, který rozkmitá hlasivky, a tlak vzduchu pod hlasivkami, který dodá tónu objem a kontrolu. Opora znamená záměrně zpomalovat a prodlužovat výdech — pracovat proti přirozenému nutkání bránice rychle vypustit nadechnutý vzduch.",
+        howto: "Jak na to: Při nádechu se mírně rozšíří pas a spodní žebra. Při zpěvu se snažte tento \"rozšířený\" pocit udržet co nejdéle — jako byste \"drželi\" nádech, zatímco zpíváte. Oporu šetřete na těžká místa (vysoké tóny, konce frází), nepoužívejte ji zbytečně brzy."
+      },
+      {
+        name: "2. Nezbytný twang",
+        desc: "Nad hlasivkami je prostor tvořící \"nálevku\" (epiglottický nálevkovitý prostor). Jejím zúžením zvuk zesvětlí, ztratí dýchavičnost a zesílí — to je twang. Většina zvuků potřebuje alespoň trochu twangu pro zdravou a snadnou produkci, u kovových módů je twang nutný vždy.",
+        howto: "Jak na to: Zkuste napodobit zvuk kachny nebo komára — \"njeee\" s úzkým, nosovým zabarvením. U mnoha lidí tento twang nezní navenek \"nosově\" — je to hlavně pocit v krku, ne ve výsledném zvuku."
+      },
+      {
+        name: "3. Nevysouvat čelist, neutahovat rty",
+        desc: "Vysunutá spodní čelist a stažené rty (zejména ve vysokých tónech) mohou spustit nekontrolované sevření kolem hlasivek. Spodní čelist by měla být spíš zasunutá vzhledem k horní. Na vysokých i nízkých tónech otevírejte ústa víc než ve střední poloze.",
+        diagram: svgJawPosition,
+        howto: "Jak na to: Zkuste si test — zaklonit hlavu a vložit si prst mezi horní a dolní zuby, abyste našli uvolněnou polohu čelisti. Tuto polohu si pak zkuste udržet i bez prstu, zejména na vysokých tónech."
+      }
+    ]
+  },
   {
     id: "modes",
     title: "🎤 Hlasové módy",
-    intro: "Módy popisují základní \"nastavení\" hlasu — kombinaci tlaku vzduchu, postavení hrtanu a napětí hlasivek.",
+    intro: "Módy popisují základní \"nastavení\" hlasu — kombinaci množství kovového zabarvení (metalu), tlaku vzduchu a postavení hrtanu. Špatné použití módů je nejčastější příčinou problémů se zpěvem.",
     diagram: svgLarynxPosition,
     items: [
       {
         name: "Neutral",
-        desc: "Měkký, neutrální zvuk bez výrazného tlaku na hlasivky. Podobné běžné řeči nebo lyrickému zpěvu. Vhodné pro klidné, jemné pasáže — balady, pomalé sborové linky.",
-        howto: "Jak na to: Zkuste tiše a klidně vyslovit \"hmm\" nebo \"nó\" — hrtan zůstává v klidové, nízké poloze, žádný tlak v krku. Zvuk by měl znít téměř jako šeptaný zpěv, ale s tónem."
+        desc: "Jediný nekovový mód — 0% metalu. Charakter je čistý, otevřený, měkký, jako ukolébavka. Je to jediný mód, ve kterém lze zpívat se vzdušným (dechovým) zvukem bez poškození hlasu. Hlasitostně je to spíše tišší mód (pp až mp), ale ve vysoké poloze lze zpívat i nahlas.",
+        howto: "Jak na to: Zkuste tiše a klidně zazpívat ukolébavku nebo zamumlat \"hmm\" — hrtan zůstává v klidové poloze, žádný tlak v krku. Zkuste i variantu se vzdušným, lehce \"foukaným\" zvukem — v Neutral je to bezpečné."
       },
       {
         name: "Curbing",
-        desc: "Lehce \"naříkavý\", komprimovanější zvuk. Hlasivky jsou víc semknuté než u Neutral, ale stále s měkkým nástupem. Často slyšet u popu a musicalu — emotivní, ale kontrolovaný zvuk.",
-        howto: "Jak na to: Zkuste napodobit tón malého kňučení nebo lítostivého \"ou\". Hrtan se mírně zvedne, ale rty a čelist zůstávají uvolněné. Pomáhá si při tom představit \"plačtivý\" emocionální podtext."
+        desc: "Jediný \"polo-kovový\" mód, obsahuje různé množství metalu (cca 1–50 %). Charakter je trochu naříkavý nebo zdrženlivý — jako když naříkáte na bolest břicha. Hlasitostně zůstává ve středním pásmu (mp–mf), nelze v něm zpívat velmi tiše ani velmi nahlas. Nelze přidat vzdušný zvuk.",
+        howto: "Jak na to: Najdete ho ustanovením lehkého \"zadržení\" (hold) — zkuste tón, který zní jako tiché stěžování si nebo lehký pláč, s mírně zvednutým hrtanem, ale uvolněnými rty a čelistí."
       },
       {
         name: "Overdrive",
-        desc: "Silný, křičivý zvuk s vysokým tlakem — podobné jako když na něco zavoláte přes ulici. Používá se pro vrcholy písní, silné výkřiky, rockové a gospelové pasáže.",
-        howto: "Jak na to: Zkuste zavolat \"Hej!\" na někoho přes ulici — přirozeně použijete víc tlaku vzduchu a hrtan se zvedne výš. Pro zpěv tento pocit zachovejte, ale hlídejte, aby krk nebyl sevřený — tlak by měl jít z bránice, ne z krku."
+        desc: "Jeden ze dvou plně kovových módů (1–100 % metalu). Charakter je přímý a hlasitý — jako když na někoho zavoláte \"hej!\" přes ulici. Typicky se používá v nízké a střední poloze hlasu při hlasitém mluvení nebo zpěvu. Nelze přidat vzdušný zvuk. Vhodné samohlásky jsou hlavně 'É' a 'Ó'.",
+        howto: "Jak na to: Najdete ho ustanovením \"kousnutí\" (bite) — zkuste přímé, neomalené zavolání \"Hej!\" na někoho přes ulici a tento pocit přeneste do tónu. Tlak by měl jít z opory (bránice), ne ze sevřeného krku."
       },
       {
         name: "Edge",
-        desc: "Ostrý, pronikavý, \"kovový\" zvuk — typický pro vysoké tóny v rocku, metalu nebo belting v muzikálech. Vyžaduje hodně tréninku, jinak hrozí přetížení hlasu.",
-        howto: "Jak na to: Zkuste imitovat zvuk klaksonu nebo houkající sirény — velmi úzký, soustředěný zvuk na \"né\" nebo \"né\". Tento mód je nejnáročnější — necvičit dlouho najednou a vždy po něm zařadit klidné Neutral cvičení."
+        desc: "Druhý plně kovový mód (1–100 % metalu), dříve nazývaný \"Belting\". Charakter je lehčí, agresivnější a ostřejší než Overdrive — jako řítící se letadlo nebo křik. Nelze přidat vzdušný zvuk. Používají se jen tvangované samohlásky.",
+        howto: "Jak na to: Najdete ho přidáním twangu k jasnému, otevřenému zvuku — zkuste napodobit kachní \"kvák\" nebo zvuk řítícího se/houkajícího letadla, velmi úzký a soustředěný. Tento mód je nejnáročnější, necvičte ho dlouho v kuse."
+      }
+    ]
+  },
+  {
+    id: "colour",
+    title: "🎨 Barva zvuku (Sound Colour)",
+    intro: "Každý mód lze zesvětlit nebo ztemnit. Barva zvuku vzniká v hlasovém traktu — prostoru nad hlasivkami až ke rtům, včetně nosní dutiny. Velikost a tvar tohoto traktu určuje, jak tmavě/světle zní váš hlas — a každý ho má jinak velký, proto má každý svou osobní barvu zvuku.",
+    diagram: svgTwang,
+    items: [
+      {
+        name: "Tvar epiglottického nálevkovitého prostoru",
+        desc: "Zúžení tohoto prostoru (twang) dělá zvuk světlejším a jasnějším.",
+        howto: "Jak na to: Zkuste přepínat mezi zvukem \"kachny\" (úzký, twangovaný) a uvolněným \"á\" bez twangu — všimněte si rozdílu v jasnosti."
+      },
+      {
+        name: "Poloha hrtanu",
+        desc: "Zvednutý hrtan zesvětlí zvuk, snížený hrtan ho ztemní.",
+        howto: "Jak na to: Zkuste plynule přejít mezi zvukem jako při polykání (hrtan nahoru, světlejší) a zíváním (hrtan dolů, temnější) — na stejném tónu."
+      },
+      {
+        name: "Tvar jazyka",
+        desc: "Plošší/širší jazyk zvuk ztmaví, stažený/užší jazyk zvuk zesvětlí.",
+        howto: "Jak na to: Zazpívejte tón na \"á\" a zkuste jazyk nejprve co nejvíc \"rozprostřít\" do šířky, pak ho stáhnout doprostřed — sledujte, jak se barva zvuku mění."
+      },
+      {
+        name: "Tvar rtů/ústních koutků",
+        desc: "Úsměv (koutky nahoru) zesvětlí zvuk, uvolněné koutky ho ztemní.",
+        howto: "Jak na to: Zazpívejte tón a zkuste na něm přejít z úsměvu do neutrálního, uvolněného výrazu — barva zvuku se mírně ztemní."
+      },
+      {
+        name: "Poloha patra",
+        desc: "Zvednuté patro (jako při zívnutí) ztmaví zvuk, uvolněné patro ho zesvětlí.",
+        howto: "Jak na to: Zkuste na jednom tónu napodobit začátek zívnutí (patro nahoru) a pak ho uvolnit — všimněte si rozdílu v \"prostoru\" zvuku."
+      },
+      {
+        name: "Otevření nosní dutiny",
+        desc: "Otevřený nosní průchod dodá zvuku nosový přídech, uzavřený ho odstraní.",
+        howto: "Jak na to: Zkuste zazpívat tón normálně a pak se zacpaným nosem — uslyšíte rozdíl v rezonanci."
       }
     ]
   },
   {
     id: "effects",
     title: "✨ Zvukové efekty",
-    intro: "Efekty se přidávají \"na vrch\" základního módu — dodávají charakter a emoci, ale měly by zůstat volitelné ozdoby, ne základ zvuku.",
+    intro: "Efekty jsou zvuky nesouvisející s melodií nebo textem, které podtrhují výraz a styl. Jsou to pokročilé techniky — než je budete trénovat, měli byste mít pod kontrolou tři základní principy a volbu módu. Zkoušejte jen krátce a pokud cítíte škrábání, přestaňte.",
     items: [
       {
         name: "Distortion (zkreslení)",
-        desc: "Drsný, \"chrčivý\" přídech ve zvuku — vzniká přidáním napětí ve falešných hlasivkách (nad těmi pravými). Používá se pro intenzitu a emoci, typicky v rocku.",
-        howto: "Jak na to: Zkuste lehce zachrčet jako při \"naštvané\" reakci — \"Grrr\" s napětím v horní části hrdla. Začněte velmi mírně, jen náznak, a postupně (pokud to bude pohodlné) zesilte."
+        desc: "Drsný, chrčivý přídech ve zvuku — vzniká přidáním napětí ve falešných hlasivkách nad těmi pravými.",
+        howto: "Jak na to: Zkuste lehce zachrčet jako při \"naštvané\" reakci — \"Grrr\". Začněte velmi mírně, jen náznak."
       },
       {
-        name: "Growl (vrčení)",
-        desc: "Hluboké vrčivé zabarvení — falešné hlasivky kmitají spolu s pravými. Efektní, ale náročné na hlasivky — nepřehánět, hlavně bez rozezpívání.",
-        howto: "Jak na to: Podobné jako vrčení motorky nebo psa — nízký, drsný tón. Vždy jen krátce a po důkladném rozezpívání. Pokud cítíte škrábání v krku, okamžitě přestaňte."
+        name: "Creak / Creaking",
+        desc: "Velmi nízký, vrzavý zvuk (podobný vrzání dveří), vznikající pomalým, nepravidelným kmitáním hlasivek na samé hranici jejich rozsahu.",
+        howto: "Jak na to: Zkuste vydat nejnižší možný zvuk, jaký umíte — mělo by to znít jako tiché \"vrzání\" nebo praskání, ne jako tón."
       },
       {
         name: "Rattle (chrastění)",
-        desc: "Krátké \"zachrastění\" na začátku tónu — podobné lehkému zakuckání. Dodává zpěvu syrovost a charakter, často u blues a soulu.",
-        howto: "Jak na to: Zkuste na začátku tónu udělat krátké, lehké \"kch\" jako mírné zakašlání, hned přecházející do čistého tónu. Mělo by to být subtilní ozdoba, ne hlavní zvuk."
+        desc: "Krátké \"zachrastění\" — podobné lehkému zakuckání, dodává zpěvu syrovost a charakter.",
+        howto: "Jak na to: Na začátku tónu zkuste krátké, lehké \"kch\" jako mírné zakašlání, hned přecházející do čistého tónu."
+      },
+      {
+        name: "Growl (vrčení)",
+        desc: "Hluboké vrčivé zabarvení — falešné hlasivky kmitají spolu s pravými.",
+        howto: "Jak na to: Podobné vrčení motorky nebo psa — nízký, drsný tón. Vždy jen krátce, po rozezpívání."
+      },
+      {
+        name: "Grunt (zabručení)",
+        desc: "Krátký, drsný a silový zvuk na začátku tónu, podobný bručení nebo zafunění.",
+        howto: "Jak na to: Zkuste krátké \"hmf\" jako při zdvihání něčeho těžkého, a hned poté přejděte do tónu."
+      },
+      {
+        name: "Screams (screamy)",
+        desc: "Velmi intenzivní, křičivé zvuky — od čistých vysokých výkřiků až po plně zkreslené screamy. Patří mezi nejnáročnější efekty.",
+        howto: "Jak na to: Tento efekt vyžaduje výbornou kontrolu opory a twangu — doporučujeme zkoušet jen krátce, po důkladném rozezpívání, a okamžitě přestat při jakémkoli nepohodlí."
+      },
+      {
+        name: "Intentional vocal breaks (úmyslné zlomy)",
+        desc: "Náhlá, slyšitelná změna zvuku — typicky přechod do falzeta (Neutral ve falzetu) a zase zpět, jako \"praskání\" hlasu.",
+        howto: "Jak na to: Zkuste na sjíždějícím tónu nechat hlas \"přeskočit\" do velmi lehkého, vzdušného zvuku (falzeta) a pak se vrátit zpět — jako u jódlování."
+      },
+      {
+        name: "Audible Air (slyšitelný vzduch)",
+        desc: "Vědomě přidaný dechový, vzdušný přízvuk ke zvuku. Bezpečně proveditelné pouze v módu Neutral.",
+        howto: "Jak na to: V módu Neutral zkuste zazpívat tón tak, aby kromě tónu byl slyšet i lehký \"šum\" dechu — jako šeptaný zpěv s tónem."
       },
       {
         name: "Vibrato",
-        desc: "Pravidelné kolísání výšky tónu. Může být pomalé a široké (klasický sborový styl) nebo rychlé a úzké (pop/jazz). Důležité je, aby vibrato bylo řízené, ne nekontrolované třesení.",
-        howto: "Jak na to: Začněte na pohodlném tónu a zkuste zpomaleně \"vlnit\" výšku nahoru-dolů jako sirénu o velmi malém rozsahu (čtvrttón). Postupně zrychlujte, dokud nezní jako přirozené vibrato. Cvičit pomalu a v klidném tempu."
+        desc: "Pravidelné kolísání výšky tónu — může vznikat z hrtanu (laryngeální vibrato) nebo jako pravidelné \"údery\" (hammer vibrato).",
+        howto: "Jak na to: Začněte na pohodlném tónu a zkuste pomalu \"vlnit\" výšku nahoru-dolů o malý interval jako pomalou sirénu. Postupně zrychlujte, dokud nezní jako přirozené vibrato."
+      },
+      {
+        name: "Ornamentace (rychlé běhy not)",
+        desc: "Rychlé melodické ozdoby — během několika tónů nahoru/dolů kolem hlavní melodie, typické pro pop, R&B a gospel.",
+        howto: "Jak na to: Vezměte krátký úsek melodie a zkuste velmi pomalu přidat 2–3 sousední tóny jako \"obtočení\" hlavní noty, postupně zrychlujte."
       }
     ]
   },
@@ -4528,23 +4680,60 @@ const CVT_CONTENT = [
     items: [
       {
         name: "Chest voice (hrudní rejstřík)",
-        desc: "Plný, silný zvuk používaný v nižší a střední poloze. Cítíte vibrace v hrudi. Základní rejstřík pro mluvení i většinu zpěvu v pohodlné poloze.",
-        howto: "Jak na to: Zazpívejte pohodlný tón ve své mluvní poloze a položte si ruku na hrudní kost — měli byste cítit slabé vibrace. Pokud žádné necítíte, zkuste tón mírně zesílit bez tlaku v krku."
+        desc: "Plný, silný zvuk používaný v nižší a střední poloze. Cítíte vibrace v hrudi.",
+        howto: "Jak na to: Zazpívejte pohodlný tón ve své mluvní poloze a položte si ruku na hrudní kost — měli byste cítit slabé vibrace."
       },
       {
         name: "Head voice (hlavový rejstřík)",
-        desc: "Lehčí, \"vznosnější\" zvuk ve vyšší poloze, vibrace cítíte víc v hlavě. Méně tlaku na hlasivky než při tažení chest voice do výšek.",
-        howto: "Jak na to: Zazpívejte vyšší tón na slabiku \"hú\" nebo \"ní\", jako byste \"plavali\" zvukem nahoru. Měli byste cítit lehkou vibraci kolem nosu/čela, ne tlak v krku."
+        desc: "Lehčí, vznosnější zvuk ve vyšší poloze, vibrace cítíte víc v hlavě.",
+        howto: "Jak na to: Zazpívejte vyšší tón na slabiku \"hú\" nebo \"ní\", jako byste \"plavali\" zvukem nahoru."
       },
       {
         name: "Falzet",
-        desc: "Velmi lehký, vzdušný zvuk v nejvyšší poloze — hlasivky se nedotýkají úplně. Charakteristické pro některé pop/falzetové pasáže u mužských hlasů.",
-        howto: "Jak na to: Zkuste velmi tiše a vzdušně zazpívat vysoký tón, jako byste foukali přes hlas — měl by znít trochu \"duté\" a éterické, bez síly."
+        desc: "Velmi lehký, vzdušný zvuk v nejvyšší poloze — hlasivky se nedotýkají úplně.",
+        howto: "Jak na to: Zkuste velmi tiše a vzdušně zazpívat vysoký tón, jako byste foukali přes hlas."
       },
       {
         name: "Mix (smíšený rejstřík)",
-        desc: "Plynulý přechod mezi chest a head voice bez slyšitelného \"zlomu\". Cílem je, aby přechody mezi rejstříky byly hladké a hlas zněl konzistentně v celém rozsahu.",
-        howto: "Jak na to: Zazpívejte pomalé glissando (plynulý sjezd/výjezd) z nízkého do vysokého tónu na \"ú\" nebo \"ó\" a snažte se, aby zvuk neměl žádný slyšitelný \"zlom\" nebo skok kvality. Pokud zlom uslyšíte, zpomalte a projeďte tu oblast vícekrát."
+        desc: "Plynulý přechod mezi chest a head voice bez slyšitelného zlomu.",
+        howto: "Jak na to: Zazpívejte pomalé glissando z nízkého do vysokého tónu na \"ú\" a snažte se, aby zvuk neměl žádný slyšitelný \"zlom\"."
+      }
+    ]
+  },
+  {
+    id: "hoarseness",
+    title: "🩺 Chrapot a péče o hlas",
+    intro: "Chrapot zpravidla neznamená trvalé poškození — obvykle jde o nekontrolované sevření, které lze během pár hodin uvolnit. Pokud chrapot přetrvává dlouho, navštivte odborníka (foniatra/ORL).",
+    items: [
+      {
+        name: "Proč hlas chraptí",
+        desc: "Nejčastěji je to napětí/sevření způsobené nesprávnou technikou, stresem nebo emocemi. Další příčiny: zánět z kouře, vysychání hlasivek, infekce, alergie nebo refluxu.",
+        howto: "Co dělat: Pokud nevíte proč chraptíte, zkuste si vzpomenout — necítili jste stres, nebyl jste v zakouřeném prostředí, nemáte rýmu? Identifikace příčiny pomáhá s řešením."
+      },
+      {
+        name: "Ranní hlas je normální",
+        desc: "Po probuzení zní hlas \"vlnitě\" — hlasivky byly přes noc vysychány proudem vzduchu, často i s pootevřenými ústy.",
+        howto: "Co dělat: Nečistěte si hrudky v krku (nechrochtejte) — to jen vysušená místa znovu podráždí. Začněte mluvit/zpívat tiše a normálně, hleny se brzy uvolní samy."
+      },
+      {
+        name: "Šeptání je horší než normální mluvení",
+        desc: "Šeptání namáhá hlasivky více než běžná řeč, protože zvyšuje nekontrolované sevření.",
+        howto: "Co dělat: Pokud musíte mluvit, mluvte normálně, jasně a s oporou — ne šeptem ani \"opatrně\". Je lepší zpívat/mluvit s menší oporou než šeptat."
+      },
+      {
+        name: "Klid pro hlas (voice rest)",
+        desc: "Pokud máte podezření na noduly nebo přetrvávající chrapot, doporučuje se 4–7 dní úplného hlasového klidu — žádné mluvení, šeptání ani chrochtání.",
+        howto: "Co dělat: Pokud zkouška vyjde na období kdy chraptíte déle než pár dní, zvažte hlasový klid a komunikaci psaním. Je to nejrychlejší a nejlevnější řešení."
+      },
+      {
+        name: "Napařování (steaming)",
+        desc: "Inhalace páry zvlhčuje sliznice hlasivek a může pomoci při chrapotu.",
+        howto: "Jak na to: Nalijte vroucí vodu do misky (případně s heřmánkem), přikryjte se ručníkem a inhalujte 10 minut. Po inhalaci nemluvte alespoň 30 minut. Přestaňte napařovat asi 4 hodiny před zpěvem."
+      },
+      {
+        name: "Alkohol a kouření",
+        desc: "Alkohol rozšiřuje cévy v hlasivkách a může způsobit jejich mírné otoky. Kouř dráždí a vysušuje sliznice.",
+        howto: "Co dělat: Před zkouškou/koncertem omezte alkohol. Pokud kouříte, nepřestávejte těsně před důležitým výstupem — náhlá změna může hlas paradoxně rozhodit."
       }
     ]
   },
@@ -4552,27 +4741,26 @@ const CVT_CONTENT = [
     id: "tips",
     title: "💡 Tipy pro tenory a basy",
     intro: "Praktické rady k dechu, opoře a péči o hlas — relevantní pro všechny hlasové skupiny.",
-    diagram: svgBreathSupport,
     items: [
       {
         name: "Tenoři — vysoké tóny",
-        desc: "Při tažení do výšek nepřitlačovat víc vzduchu — naopak uvolnit a najít \"mix\" mezi chest a head voice. Příliš mnoho tlaku vede k křiklavému, nepříjemnému zvuku a rychlé únavě.",
-        howto: "Jak na to: Před vysokým tónem si představte, že zvuk \"otáčíte\" směrem nahoru a dozadu, jako by šel přes klenbu patra. Zkuste tón nejprve zazpívat tišeji než obvykle — často to pomůže najít správné nastavení."
+        desc: "Při tažení do výšek nepřitlačovat víc vzduchu — naopak uvolnit a najít \"mix\" mezi chest a head voice.",
+        howto: "Jak na to: Před vysokým tónem si představte, že zvuk \"otáčíte\" nahoru a dozadu, jako by šel přes klenbu patra. Zkuste tón nejprve zazpívat tišeji než obvykle."
       },
       {
         name: "Basy — hloubka a opora",
-        desc: "Hluboké tóny potřebují dobrou dechovou oporu (bránice), ne tlačení v krku. Uvolněná čelist a krk pomáhají dosáhnout plného, rezonujícího zvuku bez chrčení.",
-        howto: "Jak na to: Před nízkým tónem se nadechněte tak, aby se rozšířil pas/spodní žebra (ne jen hrudník). Při zpěvu udržujte čelist uvolněnou, jako byste mírně \"otevírali\" zívnutí."
+        desc: "Hluboké tóny potřebují dobrou dechovou oporu (bránice), ne tlačení v krku.",
+        howto: "Jak na to: Před nízkým tónem se nadechněte tak, aby se rozšířil pas/spodní žebra. Při zpěvu udržujte čelist uvolněnou, jako byste mírně \"otevírali\" zívnutí."
       },
       {
         name: "Rozezpívání před zkouškou",
-        desc: "I 5-10 minut jemného rozezpívání (sirény, lehké stupnice v pohodlné dynamice) výrazně sníží riziko přetížení hlasu během dvouhodinové zkoušky.",
-        howto: "Jak na to: Začněte sirénami (plynulé \"ú\" z nejnižšího do nejvyššího pohodlného tónu a zpět) v pianissimu, pak přidejte krátké stupnice na \"mama\" nebo \"nyaa\" ve středním rozsahu, postupně rozšiřujte."
+        desc: "I 5-10 minut jemného rozezpívání výrazně sníží riziko přetížení hlasu během dvouhodinové zkoušky.",
+        howto: "Jak na to: Začněte sirénami (\"ú\" z nejnižšího do nejvyššího pohodlného tónu) v pianissimu, pak krátké stupnice na \"mama\" ve středním rozsahu."
       },
       {
         name: "Pití vody",
-        desc: "Hlasivky potřebují vlhkost — pravidelné pití vody (ne ledové) během zkoušky pomáhá udržet hlas v lepší kondici, zvlášť při delším zpívání.",
-        howto: "Jak na to: Pijte vodu pokojové teploty po malých dávkách v průběhu celé zkoušky, ne jen na začátku. Vyhněte se ledové vodě a velkému množství kofeinu před zpěvem — vysušují hlasivky."
+        desc: "Hlasivky potřebují vlhkost — voda nepřichází přímo do styku s hlasivkami, ale celkové zvlhčení organismu pomáhá.",
+        howto: "Jak na to: Pijte vodu pokojové teploty po malých dávkách v průběhu celé zkoušky. Vyhněte se velkému množství kofeinu před zpěvem."
       }
     ]
   }
@@ -4580,7 +4768,7 @@ const CVT_CONTENT = [
 
 function renderCvtTab(){
   let html = `<p class="small" style="margin-bottom:16px;color:var(--muted)">
-    Stručný přehled technik inspirovaný metodou Complete Vocal Technique (CVT). Slouží jako rychlá připomínka a inspirace pro domácí cvičení, nenahrazuje práci se sbormistrem nebo pedagogem.
+    Stručný přehled techniky Complete Vocal Technique (CVT) podle Cathrine Sadolin. Slouží jako rychlá připomínka a inspirace pro domácí cvičení, nenahrazuje práci se sbormistrem nebo pedagogem.
   </p>`
 
   CVT_CONTENT.forEach(section => {
@@ -4598,6 +4786,7 @@ function renderCvtTab(){
             <div style="padding:10px 0;border-top:1px solid rgba(128,128,128,0.1)">
               <div style="font-weight:600;margin-bottom:4px">${item.name}</div>
               <div class="small" style="line-height:1.5;margin-bottom:6px">${item.desc}</div>
+              ${item.diagram ? item.diagram() : ""}
               ${item.howto ? `<div class="small" style="line-height:1.5;padding:8px 10px;background:rgba(0,122,255,0.08);border-radius:8px;color:var(--text)">${item.howto}</div>` : ""}
             </div>
           `).join("")}
