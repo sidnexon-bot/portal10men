@@ -3249,6 +3249,7 @@ async function renderPayments(){
   setLoading()
   try{
     const data = await cachedApi("payments", {email: MEMBER_EMAIL})
+    const config = await cachedApi("config")
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += `<h2 style="margin:0 0 16px">Platby</h2>`
@@ -3323,18 +3324,21 @@ async function renderPayments(){
         </div>`
       })
 
-      // --- FIXNÍ SPODNÍ PANEL ---
-      const first = data[0]
-      if(first.instructions || first.account || first.qrUrl){
-        html += `<div class="card" style="margin-top:8px">
-          <div class="small" style="font-weight:600;margin-bottom:6px">Jak zaplatit</div>
-          ${first.instructions ? `<div class="small" style="margin-bottom:8px">${escapeHtml(first.instructions)}</div>` : ""}
-          ${first.account ? `<div class="small">Účet: <b>${escapeHtml(first.account)}</b></div>` : ""}
-          ${first.iban ? `<div class="small">IBAN: <b>${escapeHtml(first.iban)}</b></div>` : ""}
-          ${first.qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(first.qrUrl)}" style="width:160px;height:160px;border-radius:8px" onerror="this.style.display='none'"></div>` : ""}
-        </div>`
-      }
-    }
+          // --- PLATEBNÍ ÚDAJE ---
+             const account      = config?.payment_account      ? String(config.payment_account).trim()      : ""
+             const iban         = config?.payment_iban          ? String(config.payment_iban).trim()          : ""
+             const instructions = config?.payment_instructions  ? String(config.payment_instructions).trim()  : ""
+             const qrUrl        = config?.payment_qr_url        ? String(config.payment_qr_url).trim()        : ""
+         
+             if(account || instructions || qrUrl){
+               html += `<div class="card" style="margin-top:8px">
+                 <div class="small" style="font-weight:600;margin-bottom:6px">Jak zaplatit</div>
+                 ${instructions ? `<div class="small" style="margin-bottom:8px;line-height:1.5">${escapeHtml(instructions)}</div>` : ""}
+                 ${account ? `<div class="small" style="margin-bottom:4px">Číslo účtu: <b>${escapeHtml(account)}</b></div>` : ""}
+                 ${iban ? `<div class="small" style="margin-bottom:4px">IBAN: <b>${escapeHtml(iban)}</b></div>` : ""}
+                 ${qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(qrUrl)}" style="width:180px;height:180px;border-radius:8px" onerror="this.style.display='none'"></div>` : ""}
+               </div>`
+             }
 
     if(isDesktop) html += `</div>`
     container().innerHTML = html
