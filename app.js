@@ -3323,6 +3323,7 @@ async function renderPayments(){
           </div>
         </div>`
       })
+     }
 
           // --- PLATEBNÍ ÚDAJE ---
              const account      = config?.payment_account      ? String(config.payment_account).trim()      : ""
