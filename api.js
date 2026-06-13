@@ -64,6 +64,30 @@ async function addToCalendarQueue(action, eventId, eventData){
   })
 }
 
+function formatPosadkyForDiscord(doprava, dopravaPosadkyJson, membersRaw){
+  if(doprava !== "Auta" || !dopravaPosadkyJson) return ""
+  let posadky = []
+  try{ posadky = JSON.parse(dopravaPosadkyJson) }catch(e){ return "" }
+  if(!Array.isArray(posadky) || !posadky.length) return ""
+
+  const members = objToArray(membersRaw)
+  const getName = id => {
+    const m = members.find(m => m.id === id)
+    return m ? m.name : "—"
+  }
+
+  let text = "\n\n🚗 **Posádky:**\n"
+  posadky.forEach(p => {
+    text += `**${p.nazev || "Auto"}:** `
+    text += `${p.ridic ? getName(p.ridic) + " (řidič)" : "—"}`
+    if(Array.isArray(p.posadka) && p.posadka.length){
+      text += ", " + p.posadka.map(id => getName(id)).join(", ")
+    }
+    text += "\n"
+  })
+  return text
+}
+
 // ===============================
 // API FUNKCE
 // ===============================
@@ -308,16 +332,18 @@ async function addEvent(params){
     })
   }
 
-      // Discord oznámení
+    // Discord oznámení
       if(!params.silent){
         const config = await dbGet("/config")
         const roleId = config?.discord_role_id
           ? String(config.discord_role_id).replace(/"/g, '').trim()
           : null
         const rolePing = roleId ? ('<@&' + roleId + '>') : ''
-    
+
+        const posadkyText = formatPosadkyForDiscord(params.doprava, params.doprava_posadky, await dbGet("/members"))
+
         await sendDiscordMessage({
-          message: `${rolePing} 📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}\n\nProsím, potvrďte účast v docházce. 🙏`
+          message: `${rolePing} 📅 **V 10base byla vytvořena nová akce:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}${params.date_end ? " – " + formatDateSimple(params.date_end) : ""}\n- **Slot:** ${params.start ? params.start : "—"}${params.end ? " – " + params.end : ""}\n- **Místo:** ${params.place || (params.call_url ? params.call_url : "—")}${posadkyText}\n\nProsím, potvrďte účast v docházce. 🙏`
         })
       }
 
@@ -382,6 +408,9 @@ async function updateEvent(params){
   if((old?.type        || "") !== (params.type        || "")) zmeny.push("- **Typ akce:** ~~" + (old?.type || "—") + "~~ → " + (params.type || "—"))
   if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** ~~" + (old?.date_end ? formatDateSimple(old.date_end) : "—") + "~~ → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
 
+    // sleduj změnu posádek
+  if((old?.doprava_posadky || "") !== (params.doprava_posadky || "")) zmeny.push("- **Posádky:** aktualizovány")
+
   if(!params.silent && zmeny.length > 0){
     const config = await dbGet("/config")
     const roleId = config?.discord_role_id
@@ -389,8 +418,10 @@ async function updateEvent(params){
       : null
     const rolePing = roleId ? ('<@&' + roleId + '>') : ''
 
+    const posadkyText = formatPosadkyForDiscord(params.doprava, params.doprava_posadky, await dbGet("/members"))
+
     await sendDiscordMessage({
-      message: `${rolePing} ✏️ **Aktualizované info k akci: ${params.name}**\n\n${zmeny.join('\n')}`
+      message: `${rolePing} ✏️ **Aktualizované info k akci: ${params.name}**\n\n${zmeny.join('\n')}${posadkyText}`
     })
   }
 
