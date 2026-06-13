@@ -1297,6 +1297,7 @@ async function api(action, params = {}){
     case "deletemember":     return await deleteMember(params.id)
     case "sendpush":         return await sendPush(params.title, params.message)
     case "discord":          return await sendDiscordMessage(params)
+    case "getconfig":        return await dbGet("/config")
 
     default: throw new Error("Unknown action: " + action)
   }
