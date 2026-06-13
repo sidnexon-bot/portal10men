@@ -181,6 +181,7 @@ const attendance = objToArray(dochazka)
       TYPE:            akce.type          || "Zkouška",
       STATUS:          akce.status,
       DOC_URL:         akce.doc_url       || "",
+      REQUIRES_PROGRAM: akce.requires_program !== false,
       TEMPLATE_ID:     akce.template_id   || "",
       RECURRENCE_TYPE: akce.recurrence_type || "",
       SRAZ:            akce.sraz          || "",
