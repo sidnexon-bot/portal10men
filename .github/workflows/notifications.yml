@@ -2,8 +2,9 @@ name: Daily Notifications
 
 on:
   schedule:
-    - cron: '0 7 * * *'
-    - cron: '0 9 * * 0'
+    - cron: '0 7 * * 1-6'    # každý den KROMĚ neděle v 7:00 UTC
+    - cron: '0 9 * * 0'      # každou neděli v 9:00 UTC
+
   workflow_dispatch:
 
 jobs:
