@@ -3249,7 +3249,7 @@ async function renderPayments(){
   setLoading()
   try{
     const data = await cachedApi("payments", {email: MEMBER_EMAIL})
-    const config = await cachedApi("config")
+    const config = await api("getconfig")
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
     html += `<h2 style="margin:0 0 16px">Platby</h2>`
