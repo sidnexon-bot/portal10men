@@ -15,7 +15,6 @@ jobs:
 
       - name: Send notifications
         env:
-          ONESIGNAL_API_KEY: ${{ secrets.ONESIGNAL_API_KEY }}
           FIREBASE_SECRET: ${{ secrets.FIREBASE_SECRET }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node .github/scripts/notify.js
