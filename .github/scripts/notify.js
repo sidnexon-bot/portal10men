@@ -1,7 +1,6 @@
 const https = require('https');
 
 const FIREBASE_URL = 'https://base-39f52-default-rtdb.europe-west1.firebasedatabase.app';
-const ONESIGNAL_APP_ID = '01477d89-1329-43f6-91f2-bb597d5a681e';
 
 function fbGet(path){
   return new Promise((resolve, reject) => {
@@ -11,34 +10,6 @@ function fbGet(path){
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve(JSON.parse(data)));
     }).on('error', reject);
-  });
-}
-
-function sendNotification(title, message, segments){
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({
-      app_id: ONESIGNAL_APP_ID,
-      included_segments: segments || ['All'],
-      headings: { en: title, cs: title },
-      contents: { en: message, cs: message }
-    });
-    const options = {
-      hostname: 'onesignal.com',
-      path: '/api/v1/notifications',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Key ' + process.env.ONESIGNAL_API_KEY
-      }
-    };
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => { console.log('Notification sent:', data); resolve(data); });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
   });
 }
 
