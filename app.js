@@ -3344,7 +3344,7 @@ async function renderPayments(){
        <span style="color:var(--muted)">›</span>
      </div>
      <div style="display:none;margin-top:10px">
-       <p class="small" style="margin-bottom:12px;line-height:1.5">Stáhni si příslušnou tabulku, vyplň ji a pošli Zdendovi. Každý pracuje ve své vlastní kopii.</p>
+       <p class="small" style="margin-bottom:12px;line-height:1.5">Pokud jsi 10menům platil něco z vlastní kapsy, nebo jsi kvůli akci 10men jel svým autem, můžeš si tyto výdaje nechat proplatit. Stáhni si příslušnou tabulku, vyplň ji a pošli ji Zdendovi. Pokud se jedná o běžný výdaj, pošli vyplněnou tabulku spolu s oskenovanou účtenkou (nebo dej originál Zdendovi). U cesťáku není účtenka potřeba, výdaj se spočítá na základě ujeté vzdálenosti a průměrné spotřeby paliva uvedené v techničáku tvého auta.</p>
        <div style="display:flex;gap:8px">
          <a href="https://docs.google.com/spreadsheets/d/1cp9n0VUQfyGpgBRmVp7YeYXKI6zC3HQ5/export?format=xlsx" target="_blank"
            style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
