@@ -2255,7 +2255,7 @@ function openDeleteEventModal(id){
   const isSeries  = !!(thisEvent?.TEMPLATE_ID)
 
   if(!isSeries){
-    confirmModal("Opravdu zrušit a smazat tuto akci? Bude odstraněna z 10base i z Google kalendáře.", async () => {
+    confirmModal("Opravdu smazat tuto akci? Bude odstraněna z 10base i z Google kalendáře.", async () => {
 
       try{
         showSaving()
