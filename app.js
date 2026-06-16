@@ -3318,26 +3318,6 @@ async function renderPayments(){
             ` : ""}
 
           </div>
-
-          <div style="margin-top:12px;border-top:1px solid rgba(128,128,128,0.1);padding-top:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('span:last-child').textContent=this.nextElementSibling.style.display==='block'?'‹':'›'">
-          <span style="font-weight:600;font-size:14px">Proplacení výdajů a paliva</span>
-          <span style="color:var(--muted)">›</span>
-        </div>
-        <div style="display:none;margin-top:10px">
-          <p class="small" style="margin-bottom:12px;line-height:1.5">Stáhni si příslušnou tabulky, vyplň ji a pošli Zdendovi. Každý pracuje ve své vlastní kopii — stáhni soubor tlačítkem níže.</p>
-          <div style="display:flex;gap:8px">
-            <a href="https://docs.google.com/spreadsheets/d/1cp9n0VUQfyGpgBRmVp7YeYXKI6zC3HQ5/export?format=xlsx" target="_blank"
-              style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
-              💸 Chci proplatit výdaje
-            </a>
-            <a href="https://docs.google.com/spreadsheets/d/1s_Yb04Wm6eH0yYex2gwVQZXg4Dec2kfG/export?format=xlsx" target="_blank"
-              style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
-              ⛽ Chci proplatit palivo
-            </a>
-          </div>
-        </div>
-      </div>
         </div>`
       })
      }
@@ -3357,6 +3337,26 @@ async function renderPayments(){
                  ${qrUrl ? `<div style="margin-top:12px;text-align:center"><img src="${escapeHtml(qrUrl)}" style="width:180px;height:180px;border-radius:8px" onerror="this.style.display='none'"></div>` : ""}
                </div>`
              }
+
+     html += `<div class="card" style="margin-top:8px">
+     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('span:last-child').textContent=this.nextElementSibling.style.display==='block'?'‹':'›'">
+       <span style="font-weight:600;font-size:14px">Proplacení výdajů a paliva</span>
+       <span style="color:var(--muted)">›</span>
+     </div>
+     <div style="display:none;margin-top:10px">
+       <p class="small" style="margin-bottom:12px;line-height:1.5">Stáhni si příslušnou tabulku, vyplň ji a pošli Zdendovi. Každý pracuje ve své vlastní kopii.</p>
+       <div style="display:flex;gap:8px">
+         <a href="https://docs.google.com/spreadsheets/d/1cp9n0VUQfyGpgBRmVp7YeYXKI6zC3HQ5/export?format=xlsx" target="_blank"
+           style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
+           💸 Chci proplatit výdaje
+         </a>
+         <a href="https://docs.google.com/spreadsheets/d/1s_Yb04Wm6eH0yYex2gwVQZXg4Dec2kfG/export?format=xlsx" target="_blank"
+           style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
+           ⛽ Chci proplatit palivo
+         </a>
+       </div>
+     </div>
+   </div>`
 
     if(isDesktop) html += `</div>`
     container().innerHTML = html
