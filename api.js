@@ -436,57 +436,20 @@ async function updateEvent(params){
   return {status: "updated"}
 }
 
-async function deleteEvent(id){
-  // načti před smazáním
+async function deleteEvent(id, silent = false){
   const akceData = await dbGet("/akce/" + id)
   const googleEventId = akceData?.google_event_id || ""
 
-  await dbRemove("/akce/" + id)
-
-  const dochazka = await dbGet("/dochazka")
-  const toDelete = objToArray(dochazka).filter(d => d.id_akce === id)
-  for(const d of toDelete) await dbRemove("/dochazka/" + d.id)
-
-  const program = await dbGet("/program")
-  const progDel = objToArray(program).filter(p => p.id_akce === id)
-  for(const p of progDel) await dbRemove("/program/" + p.id)
-
-  await sendDiscordMessage({
-    message: `🗑️ **Akce byla smazána:**\n\n- **${akceData?.name || id}**`
-  })
-
-  await addToCalendarQueue("delete", id, {
-    google_event_id: googleEventId
-  })
-
-  return {status: "deleted"}
-}
-
-async function cancelEvent(params){
-  const id = typeof params === "string" ? params : params.id
-  if(!id){ console.error("cancelEvent: missing id"); return {error: "missing id"} }
+  // nastav docházku všech členů na Nepřijdu
   const members  = await dbGet("/members")
   const dochazka = await dbGet("/dochazka")
-  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
-  const dochazkaList = objToArray(dochazka)
-
-  await dbUpdate("/akce/" + params.id, {
-    name:             params.name    || "",
-    date:             params.date    || "",
-    start:            params.start   || "",
-    end:              params.end     || "",
-    place:            params.place   || "",
-    note:             params.note    || "",
-    type:             params.type    || "Zkouška",
-    call_url:         params.call_url || "",
-    requires_program: params.requires_program !== false,
-    status:           "Zrušená"
-  })
+  const memberList    = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
+  const dochazkaList  = objToArray(dochazka)
 
   for(const m of memberList){
-    const existing = dochazkaList.find(d => d.id_akce === params.id && d.email === m.email)
+    const existing = dochazkaList.find(d => d.id_akce === id && d.email === m.email)
     const data = {
-      id_akce:    params.id,
+      id_akce:    id,
       email:      m.email,
       status:     "Nepřijdu",
       reason:     "Zrušeno",
@@ -502,21 +465,35 @@ async function cancelEvent(params){
     }
   }
 
-    if(!params.silent){
+  // smaž akci, docházku a program
+  await dbRemove("/akce/" + id)
+
+  const toDelete = dochazkaList.filter(d => d.id_akce === id)
+  for(const d of toDelete) await dbRemove("/dochazka/" + d.id)
+
+  const program = await dbGet("/program")
+  const progDel = objToArray(program).filter(p => p.id_akce === id)
+  for(const p of progDel) await dbRemove("/program/" + p.id)
+
+  // Discord
+  if(!silent){
     const config = await dbGet("/config")
     const roleId = config?.discord_role_id
       ? String(config.discord_role_id).replace(/"/g, '').trim()
       : null
     const rolePing = roleId ? ('<@&' + roleId + '>') : ''
 
+    const datum = akceData?.date ? formatDateSimple(akceData.date) : "—"
     await sendDiscordMessage({
-      message: `${rolePing} ❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${params.name}**\n- **Kdy:** ${params.date ? formatDateSimple(params.date) : "—"}\n\nAkce byla zrušena a docházka všech členů nastavena na Nepřijdu.`
+      message: `${rolePing} ❌ **Pozor, tato akce se RUŠÍ:**\n\n- **${akceData?.name || id}**\n- **Kdy:** ${datum}\n\nAkce byla zrušena, smazána z 10base a odstraněna z kalendáře. Docházka všech členů nastavena na Nepřijdu.`
     })
   }
 
-      await addToCalendarQueue("delete", params.id, {})
+  await addToCalendarQueue("delete", id, {
+    google_event_id: googleEventId
+  })
 
-  return {status: "cancelled"}
+  return {status: "deleted"}
 }
 
 async function setProgram(params){
