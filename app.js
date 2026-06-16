@@ -2255,7 +2255,8 @@ function openDeleteEventModal(id){
   const isSeries  = !!(thisEvent?.TEMPLATE_ID)
 
   if(!isSeries){
-    confirmModal("Opravdu smazat tuto akci?", async () => {
+    confirmModal("Opravdu zrušit a smazat tuto akci? Bude odstraněna z 10base i z Google kalendáře.", async () => {
+
       try{
         showSaving()
         await api("deleteevent", {id})
@@ -3089,12 +3090,8 @@ async function saveEvent(id, notify = true){
     showSaving()
     if(id){
       if(status === "Zrušená"){
-        await api("cancelevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, requires_program: requiresProgram, call_url: callUrl,
-          sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
-          spacaky, strava, strava_nota: stravaNota,
-          obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
-          silent: !notify
-        })
+        await api("deleteevent", {id, silent: !notify})
+
       }else{
         await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
           sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
