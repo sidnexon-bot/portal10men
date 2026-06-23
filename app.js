@@ -2292,11 +2292,11 @@ function openEditEventModal(id){
   modal.classList.remove("hidden")
 }
 
-function openGrilovackaModal(akceId){
+ffunction openGrilovackaModal(akceId){
   openFormModal("Co vezmeš s sebou? 🔥", [
-    {id: "gCo",        label: "Co s sebou",    type: "text",     placeholder: "např. Hermelíny na grilování"},
-    {id: "gKdoPrinese",label: "Kdo to přinese",  type: "text",     placeholder: MEMBER_NAME || "Tvoje jméno"},
-    {id: "gKdoSiDa",   label: "Kdo si to dá", type: "text",     placeholder: "např. Všichni"}
+    {key: "gCo",         label: "Co s sebou",    type: "text", placeholder: "např. Hermelíny na grilování"},
+    {key: "gKdoPrinese", label: "Kdo to přinese",  type: "text", placeholder: MEMBER_NAME || "Tvoje jméno"},
+    {key: "gKdoSiDa",    label: "Kdo si to dá", type: "text", placeholder: "např. Všichni"}
   ], async (vals) => {
     await api("addgrilovacka", {
       akce_id:     akceId,
@@ -2306,6 +2306,7 @@ function openGrilovackaModal(akceId){
       added_by:    MEMBER_EMAIL
     })
     invalidateCache("eventdetail", akceId)
+    closeFormModal()
     openEvent(akceId)
   })
 }
