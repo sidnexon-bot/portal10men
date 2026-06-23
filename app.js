@@ -2059,7 +2059,9 @@ async function openEvent(id){
 
     // --- GRILOVAČKA ---
     if(event.IS_GRILOVACKA){
-      const grilovackaItems = await api("getgrilovacka", {id})
+     console.log("IS_GRILOVACKA true, loading items...")
+     const grilovackaItems = await api("getgrilovacka", {id})
+     console.log("grilovackaItems:", grilovackaItems)
       html += `<div class="event-card" style="margin-bottom:16px">
         <div class="event-label">Co s sebou 🔥</div>
         ${grilovackaItems.length ? `
