@@ -494,6 +494,13 @@ async function deleteEvent(id, silent = false){
     })
   }
 
+  // smaž položky grilovačky pokud existují
+  await dbRemove("/grilovacka_items/" + id)
+
+  await addToCalendarQueue("delete", id, {
+    google_event_id: googleEventId
+  })
+
   await addToCalendarQueue("delete", id, {
     google_event_id: googleEventId
   })
@@ -634,6 +641,36 @@ async function updateEntireSeries(params){
   }
 
   return { status: "entire_series_updated", count: toUpdate.length }
+}
+
+async function getGrilovacka(akceId){
+  const data = await dbGet("/grilovacka_items/" + akceId)
+  return objToArray(data).map(i => ({
+    ID:         i.id,
+    CO:         i.co         || "",
+    KDO_PRINESE: i.kdo_prinese || "",
+    KDO_SI_DA:  i.kdo_si_da  || "",
+    ADDED_BY:   i.added_by   || "",
+    ADDED_AT:   i.added_at   || ""
+  }))
+}
+
+async function addGrilovackaItem(params){
+  const iRef = push(ref(DB, "/grilovacka_items/" + params.akce_id))
+  await dbSet("/grilovacka_items/" + params.akce_id + "/" + iRef.key, {
+    id:          iRef.key,
+    co:          params.co          || "",
+    kdo_prinese: params.kdo_prinese || "",
+    kdo_si_da:   params.kdo_si_da   || "",
+    added_by:    params.added_by    || "",
+    added_at:    new Date().toISOString()
+  })
+  return {status: "added"}
+}
+
+async function deleteGrilovackaItem(itemId, akceId){
+  await dbRemove("/grilovacka_items/" + akceId + "/" + itemId)
+  return {status: "deleted"}
 }
 
 async function getEnergy(){
@@ -1251,6 +1288,9 @@ async function api(action, params = {}){
     case "deletesong":       return await deleteSong(params.id)
     case "favorites":        return await getFavorites(params.email)
     case "togglefavorite":   return await toggleFavorite(params)
+    case "getgrilovacka":    return await getGrilovacka(params.id)
+    case "addgrilovacka":    return await addGrilovackaItem(params)
+    case "deletegrilovacka": return await deleteGrilovackaItem(params.id, params.akce_id)
     case "energy":           return await getEnergy()
     case "setenergy":        return await setEnergy(params)
     case "updateenergie":    return await updateEnergie(params)
