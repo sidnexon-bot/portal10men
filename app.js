@@ -2292,7 +2292,7 @@ function openEditEventModal(id){
   modal.classList.remove("hidden")
 }
 
-ffunction openGrilovackaModal(akceId){
+function openGrilovackaModal(akceId){
   openFormModal("Co vezmeš s sebou? 🔥", [
     {key: "gCo",         label: "Co s sebou",    type: "text", placeholder: "např. Hermelíny na grilování"},
     {key: "gKdoPrinese", label: "Kdo to přinese",  type: "text", placeholder: MEMBER_NAME || "Tvoje jméno"},
