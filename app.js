@@ -2058,6 +2058,43 @@ async function openEvent(id){
       </div>`
     }
 
+    // --- GRILOVAČKA ---
+    if(event.IS_GRILOVACKA){
+      const grilovackaItems = await api("getgrilovacka", {id})
+      html += `<div class="event-card" style="margin-bottom:16px">
+        <div class="event-label">Co s sebou 🔥</div>
+        ${grilovackaItems.length ? `
+          <table style="width:100%;font-size:13px;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:6px 4px;border-bottom:2px solid rgba(128,128,128,0.15)">Co</th>
+                <th style="text-align:left;padding:6px 4px;border-bottom:2px solid rgba(128,128,128,0.15)">Kdo přinese</th>
+                <th style="text-align:left;padding:6px 4px;border-bottom:2px solid rgba(128,128,128,0.15)">Kdo si dá</th>
+                <th style="padding:6px 4px;border-bottom:2px solid rgba(128,128,128,0.15)"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${grilovackaItems.map(item => `
+                <tr>
+                  <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">${escapeHtml(item.CO)}</td>
+                  <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">${escapeHtml(item.KDO_PRINESE)}</td>
+                  <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">${escapeHtml(item.KDO_SI_DA)}</td>
+                  <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">
+                    ${item.ADDED_BY === MEMBER_EMAIL || MEMBER_ROLE === "ADMIN" ? `
+                      <button onclick="deleteGrilovackaItem('${item.ID}','${id}')" style="background:#fde8e8;color:#c00;padding:4px 8px;font-size:11px;width:auto">✕</button>
+                    ` : ""}
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        ` : `<p class="notice" style="margin:0">Zatím nikdo nic nepřidal.</p>`}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
+          <button onclick="openGrilovackaModal('${id}')" style="width:100%">+ Přidat položku</button>
+        </div>
+      </div>`
+    }
+
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
     const encoreProgram = program.filter(p => p.ENCORE)
@@ -2253,6 +2290,34 @@ function openEditEventModal(id){
 
   modal.classList.remove("hidden")
 }
+
+function openGrilovackaModal(akceId){
+  openFormModal("Co vezmeš s sebou? 🔥", [
+    {id: "gCo",        label: "Co s sebou",    type: "text",     placeholder: "např. Hermelíny na grilování"},
+    {id: "gKdoPrinese",label: "Kdo to přinese",  type: "text",     placeholder: MEMBER_NAME || "Tvoje jméno"},
+    {id: "gKdoSiDa",   label: "Kdo si to dá", type: "text",     placeholder: "např. Všichni"}
+  ], async (vals) => {
+    await api("addgrilovacka", {
+      akce_id:     akceId,
+      co:          vals.gCo,
+      kdo_prinese: vals.gKdoPrinese || MEMBER_NAME,
+      kdo_si_da:   vals.gKdoSiDa,
+      added_by:    MEMBER_EMAIL
+    })
+    invalidateCache("eventdetail", akceId)
+    openEvent(akceId)
+  })
+}
+
+async function deleteGrilovackaItem(itemId, akceId){
+  if(!confirm("Smazat tuto položku?")) return
+  await api("deletegrilovacka", {id: itemId, akce_id: akceId})
+  invalidateCache("eventdetail", akceId)
+  openEvent(akceId)
+}
+
+window.openGrilovackaModal  = openGrilovackaModal
+window.deleteGrilovackaItem = deleteGrilovackaItem
 
 function openDeleteEventModal(id){
   const cached    = lsGet("detail_" + id)
