@@ -3169,6 +3169,7 @@ async function saveEvent(id, notify = true){
           sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
           spacaky, strava, strava_nota: stravaNota,
           obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+          is_grilovacka: isGrilovacka,
           silent: !notify
         })
       }
@@ -3182,6 +3183,7 @@ async function saveEvent(id, notify = true){
         sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
+        is_grilovacka: isGrilovacka,
         silent: !notify
       })
       invalidateCache("events")
