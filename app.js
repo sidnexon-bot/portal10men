@@ -1737,6 +1737,11 @@ function renderEventFormExtra(){
       <label style="margin-top:12px">Harmonogram<br>
         <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
       </label>
+      <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="fIsGrilovacka" ${window.EDIT_EVENT?.IS_GRILOVACKA ? "checked" : ""} style="width:auto;margin:0">
+        <span>Grilovačka 🔥 — zobrazit sdílený seznam věcí</span>
+      </label>
+
     `
   }else if(isSoustredeni){
     panel.innerHTML = `
@@ -3055,6 +3060,8 @@ async function saveEvent(id, notify = true){
   const stravaNota      = document.getElementById("fStravaNota")?.value    ?? window.EDIT_EVENT?.STRAVA_NOTA    ?? ""
   const obleceniS       = document.getElementById("fObleceniSoustredeni")?.value    ?? window.EDIT_EVENT?.OBLECENI_S     ?? ""
   const obleceniSTyp    = document.getElementById("fObleceniSoustredeniTyp")?.value ?? window.EDIT_EVENT?.OBLECENI_S_TYP ?? ""
+  const isGrilovacka    = document.getElementById("fIsGrilovacka")?.checked ?? window.EDIT_EVENT?.IS_GRILOVACKA ?? false
+
 
   if(!name){ alert("Zadej název akce"); return }
   if(!date){ alert("Zadej datum"); return }
