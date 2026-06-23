@@ -21,8 +21,6 @@ const isDesktop = window.innerWidth >= 1025
 
 // Inicializace identity z Google session (přihlášení přes login.html)
 function initMemberFromSession(){
-  console.log("MEMBER_ROLE:", MEMBER_ROLE)
-  console.log("user z localStorage:", JSON.parse(localStorage.getItem('10base_user')))
   const user = JSON.parse(localStorage.getItem('10base_user') || 'null');
   if(!user){
     window.location.href = 'login.html';
@@ -1973,6 +1971,7 @@ async function openEvent(id){
   try{
 
     const data       = await cachedApi("eventdetail", {id})
+    console.log("eventdetail data:", data)
     const event      = data.event      || {}
     const program    = data.program    || []
     const attendance = data.attendance || []
@@ -2059,7 +2058,6 @@ async function openEvent(id){
     }
 
     // --- GRILOVAČKA ---
-    console.log(grilovackaItems)
     if(event.IS_GRILOVACKA){
       const grilovackaItems = await api("getgrilovacka", {id})
       html += `<div class="event-card" style="margin-bottom:16px">
