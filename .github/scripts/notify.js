@@ -145,7 +145,7 @@ async function main(){
           }).join('\n');
         }
       }else{
-        programText = kajaPing + ' program zatim neni vyplnen 🎵';
+        programText = event.requires_program !== false ? kajaPing + ' program zatim neni vyplnen 🎵' : '—';
       }
 
       const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
@@ -205,7 +205,7 @@ async function main(){
             }).join('\n');
           }
         }else{
-          progText = kajaPing + ' program zatim neni vyplnen 🎵';
+          progText = ev.requires_program !== false ? kajaPing + ' program zatim neni vyplnen 🎵' : '—';
         }
 
         const datum = new Date(ev.date).toLocaleDateString('cs-CZ', {weekday: 'long', day: 'numeric', month: 'long'});
