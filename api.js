@@ -135,6 +135,7 @@ async function getEvents(){
     STRAVA_NOTA:      e.strava_nota    || "",
     OBLECENI_S:       e.obleceni_s     || "",
     OBLECENI_S_TYP:   e.obleceni_s_typ || "",
+      IS_GRILOVACKA:    e.is_grilovacka  === true,
 
   }))
 }
@@ -218,7 +219,8 @@ const attendance = objToArray(dochazka)
       STRAVA:          akce.strava        || "",
       STRAVA_NOTA:     akce.strava_nota   || "",
       OBLECENI_S:      akce.obleceni_s    || "",
-      OBLECENI_S_TYP:  akce.obleceni_s_typ || ""
+      OBLECENI_S_TYP:  akce.obleceni_s_typ || "",
+        IS_GRILOVACKA:   akce.is_grilovacka  === true,
     },
     attendance,
     program: prog
@@ -311,6 +313,7 @@ async function addEvent(params){
     strava_nota:      params.strava_nota    || "",
     obleceni_s:       params.obleceni_s     || "",
     obleceni_s_typ:   params.obleceni_s_typ || "",
+    is_grilovacka:    params.is_grilovacka  || false,
     doc_url:          "",
     is_template:      false,
     template_id:      "",
@@ -384,7 +387,9 @@ async function updateEvent(params){
     strava:           params.strava         || "",
     strava_nota:      params.strava_nota    || "",
     obleceni_s:       params.obleceni_s     || "",
-    obleceni_s_typ:   params.obleceni_s_typ || ""
+    obleceni_s_typ:   params.obleceni_s_typ || "",
+    is_grilovacka:    params.is_grilovacka  || false,
+    doc_url:          "",
   })
 
     // porovnej změny
