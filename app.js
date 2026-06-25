@@ -792,9 +792,17 @@ function initSidebar(){
   })
 
   // naplň profil
-  document.getElementById("sidebarAvatar").textContent = getInitials(MEMBER_NAME)
-  document.getElementById("sidebarName").textContent   = MEMBER_NAME  || "—"
-  document.getElementById("sidebarRole").textContent   = MEMBER_ROLE  || "—"
+  const sidebarAvatar = document.getElementById("sidebarAvatar")
+  if(sidebarAvatar){
+    const sbUser = JSON.parse(localStorage.getItem('10base_user') || 'null')
+    if(sbUser?.photoURL){
+      sidebarAvatar.innerHTML = `<img src="${sbUser.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    }else{
+      sidebarAvatar.textContent = getInitials(MEMBER_NAME)
+    }
+  }
+  document.getElementById("sidebarName").textContent = MEMBER_NAME || "—"
+  document.getElementById("sidebarRole").textContent = MEMBER_ROLE || "—"
 
    if(AUTH_ROLE === "ADMIN"){
   const switchBtn = document.createElement("button")
