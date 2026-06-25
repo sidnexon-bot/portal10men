@@ -56,11 +56,12 @@
 
       // ulož do localStorage
       localStorage.setItem("10base_user", JSON.stringify({
-        email: member.email,
-        name:  member.name,
-        role:  member.role,
-        voice: member.voice,
-        success: true
+        email:    member.email,
+        name:     member.name,
+        role:     member.role,
+        voice:    member.voice,
+        photoURL: user.photoURL || "",
+        success:  true
       }))
 
       window.location.href = "index.html"
