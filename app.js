@@ -37,7 +37,15 @@ function initMemberFromSession(){
 
 function updateProfileBtn(){
   const profileBtn = document.getElementById("profileBtn")
-  if(profileBtn) profileBtn.textContent = getInitials(MEMBER_NAME)
+  if(profileBtn){
+    const authUser = JSON.parse(localStorage.getItem('10base_user') || 'null')
+    const photoURL = authUser?.photoURL || firebase.auth().currentUser?.photoURL
+    if(photoURL){
+      profileBtn.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    }else{
+      profileBtn.textContent = getInitials(MEMBER_NAME)
+    }
+  }
 
   // Naplň menu daty přihlášeného (vždy původní user ze session)
   const user = JSON.parse(localStorage.getItem('10base_user') || 'null');
