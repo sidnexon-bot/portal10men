@@ -39,7 +39,7 @@ function updateProfileBtn(){
   const profileBtn = document.getElementById("profileBtn")
   if(profileBtn){
     const authUser = JSON.parse(localStorage.getItem('10base_user') || 'null')
-    const photoURL = authUser?.photoURL || firebase.auth().currentUser?.photoURL
+    const photoURL = authUser?.photoURL
     if(photoURL){
       profileBtn.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
     }else{
