@@ -1,5 +1,5 @@
 // api.js - Firebase wrapper
-import { database, ref, get, set, update, remove, push, onValue } from "./firebase.js"
+import { database, auth, ref, get, set, update, remove, push, onValue, onAuthStateChanged } from "./firebase.js"
 
 const DB = database
 
