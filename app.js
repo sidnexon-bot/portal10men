@@ -1787,6 +1787,7 @@ function renderEventFormExtra(){
           </div>
           <button type="button" onclick="addHarmonogramRow()" style="width:100%;margin-top:8px">+ Přidat položku</button>
         </div>
+        ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? renderRiderToggleHtml() : ""}
       ` : ""}
       
       ${type2 === "Jiná akce" ? `
@@ -1854,6 +1855,167 @@ function renderEventFormExtra(){
     panel.innerHTML = `<p class="notice">Pro typ "${type}" nejsou k dispozici další informace.</p>`
   }
 }
+
+// =============================================
+// RIDER — Garant, Přípravné akce, Ukončení akce
+// (harmonogram koncertu se skladbami přidáme později)
+// =============================================
+
+let RIDER_OPEN = false
+
+function toggleRiderAccordion(){
+  RIDER_OPEN = !RIDER_OPEN
+  const panel   = document.getElementById("riderPanel")
+  const chevron = document.getElementById("chevronRider")
+  if(panel)   panel.style.display = RIDER_OPEN ? "block" : "none"
+  if(chevron) chevron.textContent = RIDER_OPEN ? "‹" : "›"
+  if(RIDER_OPEN) renderRiderPanel()
+}
+
+function renderRiderToggleHtml(){
+  return `
+    <div style="margin-top:16px;border-top:1px solid rgba(128,128,128,0.15);padding-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleRiderAccordion()">
+        <span style="font-weight:600;font-size:15px">Vyplnit podrobnosti pro 10space projekt</span>
+        <span id="chevronRider">${RIDER_OPEN ? "‹" : "›"}</span>
+      </div>
+      <div id="riderPanel" style="display:${RIDER_OPEN ? "block" : "none"};margin-top:12px">
+        ${RIDER_OPEN ? renderRiderPanelContent() : ""}
+      </div>
+    </div>
+  `
+}
+
+function renderRiderPanel(){
+  const panel = document.getElementById("riderPanel")
+  if(panel) panel.innerHTML = renderRiderPanelContent()
+}
+
+function renderRiderPanelContent(){
+  const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
+  const garantId = getRiderData().garant || ""
+
+  return `
+    <label>Garant akce<br>
+      <select id="fRiderGarant" onchange="updateRiderField('garant', this.value)">
+        <option value="">Nevybráno</option>
+        ${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${garantId === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
+      </select>
+      <span class="small">Člen zodpovědný za organizační průběh akce</span>
+    </label>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Přípravné akce</span>
+      <div id="riderPripravneList" style="margin-top:8px">
+        ${renderRiderListHtml('pripravne_akce')}
+      </div>
+      <button type="button" onclick="addRiderRow('pripravne_akce')" style="width:100%;margin-top:8px">+ Přidat položku</button>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Ukončení akce</span>
+      <div id="riderUkonceniList" style="margin-top:8px">
+        ${renderRiderListHtml('ukonceni')}
+      </div>
+      <button type="button" onclick="addRiderRow('ukonceni')" style="width:100%;margin-top:8px">+ Přidat položku</button>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Hospoda</span>
+      <label style="margin-top:8px">Název / adresa<br>
+        <input type="text" value="${escapeHtml(getRiderData().hospoda?.nazev || "")}" oninput="updateRiderHospoda('nazev', this.value)">
+      </label>
+      <label style="margin-top:8px">Čas rezervace<br>
+        <input type="time" value="${escapeHtml(getRiderData().hospoda?.cas || "")}" oninput="updateRiderHospoda('cas', this.value)">
+      </label>
+      <label style="margin-top:8px">Na jaké jméno<br>
+        <input type="text" value="${escapeHtml(getRiderData().hospoda?.jmeno || "")}" oninput="updateRiderHospoda('jmeno', this.value)">
+      </label>
+    </div>
+  `
+}
+
+// --- data helpers ---
+
+function getRiderData(){
+  if(window.EDIT_RIDER) return window.EDIT_RIDER
+
+  let rider = {}
+  try{
+    rider = window.EDIT_EVENT?.RIDER
+      ? JSON.parse(window.EDIT_EVENT.RIDER)
+      : {}
+  }catch(e){ rider = {} }
+
+  if(!rider || typeof rider !== "object") rider = {}
+  if(!Array.isArray(rider.pripravne_akce)) rider.pripravne_akce = []
+  if(!Array.isArray(rider.ukonceni))       rider.ukonceni = []
+  if(!rider.hospoda) rider.hospoda = { nazev: "", cas: "", jmeno: "" }
+
+  window.EDIT_RIDER = rider
+  return rider
+}
+
+function renderRiderListHtml(key){
+  const rider = getRiderData()
+  const items = rider[key] || []
+  return items.map((item, idx) => `
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+      <input type="time" value="${escapeHtml(item.cas || "")}"
+        oninput="updateRiderRow('${key}', ${idx}, 'cas', this.value)"
+        style="width:100px;flex-shrink:0">
+      <input type="text" value="${escapeHtml(item.nazev || "")}" placeholder="Název"
+        oninput="updateRiderRow('${key}', ${idx}, 'nazev', this.value)"
+        style="flex:1">
+      <button type="button" onclick="removeRiderRow('${key}', ${idx})" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+    </div>
+    <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Poznámka (volitelné)"
+      oninput="updateRiderRow('${key}', ${idx}, 'poznamka', this.value)"
+      style="margin-bottom:10px;font-size:13px">
+  `).join("")
+}
+
+function addRiderRow(key){
+  const rider = getRiderData()
+  if(!Array.isArray(rider[key])) rider[key] = []
+  rider[key].push({ cas: "", nazev: "", poznamka: "" })
+  refreshRiderList(key)
+}
+
+function removeRiderRow(key, idx){
+  const rider = getRiderData()
+  rider[key].splice(idx, 1)
+  refreshRiderList(key)
+}
+
+function updateRiderRow(key, idx, field, value){
+  const rider = getRiderData()
+  if(rider[key]?.[idx]) rider[key][idx][field] = value
+}
+
+function updateRiderField(field, value){
+  const rider = getRiderData()
+  rider[field] = value
+}
+
+function updateRiderHospoda(field, value){
+  const rider = getRiderData()
+  if(!rider.hospoda) rider.hospoda = {}
+  rider.hospoda[field] = value
+}
+
+function refreshRiderList(key){
+  const mapId = { pripravne_akce: "riderPripravneList", ukonceni: "riderUkonceniList" }
+  const wrap = document.getElementById(mapId[key])
+  if(wrap) wrap.innerHTML = renderRiderListHtml(key)
+}
+
+window.toggleRiderAccordion = toggleRiderAccordion
+window.addRiderRow          = addRiderRow
+window.removeRiderRow       = removeRiderRow
+window.updateRiderRow       = updateRiderRow
+window.updateRiderField     = updateRiderField
+window.updateRiderHospoda   = updateRiderHospoda
 
 // =============================================
 // HARMONOGRAM (strukturovaný, čas + popis)
