@@ -139,6 +139,7 @@ async function getEvents(){
     HARMONOGRAM_ITEMS: e.harmonogram_items || "",
     IS_SPOLUPRACE:    e.is_spoluprace  === true,
     SPOLUPRACE_NAZEV: e.spoluprace_nazev || "",
+    RIDER:            e.rider || "",
 
   }))
 }
@@ -227,6 +228,7 @@ const attendance = objToArray(dochazka)
       HARMONOGRAM_ITEMS: akce.harmonogram_items || "",
       IS_SPOLUPRACE:   akce.is_spoluprace  === true,
       SPOLUPRACE_NAZEV: akce.spoluprace_nazev || "",
+      RIDER:            akce.rider || "",
     },
     attendance,
     program: prog
@@ -317,6 +319,7 @@ async function addEvent(params){
     harmonogram_items: params.harmonogram_items || "",
     is_spoluprace:    params.is_spoluprace  || false,
     spoluprace_nazev: params.spoluprace_nazev || "",
+    rider:            params.rider || "",
     spacaky:          params.spacaky        || "",
     strava:           params.strava         || "",
     strava_nota:      params.strava_nota    || "",
@@ -395,6 +398,7 @@ async function updateEvent(params){
     harmonogram_items: params.harmonogram_items || "",
     is_spoluprace:    params.is_spoluprace  || false,
     spoluprace_nazev: params.spoluprace_nazev || "",
+    rider:            params.rider || "",
     spacaky:          params.spacaky        || "",
     strava:           params.strava         || "",
     strava_nota:      params.strava_nota    || "",
