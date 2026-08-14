@@ -3434,6 +3434,7 @@ async function saveEvent(id, notify = true){
   const isSpolupraceVal = document.getElementById("fIsSpoluprace")?.checked ?? window.EDIT_EVENT?.IS_SPOLUPRACE ?? false
   const spolupraceNazev = document.getElementById("fSpolupraceNazev")?.value ?? window.EDIT_EVENT?.SPOLUPRACE_NAZEV ?? ""
   const harmonogramItems = JSON.stringify(window.EDIT_HARMONOGRAM || [])
+  const riderJson        = JSON.stringify(window.EDIT_RIDER || {})
 
 
   if(!name){ alert("Zadej název akce"); return }
@@ -3451,7 +3452,7 @@ async function saveEvent(id, notify = true){
         recurrence_type: recurrenceType,
         recurrence_until: recurrenceUntil,
         sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
-        harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev,
+        harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
         silent: !notify
@@ -3476,7 +3477,7 @@ async function saveEvent(id, notify = true){
       }else{
         await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
           sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
-          harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev,
+          harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
           spacaky, strava, strava_nota: stravaNota,
           obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
           is_grilovacka: isGrilovacka,
@@ -3491,7 +3492,7 @@ async function saveEvent(id, notify = true){
     }else{
       await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
         sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
-        harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev,
+        harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
         is_grilovacka: isGrilovacka,
