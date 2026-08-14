@@ -2697,6 +2697,49 @@ async function openEvent(id){
       </div>`
     }
 
+   // --- TO-DO LIST (rider) ---
+    if((MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && event.RIDER){
+      let riderData = {}
+      try{ riderData = JSON.parse(event.RIDER) }catch(e){ riderData = {} }
+
+      const todoPred = riderData.todo_pred || []
+      const todoDen  = riderData.todo_den  || []
+
+      if(todoPred.length || todoDen.length){
+        html += `<div class="event-card" style="margin-bottom:16px">
+          <div class="event-label">To-do list</div>
+          ${todoPred.length ? `
+            <div style="margin-bottom:12px">
+              <span class="small" style="font-weight:600;display:block;margin-bottom:6px">Před koncertem</span>
+              ${todoPred.map((t, idx) => `
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleRiderTodoDetail('${id}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <div style="flex:1">
+                    <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
+                    ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : ""}
+          ${todoDen.length ? `
+            <div>
+              <span class="small" style="font-weight:600;display:block;margin-bottom:6px">V den koncertu</span>
+              ${todoDen.map((t, idx) => `
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleRiderTodoDetail('${id}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <div style="flex:1">
+                    <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
+                    ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : ""}
+        </div>`
+      }
+    }
+
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
@@ -2866,6 +2909,17 @@ async function deleteGrilovackaItem(itemId, akceId){
   invalidateCache("eventdetail", akceId)
   openEvent(akceId)
 }
+
+async function toggleRiderTodoDetail(akceId, fazeKey, idx, done){
+  try{
+    await api("toggleridertodoo", {id: akceId, faze: fazeKey, idx, done})
+    invalidateCache("eventdetail", akceId)
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+window.toggleRiderTodoDetail = toggleRiderTodoDetail
 
 window.openGrilovackaModal  = openGrilovackaModal
 window.deleteGrilovackaItem = deleteGrilovackaItem
