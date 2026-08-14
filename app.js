@@ -1784,7 +1784,6 @@ function renderEventFormExtra(){
       <div style="margin-top:16px">
         <span class="small" style="font-weight:600">Harmonogram akce</span>
         <div id="harmonogramList" style="margin-top:8px">
-        console.log("HARMONOGRAM_ITEMS:", event.HARMONOGRAM_ITEMS)
           ${renderHarmonogramHtml()}
         </div>
         <button type="button" onclick="addHarmonogramRow()" style="width:100%;margin-top:8px">+ Přidat položku</button>
