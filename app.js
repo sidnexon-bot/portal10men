@@ -1610,7 +1610,10 @@ function togglePastEvents(){
 }
 
 async function openEventForm(id){
-  window.EDIT_EVENT = {}
+ window.EDIT_EVENT = {}
+ window.EDIT_RIDER = null
+ window.EDIT_HARMONOGRAM = null
+ window.EDIT_POSADKY = null
 
   let event = {}
   if(id){
