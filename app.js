@@ -1916,14 +1916,6 @@ function renderRiderPanelContent(){
       <button type="button" onclick="addRiderRow('pripravne_akce')" style="width:100%;margin-top:8px">+ Přidat položku</button>
     </div>
 
-<div style="margin-top:16px">
-      <span class="small" style="font-weight:600">Přípravné akce</span>
-      <div id="riderPripravneList" style="margin-top:8px">
-        ${renderRiderListHtml('pripravne_akce')}
-      </div>
-      <button type="button" onclick="addRiderRow('pripravne_akce')" style="width:100%;margin-top:8px">+ Přidat položku</button>
-    </div>
-
     <div style="margin-top:16px">
       <span class="small" style="font-weight:600">Harmonogram koncertu</span>
       <div id="riderHarmonogramList" style="margin-top:8px">
@@ -1946,14 +1938,6 @@ function renderRiderPanelContent(){
     </div>
 
     <div style="margin-top:16px">
-      <span class="small" style="font-weight:600">Ukončení akce</span>
-      <div id="riderUkonceniList" style="margin-top:8px">
-        ${renderRiderListHtml('ukonceni')}
-      </div>
-      <button type="button" onclick="addRiderRow('ukonceni')" style="width:100%;margin-top:8px">+ Přidat položku</button>
-    </div>
-
-    <div style="margin-top:16px">
       <span class="small" style="font-weight:600">Hospoda</span>
       <label style="margin-top:8px">Název / adresa<br>
         <input type="text" value="${escapeHtml(getRiderData().hospoda?.nazev || "")}" oninput="updateRiderHospoda('nazev', this.value)">
@@ -1964,6 +1948,28 @@ function renderRiderPanelContent(){
       <label style="margin-top:8px">Na jaké jméno<br>
         <input type="text" value="${escapeHtml(getRiderData().hospoda?.jmeno || "")}" oninput="updateRiderHospoda('jmeno', this.value)">
       </label>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">To-do — před koncertem</span>
+      <div id="riderTodoPredList" style="margin-top:8px">
+        ${renderRiderTodoHtml('todo_pred')}
+      </div>
+      <div class="btn-group" style="margin-top:8px">
+        <button type="button" onclick="addRiderTodoItem('todo_pred')">+ Přidat úkol</button>
+        <button type="button" onclick="addRiderTodoTemplate('todo_pred')">+ Přidat šablonu</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">To-do — v den koncertu</span>
+      <div id="riderTodoDenList" style="margin-top:8px">
+        ${renderRiderTodoHtml('todo_den')}
+      </div>
+      <div class="btn-group" style="margin-top:8px">
+        <button type="button" onclick="addRiderTodoItem('todo_den')">+ Přidat úkol</button>
+        <button type="button" onclick="addRiderTodoTemplate('todo_den')">+ Přidat šablonu</button>
+      </div>
     </div>
   `
 }
@@ -1985,6 +1991,8 @@ function getRiderData(){
   if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
   if(!Array.isArray(rider.ukonceni))       rider.ukonceni = []
   if(!rider.hospoda) rider.hospoda = { nazev: "", cas: "", jmeno: "" }
+  if(!Array.isArray(rider.todo_pred)) rider.todo_pred = []
+  if(!Array.isArray(rider.todo_den))  rider.todo_den = []
 
   window.EDIT_RIDER = rider
   return rider
@@ -2175,6 +2183,85 @@ window.addRiderBlokZeSkladeb       = addRiderBlokZeSkladeb
 window.removeSongFromRiderBlock    = removeSongFromRiderBlock
 window.removeRiderHarmonogramItem  = removeRiderHarmonogramItem
 window.updateRiderHarmonogramField = updateRiderHarmonogramField
+
+// =============================================
+// RIDER — To-do list (Před koncertem / V den koncertu)
+// =============================================
+
+function renderRiderTodoHtml(fazeKey){
+  const rider = getRiderData()
+  const items = rider[fazeKey] || []
+  return items.map((item, idx) => `
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;padding:8px;background:var(--card);border-radius:10px">
+      <input type="checkbox" ${item.done ? "checked" : ""}
+        onchange="updateRiderTodoField('${fazeKey}', ${idx}, 'done', this.checked)"
+        style="width:auto;margin-top:10px;flex-shrink:0">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input type="text" value="${escapeHtml(item.co || "")}" placeholder="Co je třeba"
+          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'co', this.value)"
+          style="${item.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">
+        <input type="text" value="${escapeHtml(item.kdo || "")}" placeholder="Kdo to zařídí"
+          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'kdo', this.value)"
+          style="font-size:13px">
+        <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Poznámka (volitelné)"
+          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'poznamka', this.value)"
+          style="font-size:13px">
+      </div>
+      <button type="button" onclick="removeRiderTodoItem('${fazeKey}', ${idx})" style="width:auto;padding:6px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+    </div>
+  `).join("")
+}
+
+function addRiderTodoItem(fazeKey, co){
+  const rider = getRiderData()
+  if(!Array.isArray(rider[fazeKey])) rider[fazeKey] = []
+  rider[fazeKey].push({ co: co || "", kdo: "", poznamka: "", done: false })
+  refreshRiderTodo(fazeKey)
+}
+
+function removeRiderTodoItem(fazeKey, idx){
+  const rider = getRiderData()
+  rider[fazeKey].splice(idx, 1)
+  refreshRiderTodo(fazeKey)
+}
+
+function updateRiderTodoField(fazeKey, idx, field, value){
+  const rider = getRiderData()
+  if(rider[fazeKey]?.[idx]) rider[fazeKey][idx][field] = value
+  if(field === "done") refreshRiderTodo(fazeKey)
+}
+
+function refreshRiderTodo(fazeKey){
+  const mapId = { todo_pred: "riderTodoPredList", todo_den: "riderTodoDenList" }
+  const wrap = document.getElementById(mapId[fazeKey])
+  if(wrap) wrap.innerHTML = renderRiderTodoHtml(fazeKey)
+}
+
+const RIDER_TODO_TEMPLATE_PRED = [
+  "Vytisknout programy", "QR program", "Cedule \"Vstupné dobrovolné\"",
+  "Texty na moderace", "Kasička", "Djembe", "Nahrávadlo",
+  "Mobil, držák, powerbanka", "Stativ", "Kontaktovat fotografa", "Rezervace v hospodě"
+]
+
+const RIDER_TODO_TEMPLATE_DEN = [
+  "Odbaví lidi před začátkem", "Moderuje 10men 1", "Moderuje 10men 2",
+  "Moderuje druhý sbor 1", "Moderuje druhý sbor 2", "Moderuje úvod",
+  "Moderuje střed", "Zajistí stream", "Moderuje závěr",
+  "Asistuje v případě potřeby", "Zajistí zvukový záznam"
+]
+
+function addRiderTodoTemplate(fazeKey){
+  const rider = getRiderData()
+  if(!Array.isArray(rider[fazeKey])) rider[fazeKey] = []
+  const template = fazeKey === "todo_pred" ? RIDER_TODO_TEMPLATE_PRED : RIDER_TODO_TEMPLATE_DEN
+  template.forEach(co => rider[fazeKey].push({ co, kdo: "", poznamka: "", done: false }))
+  refreshRiderTodo(fazeKey)
+}
+
+window.addRiderTodoItem      = addRiderTodoItem
+window.removeRiderTodoItem   = removeRiderTodoItem
+window.updateRiderTodoField  = updateRiderTodoField
+window.addRiderTodoTemplate  = addRiderTodoTemplate
 
 // =============================================
 // HARMONOGRAM (strukturovaný, čas + popis)
