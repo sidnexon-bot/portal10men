@@ -135,7 +135,10 @@ async function getEvents(){
     STRAVA_NOTA:      e.strava_nota    || "",
     OBLECENI_S:       e.obleceni_s     || "",
     OBLECENI_S_TYP:   e.obleceni_s_typ || "",
-      IS_GRILOVACKA:    e.is_grilovacka  === true,
+    IS_GRILOVACKA:    e.is_grilovacka  === true,
+    HARMONOGRAM_ITEMS: e.harmonogram_items || "",
+    IS_SPOLUPRACE:    e.is_spoluprace  === true,
+    SPOLUPRACE_NAZEV: e.spoluprace_nazev || "",
 
   }))
 }
@@ -220,7 +223,10 @@ const attendance = objToArray(dochazka)
       STRAVA_NOTA:     akce.strava_nota   || "",
       OBLECENI_S:      akce.obleceni_s    || "",
       OBLECENI_S_TYP:  akce.obleceni_s_typ || "",
-        IS_GRILOVACKA:   akce.is_grilovacka  === true,
+      IS_GRILOVACKA:   akce.is_grilovacka  === true,
+      HARMONOGRAM_ITEMS: akce.harmonogram_items || "",
+      IS_SPOLUPRACE:   akce.is_spoluprace  === true,
+      SPOLUPRACE_NAZEV: akce.spoluprace_nazev || "",
     },
     attendance,
     program: prog
