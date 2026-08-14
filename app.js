@@ -1621,6 +1621,7 @@ async function openEventForm(id){
       const data = await cachedApi("eventdetail", {id})
       event = data.event || {}
       window.EDIT_EVENT = event
+      window.EDIT_PROGRAM = data.program || []
     }catch(e){
       setError("Chyba při načítání akce")
       return
@@ -1915,6 +1916,35 @@ function renderRiderPanelContent(){
       <button type="button" onclick="addRiderRow('pripravne_akce')" style="width:100%;margin-top:8px">+ Přidat položku</button>
     </div>
 
+<div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Přípravné akce</span>
+      <div id="riderPripravneList" style="margin-top:8px">
+        ${renderRiderListHtml('pripravne_akce')}
+      </div>
+      <button type="button" onclick="addRiderRow('pripravne_akce')" style="width:100%;margin-top:8px">+ Přidat položku</button>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Harmonogram koncertu</span>
+      <div id="riderHarmonogramList" style="margin-top:8px">
+        ${renderRiderHarmonogramHtml()}
+      </div>
+      <div class="btn-group" style="margin-top:8px;flex-wrap:wrap">
+        <button type="button" onclick="addRiderBlokZeSkladeb()">+ Blok ze skladeb</button>
+        <button type="button" onclick="addRiderHarmonogramItem('moderace')">+ Moderace</button>
+        <button type="button" onclick="addRiderHarmonogramItem('pribeh')">+ Příchod/odchod</button>
+        <button type="button" onclick="addRiderHarmonogramItem('spolecna')">+ Společná skladba</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <span class="small" style="font-weight:600">Ukončení akce</span>
+      <div id="riderUkonceniList" style="margin-top:8px">
+        ${renderRiderListHtml('ukonceni')}
+      </div>
+      <button type="button" onclick="addRiderRow('ukonceni')" style="width:100%;margin-top:8px">+ Přidat položku</button>
+    </div>
+
     <div style="margin-top:16px">
       <span class="small" style="font-weight:600">Ukončení akce</span>
       <div id="riderUkonceniList" style="margin-top:8px">
@@ -1952,6 +1982,7 @@ function getRiderData(){
 
   if(!rider || typeof rider !== "object") rider = {}
   if(!Array.isArray(rider.pripravne_akce)) rider.pripravne_akce = []
+  if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
   if(!Array.isArray(rider.ukonceni))       rider.ukonceni = []
   if(!rider.hospoda) rider.hospoda = { nazev: "", cas: "", jmeno: "" }
 
@@ -2019,6 +2050,131 @@ window.removeRiderRow       = removeRiderRow
 window.updateRiderRow       = updateRiderRow
 window.updateRiderField     = updateRiderField
 window.updateRiderHospoda   = updateRiderHospoda
+
+// =============================================
+// RIDER — Harmonogram koncertu (bloky skladeb, moderace)
+// Vlož mezi Přípravné akce a Ukončení akce
+// =============================================
+
+function renderRiderHarmonogramHtml(){
+  const rider = getRiderData()
+  const items = rider.harmonogram_koncertu || []
+  return items.map((item, idx) => renderRiderHarmonogramItem(item, idx)).join("")
+}
+
+function renderRiderHarmonogramItem(item, idx){
+  const typLabel = {
+    blok: "🎵 Blok skladeb",
+    moderace: "🎤 Moderace",
+    pribeh: "↔️ Příchod/odchod pódia",
+    spolecna: "🤝 Společná skladba"
+  }
+
+  return `
+    <div class="card" style="margin-bottom:10px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="small" style="font-weight:600">${typLabel[item.typ] || "Položka"}</span>
+        <button type="button" onclick="removeRiderHarmonogramItem(${idx})" style="width:auto;padding:6px 10px;background:#fde8e8;color:#c00">✕</button>
+      </div>
+
+      <label>Název<br>
+        <input type="text" value="${escapeHtml(item.nazev || "")}" placeholder="Název bloku / moderace"
+          oninput="updateRiderHarmonogramField(${idx}, 'nazev', this.value)">
+      </label>
+
+      ${item.typ === "moderace" ? `
+        <label style="margin-top:8px">Moderuje<br>
+          <select onchange="updateRiderHarmonogramField(${idx}, 'moderator', this.value)">
+            <option value="">Nevybráno</option>
+            ${(window.MEMBERS || []).filter(m => (m.ROLE||m.role||"").toUpperCase() !== "GUEST").map(m => `
+              <option value="${escapeHtml(m.ID||m.id)}" ${item.moderator === (m.ID||m.id) ? "selected" : ""}>${escapeHtml(m.NAME||m.name)}</option>
+            `).join("")}
+          </select>
+        </label>
+      ` : ""}
+
+      ${item.typ === "blok" && Array.isArray(item.skladby) && item.skladby.length ? `
+        <div style="margin-top:8px">
+          <span class="small">Skladby v bloku:</span>
+          ${item.skladby.map((s, sIdx) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px">
+              <span>${sIdx+1}. ${escapeHtml(s.name)}</span>
+              <button type="button" onclick="removeSongFromRiderBlock(${idx}, ${sIdx})" style="width:auto;padding:2px 8px;background:#fde8e8;color:#c00;font-size:11px">✕</button>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+
+      <label style="margin-top:8px">Odhad stopáže (min)<br>
+        <input type="number" value="${escapeHtml(item.stopaz_min || "")}" placeholder="např. 12"
+          oninput="updateRiderHarmonogramField(${idx}, 'stopaz_min', this.value)">
+      </label>
+
+      <label style="margin-top:8px">Poznámka<br>
+        <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Volitelné"
+          oninput="updateRiderHarmonogramField(${idx}, 'poznamka', this.value)">
+      </label>
+    </div>
+  `
+}
+
+function addRiderHarmonogramItem(typ){
+  const rider = getRiderData()
+  if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
+  rider.harmonogram_koncertu.push({ typ, nazev: "", stopaz_min: "", poznamka: "" })
+  refreshRiderHarmonogram()
+}
+
+function addRiderBlokZeSkladeb(){
+  const rider = getRiderData()
+  if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
+
+  const program = window.EDIT_PROGRAM || []
+  if(!program.length){
+    alert("Tato akce zatím nemá vyplněný program. Nejprve vytvoř program v sekci Program.")
+    return
+  }
+
+  const skladby = program.map(p => ({ song_id: p.SONG_ID, name: p.NAME }))
+
+  rider.harmonogram_koncertu.push({
+    typ: "blok",
+    nazev: "Blok — 10men",
+    skladby,
+    stopaz_min: "",
+    poznamka: ""
+  })
+  refreshRiderHarmonogram()
+}
+
+function removeSongFromRiderBlock(itemIdx, songIdx){
+  const rider = getRiderData()
+  const item = rider.harmonogram_koncertu?.[itemIdx]
+  if(item?.skladby) item.skladby.splice(songIdx, 1)
+  refreshRiderHarmonogram()
+}
+
+function removeRiderHarmonogramItem(idx){
+  const rider = getRiderData()
+  rider.harmonogram_koncertu.splice(idx, 1)
+  refreshRiderHarmonogram()
+}
+
+function updateRiderHarmonogramField(idx, field, value){
+  const rider = getRiderData()
+  if(rider.harmonogram_koncertu?.[idx]) rider.harmonogram_koncertu[idx][field] = value
+}
+
+function refreshRiderHarmonogram(){
+  const wrap = document.getElementById("riderHarmonogramList")
+  if(wrap) wrap.innerHTML = renderRiderHarmonogramHtml()
+}
+
+window.addRiderHarmonogramItem     = addRiderHarmonogramItem
+window.addRiderBlokZeSkladeb       = addRiderBlokZeSkladeb
+window.removeSongFromRiderBlock    = removeSongFromRiderBlock
+window.removeRiderHarmonogramItem  = removeRiderHarmonogramItem
+window.updateRiderHarmonogramField = updateRiderHarmonogramField
 
 // =============================================
 // HARMONOGRAM (strukturovaný, čas + popis)
