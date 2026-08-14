@@ -1722,6 +1722,7 @@ function renderEventFormExtra(){
   const isSoustredeni = type === "Soustředění" || type === "Soutěž"
 
   if(isKoncert){
+    const type2 = document.getElementById("fType")?.value || "Zkouška"
     panel.innerHTML = `
       <label>Čas srazu<br>
         <input id="fSraz" type="time" value="${escapeHtml(window.EDIT_EVENT?.SRAZ || "")}">
@@ -1748,14 +1749,33 @@ function renderEventFormExtra(){
       <label style="margin-top:12px">Hospoda<br>
         <textarea id="fHospoda" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px" placeholder="Název/adresa, čas rezervace, na jaké jméno...">${escapeHtml(window.EDIT_EVENT?.HOSPODA || "")}</textarea>
       </label>
-      <label style="margin-top:12px">Harmonogram<br>
-        <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
-      </label>
-      <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="fIsGrilovacka" ${window.EDIT_EVENT?.IS_GRILOVACKA ? "checked" : ""} style="width:auto;margin:0">
-        <span>Grilovačka 🔥 — zobrazit sdílený seznam věcí</span>
-      </label>
 
+      ${type2 === "Koncert" ? `
+        <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="fIsSpoluprace" ${window.EDIT_EVENT?.IS_SPOLUPRACE ? "checked" : ""} style="width:auto;margin:0" onchange="toggleSpolupraceField(this.checked)">
+          <span>Spolupráce s jiným tělesem</span>
+        </label>
+        <div id="spolupraceNazevWrap" style="display:${window.EDIT_EVENT?.IS_SPOLUPRACE ? "block" : "none"};margin-top:8px">
+          <label>Název spolupracujícího tělesa<br>
+            <input id="fSpolupraceNazev" type="text" value="${escapeHtml(window.EDIT_EVENT?.SPOLUPRACE_NAZEV || "")}" placeholder="např. Sbor XY">
+          </label>
+        </div>
+      ` : ""}
+
+      <div style="margin-top:16px">
+        <span class="small" style="font-weight:600">Harmonogram akce</span>
+        <div id="harmonogramList" style="margin-top:8px">
+          ${renderHarmonogramHtml()}
+        </div>
+        <button type="button" onclick="addHarmonogramRow()" style="width:100%;margin-top:8px">+ Přidat položku</button>
+      </div>
+
+      ${type2 === "Jiná akce" ? `
+        <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="fIsGrilovacka" ${window.EDIT_EVENT?.IS_GRILOVACKA ? "checked" : ""} style="width:auto;margin:0">
+          <span>Grilovačka 🔥 — zobrazit sdílený seznam věcí</span>
+        </label>
+      ` : ""}
     `
   }else if(isSoustredeni){
     panel.innerHTML = `
@@ -1815,6 +1835,90 @@ function renderEventFormExtra(){
     panel.innerHTML = `<p class="notice">Pro typ "${type}" nejsou k dispozici další informace.</p>`
   }
 }
+
+// =============================================
+// HARMONOGRAM (strukturovaný, čas + popis)
+// =============================================
+
+function getInitialHarmonogram(){
+  if(window.EDIT_HARMONOGRAM) return window.EDIT_HARMONOGRAM
+
+  let items = []
+  try{
+    items = window.EDIT_EVENT?.HARMONOGRAM_ITEMS
+      ? JSON.parse(window.EDIT_EVENT.HARMONOGRAM_ITEMS)
+      : []
+  }catch(e){ items = [] }
+
+  if(!Array.isArray(items)) items = []
+
+  // pokud je prázdné a jde o novou akci, předvyplň výchozí položky
+  if(!items.length && !window.EDIT_EVENT?.ID){
+    const isSpolupraceNow = document.getElementById("fIsSpoluprace")?.checked || false
+    const nazevSpoluprace = document.getElementById("fSpolupraceNazev")?.value || ""
+
+    items = [
+      { cas: "", popis: "Sraz" },
+      { cas: "", popis: "Akustika 10men" },
+    ]
+    if(isSpolupraceNow){
+      items.push({ cas: "", popis: "Akustika " + (nazevSpoluprace || "spolupráce") })
+    }
+    items.push({ cas: "", popis: "Pouštění lidí do sálu" })
+    items.push({ cas: "", popis: "Začátek koncertu" })
+    items.push({ cas: "", popis: "Hospoda" })
+  }
+
+  window.EDIT_HARMONOGRAM = items
+  return items
+}
+
+function renderHarmonogramHtml(){
+  const items = getInitialHarmonogram()
+  return items.map((h, idx) => `
+    <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+      <input type="time" value="${escapeHtml(h.cas || "")}"
+        oninput="updateHarmonogramField(${idx}, 'cas', this.value)"
+        style="width:110px;flex-shrink:0">
+      <input type="text" value="${escapeHtml(h.popis || "")}" placeholder="Popis"
+        oninput="updateHarmonogramField(${idx}, 'popis', this.value)"
+        style="flex:1">
+      <button type="button" onclick="removeHarmonogramRow(${idx})" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+    </div>
+  `).join("")
+}
+
+function addHarmonogramRow(){
+  const items = getInitialHarmonogram()
+  items.push({ cas: "", popis: "" })
+  refreshHarmonogramList()
+}
+
+function removeHarmonogramRow(idx){
+  const items = getInitialHarmonogram()
+  items.splice(idx, 1)
+  refreshHarmonogramList()
+}
+
+function updateHarmonogramField(idx, key, value){
+  const items = getInitialHarmonogram()
+  if(items[idx]) items[idx][key] = value
+}
+
+function refreshHarmonogramList(){
+  const wrap = document.getElementById("harmonogramList")
+  if(wrap) wrap.innerHTML = renderHarmonogramHtml()
+}
+
+function toggleSpolupraceField(checked){
+  const wrap = document.getElementById("spolupraceNazevWrap")
+  if(wrap) wrap.style.display = checked ? "block" : "none"
+}
+
+window.addHarmonogramRow      = addHarmonogramRow
+window.removeHarmonogramRow   = removeHarmonogramRow
+window.updateHarmonogramField = updateHarmonogramField
+window.toggleSpolupraceField  = toggleSpolupraceField
 
 // =============================================
 // POSÁDKY (Doprava: Auta)
@@ -1991,6 +2095,7 @@ async function openEvent(id){
     const event      = data.event      || {}
     const program    = data.program    || []
     const attendance = data.attendance || []
+
 
     // --- HLAVIČKA ---
     let html = `
