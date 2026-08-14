@@ -482,6 +482,25 @@ function renderPosadkyDetail(json){
   `).join("")
 }
 
+function renderHarmonogramDetail(json){
+  let items = []
+  try{ items = JSON.parse(json) }catch(e){ return "" }
+  if(!Array.isArray(items) || !items.length) return ""
+
+  const validItems = items.filter(h => h.cas || h.popis)
+  if(!validItems.length) return ""
+
+  return `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+    <span class="small" style="display:block;margin-bottom:6px">Harmonogram akce</span>
+    ${validItems.map(h => `
+      <div style="display:flex;gap:10px;padding:4px 0;font-size:14px">
+        <span style="font-weight:600;min-width:48px">${escapeHtml(h.cas || "—")}</span>
+        <span>${escapeHtml(h.popis || "")}</span>
+      </div>
+    `).join("")}
+  </div>`
+}
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -2170,7 +2189,8 @@ async function openEvent(id){
         ${event.OBLECENI  ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
         ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
         ${event.DOPRAVA === "Auta" && event.DOPRAVA_POSADKY ? renderPosadkyDetail(event.DOPRAVA_POSADKY) : ""}
-        ${event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : ""}
+        ${event.HARMONOGRAM_ITEMS ? renderHarmonogramDetail(event.HARMONOGRAM_ITEMS) : (event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : "")}
+        ${event.IS_SPOLUPRACE && event.SPOLUPRACE_NAZEV ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spolupráce</span><b>${escapeHtml(event.SPOLUPRACE_NAZEV)}</b></div>` : ""}
         ${event.HOSPODA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
         ${event.SPACAKY   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
         ${event.STRAVA    ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Je tam zajištěná strava?</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
@@ -5803,3 +5823,4 @@ window.togglePosadkaMember  = togglePosadkaMember
 window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
 window.setZkusebnaTab       = setZkusebnaTab
+window.renderHarmonogramDetail = renderHarmonogramDetail
