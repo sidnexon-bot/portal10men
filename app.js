@@ -2713,7 +2713,7 @@ async function openEvent(id){
               <span class="small" style="font-weight:600;display:block;margin-bottom:6px">Před koncertem</span>
               ${todoPred.map((t, idx) => `
                 <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleRiderTodoDetail('${id}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${id}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
                     ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
@@ -2727,7 +2727,7 @@ async function openEvent(id){
               <span class="small" style="font-weight:600;display:block;margin-bottom:6px">V den koncertu</span>
               ${todoDen.map((t, idx) => `
                 <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleRiderTodoDetail('${id}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${id}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
                     ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
