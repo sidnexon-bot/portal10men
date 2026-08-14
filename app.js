@@ -1771,7 +1771,7 @@ function renderEventFormExtra(){
 
       ${type2 === "Koncert" ? `
         <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
-          <input type="checkbox" id="fIsSpoluprace" ${window.EDIT_EVENT?.IS_SPOLUPRACE ? "checked" : ""} style="width:auto;margin:0" onchange="toggleSpolupraceField(this.checked)">
+          <input type="checkbox" id="fIsSpolupraceVal" ${window.EDIT_EVENT?.IS_SPOLUPRACE ? "checked" : ""} style="width:auto;margin:0" onchange="toggleSpolupraceField(this.checked)">
           <span>Spolupráce s jiným tělesem</span>
         </label>
         <div id="spolupraceNazevWrap" style="display:${window.EDIT_EVENT?.IS_SPOLUPRACE ? "block" : "none"};margin-top:8px">
@@ -1779,16 +1779,16 @@ function renderEventFormExtra(){
             <input id="fSpolupraceNazev" type="text" value="${escapeHtml(window.EDIT_EVENT?.SPOLUPRACE_NAZEV || "")}" placeholder="např. Sbor XY">
           </label>
         </div>
-      ` : ""}
 
-      <div style="margin-top:16px">
-        <span class="small" style="font-weight:600">Harmonogram akce</span>
-        <div id="harmonogramList" style="margin-top:8px">
-          ${renderHarmonogramHtml()}
+        <div style="margin-top:16px">
+          <span class="small" style="font-weight:600">Harmonogram akce</span>
+          <div id="harmonogramList" style="margin-top:8px">
+            ${renderHarmonogramHtml()}
+          </div>
+          <button type="button" onclick="addHarmonogramRow()" style="width:100%;margin-top:8px">+ Přidat položku</button>
         </div>
-        <button type="button" onclick="addHarmonogramRow()" style="width:100%;margin-top:8px">+ Přidat položku</button>
-      </div>
-
+      ` : ""}
+      
       ${type2 === "Jiná akce" ? `
         <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
           <input type="checkbox" id="fIsGrilovacka" ${window.EDIT_EVENT?.IS_GRILOVACKA ? "checked" : ""} style="width:auto;margin:0">
