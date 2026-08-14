@@ -1280,6 +1280,26 @@ async function sendDiscordMessage(params){
 }
 
 // ===============================
+// TO-DO LIST RIDER K AKCI
+// ===============================
+
+async function toggleRiderTodo(params){
+  const akce = await dbGet("/akce/" + params.id)
+  if(!akce) throw new Error("Akce nenalezena")
+
+  let rider = {}
+  try{ rider = akce.rider ? JSON.parse(akce.rider) : {} }catch(e){ rider = {} }
+
+  if(!rider[params.faze]) rider[params.faze] = []
+  if(rider[params.faze][params.idx]){
+    rider[params.faze][params.idx].done = params.done
+  }
+
+  await dbUpdate("/akce/" + params.id, { rider: JSON.stringify(rider) })
+  return {status: "updated"}
+}
+
+// ===============================
 // HLAVNÍ API FUNKCE
 // ===============================
 
@@ -1336,6 +1356,7 @@ async function api(action, params = {}){
     case "sendpush":         return await sendPush(params.title, params.message)
     case "discord":          return await sendDiscordMessage(params)
     case "getconfig":        return await dbGet("/config")
+    case "toggleridertodoo": return await toggleRiderTodo(params)
 
     default: throw new Error("Unknown action: " + action)
   }
