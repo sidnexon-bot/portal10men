@@ -439,7 +439,7 @@ button{
   border-radius: 8px;
   border: 1px solid var(--card-border);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   font-family: inherit;
   background: var(--btn-bg);
   color: var(--btn-color);
@@ -745,10 +745,11 @@ select:focus{
 }
 .season-title{
   margin:28px 0 10px;
-  font-size:12px;
+  font-size:11px;
   color:#8e8e93;
   text-transform:uppercase;
-  letter-spacing:0.08em;
+  letter-spacing:0.5px;
+  font-weight: 600;
 }
 
 /* EVENTS */
@@ -1100,6 +1101,11 @@ body.dark a[style*="#e8e8ed"]{
   color: #0a84ff !important;
 }
 
+.meta{
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* TOAST NOTIFIKACE */
 .toast{
   position: fixed;
@@ -1306,7 +1312,7 @@ a[href]{
     gap: 10px;
     padding: 10px 12px;
     border-radius: 12px;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 500;
     color: #6b6b70;
     cursor: pointer;
