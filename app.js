@@ -722,9 +722,15 @@ async function start(){
      }
      // při návratu nic nepřekreslujeme — stránka zůstane jak byla
    })
+      // skryj splash screen po dokončení inicializace
+    const splash = document.getElementById("splash")
+    if(splash) splash.classList.add("hidden")
 
   }catch(err){
     setError("Chyba při načítání: " + (err?.message || err))
+    // i při chybě skryj splash, ať uživatel vidí chybovou hlášku
+    const splash = document.getElementById("splash")
+    if(splash) splash.classList.add("hidden")
   }
 }
 
