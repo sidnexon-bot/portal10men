@@ -1,13 +1,14 @@
 :root{
   --bg:#f2f2f7;
   --card:#ffffff;
-  --text:#111;
+  --card-border:#e5e5ea;
+  --text:#1c1c1e;
   --muted:#8e8e93;
-  --accent:#000;
+  --text-secondary:#6e6e73;
+  --accent:#007aff;
   --card-selected: #f0f6ff;
-  --btn-bg: #e8e8ed;
-  --btn-color: #007aff;
-
+  --btn-bg: #f2f2f7;
+  --btn-color: #1c1c1e;
 }
 
 *{
@@ -252,58 +253,59 @@ main{
 }
 
 /* CARD */
-
 .card{
   background:var(--card);
-  border-radius:18px;
+  border-radius:12px;
+  border:1px solid var(--card-border);
   padding:16px;
   margin-bottom:16px;
+  transition: box-shadow 0.15s ease;
 }
-
+.card:hover{
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
 /* HERO CARD */
-
 .card.next{
   padding:20px;
-  border-radius:22px;
-
+  border-radius:12px;
   box-shadow:
-    0 6px 16px rgba(0,0,0,0.08),
-    0 20px 40px rgba(0,0,0,0.10);
+    0 6px 16px rgba(0,0,0,0.06),
+    0 20px 40px rgba(0,0,0,0.08);
 }
 .card.next b{
   font-size:20px;
   line-height:1.2;
 }
-
 .card + .card{
   margin-top:12px;
 }
 
 /* TEXT */
-
 h2{
-  font-size:22px;
+  font-size:17px;
+  font-weight:700;
   margin:0 0 12px;
+  color: var(--text);
 }
-
 h3{
-  font-size:13px;
+  font-size:11px;
   color:var(--muted);
   margin:20px 0 6px;
   text-transform:uppercase;
-  letter-spacing:0.05em;
+  letter-spacing:0.5px;
+  font-weight: 600;
 }
-
 .small{
-  font-size:14px;
+  font-size:13px;
   color:var(--muted);
 }
-
 .section-title{
-  font-size:13px;
+  font-size:11px;
   color:var(--muted);
   font-weight:600;
   margin:20px 0 6px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
 }
 
 /* BULLETIN */
@@ -405,140 +407,132 @@ h3{
 }
 
 /* BUTTONS */
-
 button{
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-
-  padding: 12px 18px;
-  border-radius: 14px;
-  border: none;
-
-  font-size: 15px;
+  padding: 6px 14px;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
-
   background: var(--btn-bg);
   color: var(--btn-color);
-
   cursor: pointer;
   transition: transform 0.12s ease, opacity 0.12s ease;
   -webkit-tap-highlight-color: transparent;
 }
-
 button:active{
-  transform: scale(0.95);
+  transform: scale(0.97);
   opacity: 0.8;
 }
-
 .primary-btn{
   background: #007aff;
   color: #fff;
+  border: none;
 }
-
 /* Potvrzovací — zelené */
 button[style*="#eaf7ef"],
 button[style*="#1a7a3a"]{
   background: #d4f5e2 !important;
   color: #1a7a3a !important;
+  border: none !important;
 }
-
 /* Zamítací — červené */
 button[style*="#fdecec"],
 button[style*="#c00"]{
   background: #fde8e8 !important;
   color: #c00 !important;
+  border: none !important;
 }
-
 /* Docházka tlačítka */
 button[onclick*="'Přijdu'"]{
   background: #d4f5e2;
   color: #1a7a3a;
+  border: none;
 }
-
 button[onclick*="Mozna"],
 button[onclick*="'Možná'"]{
   background: #fff4dc;
   color: #b07800;
+  border: none;
 }
-
 button[onclick*="'Nepřijdu'"]{
   background: #fde8e8;
   color: #c00;
+  border: none;
 }
-
 /* BUTTON GROUP — automatické rozložení */
 .btn-group{
   display: flex;
   gap: 8px;
   margin-top: 10px;
 }
-
 .btn-group button{
   flex: 1;
 }
-
 /* Dark mode */
-body.dark button{
-  background: #3a3a3c;
-  color: #0a84ff;
+body.dark{
+  --bg:#000;
+  --card:#1c1c1e;
+  --card-border:#2c2c2e;
+  --text:#f2f2f7;
+  --muted:#8e8e93;
 }
-
+body.dark button{
+  background: #2c2c2e;
+  color: #0a84ff;
+  border-color: #3a3a3c;
+}
 body.dark button[style*="#eaf7ef"],
 body.dark button[style*="#1a7a3a"]{
   background: #1a3d2b !important;
   color: #30d158 !important;
 }
-
 body.dark button[style*="#fdecec"],
 body.dark button[style*="#c00"]{
   background: #3d1a1a !important;
   color: #ff453a !important;
 }
-
 body.dark button[style*="#e8f0fe"]{
   background: #1c2a3a !important;
   color: #0a84ff !important;
 }
-
 body.dark button[style*="#e8e8ed"]{
-  background: #3a3a3c !important;
+  background: #2c2c2e !important;
   color: #8e8e93 !important;
 }
-
 body.dark button[onclick*="'Přijdu'"]{
   background: #1a3d2b;
   color: #30d158;
 }
-
 body.dark button[onclick*="Mozna"],
 body.dark button[onclick*="'Možná'"]{
   background: #3d3220;
   color: #ffd60a;
 }
-
 body.dark button[onclick*="'Nepřijdu'"]{
   background: #3d1a1a;
   color: #ff453a;
 }
-
 /* STATUS BUTTON COLORS */
-
 .btn-yes{
   background: #d4f5e2;
   color: #1a7a3a;
+  border: none;
 }
-
 .btn-maybe{
   background: #fff4dc;
   color: #b07800;
+  border: none;
 }
-
 .btn-no{
   background: #fde8e8;
   color: #c00;
+  border: none;
 }
 
 /* PROFILE BTN */
