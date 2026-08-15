@@ -1069,16 +1069,16 @@ async function renderDashboard(){
 
     // pomocná funkce pro Jaro/Léto
     const springHtml = `
-      <h3 class="season-title">🌿 Jaro / Léto</h3>
       ${spring.length ? `
         <div class="card" style="padding:0">
+          <div class="event-label" style="padding:16px 16px 0">Jaro / Léto</div>
           ${spring.map((e, i) => {
             const todayCheck = new Date(e.DATE)
             todayCheck.setHours(0,0,0,0)
             const nowCheck = new Date()
             nowCheck.setHours(0,0,0,0)
             const past = todayCheck < nowCheck
-            const border = i < spring.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+            const border = i < spring.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
@@ -1087,21 +1087,20 @@ async function renderDashboard(){
             </div>`
           }).join("")}
         </div>
-      ` : "<p class='notice'>Žádné koncerty</p>"}
+      ` : `<div class="card"><div class="event-label">Jaro / Léto</div><p class='notice'>Žádné koncerty</p></div>`}
     `
-
     // pomocná funkce pro Podzim/Zima
     const autumnHtml = `
-      <h3 class="season-title">🍂 Podzim / Zima</h3>
       ${autumn.length ? `
         <div class="card" style="padding:0">
+          <div class="event-label" style="padding:16px 16px 0">Podzim / Zima</div>
           ${autumn.map((e, i) => {
             const todayCheck = new Date(e.DATE)
             todayCheck.setHours(0,0,0,0)
             const nowCheck = new Date()
             nowCheck.setHours(0,0,0,0)
             const past = todayCheck < nowCheck
-            const border = i < autumn.length - 1 ? "border-bottom:1px solid #f2f2f7;" : ""
+            const border = i < autumn.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
@@ -1110,17 +1109,17 @@ async function renderDashboard(){
             </div>`
           }).join("")}
         </div>
-      ` : "<p class='notice'>Žádné koncerty</p>"}
+      ` : `<div class="card"><div class="event-label">Podzim / Zima</div><p class='notice'>Žádné koncerty</p></div>`}
     `
 
-    // pomocná funkce pro Aktuality
+   // pomocná funkce pro Aktuality
     const aktualityHtml = `
-      <h3 class="season-title" style="margin-top:20px">📋 Aktuality</h3>
       <div class="card dash-aktuality" style="padding:0">
+        <div class="event-label" style="padding:16px 16px 0">Aktuality</div>
         ${Array.isArray(aktuality) && aktuality.length ? `
           ${aktuality.map((a, idx) => {
             const isSelected = MEMBER_ROLE === "ADMIN" && AKTUALITA_SELECTED === a.id
-            const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+            const border = idx < aktuality.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div
               style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
               onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "')" : ""}"
@@ -1142,22 +1141,21 @@ async function renderDashboard(){
           }).join("")}
         ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné aktuality</p></div>`}
         ${MEMBER_ROLE === "ADMIN" ? `
-          <div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+          <div style="padding:10px 16px;border-top:1px solid var(--card-border)">
             <button onclick="addAktualita()" style="width:100%">+ Přidat aktualitu</button>
           </div>
         ` : ""}
       </div>
     `
-
     // pomocná funkce pro Úkoly
     const todosHtml = `
-      <h3 class="season-title" style="margin-top:20px">✅ Úkoly</h3>
-      <div class="card dash-todos" style="padding:0">
+      <div class="card dash-todos" style="padding:0;margin-top:12px">
+        <div class="event-label" style="padding:16px 16px 0">Úkoly</div>
         ${Array.isArray(todos) && todos.length ? `
           ${todos.map((t, idx) => {
             const done       = t.done === true
             const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
-            const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
+            const border     = idx < todos.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div
               style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
               onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
@@ -1181,7 +1179,7 @@ async function renderDashboard(){
           }).join("")}
         ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`}
         ${MEMBER_ROLE === "ADMIN" ? `
-          <div style="padding:10px 16px;border-top:1px solid rgba(128,128,128,0.1)">
+          <div style="padding:10px 16px;border-top:1px solid var(--card-border)">
             <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
           </div>
         ` : ""}
