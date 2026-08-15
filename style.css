@@ -1307,6 +1307,12 @@ a[href]{
     border-right-color: #3a3a3c;
   }
 
+  .sidebar-nav-item .icon,
+  .sidebar-action .icon{
+    width: 16px;
+    height: 16px;
+  }
+
   .sidebar-logo{
     font-size: 24px;
     font-weight: 700;
