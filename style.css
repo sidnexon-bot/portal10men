@@ -280,6 +280,28 @@ main{
   margin-top:12px;
 }
 
+/* INFO-ROW */
+.info-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 14px;
+}
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  color: var(--muted);
+  width: 100px;
+  flex-shrink: 0;
+}
+.info-value {
+  color: var(--text);
+  flex: 1;
+  font-weight: 600;
+}
+
 /* TEXT */
 h2{
   font-size:17px;
