@@ -1476,7 +1476,6 @@ async function renderEvents(){
 
     if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       html += `<div class="btn-group" style="margin-bottom:16px">`
-      html += `<a href="${INFODOC_FORM_URL}" target="_blank" style="flex:1;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:600;background:#e8e8ed;color:#007aff;text-decoration:none">Vytvořit infodokument</a>`
       if(MEMBER_ROLE === "ADMIN"){
         html += `<button onclick="openEventForm()">+ Přidat novou akci</button>`
       }
