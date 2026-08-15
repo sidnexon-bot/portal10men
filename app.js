@@ -1201,10 +1201,10 @@ async function renderDashboard(){
      })
      
       const contactsHtml = `
-        <h3 class="season-title">👥 Kontakty</h3>
         <div class="card" style="padding:0">
+          <div class="event-label" style="padding:16px 16px 0">Kontakty</div>
           ${sortedMembers.map((m, i) => {
-            const border = i < sortedMembers.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+            const border = i < sortedMembers.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div onclick="openContactModal('${escapeHtml(m.ID)}')"
               style="padding:14px 16px;${border}cursor:pointer">
               <div style="display:flex;justify-content:space-between;align-items:center">
@@ -5557,12 +5557,13 @@ async function renderHeatmap(){
       lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
     })
 
-    let html = `<h3 class="season-title">Docházka skupiny</h3>`
-    html += `<div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:12px;padding:6px 10px">
-      <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
-      <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
-      <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
-    </div>`
+    let html = `<div class="card" style="padding:16px">
+      <div class="event-label" style="margin-bottom:12px">Docházka skupiny</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-bg);border-radius:8px;padding:6px 10px">
+        <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
+        <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
+        <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
+      </div>`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
