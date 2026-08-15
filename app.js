@@ -1016,14 +1016,24 @@ async function renderDashboard(){
 
     // pomocná funkce pro kartu nejbližší akce
     const nearestEventHtml = upcoming ? `
-      <h3 class="season-title">📅 Nejbližší akce</h3>
       <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${escapeHtml(upcoming.ID)}')">
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-          <b style="font-size:18px">${escapeHtml(upcoming.NAME)}</b>
-          <div><span class="small">Datum</span><br><b>${formatDate(upcoming.DATE)}${upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""}</b></div>
-          <div><span class="small">Čas</span><br><b>${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</b></div>
-          <div><span class="small">Místo</span><br><b>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</b></div>
-          <div><span class="small" style="display:block;margin-bottom:2px">Typ akce</span><b>${escapeHtml(upcoming.TYPE) || "Zkouška"}</b></div>
+        <div class="event-label">Nejbližší akce</div>
+        <b style="font-size:18px;display:block;margin-bottom:8px">${escapeHtml(upcoming.NAME)}</b>
+        <div class="info-row">
+          <span class="info-label">Datum</span>
+          <span class="info-value">${formatDate(upcoming.DATE)}${upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Čas</span>
+          <span class="info-value">${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Místo</span>
+          <span class="info-value">${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Typ akce</span>
+          <span class="info-value">${escapeHtml(upcoming.TYPE) || "Zkouška"}</span>
         </div>
         ${(upcoming.PLACE || upcoming.CALL_URL) ? `
           <div class="btn-group" style="margin-bottom:16px">
