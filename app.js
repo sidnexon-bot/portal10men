@@ -2559,7 +2559,7 @@ async function openEvent(id){
          <div class="btn-group" style="margin-bottom:12px">
            ${event.PLACE ? `
              <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                  <circle cx="12" cy="9" r="2.5"/>
@@ -2569,7 +2569,7 @@ async function openEvent(id){
            ` : ""}
            ${event.CALL_URL ? `
              <a href="${escapeHtml(event.CALL_URL)}" target="_blank"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                  <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                </svg>
@@ -4024,7 +4024,7 @@ async function renderPayments(){
                </div>`
              }
 
-     html += `<div class="card" style="margin-top:8px">
+    html += `<div class="card" style="margin-top:8px">
      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('span:last-child').textContent=this.nextElementSibling.style.display==='block'?'‹':'›'">
        <span style="font-weight:600;font-size:14px">Proplacení výdajů a paliva</span>
        <span style="color:var(--muted)">›</span>
@@ -4033,11 +4033,11 @@ async function renderPayments(){
        <p class="small" style="margin-bottom:12px;line-height:1.5">Pokud jsi 10menům platil něco z vlastní kapsy, nebo jsi kvůli akci 10men jel svým autem, můžeš si tyto výdaje nechat proplatit. Stáhni si příslušnou tabulku, vyplň ji a pošli ji Zdendovi. Pokud se jedná o běžný výdaj, pošli vyplněnou tabulku spolu s oskenovanou účtenkou (nebo dej originál Zdendovi). U cesťáku není účtenka potřeba, výdaj se spočítá na základě ujeté vzdálenosti a průměrné spotřeby paliva uvedené v techničáku tvého auta.</p>
        <div style="display:flex;gap:8px">
          <a href="https://docs.google.com/spreadsheets/d/1cp9n0VUQfyGpgBRmVp7YeYXKI6zC3HQ5/export?format=xlsx" target="_blank"
-           style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
+           style="flex:1;display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
            💸 Chci proplatit výdaje
          </a>
          <a href="https://docs.google.com/spreadsheets/d/1s_Yb04Wm6eH0yYex2gwVQZXg4Dec2kfG/export?format=xlsx" target="_blank"
-           style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:#e8f0fe;color:#007aff;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;text-align:center">
+           style="flex:1;display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
            ⛽ Chci proplatit palivo
          </a>
        </div>
