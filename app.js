@@ -5749,8 +5749,8 @@ async function openContactModal(id){
     </div>
 
     <div style="display:flex;flex-direction:column;gap:8px">
-      ${m.PHONE ? `<a href="tel:${escapeHtml(m.PHONE)}" style="display:block;text-align:center;padding:14px;background:#d4f5e2;border-radius:14px;font-weight:600;color:#1a7a3a;text-decoration:none">📞 Zavolat</a>` : ""}
-      ${m.EMAIL ? `<a href="mailto:${escapeHtml(m.EMAIL)}" style="display:block;text-align:center;padding:14px;background:#e8f0fe;border-radius:14px;font-weight:600;color:#007aff;text-decoration:none">✉️ Napsat e-mail</a>` : ""}
+      ${m.PHONE ? `<a href="tel:${escapeHtml(m.PHONE)}" style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#d4f5e2;border-radius:8px;font-weight:600;font-size:14px;color:#1a7a3a;text-decoration:none">📞 Zavolat</a>` : ""}
+      ${m.EMAIL ? `<a href="mailto:${escapeHtml(m.EMAIL)}" style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;border-radius:8px;font-weight:600;font-size:14px;color:#007aff;text-decoration:none">✉️ Napsat e-mail</a>` : ""}
       ${canEdit ? `<button onclick="closeContactModal();openEditMember('${escapeHtml(m.ID)}')" style="width:100%">Upravit kontakt</button>` : ""}
       <button onclick="closeContactModal()" style="width:100%;background:#e8e8ed;color:#6b6b70">Zavřít</button>
     </div>
