@@ -1030,7 +1030,7 @@ async function renderDashboard(){
             ${upcoming.PLACE ? `
               <a href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank"
                 onclick="event.stopPropagation()"
-                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
                   <circle cx="12" cy="9" r="2.5"/>
@@ -1041,7 +1041,7 @@ async function renderDashboard(){
             ${upcoming.CALL_URL ? `
               <a href="${escapeHtml(upcoming.CALL_URL)}" target="_blank"
                 onclick="event.stopPropagation()"
-                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:#e8e8ed;border-radius:12px;font-size:13px;font-weight:600;color:#007aff;text-decoration:none">
+                style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
