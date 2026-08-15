@@ -2813,12 +2813,6 @@ async function openEvent(id){
       html += `<hr>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`
 
-      html += `<div class="btn-group">
-        <button onclick="uploadDocUrl('${id}')" style="width:100%">
-          ${event.DOC_URL ? "Změnit infodokument" : "Nahrát infodokument"}
-        </button>
-      </div>`
-
       if(MEMBER_ROLE === "ADMIN"){
         html += `<div class="btn-group">
           <button onclick="openEditEventModal('${id}')">Upravit akci</button>
