@@ -293,40 +293,47 @@ function setError(msg){
 }
 
 function setActiveTab(name){
-  ACTIVE_TAB = name
-  document.querySelectorAll(".bottom button").forEach(b => b.classList.remove("active"))
-  const map = {
-    dashboard: "btnDashboard",
-    events:    "btnEvents",
-    payments:  "btnPayments",
-    energy:    "btnEnergy",
-    repertoar: "btnRepertoar",
-    members:   "btnMembers"
-  }
-  const btn = document.getElementById(map[name])
-  if(btn) btn.classList.add("active")
-  updateSidebarActive(name)
+ACTIVE_TAB = name
+document.querySelectorAll(".bottom button").forEach(b => b.classList.remove("active"))
+const map = {
+dashboard: "btnDashboard",
+events:    "btnEvents",
+payments:  "btnPayments",
+energy:    "btnEnergy",
+repertoar: "btnRepertoar",
+members:   "btnMembers"
+}
+const titleMap = {
+  dashboard: "Přehled",
+  events:    "Akce",
+  payments:  "Platby",
+  energy:    "Energie",
+  repertoar: "Zkušebna",
+  members:   "Členové"
+}
+const pageTitle = document.getElementById("pageTitle")
+if(pageTitle) pageTitle.textContent = titleMap[name] || "Přehled"
 
-  const main = document.getElementById("main")
-  if(main){
-    main.style.opacity = "0"
-    main.style.transform = "translateY(6px)"
-    requestAnimationFrame(() => {
-      main.style.transition = "opacity 0.2s ease, transform 0.2s ease"
-      main.style.opacity = "1"
-      main.style.transform = "translateY(0)"
-    })
-  }
-
-  if(name === "dashboard")  renderDashboard()
-  if(name === "events")     renderEvents()
-  if(name === "payments")   renderPayments()
-  if(name === "energy")     renderEnergy()
-  if(name === "repertoar")  renderRepertoar()
-  if(name === "members")    renderMembers()
-
-  saveState()
-
+const btn = document.getElementById(map[name])
+if(btn) btn.classList.add("active")
+updateSidebarActive(name)
+const main = document.getElementById("main")
+if(main){
+main.style.opacity = "0"
+main.style.transform = "translateY(6px)"
+requestAnimationFrame(() => {
+main.style.transition = "opacity 0.2s ease, transform 0.2s ease"
+main.style.opacity = "1"
+main.style.transform = "translateY(0)"
+})
+}
+if(name === "dashboard")  renderDashboard()
+if(name === "events")     renderEvents()
+if(name === "payments")   renderPayments()
+if(name === "energy")     renderEnergy()
+if(name === "repertoar")  renderRepertoar()
+if(name === "members")    renderMembers()
+saveState()
 }
 
 function setStatus(msg){
