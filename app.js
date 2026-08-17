@@ -497,14 +497,42 @@ function renderHarmonogramDetail(json){
   const validItems = items.filter(h => h.cas || h.popis)
   if(!validItems.length) return ""
 
+  // zjisti jestli je harmonogram vícedenní (má pole 'den')
+  const hasDay = validItems.some(h => h.den)
+
+  if(!hasDay){
+    // jednodenní — původní zobrazení
+    return `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+      <span class="small" style="display:block;margin-bottom:6px">Harmonogram akce</span>
+      ${validItems.map(h => `
+        <div style="display:flex;gap:10px;padding:4px 0;font-size:14px">
+          <span style="font-weight:600;min-width:48px">${escapeHtml(h.cas || "—")}</span>
+          <span>${escapeHtml(h.popis || "")}</span>
+        </div>
+      `).join("")}
+    </div>`
+  }
+
+  // vícedenní — seskup podle dne
+  const days = [...new Set(validItems.map(h => h.den))].sort()
+
   return `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
     <span class="small" style="display:block;margin-bottom:6px">Harmonogram akce</span>
-    ${validItems.map(h => `
-      <div style="display:flex;gap:10px;padding:4px 0;font-size:14px">
-        <span style="font-weight:600;min-width:48px">${escapeHtml(h.cas || "—")}</span>
-        <span>${escapeHtml(h.popis || "")}</span>
-      </div>
-    `).join("")}
+    ${days.map(day => {
+      const dayLabel = new Date(day).toLocaleDateString("cs-CZ", {weekday: "long", day: "numeric", month: "numeric"})
+      const dayItems = validItems.filter(h => h.den === day)
+      return `
+        <div style="margin-bottom:10px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px;text-transform:capitalize;color:var(--muted)">${dayLabel}</div>
+          ${dayItems.map(h => `
+            <div style="display:flex;gap:10px;padding:4px 0;font-size:14px">
+              <span style="font-weight:600;min-width:48px">${escapeHtml(h.cas || "—")}</span>
+              <span>${escapeHtml(h.popis || "")}</span>
+            </div>
+          `).join("")}
+        </div>
+      `
+    }).join("")}
   </div>`
 }
 
