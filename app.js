@@ -501,6 +501,17 @@ function renderHarmonogramDetail(json){
   </div>`
 }
 
+function toggleDetailAccordion(key){
+  const body    = document.getElementById("accBody_" + key)
+  const chevron = document.getElementById("accChevron_" + key)
+  if(!body) return
+  const isOpen = body.style.display !== "none"
+  body.style.display = isOpen ? "none" : "block"
+  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+}
+
+window.toggleDetailAccordion = toggleDetailAccordion
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -2545,8 +2556,12 @@ async function openEvent(id){
 
     // --- DALŠÍ INFORMACE ---
     if(event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.HOSPODA || event.SPACAKY || event.STRAVA || event.OBLECENI_S){
-      html += `<div class="event-card" style="margin-bottom:16px">
-        <div class="event-label">Další informace</div>
+      html += `<div class="event-card" style="margin-bottom:16px;padding:0">
+        <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('info')">
+          <span>Další informace</span>
+          <span id="accChevron_info" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+        </div>
+        <div id="accBody_info" style="display:none;padding:0 16px 16px">
         ${event.SRAZ      ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
         ${event.OBLECENI  ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
         ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
@@ -2557,16 +2572,19 @@ async function openEvent(id){
         ${event.SPACAKY   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
         ${event.STRAVA    ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Je tam zajištěná strava?</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
         ${event.OBLECENI_S ? `<div style="padding:8px 0"><span class="small" style="display:block">Bereme koncertní oblečení?</span><b>${escapeHtml(event.OBLECENI_S)}${event.OBLECENI_S_TYP ? " — " + escapeHtml(formatObleceni(event.OBLECENI_S_TYP)) : ""}</b></div>` : ""}
+        </div>
       </div>`
     }
 
     // --- GRILOVAČKA ---
     if(event.IS_GRILOVACKA){
-     console.log("IS_GRILOVACKA true, loading items...")
      const grilovackaItems = await api("getgrilovacka", {id})
-     console.log("grilovackaItems:", grilovackaItems)
-      html += `<div class="event-card" style="margin-bottom:16px">
-        <div class="event-label">Co s sebou 🔥</div>
+      html += `<div class="event-card" style="margin-bottom:16px;padding:0">
+        <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('gril')">
+          <span>Co s sebou 🔥</span>
+          <span id="accChevron_gril" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+        </div>
+        <div id="accBody_gril" style="display:none;padding:0 16px 16px">
         ${grilovackaItems.length ? `
           <table style="width:100%;font-size:13px;border-collapse:collapse">
             <thead>
@@ -2596,16 +2614,24 @@ async function openEvent(id){
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
           <button onclick="openGrilovackaModal('${id}')" style="width:100%">+ Přidat položku</button>
         </div>
+        </div>
       </div>`
     }
 
     // --- PROGRAM ---
     const mainProgram   = program.filter(p => !p.ENCORE)
     const encoreProgram = program.filter(p => p.ENCORE)
+    const programSummary = mainProgram.length
+      ? mainProgram.length + " skladeb" + (encoreProgram.length ? " + " + encoreProgram.length + " přídavek" : "")
+      : "Program není k dispozici"
 
-    if(mainProgram.length){
-      html += `<div class="event-card" style="margin-bottom:16px">
-        <div class="event-label">Program</div>
+    html += `<div class="event-card" style="margin-bottom:16px;padding:0">
+      <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('program')">
+        <span>Program <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${programSummary}</span></span>
+        <span id="accChevron_program" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+      </div>
+      <div id="accBody_program" style="display:none;padding:0 16px 16px">
+      ${mainProgram.length ? `
         ${mainProgram.map((p, i) => `
           <div class="event-row">
             <div>
@@ -2638,30 +2664,33 @@ async function openEvent(id){
             <button onclick="openProgramEditor('${id}')" style="width:100%">Upravit program</button>
           </div>
         ` : ""}
-      </div>`
-    }else{
-      html += `<div class="event-card" style="margin-bottom:16px">
-        <div class="event-label">Program</div>
+      ` : `
         <p class="notice" style="margin:0">Program není k dispozici</p>
         ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
             <button onclick="openProgramEditor('${id}')" style="width:100%">Vytvořit program</button>
           </div>
         ` : ""}
-      </div>`
-    }
+      `}
+      </div>
+    </div>`
 
    // --- TO-DO LIST (rider) ---
     if((MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && event.RIDER){
       let riderData = {}
       try{ riderData = JSON.parse(event.RIDER) }catch(e){ riderData = {} }
-
       const todoPred = riderData.todo_pred || []
       const todoDen  = riderData.todo_den  || []
+      const totalTodos = todoPred.length + todoDen.length
+      const doneTodos = todoPred.filter(t => t.done).length + todoDen.filter(t => t.done).length
 
-      if(todoPred.length || todoDen.length){
-        html += `<div class="event-card" style="margin-bottom:16px">
-          <div class="event-label">To-do list</div>
+      if(totalTodos > 0){
+        html += `<div class="event-card" style="margin-bottom:16px;padding:0">
+          <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('todo')">
+            <span>To-do list <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${doneTodos}/${totalTodos}</span></span>
+            <span id="accChevron_todo" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+          </div>
+          <div id="accBody_todo" style="display:none;padding:0 16px 16px">
           ${todoPred.length ? `
             <div style="margin-bottom:12px">
               <span class="small" style="font-weight:600;display:block;margin-bottom:6px">Před koncertem</span>
@@ -2690,30 +2719,32 @@ async function openEvent(id){
               `).join("")}
             </div>
           ` : ""}
+          </div>
         </div>`
       }
     }
-
+     
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
     const myReason = myRow?.REASON || ""
-
     const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
     const maybe = attendance.filter(a => a.STATUS === "Možná").length
     const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
     const open  = attendance.filter(a => !a.STATUS).length
-
     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
     const statusText  = myStatus || "Nevyplněno"
 
-    html += `<div class="event-card" style="margin-bottom:16px">
-      <div class="event-label">Docházka</div>
-
+    html += `<div class="event-card" style="margin-bottom:16px;padding:0">
+      <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('attendance')">
+        <span>Docházka <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:${statusColor}">· ${statusText}</span></span>
+        <span id="accChevron_attendance" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+      </div>
+      <div id="accBody_attendance" style="display:none;padding:0 16px 16px">
       ${event.STATUS === "Zrušená" ? `
         <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
       ` : MEMBER_EMAIL ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="toggleAttendanceAccordion('${id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="event.stopPropagation();toggleAttendanceAccordion('${id}')">
           <div>
             <div style="font-weight:600;color:${statusColor}">${statusText}</div>
             ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
@@ -2729,7 +2760,6 @@ async function openEvent(id){
           </div>
         </div>
       ` : `<div class="muted">Vyber člena</div>`}
-
       <div style="margin-top:12px">
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
           <span class="small">✓ Přijdu: <b>${yes}</b></span>
@@ -2751,7 +2781,7 @@ async function openEvent(id){
           </div>`
         }).join("")}
       </div>
-
+      </div>
     </div>`
 
     // --- INFODOKUMENT ---
