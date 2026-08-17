@@ -2488,71 +2488,59 @@ async function openEvent(id){
     const program    = data.program    || []
     const attendance = data.attendance || []
 
-
     // --- HLAVIČKA ---
-    let html = `
-     ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
-     <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
-     ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">OPAKUJÍCÍ SE AKCE</div>` : ""}
-
-     <div class="card" style="margin-bottom:16px">
-
-       <!-- Typ akce -->
-       <div style="margin-bottom:12px">
-         <span class="small" style="display:block;margin-bottom:2px">Typ akce</span>
-         <b>${escapeHtml(event.TYPE) || "Zkouška"}</b>
-       </div>
-
-       <!-- Datum a čas -->
-       <div style="margin-bottom:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
-         <span class="small" style="display:block;margin-bottom:2px">Datum</span>
-         <b>${formatDate(event.DATE)}${event.DATE_END ? " – " + formatDate(event.DATE_END) : ""}</b>
-       </div>
-       <div style="margin-bottom:12px">
-         <span class="small" style="display:block;margin-bottom:2px">Čas</span>
-         <b>${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</b>
-       </div>
-
-       <!-- Místo -->
-       <div style="margin-bottom:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
-         <span class="small" style="display:block;margin-bottom:2px">Místo</span>
-         <b>${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</b>
-       </div>
-
-       <!-- Navigovat / Připojit se -->
-       ${(event.PLACE || event.CALL_URL) ? `
-         <div class="btn-group" style="margin-bottom:12px">
-           ${event.PLACE ? `
-             <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
-               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                 <circle cx="12" cy="9" r="2.5"/>
-               </svg>
-               Navigovat
-             </a>
-           ` : ""}
-           ${event.CALL_URL ? `
-             <a href="${escapeHtml(event.CALL_URL)}" target="_blank"
-               style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
-               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                 <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-               </svg>
-               Připojit se
-             </a>
-           ` : ""}
-         </div>
-       ` : ""}
-
-       <!-- Poznámka -->
-       ${event.NOTE ? `
-         <div style="padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-           <span class="small" style="display:block;margin-bottom:4px">Poznámka</span>
-           <div style="font-size:15px;white-space:pre-wrap">${escapeHtml(event.NOTE)}</div>
-         </div>
-       ` : ""}
-
-     </div>`
+   let html = `
+   ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
+        <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
+   ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">OPAKUJÍCÍ SE AKCE</div>` : ""}
+        <div class="card" style="margin-bottom:16px">
+          <div class="info-row">
+            <span class="info-label">Typ akce</span>
+            <span class="info-value">${escapeHtml(event.TYPE) || "Zkouška"}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Datum</span>
+            <span class="info-value">${formatDate(event.DATE)}${event.DATE_END ? " – " + formatDate(event.DATE_END) : ""}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Čas</span>
+            <span class="info-value">${event.START ? formatTime(event.START) : "—"}${event.END ? " – " + formatTime(event.END) : ""}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Místo</span>
+            <span class="info-value">${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</span>
+          </div>
+          ${event.NOTE ? `
+          <div class="info-row">
+            <span class="info-label">Poznámka</span>
+            <span class="info-value" style="white-space:pre-wrap">${escapeHtml(event.NOTE)}</span>
+          </div>
+          ` : ""}
+   
+          ${(event.PLACE || event.CALL_URL) ? `
+            <div class="btn-group" style="margin-top:12px">
+   ${event.PLACE ? `
+                <a href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
+                  style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                    <circle cx="12" cy="9" r="2.5"/>
+                  </svg>
+                  Navigovat
+                </a>
+              ` : ""}
+   ${event.CALL_URL ? `
+                <a href="${escapeHtml(event.CALL_URL)}" target="_blank"
+                  style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  Připojit se
+                </a>
+              ` : ""}
+            </div>
+          ` : ""}
+        </div>`
 
     // --- DALŠÍ INFORMACE ---
     if(event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.HOSPODA || event.SPACAKY || event.STRAVA || event.OBLECENI_S){
