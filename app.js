@@ -1445,7 +1445,8 @@ async function renderEvents(){
     return d >= now
   })
 
-
+   let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
+     
     if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       html += `<div class="btn-group" style="margin-bottom:16px">`
       if(MEMBER_ROLE === "ADMIN"){
