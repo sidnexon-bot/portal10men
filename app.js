@@ -1445,7 +1445,6 @@ async function renderEvents(){
     return d >= now
   })
 
-    let html = `<h2 style="margin:0 0 12px">Akce</h2>`
 
     if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       html += `<div class="btn-group" style="margin-bottom:16px">`
@@ -3908,7 +3907,6 @@ async function renderPayments(){
     const config = await api("getconfig")
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
-    html += `<h2 style="margin:0 0 16px">Platby</h2>`
 
     if(MEMBER_ROLE === "ADMIN"){
       html += `<div class="btn-group" style="margin-bottom:16px">
@@ -4091,7 +4089,6 @@ async function renderEnergy(){
       .sort((a,b) => new Date(a.DATE) - new Date(b.DATE))[0]
 
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
-    html += "<h2>Energie</h2>"
 
     html += `<div class="card">
       <label>Akce:<br>
@@ -4279,7 +4276,6 @@ async function renderRepertoar(){
   setLoading()
   try{
     let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
-    html += `<h2 style="margin:0 0 16px">Zkušebna</h2>`
 
     // --- PODZÁLOŽKY ---
     html += `<div class="btn-group" style="margin-bottom:16px">
