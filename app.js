@@ -519,6 +519,80 @@ function toggleDetailAccordion(key){
 
 window.toggleDetailAccordion = toggleDetailAccordion
 
+function isVicedenni(){
+  const dateEnd = document.getElementById("fDateEnd")?.value
+  const date    = document.getElementById("fDate")?.value
+  return !!(dateEnd && date && dateEnd !== date)
+}
+
+function getEventDays(){
+  const date    = document.getElementById("fDate")?.value
+  const dateEnd = document.getElementById("fDateEnd")?.value
+  if(!date) return []
+  if(!dateEnd || dateEnd === date) return [date]
+
+  const days = []
+  let cur = new Date(date)
+  const end = new Date(dateEnd)
+  while(cur <= end){
+    days.push(cur.toISOString().slice(0,10))
+    cur.setDate(cur.getDate() + 1)
+  }
+  return days
+}
+
+function renderMultiDayHarmonogram(){
+  const wrap = document.getElementById("harmonogramWrap")
+  if(!wrap) return
+
+  if(!isVicedenni()){
+    // jednodenní — jednoduché textové pole jako dřív
+    wrap.innerHTML = `<textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>`
+    return
+  }
+
+  // vícedenní — strukturovaný harmonogram po dnech
+  const items = getInitialHarmonogram()
+  const days = getEventDays()
+
+  wrap.innerHTML = days.map(day => {
+    const dayLabel = new Date(day).toLocaleDateString("cs-CZ", {weekday: "long", day: "numeric", month: "numeric"})
+    const dayItems = items.filter(h => h.den === day)
+
+    return `
+      <div style="margin-bottom:16px">
+        <div class="small" style="font-weight:600;margin-bottom:6px;text-transform:capitalize">${dayLabel}</div>
+        <div id="harmonogramDay_${day}">
+          ${dayItems.map((h) => {
+            const idx = items.indexOf(h)
+            return `
+              <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
+                <input type="time" value="${escapeHtml(h.cas || "")}"
+                  oninput="updateHarmonogramField(${idx}, 'cas', this.value)"
+                  style="width:100px;flex-shrink:0">
+                <input type="text" value="${escapeHtml(h.popis || "")}" placeholder="Popis"
+                  oninput="updateHarmonogramField(${idx}, 'popis', this.value)"
+                  style="flex:1">
+                <button type="button" onclick="removeHarmonogramRow(${idx});renderMultiDayHarmonogram()" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+              </div>
+            `
+          }).join("")}
+        </div>
+        <button type="button" onclick="addHarmonogramRowForDay('${day}')" style="width:100%;margin-top:4px">+ Přidat položku</button>
+      </div>
+    `
+  }).join("")
+}
+
+function addHarmonogramRowForDay(day){
+  const items = getInitialHarmonogram()
+  items.push({ den: day, cas: "", popis: "" })
+  renderMultiDayHarmonogram()
+}
+
+window.renderMultiDayHarmonogram = renderMultiDayHarmonogram
+window.addHarmonogramRowForDay   = addHarmonogramRowForDay
+
 /* ===============================
    TOAST & LOADING
 ================================ */
@@ -1823,10 +1897,12 @@ function renderEventFormExtra(){
       <div id="dopravaPosadky" style="display:${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "block" : "none"};margin-top:12px">
         ${renderPosadkyHtml()}
       </div>
-      <label style="margin-top:12px">Harmonogram<br>
-        <textarea id="fHarmonogram" style="width:100%;min-height:80px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${escapeHtml(window.EDIT_EVENT?.HARMONOGRAM || "")}</textarea>
-      </label>
+      <div style="margin-top:12px">
+        <span class="small" style="font-weight:600">Harmonogram</span>
+        <div id="harmonogramWrap" style="margin-top:8px"></div>
+      </div>
     `
+    setTimeout(() => renderMultiDayHarmonogram(), 0)
   }else{
     panel.innerHTML = `<p class="notice">Pro typ "${type}" nejsou k dispozici další informace.</p>`
   }
