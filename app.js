@@ -1607,7 +1607,7 @@ futureEvents.forEach(e => {
   const isCancelled = e.STATUS === "Zrušená"
   const highlight   = isNext ? "border-left:3px solid #007aff;" : ""
   const opacity     = isCancelled ? "0.5" : "1"
-
+  const countdown   = !isCancelled ? dnyDo(e.DATE) : null
   html += `<div class="swipe-wrapper" style="opacity:${opacity}">
     <div class="swipe-bg">
       <span class="swipe-bg-left">✓ Přijdu</span>
@@ -1616,7 +1616,10 @@ futureEvents.forEach(e => {
     <div class="card swipe-card${isNext ? " next" : ""}" data-id="${escapeHtml(e.ID)}" style="${highlight}">
       ${isNext ? `<div style="font-size:11px;color:#007aff;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Nejbližší akce</div>` : ""}
       ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
-      <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b><br>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b>
+        ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+      </div>
          <span class="small">
       ${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}
       ${e.START ? "· " + formatTime(e.START) : ""}
@@ -1632,7 +1635,7 @@ futureEvents.forEach(e => {
     </div>
   </div>`
 })
-
+     
 // pak proběhlé akce schované pod tlačítkem
 if(pastEvents.length){
   html += `<div style="margin:8px 0">
