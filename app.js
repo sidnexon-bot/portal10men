@@ -264,6 +264,15 @@ function isToday(date){
   return d.toDateString() === t.toDateString()
 }
 
+function dnyDo(datumString){
+  const dnes = new Date().toISOString().split("T")[0]
+  const diff = Math.ceil((new Date(datumString) - new Date(dnes)) / (1000 * 60 * 60 * 24))
+  if(diff < 0) return null
+  if(diff === 0) return "dnes"
+  if(diff === 1) return "zítra"
+  return `za ${diff} dní`
+}
+
 function container(){
   return document.getElementById("main")
 }
@@ -1134,7 +1143,7 @@ async function renderDashboard(){
       </div>
     ` : ""
 
-    // pomocná funkce pro Jaro/Léto
+   // pomocná funkce pro Jaro/Léto
     const springHtml = `
       ${spring.length ? `
         <div class="card" style="padding:0">
@@ -1146,9 +1155,13 @@ async function renderDashboard(){
             nowCheck.setHours(0,0,0,0)
             const past = todayCheck < nowCheck
             const border = i < spring.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+            const countdown = !past && e.STATUS !== "Zrušená" ? dnyDo(e.DATE) : null
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
-              <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
+                ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+              </div>
               <div class="small" style="margin-top:3px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>
               ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
             </div>`
@@ -1168,9 +1181,13 @@ async function renderDashboard(){
             nowCheck.setHours(0,0,0,0)
             const past = todayCheck < nowCheck
             const border = i < autumn.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+            const countdown = !past && e.STATUS !== "Zrušená" ? dnyDo(e.DATE) : null
             return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
-              <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
+                ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+              </div>
               <div class="small" style="margin-top:3px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>
               ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
             </div>`
@@ -6361,3 +6378,4 @@ window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
 window.setZkusebnaTab       = setZkusebnaTab
 window.renderHarmonogramDetail = renderHarmonogramDetail
+window.dnyDo = dnyDo
