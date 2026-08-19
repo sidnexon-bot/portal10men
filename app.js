@@ -1160,7 +1160,7 @@ async function renderDashboard(){
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
                 <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
-                ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+                ${countdown ? `<span class="days-badge">${countdown}</span>` : ""}
               </div>
               <div class="small" style="margin-top:3px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>
               ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
@@ -1186,7 +1186,7 @@ async function renderDashboard(){
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
                 <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
-                ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+                ${countdown ? `<span class="days-badge">${countdown}</span>` : ""}
               </div>
               <div class="small" style="margin-top:3px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>
               ${e.PLACE ? `<div class="small">${escapeHtml(e.PLACE)}</div>` : ""}
@@ -1618,7 +1618,7 @@ futureEvents.forEach(e => {
       ${isCancelled ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em">Zrušená</div>` : ""}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <b style="${isCancelled ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(e.NAME)}</b>
-        ${countdown ? `<span style="background:#f2f2f7;padding:3px 8px;border-radius:6px;font-size:12px;color:#8e8e93;white-space:nowrap;flex-shrink:0">${countdown}</span>` : ""}
+        ${countdown ? `<span class="days-badge">${countdown}</span>` : ""}
       </div>
          <span class="small">
       ${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}
