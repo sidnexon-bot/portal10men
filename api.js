@@ -1153,12 +1153,38 @@ async function updateSeriesFrom(params){
   console.log("newFirst:", newFirst)
   console.log("diffMs:", diffMs)
 
-  for(const inst of toUpdate){
+    for(const inst of toUpdate){
     const origDate = new Date(inst.date)
     if(isNaN(origDate)){
       console.warn("Preskakuji akci s neplatnym datem:", inst.id, inst.date)
       continue
     }
+
+    const newDate = new Date(origDate.getTime() + diffMs)
+    const y   = newDate.getFullYear()
+    const m   = String(newDate.getMonth() + 1).padStart(2, "0")
+    const d   = String(newDate.getDate()).padStart(2, "0")
+
+    await dbUpdate("/akce/" + inst.id, {
+      name:             params.name,
+      date:             `${y}-${m}-${d}`,
+      start:            params.start            || "",
+      end:              params.end              || "",
+      place:            params.place            || "",
+      call_url:         params.call_url         || "",
+      note:             params.note             || "",
+      status:           params.status           || "Plánovaná",
+      requires_program: params.requires_program !== false
+    })
+
+    await addToCalendarQueue("update", inst.id, {
+      name:  params.name,
+      date:  `${y}-${m}-${d}`,
+      start: params.start || "",
+      end:   params.end   || "",
+      place: params.place || ""
+    })
+  }
 
     const newDate = new Date(origDate.getTime() + diffMs)
     const y   = newDate.getFullYear()
