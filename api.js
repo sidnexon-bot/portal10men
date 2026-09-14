@@ -1136,24 +1136,13 @@ async function updateSeriesFrom(params){
     .filter(e => e.template_id === templateId && normalizeDate(e.date) >= thisDate)
     .sort((a,b) => normalizeDate(a.date) > normalizeDate(b.date) ? 1 : -1)
 
-  console.log("templateId:", templateId)
-  console.log("thisDate:", thisDate)
-  console.log("toUpdate.length:", toUpdate.length)
-  console.log("vsechnyAkce s template_id:", objToArray(vsechnyAkce).filter(e => e.template_id === templateId).map(e => ({id: e.id, date: e.date})))
-
   if(!toUpdate.length) return { status: "nothing_to_update" }
 
   const oldFirst = new Date(normalizeDate(toUpdate[0].date))
   const newFirst = new Date(params.date)
   const diffMs   = newFirst - oldFirst
 
-  console.log("oldFirst raw:", toUpdate[0].date)
-  console.log("oldFirst normalized:", normalizeDate(toUpdate[0].date))
-  console.log("oldFirst parsed:", new Date(normalizeDate(toUpdate[0].date)))
-  console.log("newFirst:", newFirst)
-  console.log("diffMs:", diffMs)
-
-    for(const inst of toUpdate){
+  for(const inst of toUpdate){
     const origDate = new Date(inst.date)
     if(isNaN(origDate)){
       console.warn("Preskakuji akci s neplatnym datem:", inst.id, inst.date)
@@ -1183,24 +1172,6 @@ async function updateSeriesFrom(params){
       start: params.start || "",
       end:   params.end   || "",
       place: params.place || ""
-    })
-  }
-
-    const newDate = new Date(origDate.getTime() + diffMs)
-    const y   = newDate.getFullYear()
-    const m   = String(newDate.getMonth() + 1).padStart(2, "0")
-    const d   = String(newDate.getDate()).padStart(2, "0")
-
-    await dbUpdate("/akce/" + inst.id, {
-      name:             params.name,
-      date:             `${y}-${m}-${d}`,
-      start:            params.start            || "",
-      end:              params.end              || "",
-      place:            params.place            || "",
-      call_url:         params.call_url         || "",
-      note:             params.note             || "",
-      status:           params.status           || "Plánovaná",
-      requires_program: params.requires_program !== false
     })
   }
 
