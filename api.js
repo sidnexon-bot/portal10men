@@ -442,7 +442,7 @@ async function updateEvent(params){
     const posadkyText = formatPosadkyForDiscord(params.doprava, params.doprava_posadky, await dbGet("/members"))
 
     await sendDiscordMessage({
-      message: `${rolePing} ✏️ **Aktualizované info k akci: ${params.name}**\n\n${zmeny.join('\n')}${posadkyText}`
+      message: `${rolePing} ✏️ **Aktualizované info k akci: ${params.name}** (${formatDateSimple(params.date)})\n\n${zmeny.join('\n')}${posadkyText}`
     })
   }
 
