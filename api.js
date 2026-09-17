@@ -154,31 +154,26 @@ async function getEventDetail(id){
 
   const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
 
-const attendance = objToArray(dochazka)
-  .filter(d => d.id_akce === id)
-  .filter(d => {
-    const m = objToArray(members).find(m => m.email === d.email)
-    return !m || (m.role || "").toUpperCase() !== "GUEST"
-  })
-  .map(d => {
-    const m = objToArray(members).find(m => m.email === d.email) || {}
-    return {
-      ID:         d.id,
-      ID_AKCE:    d.id_akce,
-      EMAIL:      d.email,
-      NAME:       m.name || d.email,
-      VOICE:      m.voice || "",
-      STATUS:     d.status || "",
-      REASON:     d.reason || "",
-      UPDATED_AT: d.updated_at || ""
-    }
-  })
+  const attendance = objToArray(members)
+    .filter(m => (m.role || "").toUpperCase() !== "GUEST")
+    .map(m => {
+      const d = objToArray(dochazka).find(d => d.id_akce === id && d.email === m.email) || {}
+      return {
+        ID:         d.id || "",
+        ID_AKCE:    id,
+        EMAIL:      m.email,
+        NAME:       m.name || m.email,
+        VOICE:      m.voice || "",
+        STATUS:     d.status || "",
+        REASON:     d.reason || "",
+        UPDATED_AT: d.updated_at || ""
+      }
+    })
     .sort((a, b) => {
-    console.log(a.NAME, a.VOICE, b.NAME, b.VOICE)
-    const ai = voiceOrder.indexOf(a.VOICE)
-    const bi = voiceOrder.indexOf(b.VOICE)
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
-  })
+      const ai = voiceOrder.indexOf(a.VOICE)
+      const bi = voiceOrder.indexOf(b.VOICE)
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+    })
 
   const prog = objToArray(program)
     .filter(p => p.id_akce === id)
