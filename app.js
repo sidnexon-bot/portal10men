@@ -2602,7 +2602,6 @@ async function openEvent(id){
    html += `
    ${!isDesktop ? `<button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>` : ""}
      <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
-        <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
    ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">OPAKUJÍCÍ SE AKCE</div>` : ""}
         <div class="card" style="margin-bottom:16px">
           <div class="info-row">
