@@ -1500,8 +1500,8 @@ a[href]{
     margin: 0;
   }
 
-  #detail-panel-slot,
-  #edit-panel-slot{
+   #detail-panel-slot,
+   #edit-panel-slot{
     position: sticky;
     top: 40px;
     max-height: calc(100vh - 80px);
@@ -1510,23 +1510,9 @@ a[href]{
     min-width: 0;
   }
 
-
-  #detail-panel-slot,
-  #edit-panel-slot{
-    position: sticky;
-    top: 40px;
-    max-height: calc(100vh - 80px);
-    overflow-y: auto;
-    width: 100%;
-  }
-
-
-  #detail-panel-slot{
-    position: sticky;
-    top: 40px;
-    max-height: calc(100vh - 80px);
-    overflow-y: auto;
-    width: 100%;
+  #detail-panel-slot:empty,
+  #edit-panel-slot:empty{
+    display: none;
   }
 
   #detail-panel{
