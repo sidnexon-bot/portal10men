@@ -2589,32 +2589,10 @@ async function openEvent(id){
   window.ACTIVE_EVENT_ID = id
   ACTIVE_DETAIL_ID = id
 
-  const slotEl = document.getElementById("detail-panel-slot")
-  const target = (isDesktop && ACTIVE_TAB === "events" && slotEl) ? slotEl : null
-
-  if(target){
-    const layout = document.getElementById("events-layout")
-    if(layout){
-      layout.classList.remove("two-col", "three-col")
-      layout.classList.add("two-col")
-      const editSlot = document.getElementById("edit-panel-slot")
-      if(editSlot) editSlot.innerHTML = ""
-    }
-    target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px">
-      <div class="skeleton-card" style="background:transparent">
-        <div class="skeleton skeleton-line tall"></div>
-        <div class="skeleton skeleton-line medium"></div>
-        <div class="skeleton skeleton-line short"></div>
-      </div>
-    </div>`
-  }else{
-    setLoading()
-  }
+  setLoading()
 
   try{
-
     const data       = await cachedApi("eventdetail", {id})
-    console.log("eventdetail data:", data)
     const event      = data.event      || {}
     const program    = data.program    || []
     const attendance = data.attendance || []
@@ -2926,20 +2904,12 @@ async function openEvent(id){
       html += `</div>`
     }
 
-    if(target){
-      target.innerHTML = `<div style="background:var(--card);border-radius:18px;padding:20px;max-height:90vh;overflow-y:auto">${html}</div>`
-    }else{
-      container().innerHTML = html
-    }
+       container().innerHTML = html
 
     saveState()
 
   }catch(err){
-    if(target){
-      target.innerHTML = `<p class="notice">Chyba při načítání akce</p>`
-    }else{
-      setError("Chyba při načítání akce: " + (err?.message || err))
-    }
+    setError("Chyba při načítání akce: " + (err?.message || err))
   }
 
 }
