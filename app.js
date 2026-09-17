@@ -1048,15 +1048,19 @@ async function renderDashboard(){
       return !keywords.some(k => name.includes(k))
     })
 
-    const spring = concerts.filter(e => {
-      const m = new Date(e.DATE).getMonth() + 1
-      return m >= 1 && m <= 6
-    }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+    const currentYear = new Date().getFullYear()
 
-    const autumn = concerts.filter(e => {
-      const m = new Date(e.DATE).getMonth() + 1
-      return m >= 7 && m <= 12
-    }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+       const spring = concerts.filter(e => {
+       const d = new Date(e.DATE)
+       const m = d.getMonth() + 1
+       return d.getFullYear() === currentYear && m >= 1 && m <= 6
+     }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
+   
+       const autumn = concerts.filter(e => {
+       const d = new Date(e.DATE)
+       const m = d.getMonth() + 1
+       return d.getFullYear() === currentYear && m >= 7 && m <= 12
+     }).sort((a,b) => new Date(a.DATE) - new Date(b.DATE))
 
     const today = new Date()
     today.setHours(0,0,0,0)
