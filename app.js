@@ -3775,6 +3775,32 @@ async function confirmSwipeWithReason(eventId, el){
   }
 }
 
+ // seřaď harmonogram chronologicky podle času (položky bez času zůstanou na konci v původním pořadí)
+  function sortByTime(items){
+    return [...items].sort((a, b) => {
+      // nejdřív podle dne (pokud existuje)
+      if(a.den || b.den){
+        const denA = a.den || ""
+        const denB = b.den || ""
+        if(denA !== denB) return denA.localeCompare(denB)
+      }
+      // pak podle času
+      if(!a.cas && !b.cas) return 0
+      if(!a.cas) return 1
+      if(!b.cas) return -1
+      return a.cas.localeCompare(b.cas)
+    })
+  }
+
+  const sortedHarmonogram = sortByTime(window.EDIT_HARMONOGRAM || [])
+  const harmonogramItems  = JSON.stringify(sortedHarmonogram)
+
+  const riderData = window.EDIT_RIDER || {}
+  if(Array.isArray(riderData.pripravne_akce))       riderData.pripravne_akce = sortByTime(riderData.pripravne_akce)
+  if(Array.isArray(riderData.harmonogram_koncertu))  riderData.harmonogram_koncertu = sortByTime(riderData.harmonogram_koncertu)
+  if(Array.isArray(riderData.ukonceni))              riderData.ukonceni = sortByTime(riderData.ukonceni)
+  const riderJson = JSON.stringify(riderData)
+
 async function saveEvent(id, notify = true){
 
   const name            = document.getElementById("fName")?.value.trim()
