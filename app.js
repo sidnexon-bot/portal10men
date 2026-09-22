@@ -3794,7 +3794,7 @@ async function saveEvent(id, notify = true){
   const obleceni        = document.getElementById("fObleceni")?.value      ?? window.EDIT_EVENT?.OBLECENI       ?? ""
   const doprava         = document.getElementById("fDoprava")?.value       ?? window.EDIT_EVENT?.DOPRAVA        ?? ""
   const dopravaPosadky  = doprava === "Auta" 
-  ? JSON.stringify(window.EDIT_POSADKY || [])
+  ? JSON.stringify(window.EDIT_POSADKY || (window.EDIT_EVENT?.DOPRAVA_POSADKY ? JSON.parse(window.EDIT_EVENT.DOPRAVA_POSADKY) : []))
   : ""
   const hospoda         = document.getElementById("fHospoda")?.value       ?? window.EDIT_EVENT?.HOSPODA        ?? ""
   const harmonogram     = document.getElementById("fHarmonogram")?.value   ?? window.EDIT_EVENT?.HARMONOGRAM    ?? ""
@@ -3822,10 +3822,11 @@ async function saveEvent(id, notify = true){
     })
   }
 
-  const sortedHarmonogram = sortByTime(window.EDIT_HARMONOGRAM || [])
+  const rawHarmonogram = window.EDIT_HARMONOGRAM || (window.EDIT_EVENT?.HARMONOGRAM_ITEMS ? JSON.parse(window.EDIT_EVENT.HARMONOGRAM_ITEMS) : [])
+  const sortedHarmonogram = sortByTime(rawHarmonogram)
   const harmonogramItems  = JSON.stringify(sortedHarmonogram)
 
-  const riderData = window.EDIT_RIDER || {}
+  const riderData = window.EDIT_RIDER || (window.EDIT_EVENT?.RIDER ? JSON.parse(window.EDIT_EVENT.RIDER) : {})
   if(Array.isArray(riderData.pripravne_akce))       riderData.pripravne_akce = sortByTime(riderData.pripravne_akce)
   if(Array.isArray(riderData.harmonogram_koncertu))  riderData.harmonogram_koncertu = sortByTime(riderData.harmonogram_koncertu)
   if(Array.isArray(riderData.ukonceni))              riderData.ukonceni = sortByTime(riderData.ukonceni)
