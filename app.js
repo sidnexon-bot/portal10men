@@ -4120,24 +4120,18 @@ async function renderPayments(){
              }
 
     html += `<div class="card" style="margin-top:8px">
-     <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('span:last-child').textContent=this.nextElementSibling.style.display==='block'?'‹':'›'">
-       <span style="font-weight:600;font-size:14px">Proplacení výdajů a paliva</span>
-       <span style="color:var(--muted)">›</span>
-     </div>
-     <div style="display:none;margin-top:10px">
-       <p class="small" style="margin-bottom:12px;line-height:1.5">Pokud jsi 10menům platil něco z vlastní kapsy, nebo jsi kvůli akci 10men jel svým autem, můžeš si tyto výdaje nechat proplatit. Stáhni si příslušnou tabulku, vyplň ji a pošli ji Zdendovi. Pokud se jedná o běžný výdaj, pošli vyplněnou tabulku spolu s oskenovanou účtenkou (nebo dej originál Zdendovi). U cesťáku není účtenka potřeba, výdaj se spočítá na základě ujeté vzdálenosti a průměrné spotřeby paliva uvedené v techničáku tvého auta.</p>
-       <div style="display:flex;gap:8px">
-         <a href="https://docs.google.com/spreadsheets/d/1cp9n0VUQfyGpgBRmVp7YeYXKI6zC3HQ5/export?format=xlsx" target="_blank"
-           style="flex:1;display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
-           💸 Chci proplatit výdaje
-         </a>
-         <a href="https://docs.google.com/spreadsheets/d/1s_Yb04Wm6eH0yYex2gwVQZXg4Dec2kfG/export?format=xlsx" target="_blank"
-           style="flex:1;display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
-           ⛽ Chci proplatit palivo
-         </a>
-       </div>
-     </div>
-   </div>`
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('span:last-child').textContent=this.nextElementSibling.style.display==='block'?'‹':'›'">
+          <span style="font-weight:600;font-size:14px">Proplacení výdajů a paliva</span>
+          <span style="color:var(--muted)">›</span>
+        </div>
+        <div style="display:none;margin-top:10px">
+          <p class="small" style="margin-bottom:12px;line-height:1.5">Pokud jsi 10menům platil něco z vlastní kapsy, nebo jsi kvůli akci 10men jel svým autem, můžeš si tyto výdaje nechat proplatit. Pokud se jedná o běžný výdaj, přilož fotku nebo sken účtenky (nebo dej originál Zdendovi). U cesťáku není účtenka potřeba, výdaj se spočítá na základě ujeté vzdálenosti a průměrné spotřeby paliva uvedené v techničáku tvého auta.</p>
+          <a href="https://cash.10men.cz/expenses.html" target="_blank" rel="noopener"
+            style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
+            Proplatit výdaje
+          </a>
+        </div>
+      </div>`
 
     if(isDesktop) html += `</div>`
     container().innerHTML = html
