@@ -148,6 +148,8 @@ body:not(.dark) :is(.card, .modal-content, #detail-panel, .event-card, .swipe-ca
 }
 .bottom button.active .icon svg { stroke: #007aff; transform: none; }
 .bottom button:active { transform: scale(0.96); opacity: 1; }
+/* neaktivní záložky bez stínu z obecného pravidla tlačítek (světlý režim) */
+body:not(.dark) .bottom button:not(.active) { box-shadow: none; }
 
 body.dark .bottom {
   background: linear-gradient(180deg, rgba(96, 96, 104, 0.46), rgba(38, 38, 42, 0.34));
