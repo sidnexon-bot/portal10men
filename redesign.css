@@ -16,6 +16,7 @@
   --hair: rgba(60, 60, 67, 0.12);
   --card-border: transparent;
   --raised: #ffffff;
+  --btn-bg: #ffffff;   /* tlačítko na pozadí stránky: bílá plocha se stínem */
 }
 body.dark {
   --bg: #000000;
@@ -23,7 +24,7 @@ body.dark {
   --raised: #1d1d20;
   --text: #ececee;
   --muted: #8e8e93;
-  --btn-bg: #212124;
+  --btn-bg: #1f1f22;
   --shadow-card: none;
   --hair: rgba(255, 255, 255, 0.08);
 }
@@ -74,7 +75,7 @@ body.dark .swipe-card,
 body.dark .event-card,
 body.dark .skeleton-card { background: var(--card); }
 body.dark .sidebar { background: #000000; border-right: none; }
-body.dark button { background: #212124; border-color: transparent; }
+body.dark button { background: var(--btn-bg); border-color: transparent; }
 body.dark .profile-btn, body.dark .active-member, body.dark .member-row,
 body.dark .sidebar-profile-avatar, body.dark .days-badge { background: #222225; }
 body.dark input, body.dark select, body.dark textarea { background: #1c1c1f; border-color: #2a2a2e; }
@@ -89,6 +90,16 @@ body.dark .card[style*="padding:0"] div[style*="border-bottom"] { border-color: 
 .sidebar-divider, body.dark .sidebar-divider { border: 0 !important; height: 14px; margin: 0; background: none !important; }
 .sidebar-nav-item { border-radius: 12px; }
 .sidebar-nav-item.active { box-shadow: inset 3px 0 0 #007aff; }
+
+/* ── 5b) Tlačítka: plocha odlišná od podkladu, ne okraj ──────────────
+   Původní okraj tlačítek používal barvu okraje karet (teď průhlednou), takže ve světlém
+   režimu splývala s pozadím. Tlačítko na stránce je bílé se stínem, uvnitř karty a okna
+   je tmavší šedé; v tmavém režimu jsou o stupeň světlejší než podklad. */
+.card, .modal-content, #detail-panel, .event-card, .swipe-card { --btn-bg: #ebebf0; }
+body.dark :is(.card, .modal-content, #detail-panel, .event-card, .swipe-card) { --btn-bg: #2a2a2e; }
+button { border-color: transparent; }
+body:not(.dark) button { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.05); }
+body:not(.dark) :is(.card, .modal-content, #detail-panel, .event-card, .swipe-card) button { box-shadow: none; }
 
 /* ── 6) Místo pro plovoucí lištu ────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -209,3 +220,86 @@ html[data-platform="android"] body.dark .bottom button:active .icon::before { ba
    Zpět: smazat tento blok a blok „Energie“ v platform.js.
    ════════════════════════════════════════════════════════════════════ */
 #btnEnergy, #sidebarEnergy { display: none !important; }
+
+/* ════════════════════════════════════════════════════════════════════
+   9) MENU PROFILU
+   Profilový obrázek (nebo iniciály), jednotná sada SVG ikon, bez dělicích čar
+   (skupiny odděluje mezera) a animace otevření i zavření.
+   ════════════════════════════════════════════════════════════════════ */
+.profile-menu {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 1000;
+  width: min(304px, calc(100vw - 32px)); min-width: 0; padding: 8px; overflow: hidden;
+  border-radius: 22px;
+  background: var(--raised);   /* plná plocha: menu leží v hlavičce, která má sama rozmazání, vnořené by nic nerozostřilo */
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 0 0 0.5px rgba(255, 255, 255, 0.55);
+  transform-origin: calc(100% - 22px) 0;
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity 0.2s ease, transform 0.36s cubic-bezier(0.2, 1.25, 0.3, 1), visibility 0s;
+}
+/* zavřené menu zůstává v dokumentu, aby se dalo animovat (původní .hidden ho vypínalo hned) */
+.profile-menu.hidden {
+  display: block !important; opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-10px) scale(0.88);
+  transition: opacity 0.14s ease, transform 0.18s cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 0.18s;
+}
+body.dark .profile-menu {
+  background: #18181b;
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.7), inset 0 0 0 0.5px rgba(255, 255, 255, 0.10);
+}
+
+.profile-menu-info { display: flex; align-items: center; gap: 14px; padding: 12px 12px 14px; }
+.pm-avatar {
+  flex: none; width: 54px; height: 54px; border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #4aa0ff, #007aff); color: #fff; font-size: 19px; font-weight: 700; letter-spacing: 0.02em;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #007aff 22%, transparent);
+}
+.pm-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-id { min-width: 0; display: grid; gap: 2px; }
+.profile-menu-name { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-menu-email { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.profile-menu-role, .profile-menu-voice {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1;
+  padding: 4px 8px; border-radius: 999px; margin: 0;
+}
+.profile-menu-role { color: #007aff; background: color-mix(in srgb, #007aff 13%, transparent); }
+body.dark .profile-menu-role { color: #4aa0ff; }
+.profile-menu-voice { color: var(--muted); background: color-mix(in srgb, var(--text) 8%, transparent); }
+.profile-menu-role:empty, .profile-menu-voice:empty { display: none; }
+
+.pm-group { display: flex; flex-direction: column; gap: 2px; }
+.pm-group + .pm-group { margin-top: 6px; }
+.pm-group:not(:has(.profile-menu-item:not(.hidden))) { display: none; }
+.profile-menu-item {
+  display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 10px 0 8px;
+  border-radius: 14px; font-size: 15px; font-weight: 500; color: var(--text); opacity: 1;
+  transition: background 0.15s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.profile-menu-item:hover { background: color-mix(in srgb, var(--text) 6%, transparent); opacity: 1; }
+.profile-menu-item:active { background: color-mix(in srgb, var(--text) 11%, transparent); transform: scale(0.98); }
+.profile-menu-item.hidden { display: none; }
+.pm-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-icon {
+  flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+  color: var(--muted); background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.pm-icon svg { width: 18px; height: 18px; display: block; }
+.pm-icon.pm-blue { color: #007aff; }
+body.dark .pm-icon.pm-blue { color: #4aa0ff; }
+.pm-icon.pm-discord { color: #5865f2; }
+.pm-icon.pm-red { color: #ff3b30; }
+.profile-menu-logout { color: #ff3b30; }
+
+/* obsah menu naskočí postupně po otevření */
+.profile-menu:not(.hidden) .profile-menu-info { animation: pmIn 0.38s cubic-bezier(0.2, 0.9, 0.3, 1) 0.03s both; }
+.profile-menu:not(.hidden) .profile-menu-item { animation: pmIn 0.36s cubic-bezier(0.2, 0.9, 0.3, 1) both; animation-delay: calc(70ms + var(--i, 0) * 34ms); }
+@keyframes pmIn { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
+.profile-btn { transition: transform 0.15s ease, box-shadow 0.2s ease; }
+.profile-btn:active { transform: scale(0.94); }
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-menu, .profile-menu.hidden { transition: opacity 0.12s ease, visibility 0s; transform: none; }
+  .profile-menu:not(.hidden) .profile-menu-info, .profile-menu:not(.hidden) .profile-menu-item { animation: none; }
+}

@@ -35,6 +35,33 @@ function initMemberFromSession(){
   return true;
 }
 
+/* Menu profilu: ikony jsou SVG ve společné sadě. Režim přepíná měsíc / slunce a text se už nepřepisuje emoji. */
+const PM_ICON = {
+  moon:   `<span class="pm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>`,
+  sun:    `<span class="pm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></span>`,
+  switch: `<span class="pm-icon pm-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></span>`
+}
+
+function setDarkModeItem(btn, on){
+  btn.innerHTML = (on ? PM_ICON.sun : PM_ICON.moon) + `<span class="pm-label">${on ? "Světlý režim" : "Tmavý režim"}</span>`
+}
+
+function fillProfileMenuAvatar(user){
+  const el = document.getElementById("profileMenuAvatar")
+  if(!el) return
+  el.textContent = ""
+  if(user.photoURL){
+    const img = document.createElement("img")
+    img.alt = ""
+    img.referrerPolicy = "no-referrer"
+    img.onerror = () => { el.textContent = getInitials(user.name) }
+    img.src = user.photoURL
+    el.appendChild(img)
+  }else{
+    el.textContent = getInitials(user.name)
+  }
+}
+
 function updateProfileBtn(){
   const profileBtn = document.getElementById("profileBtn")
   if(profileBtn){
@@ -54,6 +81,7 @@ function updateProfileBtn(){
     document.getElementById("profileMenuEmail").textContent = user.email;
     document.getElementById("profileMenuRole").textContent  = user.role;
     document.getElementById("profileMenuVoice").textContent  = user.voice;
+    fillProfileMenuAvatar(user)
   }
 
   // Přepínač jen pro admina
@@ -61,7 +89,7 @@ function updateProfileBtn(){
 if(switchBtn){
   if(AUTH_ROLE === 'ADMIN'){
     switchBtn.classList.remove('hidden')
-    switchBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Přepnout člena`
+    switchBtn.innerHTML = PM_ICON.switch + `<span class="pm-label">Přepnout člena</span>`
     switchBtn.onclick = () => { closeProfileMenu(); openMemberModal() }
   }else{
     switchBtn.classList.add('hidden')
@@ -688,7 +716,7 @@ function initDarkMode(){
 function applyDarkMode(on){
   document.body.classList.toggle("dark", on)
   const btn = document.getElementById("darkModeToggle")
-  if(btn) btn.textContent = on ? "☀️ Světlý režim" : "🌙 Tmavý režim"
+  if(btn) setDarkModeItem(btn, on)
 
   // aktualizuj barvu status baru
   const meta = document.querySelector('meta[name="theme-color"]:not([media])')

@@ -30,3 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
   sync();
   new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 });
+
+/* Menu profilu: zavření klávesou Esc (zavírání klikem mimo řeší app.js). */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  var m = document.getElementById('profileMenu');
+  if (m && !m.classList.contains('hidden')) m.classList.add('hidden');
+});
