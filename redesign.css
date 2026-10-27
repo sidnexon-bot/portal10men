@@ -1,0 +1,211 @@
+/* ════════════════════════════════════════════════════════════════════
+   10base – sjednocený vzhled s ostatními aplikacemi 10men (Marek)
+   Přídavná vrstva nad style.css. Modrá zůstává identitou 10base.
+   Zapnutí: <link rel="stylesheet" href="redesign.css"> za style.css
+            + <script src="platform.js"></script> v <head>.
+   Vypnutí: odebrat ty dva řádky. Nic jiného se nemění.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── 1) Tokeny: jedna plocha, bez dekorativních čar ──────────────────
+   Tmavý režim je čistě černý (#000): na OLED displejích pixely nesvítí,
+   takže šetří baterii. Karty se od pozadí oddělují plochou, ne okrajem. */
+:root {
+  --r-card: 18px;
+  --r-ctl: 14px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 22px rgba(0, 0, 0, 0.06);
+  --hair: rgba(60, 60, 67, 0.12);
+  --card-border: transparent;
+  --raised: #ffffff;
+}
+body.dark {
+  --bg: #000000;
+  --card: #151517;
+  --raised: #1d1d20;
+  --text: #ececee;
+  --muted: #8e8e93;
+  --btn-bg: #212124;
+  --shadow-card: none;
+  --hair: rgba(255, 255, 255, 0.08);
+}
+html { background: #f2f2f7; }
+body { background: var(--bg); }
+body.dark, html:has(body.dark) { background: #000000; }
+
+/* ── 2) Karty: jednotné zaoblení a plocha, žádný okraj ─────────────── */
+.card, .event-card, .swipe-card, #detail-panel {
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  border-color: transparent;
+}
+.card { margin-bottom: 14px; }
+.card.next, .event-card.main { border-radius: var(--r-card); }
+.section-title { letter-spacing: 0.06em; }
+.info-row, .event-row { border-color: var(--hair); }   /* čáry uvnitř karet oddělují řádky údajů, zůstávají */
+.modal-content { border-radius: 24px; }
+.profile-menu { border-radius: 16px; }
+input, select, textarea, .ios-textarea { border-radius: var(--r-ctl); }
+button, .btn-group button, .attendance-buttons button { border-radius: var(--r-ctl); }
+.profile-btn { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+
+/* ── 3) Hlavička: průhledné sklo bez čáry pod sebou ──────────────────
+   Obsah pod ní se při rolování měkce ztrácí (místo ostré hrany).       */
+header {
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  -webkit-backdrop-filter: saturate(1.6) blur(24px);
+  backdrop-filter: saturate(1.6) blur(24px);
+  border-bottom: none;
+  box-shadow: none;
+}
+header::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 14px; pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 84%, transparent), transparent);
+}
+header h1 { letter-spacing: -0.03em; }
+
+/* ── 4) Tmavý režim: černá plocha, karty #151517, vyvýšené prvky #1d1d20 ── */
+body.dark .splash { background: #000000; }
+body.dark header { background: rgba(0, 0, 0, 0.84); border-bottom: none; }
+body.dark header::after { background: linear-gradient(to bottom, rgba(0, 0, 0, 0.84), transparent); }
+body.dark .modal-content,
+body.dark .profile-menu { background: var(--raised); }
+body.dark #detail-panel,
+body.dark .sidebar-profile,
+body.dark .swipe-card,
+body.dark .event-card,
+body.dark .skeleton-card { background: var(--card); }
+body.dark .sidebar { background: #000000; border-right: none; }
+body.dark button { background: #212124; border-color: transparent; }
+body.dark .profile-btn, body.dark .active-member, body.dark .member-row,
+body.dark .sidebar-profile-avatar, body.dark .days-badge { background: #222225; }
+body.dark input, body.dark select, body.dark textarea { background: #1c1c1f; border-color: #2a2a2e; }
+body.dark .event-row, body.dark .profile-menu-divider,
+body.dark .heatmap-desktop tr { border-color: var(--hair) !important; }
+body.dark .sidebar-nav-item:hover, body.dark .sidebar-action:hover { background: #151517; }
+body.dark .prog-song-row { background: #151517 !important; }
+body.dark .card[style*="padding:0"] div[style*="border-bottom"] { border-color: var(--hair) !important; }
+
+/* ── 5) Desktop postranní panel: bez dělicí čáry, členění dává mezera ── */
+.sidebar { border-right: none; }
+.sidebar-divider, body.dark .sidebar-divider { border: 0 !important; height: 14px; margin: 0; background: none !important; }
+.sidebar-nav-item { border-radius: 12px; }
+.sidebar-nav-item.active { box-shadow: inset 3px 0 0 #007aff; }
+
+/* ── 6) Místo pro plovoucí lištu ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  main { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   7) SPODNÍ PLOVOUCÍ LIŠTA
+   Výchozí (Apple i ostatní): Liquid Glass
+   ════════════════════════════════════════════════════════════════════ */
+.bottom-wrap { padding: 0 16px calc(10px + env(safe-area-inset-bottom)); }
+.bottom {
+  position: relative; isolation: isolate;
+  display: flex; gap: 2px; width: min(100%, 440px); padding: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.60), rgba(255, 255, 255, 0.28));
+  -webkit-backdrop-filter: blur(22px) saturate(190%);
+  backdrop-filter: blur(22px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 14px 34px rgba(20, 24, 40, 0.18), 0 2px 6px rgba(20, 24, 40, 0.08),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.30),
+    inset 0 0 16px rgba(255, 255, 255, 0.20);
+  pointer-events: auto;
+}
+/* odlesk po okraji skla */
+.bottom::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background:
+    radial-gradient(110% 120% at 12% -10%, rgba(255, 255, 255, 0.75), transparent 46%),
+    radial-gradient(90% 110% at 92% 115%, rgba(255, 255, 255, 0.40), transparent 52%);
+  opacity: 0.9;
+}
+.bottom button {
+  background: transparent; border: none; border-radius: 999px;
+  padding: 8px 2px 7px; gap: 3px;
+  color: #55555b; font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
+  box-shadow: none; transition: background 0.25s ease, box-shadow 0.25s ease, color 0.2s ease, transform 0.15s ease;
+}
+.bottom button small { font-size: 10px; margin-top: 0; }
+.bottom button .icon svg { width: 23px; height: 23px; }
+.bottom button.active {
+  color: #007aff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.46));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 1), inset 0 -1px 2px rgba(0, 0, 0, 0.05), 0 3px 12px rgba(20, 24, 40, 0.12);
+}
+.bottom button.active .icon svg { stroke: #007aff; transform: none; }
+.bottom button:active { transform: scale(0.96); opacity: 1; }
+
+body.dark .bottom {
+  background: linear-gradient(180deg, rgba(96, 96, 104, 0.46), rgba(38, 38, 42, 0.34));
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.30),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.22), inset 0 -1px 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 18px rgba(255, 255, 255, 0.05);
+}
+body.dark .bottom::before {
+  background:
+    radial-gradient(110% 120% at 12% -10%, rgba(255, 255, 255, 0.26), transparent 46%),
+    radial-gradient(90% 110% at 92% 115%, rgba(255, 255, 255, 0.10), transparent 52%);
+}
+body.dark .bottom button { background: transparent; color: #a0a0a8; }
+body.dark .bottom button.active {
+  color: #0a84ff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.09));
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(0, 0, 0, 0.25), 0 3px 12px rgba(0, 0, 0, 0.35);
+}
+body.dark .bottom button.active .icon svg { stroke: #0a84ff; }
+
+/* ── Android: Samsung One UI ─────────────────────────────────────────
+   Plná plovoucí lišta, velké zaoblení (superelipsa), indikátor „pilulka“
+   za ikonou aktivní položky, štítky pod ikonou, měkký stín bez skla.    */
+html[data-platform="android"] .bottom-wrap { padding: 0 12px calc(12px + env(safe-area-inset-bottom)); }
+html[data-platform="android"] .bottom {
+  width: 100%; max-width: 520px; gap: 0; padding: 8px 6px 6px; border-radius: 30px;
+  background: #ffffff; border: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.10);
+}
+html[data-platform="android"] .bottom::before { display: none; }
+html[data-platform="android"] .bottom button {
+  gap: 5px; padding: 4px 2px 2px; border-radius: 18px;
+  color: #5f5f66; font-size: 11px; font-weight: 500; background: transparent; box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-platform="android"] .bottom button small { font-size: 11px; font-weight: 500; }
+html[data-platform="android"] .bottom button .icon { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; }
+html[data-platform="android"] .bottom button .icon::before {
+  content: ""; position: absolute; left: 50%; top: 0; width: 64px; height: 32px; border-radius: 16px;
+  transform: translateX(-50%) scaleX(0.5); opacity: 0; background: rgba(0, 122, 255, 0.16);
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), opacity 0.18s ease;
+}
+html[data-platform="android"] .bottom button .icon svg { position: relative; width: 24px; height: 24px; transition: none; }
+html[data-platform="android"] .bottom button.active { background: transparent; box-shadow: none; color: #1c1c1e; font-weight: 600; }
+html[data-platform="android"] .bottom button.active small { font-weight: 700; }
+html[data-platform="android"] .bottom button.active .icon::before { transform: translateX(-50%) scaleX(1); opacity: 1; }
+html[data-platform="android"] .bottom button.active .icon svg { stroke: #0a5fd6; transform: none; }
+html[data-platform="android"] .bottom button:active { transform: none; opacity: 1; }
+html[data-platform="android"] .bottom button:active .icon::before { transform: translateX(-50%) scaleX(1); opacity: 1; background: rgba(0, 0, 0, 0.08); }
+
+html[data-platform="android"] body.dark .bottom,
+body.dark html[data-platform="android"] .bottom { background: #1f1f21; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04); }
+html[data-platform="android"] body.dark .bottom button { color: #a9a9b0; background: transparent; }
+html[data-platform="android"] body.dark .bottom button.active { color: #f2f2f7; background: transparent; box-shadow: none; }
+html[data-platform="android"] body.dark .bottom button .icon::before { background: rgba(10, 132, 255, 0.28); }
+html[data-platform="android"] body.dark .bottom button.active .icon svg { stroke: #6cb0ff; }
+html[data-platform="android"] body.dark .bottom button:active .icon::before { background: rgba(255, 255, 255, 0.10); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom button, html[data-platform="android"] .bottom button .icon::before { transition: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   8) Záložka Energie je skrytá (nepoužívá se).
+   Kód v app.js zůstává a data v databázi (/energie) se nemažou.
+   Záloha dat: rules-backup/ENERGIE-20261027-212908.json (+ .csv).
+   Zpět: smazat tento blok a blok „Energie“ v platform.js.
+   ════════════════════════════════════════════════════════════════════ */
+#btnEnergy, #sidebarEnergy { display: none !important; }
