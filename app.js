@@ -1901,7 +1901,7 @@ function renderEventFormExtra(){
 
       ${type2 === "Koncert" ? `
         <label style="margin-top:16px;display:flex;align-items:center;gap:10px">
-          <input type="checkbox" id="fIsSpolupraceVal" ${window.EDIT_EVENT?.IS_SPOLUPRACE ? "checked" : ""} style="width:auto;margin:0" onchange="toggleSpolupraceField(this.checked)">
+          <input type="checkbox" id="fIsSpoluprace" ${window.EDIT_EVENT?.IS_SPOLUPRACE ? "checked" : ""} style="width:auto;margin:0" onchange="toggleSpolupraceField(this.checked)">
           <span>Spolupráce s jiným tělesem</span>
         </label>
         <div id="spolupraceNazevWrap" style="display:${window.EDIT_EVENT?.IS_SPOLUPRACE ? "block" : "none"};margin-top:8px">
@@ -2697,7 +2697,7 @@ async function openEvent(id){
         ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
         ${event.DOPRAVA === "Auta" && event.DOPRAVA_POSADKY ? renderPosadkyDetail(event.DOPRAVA_POSADKY) : ""}
         ${event.HARMONOGRAM_ITEMS ? renderHarmonogramDetail(event.HARMONOGRAM_ITEMS) : (event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : "")}
-        ${event.IS_SPOLUPRACE && event.SPOLUPRACE_NAZEV ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spolupráce</span><b>${escapeHtml(event.SPOLUPRACE_NAZEV)}</b></div>` : ""}
+        ${event.IS_SPOLUPRACE ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spolupráce</span><b>${escapeHtml(event.SPOLUPRACE_NAZEV || "Ano")}</b></div>` : ""}
         ${event.HOSPODA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
         ${event.SPACAKY   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Bereme spacáky a karimatky?</span><b>${escapeHtml(event.SPACAKY)}</b></div>` : ""}
         ${event.STRAVA    ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Je tam zajištěná strava?</span><b>${escapeHtml(event.STRAVA)}${event.STRAVA_NOTA ? " — " + escapeHtml(event.STRAVA_NOTA) : ""}</b></div>` : ""}
@@ -3833,7 +3833,7 @@ async function saveEvent(id, notify = true){
   const obleceniSTyp    = document.getElementById("fObleceniSoustredeniTyp")?.value ?? window.EDIT_EVENT?.OBLECENI_S_TYP ?? ""
   const isGrilovacka    = document.getElementById("fIsGrilovacka")?.checked ?? window.EDIT_EVENT?.IS_GRILOVACKA ?? false
   const isSpolupraceVal = document.getElementById("fIsSpoluprace")?.checked ?? window.EDIT_EVENT?.IS_SPOLUPRACE ?? false
-  const spolupraceNazev = document.getElementById("fSpolupraceNazev")?.value ?? window.EDIT_EVENT?.SPOLUPRACE_NAZEV ?? ""
+  const spolupraceNazev = isSpolupraceVal ? (document.getElementById("fSpolupraceNazev")?.value ?? window.EDIT_EVENT?.SPOLUPRACE_NAZEV ?? "") : ""
 
   // seřaď harmonogram chronologicky podle času (položky bez času zůstanou na konci v původním pořadí)
   function sortByTime(items){
