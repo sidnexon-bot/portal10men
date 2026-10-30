@@ -726,8 +726,7 @@ function applyDarkMode(on){
   if(btn) setDarkModeItem(btn, on)
 
   // aktualizuj barvu status baru
-  const meta = document.querySelector('meta[name="theme-color"]:not([media])')
-  if(meta) meta.content = on ? "#1c1c1e" : "#f2f2f7"
+  if(window.tenChrome) window.tenChrome(on)
   updateSidebarDarkLabel()
 }
 
