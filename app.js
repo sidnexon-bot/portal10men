@@ -10,9 +10,6 @@ let ACTIVE_TAB   = "dashboard"
 let MEMBER_ROLE  = "MEMBER"
 let AUTH_ROLE = null // původní role přihlášeného – nemění se při přepínání člena
 let ACTIVE_DETAIL_ID = null
-let SONG_SELECTED = null
-let REPERTOAR_FILTER_OPEN = false
-let REPERTOAR_ACTIVE_FILTERS = {status: "Vše", version: "Vše"}
 const SPACE_URL = "https://space.10men.cz"
 // odkaz na noty vede do PDF vieweru v 10space, ne na Google Disk
 function noteLink(url){
@@ -20,7 +17,7 @@ function noteLink(url){
   const m = t.match(/\/d\/([\w-]{20,})/) || t.match(/[?&]id=([\w-]{20,})/) || t.match(/^([\w-]{20,})$/)
   return m ? `${SPACE_URL}/#/file/${m[1]}` : t
 }
-let ZKUSEBNA_TAB = "repertoar" // "repertoar" | "klavesy" | "cvt"
+let ZKUSEBNA_TAB = "klavesy" // "klavesy" | "cvt"
 
 const BULLETIN = `Koncert s Verum se blíží — sledujte detaily akce.`
 const INFODOC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevXNcXk9qR3YxiMI_k2OUIAgivQJW5mE-U4uodV91fJ-bWpg/viewform?usp=header"
@@ -477,24 +474,6 @@ function formatObleceni(val){
   return map[val] || val
 }
 
-function buildSongDetail(id){
-  const card = document.querySelector(`.repertoar-row[data-id="${id}"]`)
-  if(!card) return ""
-  // potřebujeme data ze skladby — uložíme je do data atributů
-  const note = card.dataset.note || ""
-  const canEdit = MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"
-
-  return `<div class="song-detail" style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-    ${note ? `<div class="small" style="margin-bottom:10px;white-space:pre-wrap">${escapeHtml(note)}</div>` : ""}
-    ${canEdit ? `
-      <div class="btn-group">
-        <button onclick="event.stopPropagation();openEditSong('${id}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-        <button onclick="event.stopPropagation();deleteSongItem('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
-      </div>
-    ` : ""}
-  </div>`
-}
-
 function saveScroll(){
   return window.scrollY
 }
@@ -511,7 +490,6 @@ function saveState(){
   const state = {
     tab:          ACTIVE_TAB,
     eventId:      window.ACTIVE_EVENT_ID || null,
-    songSelected: SONG_SELECTED || null,
     eventsMonth:  window.EVENTS_MONTH || null,
     scroll:       window.scrollY,
     timestamp:    Date.now()
@@ -830,7 +808,6 @@ async function start(){
       const state = loadState()
       if(state){
         if(state.eventsMonth) window.EVENTS_MONTH = state.eventsMonth
-        if(state.songSelected) SONG_SELECTED = state.songSelected
         await setActiveTab(state.tab)
         if(state.eventId && state.tab === "events"){
           await openEvent(state.eventId)
@@ -4458,7 +4435,7 @@ async function saveEnergy(){
 }
 
 /* ===============================
-   REPERTOAR
+   ZKUŠEBNA (Klávesy, CVT)
 ================================ */
 
 async function renderRepertoar(){
@@ -4469,7 +4446,6 @@ async function renderRepertoar(){
 
     // --- PODZÁLOŽKY ---
     html += `<div class="btn-group" style="margin-bottom:16px">
-      <button onclick="setZkusebnaTab('repertoar')" style="${ZKUSEBNA_TAB === 'repertoar' ? 'background:#007aff;color:#fff' : ''}">Repertoár</button>
       <button onclick="setZkusebnaTab('klavesy')" style="${ZKUSEBNA_TAB === 'klavesy' ? 'background:#007aff;color:#fff' : ''}">Klávesy</button>
       <button onclick="setZkusebnaTab('cvt')" style="${ZKUSEBNA_TAB === 'cvt' ? 'background:#007aff;color:#fff' : ''}">CVT</button>
     </div>`
@@ -4490,17 +4466,12 @@ async function renderRepertoar(){
       return
     }
 
-    // --- REPERTOÁR: správa not se přesunula do 10space ---
-    html += `<div class="card">
-      <div style="font-weight:600;font-size:15px;margin-bottom:6px">Repertoár a noty jsou v 10space</div>
-      <div class="small" style="margin-bottom:12px">Hledání skladeb, filtry, oblíbené, přidávání a úpravy skladeb i otevření not najdete v 10space: Osobní desky, karta Repertoár.</div>
-      <a href="${SPACE_URL}/#/osobni" target="_blank" rel="noopener" style="display:inline-block;padding:10px 16px;background:#007aff;color:#fff;border-radius:12px;font-weight:600;text-decoration:none">Otevřít repertoár v 10space</a>
-    </div>`
+    html += renderKlavesyTab()
     if(isDesktop) html += `</div>`
     container().innerHTML = html
     restoreScroll(scroll)
   }catch(err){
-    setError("Chyba při načítání repertoáru: " + (err?.message || err))
+    setError("Chyba při načítání zkušebny: " + (err?.message || err))
   }
 }
 
@@ -4731,27 +4702,6 @@ function renderKlavesyOverlay(){
 
 window.openKlavesyOverlay  = openKlavesyOverlay
 window.closeKlavesyOverlay = closeKlavesyOverlay
-
-function selectSong(id){
-  const prev = SONG_SELECTED
-  SONG_SELECTED = SONG_SELECTED === id ? null : id
-
-  // aktualizuj starou kartu
-  if(prev){
-    const oldCard = document.querySelector(`.repertoar-row[data-id="${prev}"]`)
-    if(oldCard) oldCard.querySelector(".song-detail")?.remove()
-  }
-
-  // aktualizuj novou kartu
-  const card = document.querySelector(`.repertoar-row[data-id="${id}"]`)
-  if(!card) return
-
-  if(SONG_SELECTED === id){
-    // přidej detail
-    const detailHtml = buildSongDetail(id)
-    card.insertAdjacentHTML("beforeend", detailHtml)
-  }
-}
 
 // =============================================
 // METRONOM
@@ -4995,79 +4945,6 @@ window.akordPadDown      = akordPadDown
 window.akordPadUp        = akordPadUp
 window.klavesyToggleMode = klavesyToggleMode
 
-function openAddSong(){
-  openFormModal("Nová skladba", [
-    {key: "name",        label: "Název",        type: "text"},
-    {key: "author",      label: "Skladatel",    type: "text"},
-    {key: "arranged_by", label: "Aranžmá",      type: "text"},
-    {key: "text_by",     label: "Text",         type: "text"},
-    {key: "status",      label: "Status",       type: "select",    value: "Aktivní",    options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
-    {key: "version",     label: "Verze",        type: "select",    value: "",           options: ["", "TTBB", "SATB"]},
-    {key: "pdf",         label: "Odkaz na noty (URL)", type: "text"},
-    {key: "code",        label: "Kód",          type: "text"},
-    {key: "note",        label: "Poznámka",     type: "textarea"}
-  ], async (values) => {
-    if(!values.name){ alert("Zadej název skladby"); return }
-    try{
-      closeFormModal()
-      showSaving()
-      await api("addsong", values)
-      lsDel("repertoar")
-      hideSaving("Skladba přidána ✓")
-      renderRepertoar()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + err.message)
-    }
-  })
-}
-
-async function openEditSong(id){
-  const data = await cachedApi("repertoar")
-  const song = data.find(r => r.ID === id)
-  if(!song) return
-
-  openFormModal("Upravit skladbu", [
-    {key: "name",        label: "Název",        type: "text",     value: song.NAME},
-    {key: "author",      label: "Skladatel",    type: "text",     value: song.AUTHOR},
-    {key: "arranged_by", label: "Aranžmá",      type: "text",     value: song.ARRANGED_BY},
-    {key: "text_by",     label: "Text",         type: "text",     value: song.TEXT_BY},
-    {key: "status",      label: "Status",       type: "select", value: song?.STATUS || "Aktivní", options: ["Aktivní", "Neaktuální", "Mimo repertoár"]},
-    {key: "version",     label: "Verze",        type: "select", value: song?.VERSION || "", options: ["", "TTBB", "SATB"]},
-    {key: "pdf",         label: "Odkaz na noty (URL)", type: "text", value: song.PDF},
-    {key: "code",        label: "Kód",          type: "text",     value: song.CODE},
-    {key: "note",        label: "Poznámka",     type: "textarea", value: song.NOTE}
-  ], async (values) => {
-    if(!values.name){ alert("Zadej název skladby"); return }
-    try{
-      closeFormModal()
-      showSaving()
-      await api("updatesong", {id, ...values})
-      lsDel("repertoar")
-      hideSaving("Skladba upravena ✓")
-      renderRepertoar()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + err.message)
-    }
-  })
-}
-
-async function deleteSongItem(id){
-  confirmModal("Opravdu smazat tuto skladbu?", async () => {
-    try{
-      showSaving()
-      await api("deletesong", {id})
-      lsDel("repertoar")
-      hideSaving("Skladba smazána ✓")
-      renderRepertoar()
-    }catch(err){
-      hideSaving("Chyba ✗")
-      alert("Chyba: " + (err?.message || err))
-    }
-  })
-}
-
 async function toggleFav(songId){
   if(!MEMBER_EMAIL) return
   try{
@@ -5078,50 +4955,8 @@ async function toggleFav(songId){
   }
 }
 
-function toggleRepertoarFilter(){
-  REPERTOAR_FILTER_OPEN = !REPERTOAR_FILTER_OPEN
-  const panel   = document.getElementById("repertoarFilterPanel")
-  const chevron = document.getElementById("chevronRepertoarFilter")
-  if(panel)   panel.style.display   = REPERTOAR_FILTER_OPEN ? "block" : "none"
-  if(chevron) chevron.textContent   = REPERTOAR_FILTER_OPEN ? "‹" : "›"
-}
-
-function setRepertoarFilter(type, value){
-  REPERTOAR_ACTIVE_FILTERS[type] = value
-  REPERTOAR_FILTER_OPEN = true
-  renderRepertoar()
-}
-
-function applyRepertoarFilter(){
-  const search  = (document.getElementById("repertoarSearch")?.value || "").toLowerCase()
-  const status  = REPERTOAR_ACTIVE_FILTERS.status
-  const version = REPERTOAR_ACTIVE_FILTERS.version
-
-  console.log("filter status:", status, "version:", version)
-
-  document.querySelectorAll(".repertoar-row").forEach(row => {
-    const name       = row.dataset.name     || ""
-    const author     = row.dataset.author   || ""
-    const arranged   = row.dataset.arranged || ""
-    const text       = row.dataset.text     || ""
-    const rowStatus  = row.dataset.status   || ""
-    const rowFav     = row.dataset.fav      || "0"
-    const rowVersion = row.dataset.version  || ""
-
-    const matchSearch  = !search || name.includes(search) || author.includes(search) || arranged.includes(search) || text.includes(search)
-    const matchStatus  = status  === "Vše" ? true : status === "Oblíbené" ? rowFav === "1" : rowStatus === status
-    const matchVersion = version === "Vše" ? true : rowVersion === version.toLowerCase()
-
-    row.style.display = matchSearch && matchStatus && matchVersion ? "" : "none"
-  })
-}
-
-function filterRepertoar(query){
-  applyRepertoarFilter()
-}
-
 function setZkusebnaTab(tab){
-  ZKUSEBNA_TAB = tab
+  ZKUSEBNA_TAB = tab === "cvt" ? "cvt" : "klavesy"
   renderRepertoar()
 }
 
@@ -6263,14 +6098,6 @@ window.removeProgSong       = removeProgSong
 window.moveProgSong         = moveProgSong
 window.setProgSection       = setProgSection
 window.filterProgSongs      = filterProgSongs
-window.filterRepertoar      = filterRepertoar
-window.toggleRepertoarFilter = toggleRepertoarFilter
-window.setRepertoarFilter    = setRepertoarFilter
-window.applyRepertoarFilter  = applyRepertoarFilter
-window.selectSong           = selectSong
-window.openAddSong          = openAddSong
-window.openEditSong         = openEditSong
-window.deleteSongItem       = deleteSongItem
 window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext
 window.heatmapInfo          = heatmapInfo

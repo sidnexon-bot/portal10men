@@ -95,6 +95,10 @@ const ICON = {
 function infoRow(label, value) {
   return `<div class="st-row st-info"><div class="st-name">${esc(label)}</div><div class="st-val">${value ? esc(value) : '<span class="st-empty-v">nevyplněno</span>'}</div></div>`
 }
+function aboutHtml() {
+  const V = globalThis.TEN_VERSION || {}
+  return `<div class="card st-card"><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">10base ${esc(V.version || "")}</div><div class="st-desc">Vydáno ${esc(V.date || "")}. Aplikace sama nabídne obnovení, jakmile vyjde novější verze.</div></div><div class="st-acts"><button type="button" class="st-add" data-check-update="1"><span id="st-upd-label">Zkontrolovat aktualizace</span></button></div></div></div>`
+}
 function pageHtml() {
   const vis = dashboardCards(), hidden = S.dashboard.hidden
   const shown = vis.length ? `<div class="st-list" id="st-list">${vis.map(id => { const c = card(id); return `<div class="st-row" data-card="${id}"><button type="button" class="st-grip" data-grip="${id}" aria-label="Přesunout kartu ${esc(c.title)} (šipky nahoru a dolů)" title="Přetáhni">${ICON.grip}</button><div class="st-t"><div class="st-name">${esc(c.title)}</div><div class="st-desc">${esc(c.desc)}</div></div><div class="st-acts"><button type="button" class="st-ic" data-hide="${id}" aria-label="Odebrat z Přehledu: ${esc(c.title)}" title="Odebrat">${ICON.minus}</button></div></div>` }).join("")}</div>` : `<div class="st-empty">Přehled je prázdný. Přidej karty níže.</div>`
@@ -111,7 +115,8 @@ function pageHtml() {
     <div class="card st-card"><div class="event-label">Přehled</div><p class="st-hint">Vyber, které karty se na Přehledu zobrazují, a přetažením změň jejich pořadí.</p>${shown}</div>
     ${more ? `<div class="card st-card"><div class="event-label">Další karty</div>${more}</div>` : ""}
     <div class="st-foot"><button type="button" class="st-add" data-reset="1" ${isDefault ? "disabled" : ""}><span>Obnovit výchozí Přehled</span></button></div>
-    <h3 class="st-h">Osobní údaje</h3>${personal}</div>`
+    <h3 class="st-h">Osobní údaje</h3>${personal}
+    <h3 class="st-h">O aplikaci</h3>${aboutHtml()}</div>`
 }
 function refresh() {
   if (!area || !area.isConnected || !area.querySelector(".st-wrap")) return
@@ -119,9 +124,13 @@ function refresh() {
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update]")
   if (!t || !area || !area.contains(t)) return
   if (t.dataset.theme) return setTheme(t.dataset.theme)
+  if (t.dataset.checkUpdate) {
+    const lb = document.getElementById("st-upd-label"); if (lb) lb.textContent = "Kontroluji…"
+    return (window.tenVersionCheck ? window.tenVersionCheck(true) : Promise.resolve(null)).then(r => { const l2 = document.getElementById("st-upd-label"); if (l2) l2.textContent = r === false ? "Máte nejnovější verzi" : r === null ? "Nepodařilo se zjistit" : "Nová verze " + r })
+  }
   if (t.dataset.back) return back()
   if (t.dataset.hide) return hide(t.dataset.hide)
   if (t.dataset.show) return show(t.dataset.show)
