@@ -1,0 +1,69 @@
+/* 10base – Nastavení, boční panel jen s ikonami (settings.js) */
+.st-wrap { max-width: 720px; margin: 0 auto; padding: 0 0 32px; }
+.st-title { margin: 12px 0 0; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+h3.st-h { margin: 22px 0 10px; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; text-transform: none; color: inherit; }
+.st-card { padding: 16px 18px; }
+.st-hint { margin: 6px 0 4px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.st-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--card-border); }
+.event-label + .st-row, .st-hint + .st-row, .st-hint + .st-list > .st-row:first-child, .st-sub + .st-row { border-top: none; }
+.st-t { flex: 1; min-width: 0; }
+.st-name { font-size: 14px; font-weight: 600; }
+.st-desc { margin-top: 2px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.st-info { justify-content: space-between; align-items: baseline; }
+.st-info .st-name { font-weight: 500; color: var(--muted); flex: none; width: 150px; }
+.st-val { flex: 1; text-align: right; font-size: 14px; overflow-wrap: anywhere; }
+.st-empty-v { color: var(--muted); }
+.st-sub { margin: 10px 0 0; padding-top: 12px; border-top: 1px solid var(--card-border); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.st-acts { flex: none; display: flex; align-items: center; gap: 2px; }
+.st-ic { width: 36px; height: 36px; min-height: 36px; padding: 0; border: none; border-radius: 50%; background: transparent; color: var(--muted); }
+.st-ic svg, .st-back svg, .st-add svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.st-ic:hover { background: rgba(120, 120, 128, 0.14); color: var(--text); }
+.st-grip { flex: none; width: 32px; height: 40px; min-height: 40px; margin-left: -8px; padding: 0; border: none; border-radius: 10px; background: transparent; color: var(--muted); cursor: grab; touch-action: none; }
+.st-grip svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+.st-grip:hover { background: rgba(120, 120, 128, 0.14); color: var(--text); }
+.st-grip:focus-visible, .st-ic:focus-visible, .st-seg button:focus-visible { outline: 2px solid #007aff; outline-offset: 1px; }
+.st-list.is-dragging, .st-list.is-dragging .st-grip { cursor: grabbing; }
+.st-row.dragging { position: relative; z-index: 3; background: var(--card); border-radius: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); border-top-color: transparent; padding-left: 8px; padding-right: 8px; }
+.st-list.is-dragging .st-row:not(.dragging) { transition: transform 0.15s ease; }
+.st-back { margin: 4px 0 0; padding: 6px 12px 6px 8px; }
+.st-back svg { width: 16px; height: 16px; }
+.st-empty { padding: 16px 0; font-size: 14px; color: var(--muted); }
+.st-foot { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.st-add:disabled { opacity: 0.4; cursor: default; }
+.st-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(120, 120, 128, 0.14); }
+.st-seg button { border: none; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; padding: 7px 14px; min-height: 0; border-radius: 9px; white-space: nowrap; }
+.st-seg button.on { background: var(--card); color: var(--text, inherit); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+body.dark .st-seg button.on { background: #3a3a3c; color: #fff; }
+@media (max-width: 767px) {
+  .st-row-seg { flex-direction: column; align-items: stretch; }
+  .st-seg { display: flex; }
+  .st-seg button { flex: 1; padding: 9px 6px; }
+  .st-title { display: none; }
+  .st-info { flex-direction: column; gap: 2px; align-items: flex-start; }
+  .st-info .st-name { width: auto; }
+  .st-val { text-align: left; }
+}
+/* v Nastavení bez spodní lišty */
+body.settings-page .bottom-wrap { display: none !important; }
+body.settings-page main { padding-bottom: 24px; }
+
+/* dvousloupcový Přehled podle pořadí karet (zleva doprava, bez mezer) */
+.dash-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; align-items: start; }
+.dash-col > .card { margin-bottom: 16px; }
+.dash-col .dash-todos { margin-top: 0 !important; }
+
+/* boční panel jen s ikonami (jen počítač) */
+.sidebar-action-sep { height: 1px; margin: 8px 12px; background: var(--card-border, rgba(60, 60, 67, 0.12)); }
+.sidebar-collapse { color: var(--muted); }
+.sidebar-collapse svg { transition: transform 0.22s cubic-bezier(0.22, 0.8, 0.28, 1); }
+@media (min-width: 768px) {
+  .sidebar { transition: width 0.22s cubic-bezier(0.22, 0.8, 0.28, 1); }
+  body.sb-collapsed .sidebar { width: 68px; padding-left: 10px; padding-right: 10px; overflow-x: hidden; }
+  body.sb-collapsed main { margin-left: 68px !important; width: calc(100vw - 68px) !important; }
+  body.sb-collapsed .sidebar-collapse svg { transform: rotate(180deg); }
+  body.sb-collapsed .sidebar-logo, body.sb-collapsed .sidebar-subtitle, body.sb-collapsed .sidebar-profile > div:not(.sidebar-profile-avatar) { display: none; }
+  body.sb-collapsed .sidebar-profile { justify-content: center; padding: 8px 0; background: none !important; margin-bottom: 12px; }
+  body.sb-collapsed .sidebar-nav-item, body.sb-collapsed .sidebar-action { font-size: 0; gap: 0; justify-content: center; padding-left: 0; padding-right: 0; }
+  body.sb-collapsed .sidebar-nav-item.active { box-shadow: none; }
+  body.sb-collapsed .sidebar-collapse-label { display: none; }
+}

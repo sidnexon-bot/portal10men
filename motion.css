@@ -1,0 +1,39 @@
+/* 10base – pohyb a odezva (načítá se jako poslední), stejné časování jako v 10space.
+   Okna se prolnou a vyjedou, menu mají nájezd, ovladače reagují na najetí i stisk.
+   Při nastavení systému „omezit pohyb“ se vše zkrátí na prosté prolnutí. */
+:root { --m-fast: 0.14s; --m-base: 0.22s; --m-slow: 0.34s; --m-ease: cubic-bezier(0.22, 0.8, 0.28, 1); --m-spring: cubic-bezier(0.2, 1.2, 0.3, 1); }
+
+/* Modální okna */
+.modal { transition: opacity var(--m-fast) ease, visibility 0s linear var(--m-fast); }
+.modal:not(.hidden) { transition-delay: 0s; }
+.modal-backdrop { transition: backdrop-filter var(--m-base) ease; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
+.modal:not(.hidden) .modal-backdrop { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal .modal-content { transform: translateY(8px) scale(0.97); transition: transform var(--m-fast) ease; }
+.modal:not(.hidden) .modal-content { animation: mModalIn var(--m-slow) var(--m-spring) both; transform: none; }
+@keyframes mModalIn { from { opacity: 0; transform: translateY(14px) scale(0.95); } to { opacity: 1; transform: none; } }
+
+/* Menu profilu a výsledky */
+.profile-menu:not(.hidden) { transform-origin: top right; animation: mPop var(--m-base) var(--m-spring) both; }
+.profile-menu:not(.hidden) .profile-menu-item { animation: mItem var(--m-base) var(--m-ease) both; animation-delay: calc(var(--i, 0) * 28ms); }
+@keyframes mPop { from { opacity: 0; transform: scale(0.92) translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes mItem { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.profile-menu-item, .sidebar-nav-item, .sidebar-action { transition: background var(--m-fast) ease, color var(--m-fast) ease, transform var(--m-fast) var(--m-ease); }
+@media (hover: hover) { .profile-menu-item:hover { padding-left: calc(var(--pl, 16px) + 3px); } }
+
+/* Tlačítka a karty */
+button { transition: background var(--m-base) ease, border-color var(--m-base) ease, color var(--m-base) ease, box-shadow var(--m-base) ease, transform var(--m-fast) var(--m-ease), opacity var(--m-base) ease; }
+@media (hover: hover) { button:hover:not(:disabled) { transform: translateY(-1px); } }
+button:active:not(:disabled) { transform: scale(0.96); transition-duration: 0.06s; }
+.card, .event-card { transition: transform var(--m-base) var(--m-ease), box-shadow var(--m-base) ease, border-color var(--m-base) ease, background var(--m-base) ease; }
+@media (hover: hover) { .card[onclick]:hover, .event-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12); } }
+.card[onclick]:active, .event-card:active { transform: scale(0.985); transition-duration: 0.06s; }
+.sidebar-nav-item svg { transition: transform var(--m-base) var(--m-spring); }
+@media (hover: hover) { .sidebar-nav-item:hover svg { transform: scale(1.12); } }
+.bottom button { transition: transform var(--m-base) var(--m-spring), background var(--m-base) ease, color var(--m-base) ease; }
+.toast { transition: opacity var(--m-base) ease, transform var(--m-slow) var(--m-spring); }
+input, textarea, select { transition: border-color var(--m-fast) ease, box-shadow var(--m-base) ease, background var(--m-fast) ease; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.16); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
+}

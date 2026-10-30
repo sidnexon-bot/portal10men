@@ -337,7 +337,9 @@ function setError(msg){
 }
 
 function setActiveTab(name){
+if(name !== "settings") window.__prevTab = name
 ACTIVE_TAB = name
+document.body.classList.toggle("settings-page", name === "settings") // v Nastavení bez spodní lišty
 document.querySelectorAll(".bottom button").forEach(b => b.classList.remove("active"))
 const map = {
 dashboard: "btnDashboard",
@@ -353,7 +355,8 @@ const titleMap = {
   payments:  "Platby",
   energy:    "Energie",
   repertoar: "Zkušebna",
-  members:   "Členové"
+  members:   "Členové",
+  settings:  "Nastavení"
 }
 const pageTitle = document.getElementById("pageTitle")
 if(pageTitle) pageTitle.textContent = titleMap[name] || "Přehled"
@@ -377,7 +380,22 @@ if(name === "payments")   renderPayments()
 if(name === "energy")     renderEnergy()
 if(name === "repertoar")  renderRepertoar()
 if(name === "members")    renderMembers()
+if(name === "settings")   renderSettings()
 saveState()
+}
+
+function renderSettings(){
+  window.tenSettings?.render(container())
+}
+
+function openSettings(){
+  closeProfileMenu()
+  setActiveTab("settings")
+}
+
+window.__tenSettingsBack = () => {
+  const t = window.__prevTab && window.__prevTab !== "settings" ? window.__prevTab : "dashboard"
+  setActiveTab(t)
 }
 
 function setStatus(msg){
@@ -716,6 +734,7 @@ function hideSaving(successMsg = "Uloženo ✓"){
 ================================ */
 
 function initDarkMode(){
+  if(window.tenSettings) return window.tenSettings.boot() // světlý / tmavý / podle systému (settings.js)
   const saved = localStorage.getItem("darkMode")
   if(saved === "1") applyDarkMode(true)
 }
@@ -732,6 +751,7 @@ function applyDarkMode(on){
 
 function toggleDarkMode(){
   const isDark = document.body.classList.contains("dark")
+  if(window.tenSettings){ window.tenSettings.setTheme(isDark ? "light" : "dark"); closeProfileMenu(); return }
   applyDarkMode(!isDark)
   localStorage.setItem("darkMode", isDark ? "0" : "1")
   closeProfileMenu()
@@ -755,6 +775,8 @@ async function start(){
     if(!profileBtn){ console.error("profileBtn nenalezen"); return }
 
     setStatus(MEMBER_NAME)
+    window.tenSettings?.start()
+    window.__tenSettingsChanged = () => { if(ACTIVE_TAB === "dashboard") renderDashboard() }
 
     profileBtn.onclick = (e) => {
       e.stopPropagation();
@@ -1341,38 +1363,48 @@ async function renderDashboard(){
         </div>
       `
 
-   if(isDesktop){
-     let html = ""
-   
-     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
-     html += `<div>${nearestEventHtml}</div>`
-     html += `<div>${springHtml}</div>`
-     html += `</div>`
-   
-     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
-     html += `<div>${aktualityHtml}${todosHtml}</div>`
-     html += `<div>${autumnHtml}</div>`
-     html += `</div>`
-   
-     html += `<div id="heatmap-container">${heatmapHtml}</div>`
-     html += contactsHtml
-   
-     container().innerHTML = html
-     restoreScroll(scroll)
-   
-   }else{
-     let html = ""
-     html += nearestEventHtml
-     html += aktualityHtml
-     html += todosHtml
-     html += springHtml
-     html += autumnHtml
-     html += `<div id="heatmap-container">${heatmapHtml}</div>`
-     html += contactsHtml
-   
-     container().innerHTML = html
-     restoreScroll(scroll)
+   // karty podle nastavení (Nastavení > Přehled): pořadí a výběr; na počítači do dvou sloupců zleva doprava
+   const DASH = {
+     nearest:   nearestEventHtml,
+     spring:    springHtml,
+     aktuality: aktualityHtml,
+     autumn:    autumnHtml,
+     todos:     todosHtml,
+     heatmap:   `<div id="heatmap-container">${heatmapHtml}</div>`,
+     contacts:  contactsHtml
    }
+   const WIDE = ["heatmap", "contacts"]
+   const order = window.tenSettings ? window.tenSettings.dashboardCards() : ["nearest","aktuality","todos","spring","autumn","heatmap","contacts"]
+   let html = ""
+
+   if(!order.length){
+     html = `<div class="card"><p class="notice">Přehled je prázdný. Karty přidáš v <a href="#" onclick="openSettings();return false">Nastavení</a>.</p></div>`
+   }else if(isDesktop && window.tenSettings?.isDefaultDash()){
+     // výchozí Přehled: rozložení beze změny
+     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
+     html += `<div>${nearestEventHtml}</div><div>${springHtml}</div></div>`
+     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
+     html += `<div>${aktualityHtml}${todosHtml}</div><div>${autumnHtml}</div></div>`
+     html += DASH.heatmap + DASH.contacts
+   }else if(isDesktop){
+     let run = []
+     const flush = () => {
+       if(!run.length) return
+       const left  = run.filter((_, i) => i % 2 === 0).map(id => DASH[id]).join("")
+       const right = run.filter((_, i) => i % 2 === 1).map(id => DASH[id]).join("")
+       html += `<div class="dash-cols"><div class="dash-col">${left}</div><div class="dash-col">${right}</div></div>`
+       run = []
+     }
+     order.forEach(id => {
+       if(WIDE.includes(id)){ flush(); html += DASH[id] } else run.push(id)
+     })
+     flush()
+   }else{
+     html = order.map(id => DASH[id]).join("")
+   }
+
+   container().innerHTML = html
+   restoreScroll(scroll)
 
   }catch(err){
     setError("Chyba při načítání přehledu: " + (err?.message || err))
@@ -3562,6 +3594,7 @@ async function openEditMember(id){
   const members = await api("members")
   const m = members.find(m => m.ID === id)
   if(!m) return
+  const priv = (await window.tenSettings?.privateGet(m.EMAIL)) || {}
 
   openFormModal("Upravit člena", [
     {key: "name",  label: "Jméno",   type: "text",   value: m.NAME},
@@ -3569,14 +3602,19 @@ async function openEditMember(id){
     {key: "discord_id", label: "Discord ID", type: "text", value: m.DISCORD_ID || ""},
     {key: "phone", label: "Telefon", type: "text",   value: m.PHONE || ""},
     {key: "voice", label: "Hlas",   type: "select", value: m.VOICE, options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
-    {key: "role",  label: "Role",   type: "select", value: m.ROLE,  options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
+    {key: "role",  label: "Role",   type: "select", value: m.ROLE,  options: ["MEMBER", "ADMIN", "ART", "GUEST"]},
+    {key: "birth",   label: "Datum narození (jen pro čtení u člena)", type: "date", value: priv.birth || ""},
+    {key: "address", label: "Adresa", type: "text", value: priv.address || ""},
+    {key: "bank",    label: "Číslo účtu", type: "text", value: priv.bank || "", placeholder: "123456789/0100"}
   ], async (values) => {
     if(!values.name)  { alert("Zadej jméno"); return }
     if(!values.email) { alert("Zadej email"); return }
     try{
       closeFormModal()
       showSaving()
-      await api("updatemember", {id, ...values})
+      const {birth, address, bank, ...member} = values
+      await api("updatemember", {id, ...member})
+      await window.tenSettings?.privateSet(values.email, {birth, address, bank})
       invalidateCache("members")
       hideSaving("Člen upraven ✓")
       renderMembers()
@@ -6242,6 +6280,8 @@ window.prefetchProgramPdfs  = prefetchProgramPdfs
 window.Auth                 = Auth
 window.toggleDarkMode       = toggleDarkMode
 window.setActiveTab         = setActiveTab
+window.openSettings         = openSettings
+window.applyDarkMode        = applyDarkMode
 window.toggleAccordion      = toggleAccordion
 window.confirmModal         = confirmModal
 window.promptModal          = promptModal
