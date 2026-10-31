@@ -371,3 +371,7 @@ button { font-size: 14px; font-weight: 500; min-height: 38px; }
 .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; }
 .profile-btn { width: 40px; height: 40px; background: #007aff; color: #fff; font-size: 14px; font-weight: 700; }
 body.dark .profile-btn { background: #0a84ff; color: #fff; }
+
+/* okno s formulářem se klikem mimo nezavře, jen se zatřese */
+@keyframes nudge { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.modal-content.nudge { animation: nudge .25s ease; }

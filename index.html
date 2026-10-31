@@ -202,7 +202,7 @@
   </div>
 
   <div id="moznaModal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closeMoznaModal()"></div>
+  <div class="modal-backdrop" onclick="nudgeModal(this)"></div>
   <div class="modal-content" style="padding:20px">
     <div class="modal-header">Upřesni docházku</div>
     <input id="moznaReason" placeholder="Důvod (povinné)" style="margin-bottom:16px">
@@ -218,6 +218,10 @@
 
   <!-- PIN zatím vypnut -->
 
+  <script>
+  // formulářová okna se klikem mimo nezavírají (rozepsaná práce by se ztratila), jen se zatřesou; zavře je Zrušit/Uložit
+  function nudgeModal(bd){var m=bd.nextElementSibling;if(!m)return;m.classList.remove("nudge");void m.offsetWidth;m.classList.add("nudge");}
+  </script>
   <script src="auth.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
   <script type="module" src="settings.js"></script>
@@ -226,7 +230,7 @@
   <!-- FORMULÁŘ -->
 
   <div id="formModal" class="modal hidden">
-  <div class="modal-backdrop" onclick="closeFormModal()"></div>
+  <div class="modal-backdrop" onclick="nudgeModal(this)"></div>
   <div class="modal-content" style="padding:20px">
     <div id="formModalTitle" class="modal-header"></div>
     <div id="formModalBody"></div>
@@ -245,14 +249,14 @@
 </div>
 
 <div id="eventFormModal" class="modal hidden">
-   <div class="modal-backdrop" onclick="closeEventFormModal()"></div>
+   <div class="modal-backdrop" onclick="nudgeModal(this)"></div>
    <div class="modal-content" style="max-width:560px;max-height:90vh;overflow-y:auto">
     <div id="eventFormModalBody"></div>
   </div>
  </div>
 
  <div id="programEditorModal" class="modal hidden">
-   <div class="modal-backdrop" onclick="closeProgramEditorModal()"></div>
+   <div class="modal-backdrop" onclick="nudgeModal(this)"></div>
    <div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto">
      <div id="programEditorModalBody"></div>
    </div>
