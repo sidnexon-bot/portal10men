@@ -70,18 +70,20 @@ body.dark header::after { background: linear-gradient(to bottom, rgba(0, 0, 0, 0
 body.dark .modal-content,
 body.dark .profile-menu { background: var(--raised); }
 body.dark #detail-panel,
-body.dark .sidebar-profile,
 body.dark .swipe-card,
 body.dark .event-card,
 body.dark .skeleton-card { background: var(--card); }
-body.dark .sidebar { background: #000000; border-right: none; }
+/* postranní panel má stejný odstín jako karty (světlý #fff, tmavý #151517); karta profilu je o stupeň světlejší */
+.sidebar { background: var(--card); border-right: none; }
+body.dark .sidebar { background: var(--card); border-right: none; }
+body.dark .sidebar-profile { background: #1d1d20; }
 body.dark button { background: var(--btn-bg); border-color: transparent; }
 body.dark .profile-btn, body.dark .active-member, body.dark .member-row,
 body.dark .sidebar-profile-avatar, body.dark .days-badge { background: #222225; }
 body.dark input, body.dark select, body.dark textarea { background: #1c1c1f; border-color: #2a2a2e; }
 body.dark .event-row, body.dark .profile-menu-divider,
 body.dark .heatmap-desktop tr { border-color: var(--hair) !important; }
-body.dark .sidebar-nav-item:hover, body.dark .sidebar-action:hover { background: #151517; }
+body.dark .sidebar-nav-item:hover, body.dark .sidebar-action:hover { background: #1d1d20; }
 body.dark .prog-song-row { background: #151517 !important; }
 body.dark .card[style*="padding:0"] div[style*="border-bottom"] { border-color: var(--hair) !important; }
 
@@ -100,6 +102,7 @@ body.dark :is(.card, .modal-content, #detail-panel, .event-card, .swipe-card) { 
 button { border-color: transparent; }
 body:not(.dark) button { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.05); }
 body:not(.dark) :is(.card, .modal-content, #detail-panel, .event-card, .swipe-card) button { box-shadow: none; }
+body:not(.dark) .sidebar button { box-shadow: none; }
 
 /* ── 6) Místo pro plovoucí lištu ────────────────────────────────────── */
 @media (max-width: 1024px) {
