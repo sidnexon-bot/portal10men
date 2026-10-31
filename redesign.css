@@ -320,3 +320,8 @@ body.dark .pm-icon.pm-blue { color: #4aa0ff; }
   .profile-menu, .profile-menu.hidden { transition: opacity 0.12s ease, visibility 0s; transform: none; }
   .profile-menu:not(.hidden) .profile-menu-info, .profile-menu:not(.hidden) .profile-menu-item { animation: none; }
 }
+
+/* Logo v postranním panelu: černá 10 a modré „base“ (bez podtitulku) */
+.sidebar-logo { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 24px; color: var(--text); line-height: 1.1; }
+.sidebar-logo .logo-rest { color: #007aff; }
+body.dark .sidebar-logo .logo-rest { color: #0a84ff; }
