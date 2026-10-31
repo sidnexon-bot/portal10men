@@ -103,6 +103,10 @@ button { border-color: transparent; }
 body:not(.dark) button { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 3px 10px rgba(0, 0, 0, 0.05); }
 body:not(.dark) :is(.card, .modal-content, #detail-panel, .event-card, .swipe-card) button { box-shadow: none; }
 body:not(.dark) .sidebar button { box-shadow: none; }
+/* zvýrazněná položka si drží proužek (stejně jako v 10space a 10korun) */
+body .sidebar .sidebar-nav-item.active { box-shadow: inset 3px 0 0 #007aff; }
+body.dark .sidebar .sidebar-nav-item.active { box-shadow: inset 3px 0 0 #0a84ff; }
+body.sb-collapsed .sidebar .sidebar-nav-item.active { box-shadow: none; }
 
 /* ── 6) Místo pro plovoucí lištu ────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -322,6 +326,35 @@ body.dark .pm-icon.pm-blue { color: #4aa0ff; }
 }
 
 /* Logo v postranním panelu: černá 10 a modré „base“ (bez podtitulku) */
-.sidebar-logo { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 24px; color: var(--text); line-height: 1.1; }
 .sidebar-logo .logo-rest { color: #007aff; }
 body.dark .sidebar-logo .logo-rest { color: #0a84ff; }
+
+/* ════════════════════════════════════════════════════════════════════
+   Postranní panel: stejné písmo, velikosti, odsazení a pořadí jako v 10space a 10korun
+   (logo, karta profilu, položky 14 px, akce 13 px, pořadí: režim, Nastavení, Odhlásit se, čára, Skrýt panel)
+   Písmo tlačítek zůstává výchozí systémové (font-family: revert), přesně jako v 10space.
+   ════════════════════════════════════════════════════════════════════ */
+.sidebar { padding: 0; overflow-y: auto; }
+body.sb-collapsed .sidebar { padding: 0; }
+.sidebar-logo { padding: 22px 20px 6px; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; color: var(--text); }
+body.sb-collapsed .sidebar-logo { display: block; padding: 22px 0 6px; text-align: center; }
+body.sb-collapsed .sidebar-logo .logo-rest { display: none; }
+.sidebar-profile { margin: 10px 16px 8px; padding: 10px 12px; border-radius: 16px; gap: 10px; }
+body.sb-collapsed .sidebar-profile { margin: 10px 10px 8px; padding: 8px 0; }
+.sidebar-profile-avatar { background: #007aff; color: #fff; }
+body.dark .sidebar-profile-avatar { background: #0a84ff; }
+.sidebar-nav { padding: 4px 8px; gap: 2px; }
+.sidebar-nav-item { font-family: revert; font-size: 14px; font-weight: 400; color: #1c1c1e; padding: 9px 12px; gap: 10px; border-radius: 12px; }
+body.dark .sidebar-nav-item { color: #8e8e93; }
+.sidebar-nav-item:hover { background: #f2f2f7; opacity: 1; }
+body.dark .sidebar-nav-item:hover { background: #1d1d20; }
+.sidebar-nav-item.active { font-weight: 600; color: #007aff; background: rgba(0, 122, 255, 0.08); }
+body.dark .sidebar-nav-item.active { color: #0a84ff; background: rgba(10, 132, 255, 0.15); }
+.sidebar-bottom { padding: 0 8px 16px; margin-top: auto; gap: 2px; }
+.sidebar-action { font-family: revert; font-size: 13px; font-weight: 500; color: #6b6b70; padding: 9px 12px; gap: 10px; border-radius: 8px; }
+body.dark .sidebar-action { color: #8e8e93; }
+.sidebar-action:hover { background: #f2f2f7; opacity: 1; }
+body.dark .sidebar-action:hover { background: #1d1d20; }
+.sidebar-action-sep { margin: 8px 12px; }
+.sidebar-nav-item .icon, .sidebar-action .icon { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sidebar-nav-item .icon svg, .sidebar-action .icon svg { width: 16px; height: 16px; }
