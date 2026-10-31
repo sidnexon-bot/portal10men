@@ -1358,10 +1358,9 @@ async function renderDashboard(){
      html = `<div class="card"><p class="notice">Přehled je prázdný. Karty přidáš v <a href="#" onclick="openSettings();return false">Nastavení</a>.</p></div>`
    }else if(isDesktop && window.tenSettings?.isDefaultDash()){
      // výchozí Přehled: rozložení beze změny
-     html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:8px">`
-     html += `<div>${nearestEventHtml}</div><div>${springHtml}</div></div>`
+     // dva nezávislé sloupce, aby pod nižší kartou nevznikala mezera
      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
-     html += `<div>${aktualityHtml}${todosHtml}</div><div>${autumnHtml}</div></div>`
+     html += `<div>${nearestEventHtml}${aktualityHtml}${todosHtml}</div><div>${springHtml}${autumnHtml}</div></div>`
      html += DASH.heatmap + DASH.contacts
    }else if(isDesktop){
      let run = []
