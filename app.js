@@ -3326,7 +3326,7 @@ function renderProgramEditor(songs, currentIds, event){
   html += `</div>
 
   <div class="prog-foot btn-group">
-    <button onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit program</button>
+    <button class="ar-primary" onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit program</button>
     <button onclick="guardedClose('programEditorModal')">Zrušit</button>
   </div>`
 
