@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.1.9 (1. 11. 2026)
+- Apple: přepínače (Světlý / Tmavý / Podle systému a další) jsou zaoblené do pilulek.
+
 ## 3.1.8 (1. 11. 2026)
 - Apple (iOS 26): větší zaoblení oken a karet, pilulková tlačítka, zavírání ikonou ✕ / ✓ místo textu Zavřít / Hotovo, nadpisy sekcí ve větném tvaru, zaoblená pole (včetně data a času), systémové písmo SF Pro.
 - Tlačítka na mobilu mají jednotnou výšku 38 px; samostatná tlačítka a Navigovat / Připojit se jsou v mřížce; popisek „Opakující se akce“ ve větném tvaru.
