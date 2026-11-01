@@ -680,3 +680,14 @@ html[data-platform="android"] .bottom button.active, html[data-platform="android
   #exp-list > .exp-group-title { grid-column: 1 / -1; margin: 6px 0 0; }
   #exp-list > .exp-card, #exp-list > div:not(.exp-group-title) { margin: 0; }
 }
+
+/* odkaz vypadající jako tlačítko v kartě (Proplatit výdaje): stejný vzhled jako ostatní tlačítka v kartách */
+.btn-card-link {
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%;
+  min-height: 38px; padding: 8px 14px; border-radius: var(--r-ctl); background: var(--btn-bg); color: #007aff;
+  font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; -webkit-tap-highlight-color: transparent;
+}
+body.dark .btn-card-link { color: #0a84ff; }
+.btn-card-link:active { filter: brightness(0.94); }
+html[data-platform="android"] .btn-card-link { border-radius: 999px; min-height: 40px; background: var(--and-tonal); color: var(--and-accent); letter-spacing: .01em; }
+@media (min-width: 768px) and (pointer: fine) { .btn-card-link { min-height: 34px; padding: 7px 14px; font-size: 13px; border-radius: 10px; } }

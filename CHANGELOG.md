@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.1.4 (1. 11. 2026)
+- Tlačítko Proplatit výdaje (Platby) má stejný vzhled jako ostatní tlačítka v kartách, i na Androidu a na počítači.
+
 ## 3.1.3 (1. 11. 2026)
 Kompaktní prostředí na počítači (myš, okno od 768 px; telefony a tablety se nemění).
 - Menší písmo a pole (výška 32 px), užší okna a formuláře ve dvou až třech sloupcích, hustší tabulky a karty.

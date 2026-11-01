@@ -4174,8 +4174,7 @@ async function renderPayments(){
         </div>
         <div style="display:none;margin-top:10px">
           <p class="small" style="margin-bottom:12px;line-height:1.5">Pokud jsi 10menům platil něco z vlastní kapsy, nebo jsi kvůli akci 10men jel svým autem, můžeš si tyto výdaje nechat proplatit. Pokud se jedná o běžný výdaj, přilož fotku nebo sken účtenky (nebo dej originál Zdendovi). U cesťáku není účtenka potřeba, výdaj se spočítá na základě ujeté vzdálenosti a průměrné spotřeby paliva uvedené v techničáku tvého auta.</p>
-          <a href="https://cash.10men.cz/expenses.html" target="_blank" rel="noopener"
-            style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;color:#007aff;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;text-align:center">
+          <a href="https://cash.10men.cz/expenses.html" target="_blank" rel="noopener" class="btn-card-link">
             Proplatit výdaje
           </a>
         </div>
