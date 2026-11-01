@@ -628,7 +628,8 @@ html[data-platform="android"] .bottom button.active, html[data-platform="android
   .field-group { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin-bottom: 12px; }
   .field-group .field { margin: 0; min-width: 0; }
   .field-group .field:is(:has(input[type=url]), .autocomplete-wrap, :has(textarea), :has(select[id$="code"]), :has(input[id$="desc"]), :has(input[id$="party"]), :has(input[id$="note"]), :has(input[id$="name"]), :has(input[id$="vendor"]), [style*="display:flex"], .field-wide) { grid-column: 1 / -1; }
-  button, .btn-primary, .btn-secondary, .btn-danger, .modal-btn, .tn-btn, .filter-btn, .type-btn { font-size: 13px; min-height: 34px; padding: 7px 14px; border-radius: 10px; }
+  button { font-size: 13px; }
+  .btn-primary, .btn-secondary, .btn-danger, .modal-btn, .tn-btn, .filter-btn, .type-btn { font-size: 13px; min-height: 34px; padding: 7px 14px; border-radius: 10px; }
   .btn-primary, .btn-secondary, .modal-btn { font-weight: 600; }
   /* okna */
   .modal:not(:has(> .modal-backdrop)) { max-width: 640px; border-radius: 18px; }
@@ -691,3 +692,26 @@ body.dark .btn-card-link { color: #0a84ff; }
 .btn-card-link:active { filter: brightness(0.94); }
 html[data-platform="android"] .btn-card-link { border-radius: 999px; min-height: 40px; background: var(--and-tonal); color: var(--and-accent); letter-spacing: .01em; }
 @media (min-width: 768px) and (pointer: fine) { .btn-card-link { min-height: 34px; padding: 7px 14px; font-size: 13px; border-radius: 10px; } }
+
+/* ── Audit vzhledu: drobné opravy (klikací plochy, oddělovače nabídek, pozadí detailu na Androidu) ── */
+.bottom-sheet-sep { height: 1px; margin: 0 20px; background: var(--hair, rgba(60, 60, 67, 0.12)); }
+body.dark .bottom-sheet-sep { background: rgba(255, 255, 255, 0.08); }
+html[data-platform="android"] .projekt-overlay { background: var(--and-bg); }
+html[data-platform="android"] body.dark .projekt-overlay { background: var(--and-bg); }
+@media (pointer: coarse) {
+  .modal-close { width: 36px; height: 36px; }
+  .dots-btn { min-width: 40px; min-height: 40px; }
+  .kd-add, .a-neutral, .exp-actions button { min-height: 32px; }
+}
+
+/* ── Audit (10base): klikací plochy a popisky formulářů v oknech ── */
+@media (pointer: coarse) {
+  button[onclick^="eventsMonth"], button[onclick^="heatmap"], button[onclick^="klavesyShift"] { min-width: 40px; min-height: 40px; }
+  html:not([data-platform="android"]) .modal-content .card > label { font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 0; }
+  html:not([data-platform="android"]) .modal-content .card > label > input, html:not([data-platform="android"]) .modal-content .card > label > select, html:not([data-platform="android"]) .modal-content .card > label > textarea { margin-top: 4px; }
+  html:not([data-platform="android"]) .modal-content .card > label + label { margin-top: 12px; }
+}
+@media (min-width: 768px) and (pointer: fine) {
+  body.dark .modal-content .card textarea { background: #1c1c1f !important; color: var(--text); }
+  body:not(.dark) .modal-content .card textarea { background: #f2f2f7 !important; }
+}
