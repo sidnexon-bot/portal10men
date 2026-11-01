@@ -835,6 +835,14 @@ html[data-platform="apple"] :is(.st-seg, .pj-seg, .detail-tabs, .mobile-detail-m
 html[data-platform="apple"] :is(.type-btn, .filter-btn, .doc-filters > button),
 html[data-platform="apple"] .btn-group:has(> .type-btn) { border-radius: 999px !important; }
 
+/* přepínače (segmenty, záložky, filtry, typ příjem/výdaj) jsou menší než tlačítka: 30 px */
+@media (max-width: 768px) {
+  html[data-platform] :is(.st-seg, .pj-seg, .detail-tabs, .mobile-detail-modal-tabs, .acct-switch, .prog-seg) { padding: 3px !important; gap: 2px !important; }
+  html[data-platform] :is(.st-seg, .pj-seg, .detail-tabs, .mobile-detail-modal-tabs, .acct-switch, .prog-seg) > :is(button, a) {
+    min-height: 30px !important; height: 30px; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 13px !important; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+  html[data-platform] :is(.doc-filters > button, .type-btn, .filter-btn) { min-height: 30px !important; height: 30px; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 13px !important; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+}
+
 /* ===== Editor programu akce (přidávání skladeb) ===== */
 .modal-content:has(.prog-foot) { --prog-bg: #ffffff; --prog-fill: rgba(120, 120, 128, .12); --prog-hair: rgba(60, 60, 67, .12); background: var(--prog-bg); }
 body.dark .modal-content:has(.prog-foot) { --prog-bg: var(--raised, #1d1d20); --prog-fill: rgba(255, 255, 255, .08); --prog-hair: rgba(255, 255, 255, .1); }
@@ -875,8 +883,18 @@ html body .prog-list .prog-song-row.selected { background: color-mix(in srgb, va
 
 /* ===== Přepínač měsíců (Akce, Docházka skupiny): jednotný vzhled ===== */
 .month-switch { display: flex; align-items: center; gap: 8px; padding: 4px; margin: 0 0 16px; border-radius: 999px; background: rgba(120, 120, 128, .14); }
-.month-switch > span { flex: 1; min-width: 0; text-align: center; font-weight: 600; font-size: 15px; }
-.month-switch > button { flex: none; width: 38px; height: 38px; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; background: var(--raised, #fff); color: inherit; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.month-switch > span { flex: 1; min-width: 0; text-align: center; font-weight: 600; font-size: 14px; }
+.month-switch > button { flex: none; width: 30px; height: 30px; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; background: var(--raised, #fff); color: inherit; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
 .month-switch > button:active { filter: brightness(.94); }
 html[data-platform="android"] .month-switch > button { background: var(--and-card, #fff); box-shadow: none; color: var(--and-accent); }
 .prog-pdf { color: var(--accent, #007aff); display: inline-flex; align-items: center; }
+
+/* ===== Posuvný přepínač měsíců ===== */
+.month-slider { position: relative; height: 36px; margin: 0 0 16px; border-radius: 999px; background: rgba(120, 120, 128, .14); overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; outline: none; -webkit-tap-highlight-color: transparent; }
+.month-slider.dragging { cursor: grabbing; }
+.month-slider::before { content: ""; position: absolute; left: calc(100% / 3); width: calc(100% / 3); top: 3px; bottom: 3px; border-radius: 999px; background: var(--raised, #fff); box-shadow: 0 1px 3px rgba(0, 0, 0, .16); pointer-events: none; }
+.month-slider:focus-visible { box-shadow: 0 0 0 2px var(--accent, #007aff); }
+.ms-track { position: absolute; left: 0; top: 0; height: 100%; display: flex; will-change: transform; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 14%, #000 86%, transparent 100%); }
+.ms-item { flex: none; display: flex; align-items: center; justify-content: center; height: 100%; font-size: clamp(11px, 3.5vw, 14px); white-space: nowrap; pointer-events: none; }
+html[data-platform="android"] .month-slider { background: var(--and-card, #f0f4f9); }
+html[data-platform="android"] .month-slider::before { background: var(--and-accent-c, #d3e3fd); box-shadow: none; }

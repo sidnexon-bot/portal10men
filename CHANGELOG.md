@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.2.1 (1. 11. 2026)
+- Přepínač měsíců (Akce, Docházka skupiny) je posuvný jezdec: uprostřed vybraný měsíc, vlevo předchozí, vpravo následující; klepnutím, tažením nebo švihem (měsíce rotují a pozvolna se zastaví).
+- Přepínače (Světlý / Tmavý / Podle systému, Program / Přídavky) jsou menší než tlačítka: 30 px.
+
 ## 3.2.0 (1. 11. 2026)
 - Oprava: pravidlo pro samostatná tlačítka nově přeskakuje řádky tabulek a seznamů, aby je nerozhodilo.
 

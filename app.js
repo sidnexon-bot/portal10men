@@ -1620,11 +1620,7 @@ async function renderEvents(){
       html += `</div>`
     }
 
-    html += `<div class="month-switch">
-      <button type="button" onclick="eventsMonthPrev()" aria-label="Předchozí měsíc">‹</button>
-      <span>${escapeHtml(monthName)}</span>
-      <button type="button" onclick="eventsMonthNext()" aria-label="Další měsíc">›</button>
-    </div>`
+    html += monthSliderHtml("events", window.EVENTS_MONTH)
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
@@ -3342,6 +3338,125 @@ function setProgSection(section){
   if(btnEncore){ btnEncore.classList.toggle("active", section === "encore"); btnEncore.setAttribute("aria-selected", section === "encore") }
   refreshProgSelected()
 }
+
+/* ===============================
+   POSUVNÝ PŘEPÍNAČ MĚSÍCŮ (Akce, Docházka skupiny)
+   Uprostřed vybraný měsíc, vlevo předchozí, vpravo následující. Klepnutí na sousední měsíc ho vybere,
+   tažení posouvá, švih nechá měsíce rotovat a pozvolna se zastaví na některém z nich. Obsah se překreslí až po zastavení.
+   =============================== */
+const MS_RANGE = 36
+function monthKeyAdd(key, n){
+  const [y, m] = key.split("-").map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")
+}
+function monthLabel(key){
+  const [y, m] = key.split("-").map(Number)
+  return new Date(y, m - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})
+}
+function monthSliderHtml(target, key){
+  return `<div class="month-slider" data-target="${target}" data-month="${key}" role="slider" tabindex="0" aria-label="Měsíc" aria-valuetext="${escapeHtml(monthLabel(key))}"><div class="ms-track"></div></div>`
+}
+
+function selectSliderMonth(target, key){
+  if(target === "events"){ window.EVENTS_MONTH = key; renderEvents() }
+  else if(target === "heat"){ HEATMAP_MONTH = key; refreshHeatmap() }
+}
+
+function initMonthSlider(el){
+  if(el.dataset.init) return
+  el.dataset.init = "1"
+  const base = el.dataset.month, target = el.dataset.target, N = MS_RANGE
+  const track = el.querySelector(".ms-track")
+  const keys = []
+  for(let i = -N; i <= N; i++) keys.push(monthKeyAdd(base, i))
+  track.innerHTML = keys.map(k => `<span class="ms-item">${escapeHtml(monthLabel(k))}</span>`).join("")
+  const items = [...track.children]
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  let w = 0, idx = N, raf = 0, drag = null
+
+  const layout = () => {
+    w = el.clientWidth / 3
+    items.forEach(it => { it.style.width = w + "px" })
+    paint()
+  }
+  const paint = () => {
+    track.style.transform = `translateX(${el.clientWidth / 2 - (idx + 0.5) * w}px)`
+    items.forEach((it, i) => {
+      const d = Math.abs(i - idx), c = Math.min(d, 1)
+      it.style.opacity = d > 1.7 ? "0" : String(1 - c * 0.62)
+      it.style.transform = `scale(${1 - c * 0.18})`
+      it.style.fontWeight = d < 0.5 ? "700" : "500"
+    })
+  }
+  const clamp = v => Math.max(0, Math.min(2 * N, v))
+  const commit = () => {
+    const key = keys[Math.round(idx)]
+    el.setAttribute("aria-valuetext", monthLabel(key))
+    if(key !== base) selectSliderMonth(target, key)
+  }
+  const animateTo = (to, ms) => {
+    cancelAnimationFrame(raf)
+    to = clamp(to)
+    if(reduced || ms <= 0){ idx = to; paint(); commit(); return }
+    const from = idx, t0 = performance.now()
+    const step = now => {
+      const t = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - t, 4)
+      idx = from + (to - from) * e
+      paint()
+      if(t < 1) raf = requestAnimationFrame(step)
+      else { idx = to; paint(); commit() }
+    }
+    raf = requestAnimationFrame(step)
+  }
+
+  el.addEventListener("pointerdown", e => {
+    if(e.pointerType === "mouse" && e.button !== 0) return
+    cancelAnimationFrame(raf)
+    drag = { x0: e.clientX, i0: idx, id: e.pointerId, moved: false, s: [{ t: performance.now(), x: e.clientX }] }
+  })
+  el.addEventListener("pointermove", e => {
+    if(!drag || e.pointerId !== drag.id) return
+    const dx = e.clientX - drag.x0
+    if(!drag.moved && Math.abs(dx) > 6){ drag.moved = true; el.setPointerCapture?.(e.pointerId); el.classList.add("dragging") }
+    if(!drag.moved) return
+    idx = clamp(drag.i0 - dx / w)
+    const now = performance.now()
+    drag.s.push({ t: now, x: e.clientX })
+    while(drag.s.length > 2 && now - drag.s[0].t > 100) drag.s.shift()
+    paint()
+  })
+  const release = (e, cancelled) => {
+    if(!drag || e.pointerId !== drag.id) return
+    const d = drag; drag = null
+    el.classList.remove("dragging")
+    if(!d.moved){
+      if(cancelled) return
+      const off = Math.round(((e.clientX - el.getBoundingClientRect().left) - el.clientWidth / 2) / w)
+      if(off !== 0) animateTo(Math.round(idx) + off, 280)
+      return
+    }
+    const now = performance.now(), recent = d.s.filter(q => now - q.t <= 100)
+    const a = recent[0], b = recent[recent.length - 1]
+    const v = recent.length >= 2 && b.t > a.t && now - b.t <= 80 ? -(b.x - a.x) / (b.t - a.t) / w : 0        // měsíců za milisekundu; po zastavení prstu bez švihu
+    const TAU = 380
+    const to = clamp(Math.round(idx + v * TAU))
+    animateTo(to, Math.max(300, Math.min(1900, 320 + Math.abs(to - idx) * 120)))
+  }
+  el.addEventListener("pointerup", e => release(e, false))
+  el.addEventListener("pointercancel", e => release(e, true))
+  el.addEventListener("keydown", e => {
+    if(e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
+    e.preventDefault()
+    animateTo(Math.round(idx) + (e.key === "ArrowLeft" ? -1 : 1), 240)
+  })
+  if(window.ResizeObserver) new ResizeObserver(layout).observe(el)
+  layout()
+}
+
+function initMonthSliders(){ document.querySelectorAll(".month-slider:not([data-init])").forEach(initMonthSlider) }
+new MutationObserver(initMonthSliders).observe(document.documentElement, { childList: true, subtree: true })
+initMonthSliders()
 
 function eventsMonthPrev(){
   const [year, month] = window.EVENTS_MONTH.split("-").map(Number)
@@ -5577,11 +5692,7 @@ async function renderHeatmap(){
 
     let html = `<div class="card" style="padding:16px">
       <div class="event-label" style="margin-bottom:12px">Docházka skupiny</div>
-      <div class="month-switch">
-        <button type="button" onclick="heatmapPrev()" aria-label="Předchozí měsíc">‹</button>
-        <span>${escapeHtml(monthName)}</span>
-        <button type="button" onclick="heatmapNext()" aria-label="Další měsíc">›</button>
-      </div>`
+      ${monthSliderHtml("heat", HEATMAP_MONTH)}`
 
     if(!filtered.length){
       html += "<p class='notice'>Žádné akce v tomto měsíci</p>"
