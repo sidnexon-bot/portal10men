@@ -1620,10 +1620,10 @@ async function renderEvents(){
       html += `</div>`
     }
 
-    html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button onclick="eventsMonthPrev()" style="padding:8px 14px;font-size:16px">‹</button>
-      <span style="flex:1;text-align:center;font-weight:600;font-size:16px">${escapeHtml(monthName)}</span>
-      <button onclick="eventsMonthNext()" style="padding:8px 14px;font-size:16px">›</button>
+    html += `<div class="month-switch">
+      <button type="button" onclick="eventsMonthPrev()" aria-label="Předchozí měsíc">‹</button>
+      <span>${escapeHtml(monthName)}</span>
+      <button type="button" onclick="eventsMonthNext()" aria-label="Další měsíc">›</button>
     </div>`
 
     if(!filtered.length){
@@ -2783,7 +2783,7 @@ async function openEvent(id){
               ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
             </div>
             <div style="display:flex;align-items:center;gap:8px">
-              ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
+              ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
             </div>
           </div>
         `).join("")}
@@ -2797,7 +2797,7 @@ async function openEvent(id){
                   ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                  ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">📄 Noty</a>` : ""}
+                  ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
                 </div>
               </div>
             `).join("")}
@@ -3318,7 +3318,6 @@ function renderProgramEditor(songs, currentIds, event){
         <b>${escapeHtml(r.NAME)}</b>
         ${r.AUTHOR ? `<div class="small">${escapeHtml(r.AUTHOR)}</div>` : ""}
       </div>
-      ${r.PDF ? `<a class="prog-pdf" href="${escapeHtml(noteLink(r.PDF))}" target="_blank" onclick="event.stopPropagation()" aria-label="Noty">📄</a>` : ""}
       <span class="prog-badge" aria-hidden="true">+</span>
     </div>`
   })
@@ -5578,10 +5577,10 @@ async function renderHeatmap(){
 
     let html = `<div class="card" style="padding:16px">
       <div class="event-label" style="margin-bottom:12px">Docházka skupiny</div>
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--btn-bg);border-radius:8px;padding:6px 10px">
-        <button onclick="heatmapPrev()" style="padding:4px 10px;font-size:16px">‹</button>
-        <span style="font-weight:600;font-size:14px">${escapeHtml(monthName)}</span>
-        <button onclick="heatmapNext()" style="padding:4px 10px;font-size:16px">›</button>
+      <div class="month-switch">
+        <button type="button" onclick="heatmapPrev()" aria-label="Předchozí měsíc">‹</button>
+        <span>${escapeHtml(monthName)}</span>
+        <button type="button" onclick="heatmapNext()" aria-label="Další měsíc">›</button>
       </div>`
 
     if(!filtered.length){

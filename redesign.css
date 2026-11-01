@@ -872,3 +872,11 @@ html body .prog-list .prog-song-row.selected { background: color-mix(in srgb, va
 .prog-grip:focus-visible { outline: 2px solid var(--accent, #007aff); }
 .prog-copy { width: 100%; margin: 4px 0 0; min-height: 40px; border: 0 !important; border-radius: 12px !important; background: var(--prog-fill) !important; color: var(--accent, #007aff) !important; box-shadow: none !important; font-weight: 600; font-size: 14px; }
 .prog-copy:disabled { opacity: .6; }
+
+/* ===== Přepínač měsíců (Akce, Docházka skupiny): jednotný vzhled ===== */
+.month-switch { display: flex; align-items: center; gap: 8px; padding: 4px; margin: 0 0 16px; border-radius: 999px; background: rgba(120, 120, 128, .14); }
+.month-switch > span { flex: 1; min-width: 0; text-align: center; font-weight: 600; font-size: 15px; }
+.month-switch > button { flex: none; width: 38px; height: 38px; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1; background: var(--raised, #fff); color: inherit; box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.month-switch > button:active { filter: brightness(.94); }
+html[data-platform="android"] .month-switch > button { background: var(--and-card, #fff); box-shadow: none; color: var(--and-accent); }
+.prog-pdf { color: var(--accent, #007aff); display: inline-flex; align-items: center; }

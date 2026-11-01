@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.1.10 (1. 11. 2026)
+- Přepínač měsíců (Akce, Docházka skupiny) má jednotný vzhled: pilulka s kulatými tlačítky ‹ ›.
+- Program: u skladeb v editoru už není ikona ani emoji papíru; v detailu akce zůstává odkaz „Noty“ bez emoji.
+
 ## 3.1.9 (1. 11. 2026)
 - Apple: přepínače (Světlý / Tmavý / Podle systému a další) jsou zaoblené do pilulek.
 
