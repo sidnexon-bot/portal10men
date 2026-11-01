@@ -3173,6 +3173,7 @@ async function openProgramEditor(eventId){
 
     window.PROG_SONGS   = active
     window.PROG_EVENT   = eventId
+    window.PROG_EVENT_DATA = event
     window.PROG_MAIN    = mainProgram.map(p => p.SONG_ID)
     window.PROG_ENCORE  = [
       encoreProgram[0]?.SONG_ID || "",
@@ -3195,6 +3196,49 @@ async function openProgramEditor(eventId){
 
 function closeProgramEditorModal(){
   document.getElementById("programEditorModal").classList.add("hidden")
+}
+
+// Převzetí programu z minulé akce: nejbližší dřívější akce se stejným typem, která má program (jinak jakéhokoli typu)
+async function copyProgramFromPrevious(){
+  const btn = document.getElementById("progCopyBtn")
+  if(!btn || btn.disabled) return
+  const label = btn.textContent
+  btn.disabled = true
+  btn.textContent = "Hledám minulou akci…"
+  try{
+    const cur    = window.PROG_EVENT_DATA || {}
+    const events = await cachedApi("events")
+    const curT   = new Date(cur.DATE).getTime()
+    const prev   = events
+      .filter(e => !e.IS_TEMPLATE && e.ID !== window.PROG_EVENT && e.REQUIRES_PROGRAM !== false && new Date(e.DATE).getTime() < curT)
+      .sort((a, b) => new Date(b.DATE) - new Date(a.DATE))
+    const ordered = [...prev.filter(e => e.TYPE === cur.TYPE), ...prev.filter(e => e.TYPE !== cur.TYPE)].slice(0, 12)
+
+    for(const e of ordered){
+      const d    = await cachedApi("eventdetail", { id: e.ID })
+      const prog = (d.program || []).filter(p => window.PROG_SONGS.some(s => s.ID === p.SONG_ID))
+      if(!prog.length) continue
+
+      const main   = prog.filter(p => !p.ENCORE).map(p => p.SONG_ID)
+      const encore = prog.filter(p => p.ENCORE).map(p => p.SONG_ID).slice(0, 2)
+      const have   = window.PROG_MAIN.length + window.PROG_ENCORE.filter(Boolean).length
+      const when   = formatDate(e.DATE)
+      if(have && !confirm(`Nahradit současný program programem z akce „${e.NAME}“ (${when})?`)) return
+
+      window.PROG_MAIN   = main
+      window.PROG_ENCORE = [encore[0] || "", encore[1] || ""]
+      markModalDirty('programEditorModal')
+      refreshProgSelected()
+      showToast(`Převzato z „${e.NAME}“ (${when}): ${main.length} skladeb${encore.length ? " + " + encore.length + " přídavky" : ""}`, 3500)
+      return
+    }
+    showToast("Žádná dřívější akce nemá vyplněný program")
+  }catch(err){
+    showToast("Program se nepodařilo načíst")
+  }finally{
+    btn.disabled = false
+    btn.textContent = label
+  }
 }
 
 /* ===============================
@@ -3250,6 +3294,8 @@ function renderProgramEditor(songs, currentIds, event){
 
   let html = `
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
+
+  <button type="button" class="prog-copy" id="progCopyBtn" onclick="copyProgramFromPrevious()">Převzít program z minulé akce</button>
 
   <div class="prog-seg" role="tablist">
     <button type="button" role="tab" id="btnSectionMain" class="active" onclick="setProgSection('main')">Program <span class="prog-count" id="progCountMain">0</span></button>
@@ -6215,6 +6261,7 @@ window.toggleProgSong       = toggleProgSong
 window.removeProgSong       = removeProgSong
 window.moveProgSong         = moveProgSong
 window.setProgSection       = setProgSection
+window.copyProgramFromPrevious = copyProgramFromPrevious
 window.filterProgSongs      = filterProgSongs
 window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext

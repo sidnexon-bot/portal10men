@@ -782,3 +782,5 @@ html body .prog-list .prog-song-row.selected { background: color-mix(in srgb, va
 .prog-grip { flex: 0 0 30px; width: 30px !important; min-height: 40px; padding: 0 !important; margin: 0 -4px 0 -8px !important; border: 0 !important; border-radius: 8px !important; background: transparent !important; box-shadow: none !important; color: var(--muted, #8e8e93) !important; display: inline-flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
 .prog-sel-row.dragging .prog-grip { cursor: grabbing; color: var(--accent, #007aff) !important; }
 .prog-grip:focus-visible { outline: 2px solid var(--accent, #007aff); }
+.prog-copy { width: 100%; margin: 4px 0 0; min-height: 40px; border: 0 !important; border-radius: 12px !important; background: var(--prog-fill) !important; color: var(--accent, #007aff) !important; box-shadow: none !important; font-weight: 600; font-size: 14px; }
+.prog-copy:disabled { opacity: .6; }
