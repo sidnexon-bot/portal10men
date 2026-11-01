@@ -6,6 +6,8 @@ Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor,
 ## 3.1.6 (1. 11. 2026)
 - Apple: profilové menu ve stylu Liquid Glass (jako spodní lišta); Android beze změny.
 - 10space: přepínač Akce / Kódy má stejný vzhled jako přepínač Pokladna / Bankovní účet v 10korun (na všech platformách).
+- Akce, program: nový editor programu (přepínač Program / Přídavky s počty, označené skladby v seznamu, přetahování pořadí úchytem, spodní tlačítka stále vidět), vzhled sedí i v tmavém režimu a na Androidu.
+- Ochrana oken: Zrušit a Esc se u okna s neuloženými změnami zeptají „Zahodit neuložené změny?“; klik mimo okno dál jen zatřese.
 
 ## 3.1.5 (1. 11. 2026)
 Designový audit všech obrazovek (iPhone, Android, tablet, počítač).

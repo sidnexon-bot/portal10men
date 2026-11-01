@@ -211,7 +211,7 @@
       <button onclick="confirmMozna('spise-ne')" style="background:#fde8e8;color:#c00">Spíše ne</button>
     </div>
     <div class="btn-group" style="margin-top:8px">
-      <button onclick="closeMoznaModal()" style="background:#e8e8ed;color:#6b6b70">Zrušit</button>
+      <button onclick="guardedClose('moznaModal')" style="background:#e8e8ed;color:#6b6b70">Zrušit</button>
     </div>
   </div>
 </div>
@@ -236,7 +236,7 @@
     <div id="formModalBody"></div>
     <div class="btn-group" style="margin-top:16px">
       <button id="formModalSubmit" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
-      <button onclick="closeFormModal()">Zrušit</button>
+      <button onclick="guardedClose('formModal')">Zrušit</button>
     </div>
   </div>
 </div>

@@ -1852,7 +1852,7 @@ async function openEventForm(id){
       </button>
       <div class="btn-group">
         <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)" style="background:#e8e8ed;color:#000">Pouze uložit</button>
-        <button onclick="closeEventFormModal()">Zrušit</button>
+        <button onclick="guardedClose('eventFormModal')">Zrušit</button>
       </div>
     </div>
   </div>`
@@ -2897,7 +2897,7 @@ async function openEvent(id){
         </div>
         <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
           <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-          <div class="btn-group">
+          <div class="btn-group" data-ar-skip>
             <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
             <button onclick="doAttendanceMozna('${id}')">Možná</button>
             <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
@@ -3197,52 +3197,91 @@ function closeProgramEditorModal(){
   document.getElementById("programEditorModal").classList.add("hidden")
 }
 
+/* ===============================
+   OCHRANA OKEN PŘED NECHTĚNÝM ZAVŘENÍM
+   Klik mimo okno jen zatřese (viz nudgeModal). Zrušit a Esc se u okna s neuloženými změnami nejdřív zeptají.
+   =============================== */
+const GUARDED_MODALS = {
+  programEditorModal: closeProgramEditorModal,
+  moznaModal:         closeMoznaModal,
+  formModal:          closeFormModal,
+  eventFormModal:     closeEventFormModal
+}
+
+function markModalDirty(id){
+  const m = document.getElementById(id)
+  if(m && !m.classList.contains("hidden")) m.dataset.dirty = "1"
+}
+
+function guardedClose(id){
+  const m = document.getElementById(id)
+  if(!m) return false
+  if(m.dataset.dirty === "1" && !confirm("Zahodit neuložené změny?")) return false
+  GUARDED_MODALS[id]()
+  return true
+}
+window.guardedClose = guardedClose
+
+function anyModalDirty(){
+  return Object.keys(GUARDED_MODALS).some(id => { const m = document.getElementById(id); return m && !m.classList.contains("hidden") && m.dataset.dirty === "1" })
+}
+
+;(function initModalGuard(){
+  const onEdit = e => {
+    const m = e.target.closest && e.target.closest(".modal")
+    if(m && GUARDED_MODALS[m.id] && e.target.id !== "progSearch") markModalDirty(m.id)
+  }
+  document.addEventListener("input", onEdit)
+  document.addEventListener("change", onEdit)
+  // při každém otevření a zavření okna se stav „změněno“ vynuluje
+  Object.keys(GUARDED_MODALS).forEach(id => {
+    const m = document.getElementById(id)
+    if(m) new MutationObserver(() => { delete m.dataset.dirty }).observe(m, { attributes: true, attributeFilter: ["class"] })
+  })
+  document.addEventListener("keydown", e => {
+    if(e.key !== "Escape" || e.defaultPrevented) return
+    const id = Object.keys(GUARDED_MODALS).find(k => { const m = document.getElementById(k); return m && !m.classList.contains("hidden") })
+    if(id){ e.preventDefault(); guardedClose(id) }
+  })
+  window.addEventListener("beforeunload", e => { if(anyModalDirty()){ e.preventDefault(); e.returnValue = "" } })
+})()
+
 function renderProgramEditor(songs, currentIds, event){
 
   let html = `
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
 
-  <div class="card" style="margin-bottom:12px">
-    <div class="small" style="font-weight:600;margin-bottom:8px">Program</div>
-    <div id="progSelected"></div>
+  <div class="prog-seg" role="tablist">
+    <button type="button" role="tab" id="btnSectionMain" class="active" onclick="setProgSection('main')">Program <span class="prog-count" id="progCountMain">0</span></button>
+    <button type="button" role="tab" id="btnSectionEncore" onclick="setProgSection('encore')">Přídavky <span class="prog-count" id="progCountEncore">0/2</span></button>
   </div>
 
-  <div class="card" style="margin-bottom:12px">
-    <div class="small" style="font-weight:600;margin-bottom:8px">Přídavky</div>
-    <div id="progEncores"></div>
-  </div>
+  <div class="prog-selected" id="progSelected"></div>
 
-  <div class="card" style="margin-bottom:16px;width:100%">
-    <div class="small" style="font-weight:600;margin-bottom:8px">
-      Přidávám do: 
-      <button onclick="setProgSection('main')"   id="btnSectionMain"   style="padding:4px 10px;font-size:12px;background:#007aff;color:#fff">Program</button>
-      <button onclick="setProgSection('encore')" id="btnSectionEncore" style="padding:4px 10px;font-size:12px;background:#e8e8ed;color:#000">Přídavky</button>
-    </div>
-    <input id="progSearch" placeholder="🔍 Hledat skladbu…" oninput="filterProgSongs(this.value)" style="margin-bottom:12px">
-    <div id="progSongList" style="max-height:240px;overflow-y:auto">`
+  <div class="prog-add-title">Přidat skladbu</div>
+  <input id="progSearch" class="prog-search" type="search" placeholder="Hledat skladbu…" oninput="filterProgSongs(this.value)">
+  <div id="progSongList" class="prog-list">`
 
   songs.forEach(r => {
     html += `<div class="prog-song-row"
       data-id="${escapeHtml(r.ID)}"
       data-name="${escapeHtml(r.NAME).toLowerCase()}"
       data-author="${escapeHtml(r.AUTHOR || "").toLowerCase()}"
-      onclick="toggleProgSong('${escapeHtml(r.ID)}')"
-      style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f2f2f7;cursor:pointer">
-      <div>
-        <b style="font-size:15px">${escapeHtml(r.NAME)}</b>
+      onclick="toggleProgSong('${escapeHtml(r.ID)}')">
+      <div class="prog-song-text">
+        <b>${escapeHtml(r.NAME)}</b>
         ${r.AUTHOR ? `<div class="small">${escapeHtml(r.AUTHOR)}</div>` : ""}
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        ${r.PDF ? `<a href="${escapeHtml(noteLink(r.PDF))}" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:#007aff;text-decoration:none">📄</a>` : ""}
-      </div>
+      ${r.PDF ? `<a class="prog-pdf" href="${escapeHtml(noteLink(r.PDF))}" target="_blank" onclick="event.stopPropagation()" aria-label="Noty">📄</a>` : ""}
+      <span class="prog-badge" aria-hidden="true">+</span>
     </div>`
   })
 
-  html += `</div></div>
+  html += `</div>
 
-  <div class="btn-group">
+  <div class="prog-foot btn-group">
     <button onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit program</button>
-    <button onclick="closeProgramEditorModal()">Zrušit</button>
+    <button onclick="guardedClose('programEditorModal')">Zrušit</button>
   </div>`
 
   return html
@@ -3254,14 +3293,9 @@ function setProgSection(section){
   PROG_ACTIVE_SECTION = section
   const btnMain   = document.getElementById("btnSectionMain")
   const btnEncore = document.getElementById("btnSectionEncore")
-  if(btnMain){
-    btnMain.style.background   = section === "main"   ? "#007aff" : "#e8e8ed"
-    btnMain.style.color        = section === "main"   ? "#fff"    : "#000"
-  }
-  if(btnEncore){
-    btnEncore.style.background = section === "encore" ? "#007aff" : "#e8e8ed"
-    btnEncore.style.color      = section === "encore" ? "#fff"    : "#000"
-  }
+  if(btnMain){   btnMain.classList.toggle("active",   section === "main");   btnMain.setAttribute("aria-selected",   section === "main") }
+  if(btnEncore){ btnEncore.classList.toggle("active", section === "encore"); btnEncore.setAttribute("aria-selected", section === "encore") }
+  refreshProgSelected()
 }
 
 function eventsMonthPrev(){
@@ -3279,55 +3313,64 @@ function eventsMonthNext(){
 }
 
 function refreshProgSelected(){
+  const main   = window.PROG_MAIN || []
+  const encore = (window.PROG_ENCORE || []).filter(Boolean)
+  const isEnc  = PROG_ACTIVE_SECTION === "encore"
+  const cM = document.getElementById("progCountMain"), cE = document.getElementById("progCountEncore")
+  if(cM) cM.textContent = main.length
+  if(cE) cE.textContent = encore.length + "/2"
+
   const el = document.getElementById("progSelected")
   if(el){
-    if(!window.PROG_MAIN.length){
-      el.innerHTML = `<p class="notice" style="margin:0">Zatím žádné skladby</p>`
+    const ids = isEnc ? encore : main
+    if(!ids.length){
+      el.innerHTML = `<p class="prog-empty">${isEnc ? "Zatím žádné přídavky. Klepni na skladbu níže." : "Zatím žádné skladby. Klepni na skladbu níže."}</p>`
     }else{
-      el.innerHTML = window.PROG_MAIN.map((id, i) => {
+      el.innerHTML = ids.map((id, i) => {
         const song = window.PROG_SONGS.find(r => r.ID === id)
         if(!song) return ""
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
-          <span style="flex:1">${i+1}. ${escapeHtml(song.NAME)}</span>
-          <div style="display:flex;gap:4px">
-            <button onclick="moveProgSong(${i},-1)" style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===0?"disabled":""}>↑</button>
-            <button onclick="moveProgSong(${i},1)"  style="padding:4px 8px;font-size:13px;background:#e8e8ed;color:#000" ${i===window.PROG_MAIN.length-1?"disabled":""}>↓</button>
-            <button onclick="removeProgSong('main',${i})" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>
-          </div>
+        const encIdx = isEnc ? window.PROG_ENCORE.indexOf(id) : i
+        return `<div class="prog-sel-row" data-i="${i}">
+          <button type="button" class="prog-grip" aria-label="Změnit pořadí: ${escapeHtml(song.NAME)} (tažením nebo šipkami)">
+            <svg viewBox="0 0 12 18" width="12" height="18" aria-hidden="true" fill="currentColor"><circle cx="3" cy="3" r="1.6"/><circle cx="9" cy="3" r="1.6"/><circle cx="3" cy="9" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="3" cy="15" r="1.6"/><circle cx="9" cy="15" r="1.6"/></svg>
+          </button>
+          <span class="prog-num">${i+1}</span>
+          <span class="prog-sel-name">${escapeHtml(song.NAME)}</span>
+          <button type="button" class="prog-ico prog-del" aria-label="Odebrat" onclick="removeProgSong('${isEnc ? "encore" : "main"}',${isEnc ? encIdx : i})">✕</button>
         </div>`
       }).join("")
     }
   }
 
-  const ee = document.getElementById("progEncores")
-  if(ee){
-    const encores = window.PROG_ENCORE.filter(Boolean)
-    if(!encores.length){
-      ee.innerHTML = `<p class="notice" style="margin:0">Zatím žádné přídavky</p>`
-    }else{
-      ee.innerHTML = encores.map((id, i) => {
-        const song = window.PROG_SONGS.find(r => r.ID === id)
-        if(!song) return ""
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f2f2f7">
-          <span style="flex:1">${i+1}. ${escapeHtml(song.NAME)}</span>
-          <button onclick="removeProgSong('encore',${i})" style="padding:4px 8px;font-size:12px;background:#fde8e8;color:#c00">✕</button>
-        </div>`
-      }).join("")
-    }
-  }
+  // značky u skladeb v seznamu: pořadí v aktivní části, nebo informace, že je skladba v druhé
+  const act = isEnc ? encore : main, other = isEnc ? main : encore
+  document.querySelectorAll("#progSongList .prog-song-row").forEach(row => {
+    const id = row.dataset.id, pos = act.indexOf(id), inOther = other.includes(id)
+    const b = row.querySelector(".prog-badge")
+    row.classList.toggle("selected", pos > -1)
+    row.classList.toggle("in-other", pos === -1 && inOther)
+    if(b) b.textContent = pos > -1 ? String(pos + 1) : (inOther ? "✓" : "+")
+  })
 }
 
 function toggleProgSong(songId){
+  markModalDirty('programEditorModal')
   if(PROG_ACTIVE_SECTION === "encore"){
-    const filled = window.PROG_ENCORE.filter(Boolean).length
-    if(filled >= 2){
-      showToast("Přídavky jsou plné (max 2)")
-      return
+    const at = window.PROG_ENCORE.indexOf(songId)
+    if(at > -1){
+      window.PROG_ENCORE[at] = ""
+    }else{
+      const free = window.PROG_ENCORE.indexOf("")
+      if(free === -1){
+        showToast("Přídavky jsou plné (max 2)")
+        return
+      }
+      window.PROG_ENCORE[free] = songId
     }
-    const free = window.PROG_ENCORE.indexOf("")
-    if(free > -1) window.PROG_ENCORE[free] = songId
   }else{
-    window.PROG_MAIN.push(songId)
+    const at = window.PROG_MAIN.indexOf(songId)
+    if(at > -1) window.PROG_MAIN.splice(at, 1)
+    else window.PROG_MAIN.push(songId)
   }
   refreshProgSelected()
 }
@@ -3342,6 +3385,7 @@ function filterProgSongs(query){
 }
 
 function removeProgSong(list, idx){
+  markModalDirty('programEditorModal')
   if(list === "main"){
     window.PROG_MAIN.splice(idx, 1)
   }else{
@@ -3350,13 +3394,89 @@ function removeProgSong(list, idx){
   refreshProgSelected()
 }
 
-function moveProgSong(idx, dir){
-  const arr    = window.PROG_MAIN
-  const newIdx = idx + dir
-  if(newIdx < 0 || newIdx >= arr.length) return
-  ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
+function reorderProg(list, from, to){
+  if(from === to || from < 0 || to < 0) return
+  const arr = list === "encore" ? window.PROG_ENCORE.filter(Boolean) : window.PROG_MAIN
+  if(from >= arr.length || to >= arr.length) return
+  const [it] = arr.splice(from, 1)
+  arr.splice(to, 0, it)
+  if(list === "encore") window.PROG_ENCORE = [arr[0] || "", arr[1] || ""]
+  markModalDirty('programEditorModal')
   refreshProgSelected()
 }
+
+function moveProgSong(idx, dir){
+  reorderProg(PROG_ACTIVE_SECTION === "encore" ? "encore" : "main", idx, idx + dir)
+}
+
+// Přetahování pořadí: úchyt vlevo, funguje myší i dotykem; šipky nahoru/dolů na úchytu přesouvají klávesnicí
+let PROG_DRAG = null
+document.addEventListener("pointerdown", e => {
+  const grip = e.target.closest && e.target.closest(".prog-grip")
+  if(!grip || (e.pointerType === "mouse" && e.button !== 0)) return
+  const row = grip.closest(".prog-sel-row"), box = document.getElementById("progSelected")
+  const scroller = document.querySelector("#programEditorModal .modal-content")
+  if(!row || !box || !scroller) return
+  e.preventDefault()
+  const rows = [...box.querySelectorAll(".prog-sel-row")]
+  const top0 = scroller.scrollTop
+  PROG_DRAG = {
+    grip, row, rows, scroller, from: rows.indexOf(row), to: rows.indexOf(row), y0: e.clientY, top0, id: e.pointerId,
+    mid: rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2 + top0 }),
+    h: row.getBoundingClientRect().height, lastY: e.clientY
+  }
+  grip.setPointerCapture?.(e.pointerId)
+  row.classList.add("dragging")
+  box.classList.add("is-dragging")
+})
+
+function progDragMove(){
+  const d = PROG_DRAG
+  if(!d) return
+  const dy = (d.lastY - d.y0) + (d.scroller.scrollTop - d.top0)
+  const center = d.mid[d.from] + dy
+  let to = 0
+  d.mid.forEach((m, i) => { if(i !== d.from && m < center) to++ })
+  d.to = to
+  d.rows.forEach((r, i) => {
+    if(i === d.from){ r.style.transform = `translateY(${dy}px)`; return }
+    let shift = 0
+    if(d.from < to && i > d.from && i <= to) shift = -d.h
+    else if(d.from > to && i >= to && i < d.from) shift = d.h
+    r.style.transform = shift ? `translateY(${shift}px)` : ""
+  })
+}
+
+document.addEventListener("pointermove", e => {
+  const d = PROG_DRAG
+  if(!d || e.pointerId !== d.id) return
+  d.lastY = e.clientY
+  const sb = d.scroller.getBoundingClientRect()
+  if(e.clientY < sb.top + 50) d.scroller.scrollTop -= 12
+  else if(e.clientY > sb.bottom - 50) d.scroller.scrollTop += 12
+  progDragMove()
+})
+
+function progDragEnd(e, cancel){
+  const d = PROG_DRAG
+  if(!d || (e && e.pointerId !== d.id)) return
+  PROG_DRAG = null
+  d.rows.forEach(r => { r.style.transform = ""; r.classList.remove("dragging") })
+  document.getElementById("progSelected")?.classList.remove("is-dragging")
+  if(!cancel && d.to !== d.from) reorderProg(PROG_ACTIVE_SECTION === "encore" ? "encore" : "main", d.from, d.to)
+}
+document.addEventListener("pointerup", e => progDragEnd(e, false))
+document.addEventListener("pointercancel", e => progDragEnd(e, true))
+
+document.addEventListener("keydown", e => {
+  const grip = e.target.closest && e.target.closest(".prog-grip")
+  if(!grip || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return
+  e.preventDefault()
+  const i = Number(grip.closest(".prog-sel-row").dataset.i)
+  moveProgSong(i, e.key === "ArrowUp" ? -1 : 1)
+  const ni = Math.max(0, i + (e.key === "ArrowUp" ? -1 : 1))
+  document.querySelectorAll("#progSelected .prog-grip")[ni]?.focus()
+})
 
 async function saveProgram(eventId){
   const main   = window.PROG_MAIN   || []
