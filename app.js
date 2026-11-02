@@ -638,7 +638,7 @@ function renderMultiDayHarmonogram(){
                 <input type="text" value="${escapeHtml(h.popis || "")}" placeholder="Popis"
                   oninput="updateHarmonogramField(${idx}, 'popis', this.value)"
                   style="flex:1">
-                <button type="button" onclick="removeHarmonogramRow(${idx});renderMultiDayHarmonogram()" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+                <button class="btn-danger" type="button" onclick="removeHarmonogramRow(${idx});renderMultiDayHarmonogram()" style="width:auto;padding:8px 10px;flex-shrink:0">✕</button>
               </div>
             `
           }).join("")}
@@ -794,7 +794,7 @@ async function start(){
 
       const logoutBar = document.createElement("div")
       logoutBar.style.cssText = "position:fixed;top:16px;right:16px;z-index:100"
-      logoutBar.innerHTML = `<button onclick="Auth.logout()" style="background:#fde8e8;color:#c00;padding:8px 14px;font-size:13px">Odhlásit se</button>`
+      logoutBar.innerHTML = `<button class="btn-danger" onclick="Auth.logout()" style="padding:8px 14px;font-size:13px">Odhlásit se</button>`
       document.body.appendChild(logoutBar)
 
     }else{
@@ -1251,8 +1251,8 @@ async function renderDashboard(){
               </div>
               ${isSelected ? `
                 <div class="btn-group" style="margin-top:10px">
-                  <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-                  <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+                  <button class="btn-info" onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')">Smazat</button>
                 </div>
               ` : ""}
             </div>`
@@ -1288,9 +1288,9 @@ async function renderDashboard(){
               </div>
               ${isSelected ? `
                 <div class="btn-group" style="margin-top:10px">
-                  <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-                  <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
-                  <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+                  <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
+                  <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
                 </div>
               ` : ""}
             </div>`
@@ -1840,11 +1840,11 @@ async function openEventForm(id){
     </div>
 
    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
-      <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%;background:#d4f5e2;color:#1a7a3a">
+      <button class="btn-success" onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%">
         ${isEdit ? "Uložit a poslat do Discordu" : "Vytvořit a poslat do Discordu"}
       </button>
       <div class="btn-group">
-        <button onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)" style="background:#e8e8ed;color:#000">Pouze uložit</button>
+        <button class="btn-neutral" onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, false)">Pouze uložit</button>
         <button onclick="guardedClose('eventFormModal')">Zrušit</button>
       </div>
     </div>
@@ -2142,7 +2142,7 @@ function renderRiderListHtml(key){
       <input type="text" value="${escapeHtml(item.nazev || "")}" placeholder="Název"
         oninput="updateRiderRow('${key}', ${idx}, 'nazev', this.value)"
         style="flex:1">
-      <button type="button" onclick="removeRiderRow('${key}', ${idx})" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+      <button class="btn-danger" type="button" onclick="removeRiderRow('${key}', ${idx})" style="width:auto;padding:8px 10px;flex-shrink:0">✕</button>
     </div>
     <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Poznámka (volitelné)"
       oninput="updateRiderRow('${key}', ${idx}, 'poznamka', this.value)"
@@ -2215,7 +2215,7 @@ function renderRiderHarmonogramItem(item, idx){
     <div class="card" style="margin-bottom:10px;padding:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span class="small" style="font-weight:600">${typLabel[item.typ] || "Položka"}</span>
-        <button type="button" onclick="removeRiderHarmonogramItem(${idx})" style="width:auto;padding:6px 10px;background:#fde8e8;color:#c00">✕</button>
+        <button class="btn-danger" type="button" onclick="removeRiderHarmonogramItem(${idx})" style="width:auto;padding:6px 10px">✕</button>
       </div>
 
       <label>Název<br>
@@ -2240,7 +2240,7 @@ function renderRiderHarmonogramItem(item, idx){
           ${item.skladby.map((s, sIdx) => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px">
               <span>${sIdx+1}. ${escapeHtml(s.name)}</span>
-              <button type="button" onclick="removeSongFromRiderBlock(${idx}, ${sIdx})" style="width:auto;padding:2px 8px;background:#fde8e8;color:#c00;font-size:11px">✕</button>
+              <button class="btn-danger" type="button" onclick="removeSongFromRiderBlock(${idx}, ${sIdx})" style="width:auto;padding:2px 8px;font-size:11px">✕</button>
             </div>
           `).join("")}
         </div>
@@ -2340,7 +2340,7 @@ function renderRiderTodoHtml(fazeKey){
           oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'poznamka', this.value)"
           style="font-size:13px">
       </div>
-      <button type="button" onclick="removeRiderTodoItem('${fazeKey}', ${idx})" style="width:auto;padding:6px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+      <button class="btn-danger" type="button" onclick="removeRiderTodoItem('${fazeKey}', ${idx})" style="width:auto;padding:6px 10px;flex-shrink:0">✕</button>
     </div>
   `).join("")
 }
@@ -2443,7 +2443,7 @@ function renderHarmonogramHtml(){
       <input type="text" value="${escapeHtml(h.popis || "")}" placeholder="Popis"
         oninput="updateHarmonogramField(${idx}, 'popis', this.value)"
         style="flex:1">
-      <button type="button" onclick="removeHarmonogramRow(${idx})" style="width:auto;padding:8px 10px;background:#fde8e8;color:#c00;flex-shrink:0">✕</button>
+      <button class="btn-danger" type="button" onclick="removeHarmonogramRow(${idx})" style="width:auto;padding:8px 10px;flex-shrink:0">✕</button>
     </div>
   `).join("")
 }
@@ -2536,7 +2536,7 @@ function renderPosadkaCard(p, idx, members, allPosadky){
           <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
             oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
         </label>
-        <button type="button" onclick="removePosadka(${idx})" style="margin-left:8px;background:#fde8e8;color:#c00;width:auto;padding:8px 12px">✕</button>
+        <button class="btn-danger" type="button" onclick="removePosadka(${idx})" style="margin-left:8px;width:auto;padding:8px 12px">✕</button>
       </div>
       <label>Řidič<br>
         <select onchange="updatePosadkaField(${idx}, 'ridic', this.value)">
@@ -2738,7 +2738,7 @@ async function openEvent(id){
                   <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">${escapeHtml(item.KDO_SI_DA)}</td>
                   <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">
                     ${item.ADDED_BY === MEMBER_EMAIL || MEMBER_ROLE === "ADMIN" ? `
-                      <button onclick="deleteGrilovackaItem('${item.ID}','${id}')" style="background:#fde8e8;color:#c00;padding:4px 8px;font-size:11px;width:auto">✕</button>
+                      <button class="btn-danger" onclick="deleteGrilovackaItem('${item.ID}','${id}')" style="padding:4px 8px;font-size:11px;width:auto">✕</button>
                     ` : ""}
                   </td>
                 </tr>
@@ -2935,7 +2935,7 @@ async function openEvent(id){
       if(MEMBER_ROLE === "ADMIN"){
         html += `<div class="btn-group">
           <button onclick="openEditEventModal('${id}')">Upravit akci</button>
-          <button onclick="openDeleteEventModal('${id}')" style="background:#fde8e8;color:#c00">Smazat</button>
+          <button class="btn-danger" onclick="openDeleteEventModal('${id}')">Smazat</button>
         </div>`
       }
 
@@ -3064,7 +3064,7 @@ function openDeleteEventModal(id){
     <p class="small">Chceš smazat jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
 
   btnGroup.innerHTML = `
-    <button class="btn-series-action" style="flex:1;background:#fde8e8;color:#c00">Jen tuto akci</button>
+    <button class="btn-danger btn-series-action" style="flex:1">Jen tuto akci</button>
     <button class="btn-series-action" style="flex:1;background:#ff9f0a;color:#fff">Tuto a následující</button>`
 
   const row2 = document.createElement("div")
@@ -3316,7 +3316,7 @@ function renderProgramEditor(songs, currentIds, event){
   html += `</div>
 
   <div class="prog-foot btn-group">
-    <button class="ar-primary" onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit program</button>
+    <button class="btn-success ar-primary" onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')">Uložit program</button>
     <button onclick="guardedClose('programEditorModal')">Zrušit</button>
   </div>`
 
@@ -3925,8 +3925,8 @@ async function renderMembers(){
               <div class="small" style="margin-top:4px;font-weight:600;color:#007aff">${escapeHtml(m.ROLE)}</div>
             </div>
             <div style="display:flex;gap:8px">
-              <button onclick="openEditMember('${escapeHtml(m.ID)}')" style="background:#e8f0fe;color:#007aff;padding:8px 12px;font-size:13px">Upravit</button>
-              <button onclick="deleteMemberItem('${escapeHtml(m.ID)}')" style="background:#fde8e8;color:#c00;padding:8px 12px;font-size:13px">Smazat</button>
+              <button class="btn-info" onclick="openEditMember('${escapeHtml(m.ID)}')" style="padding:8px 12px;font-size:13px">Upravit</button>
+              <button class="btn-danger" onclick="deleteMemberItem('${escapeHtml(m.ID)}')" style="padding:8px 12px;font-size:13px">Smazat</button>
             </div>
           </div>
         </div>`
@@ -4408,7 +4408,7 @@ async function renderPayments(){
             ${MEMBER_ROLE === "ADMIN" ? `
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
                 <div class="btn-group" style="margin-bottom:12px">
-                  <button onclick="event.stopPropagation();deleteCollection('${escapeHtml(v.id)}')" style="background:#fde8e8;color:#c00">Smazat výběr</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteCollection('${escapeHtml(v.id)}')">Smazat výběr</button>
                 </div>
                 <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
                 <div class="btn-group">
@@ -4416,7 +4416,7 @@ async function renderPayments(){
                     ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
                   </select>
                   <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px;flex:1" value="${v.amount}" onclick="event.stopPropagation()">
-                  <button onclick="event.stopPropagation();recordPayment('${escapeHtml(v.id)}')" style="background:#d4f5e2;color:#1a7a3a">Uložit</button>
+                  <button class="btn-success" onclick="event.stopPropagation();recordPayment('${escapeHtml(v.id)}')">Uložit</button>
                 </div>
               </div>
             ` : ""}
@@ -4549,7 +4549,7 @@ async function renderEnergy(){
     html += `</select></label>
 
       <div class="btn-group" style="margin-bottom:16px">
-        <button onclick="setEnergyPhase('start')" id="btnPhaseStart" style="background:#007aff;color:#fff">Začátek zkoušky</button>
+        <button class="btn-primary" onclick="setEnergyPhase('start')" id="btnPhaseStart">Začátek zkoušky</button>
         <button onclick="setEnergyPhase('end')"   id="btnPhaseEnd">Konec zkoušky</button>
       </div>
 
@@ -4558,7 +4558,7 @@ async function renderEnergy(){
           <input id="energyStart" type="number" style="width:100%;margin:6px 0 12px" placeholder="např. 4520.19">
         </label>
         <div class="btn-group">
-          <button onclick="saveEnergyPhase('start')" style="background:#d4f5e2;color:#1a7a3a">Uložit stav na začátku</button>
+          <button class="btn-success" onclick="saveEnergyPhase('start')">Uložit stav na začátku</button>
         </div>
       </div>
 
@@ -4567,7 +4567,7 @@ async function renderEnergy(){
           <input id="energyEnd" type="number" style="width:100%;margin:6px 0 12px" placeholder="např. 4527.43">
         </label>
         <div class="btn-group">
-          <button onclick="saveEnergyPhase('end')" style="background:#d4f5e2;color:#1a7a3a">Uložit stav na konci</button>
+          <button class="btn-success" onclick="saveEnergyPhase('end')">Uložit stav na konci</button>
         </div>
       </div>
 
@@ -4600,8 +4600,8 @@ async function renderEnergy(){
           </div>
           ${isSelected ? `
             <div class="btn-group" style="margin-top:10px">
-              <button onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END||""})" style="background:#e8f0fe;color:#007aff">Upravit</button>
-              <button onclick="event.stopPropagation();deleteEnergyRow('${escapeHtml(r.ID)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+              <button class="btn-info" onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END||""})">Upravit</button>
+              <button class="btn-danger" onclick="event.stopPropagation();deleteEnergyRow('${escapeHtml(r.ID)}')">Smazat</button>
             </div>
           ` : ""}
         </div>`
@@ -6155,8 +6155,8 @@ onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "'
         </div>
         ${isSelected ? `
           <div class="btn-group" style="margin-top:10px">
-            <button onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-            <button onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
+            <button class="btn-info" onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>
+            <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')">Smazat</button>
           </div>
         ` : ""}
       </div>`
@@ -6195,9 +6195,9 @@ onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : 
         </div>
         ${isSelected ? `
           <div class="btn-group" style="margin-top:10px">
-            <button onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')" style="background:#e8f0fe;color:#007aff">Upravit</button>
-            <button onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')" style="background:#fde8e8;color:#c00">Smazat</button>
-            <button onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})" style="background:#d4f5e2;color:#1a7a3a">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+            <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
+            <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
+            <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
           </div>
         ` : ""}
       </div>`
