@@ -5905,6 +5905,7 @@ function initPullToRefresh(){
   const THRESHOLD = 80
 
   document.addEventListener("touchstart", e => {
+    if(e.target.closest && e.target.closest(".modal:not(.hidden)")) return   // tažení uvnitř okna (bottom sheet) stránku neobnovuje
     if(window.scrollY === 0){
       startY  = e.touches[0].clientY
       pulling = true
