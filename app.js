@@ -149,10 +149,8 @@ function toggleAccordion(bodyId, chevronId){
   const el      = document.getElementById(bodyId)
   const chevron = document.getElementById(chevronId)
   if(!el) return
-  const isOpen = el.classList.contains("open")
-  el.classList.toggle("open", !isOpen)
-  el.style.display = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  const isOpen = el.style.display !== "none" && el.classList.contains("open")
+  tenAcc.set(el, !isOpen, { display: "block", chevs: [chevron] })   // roleta (viz platform.js)
 }
 
 async function cachedApi(action, params){
@@ -581,8 +579,7 @@ function toggleDetailAccordion(key){
   const chevron = document.getElementById("accChevron_" + key)
   if(!body) return
   const isOpen = body.style.display !== "none"
-  body.style.display = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
+  tenAcc.set(body, !isOpen, { display: "block", chevs: [chevron] })
 }
 
 window.toggleDetailAccordion = toggleDetailAccordion
@@ -1867,9 +1864,8 @@ function toggleEventFormExtra(){
   const chevron = document.getElementById("chevronEventFormExtra")
   if(!panel) return
   const isOpen = panel.style.display !== "none"
-  panel.style.display = isOpen ? "none" : "block"
-  if(chevron) chevron.textContent = isOpen ? "›" : "‹"
-  if(!isOpen) renderEventFormExtra()
+  if(!isOpen) renderEventFormExtra()   // obsah musí existovat dřív, než se změří výška
+  tenAcc.set(panel, !isOpen, { display: "block", chevs: [chevron] })
 }
 
 function renderEventFormExtra(){
@@ -2009,9 +2005,8 @@ function toggleRiderAccordion(){
   RIDER_OPEN = !RIDER_OPEN
   const panel   = document.getElementById("riderPanel")
   const chevron = document.getElementById("chevronRider")
-  if(panel)   panel.style.display = RIDER_OPEN ? "block" : "none"
-  if(chevron) chevron.textContent = RIDER_OPEN ? "‹" : "›"
   if(RIDER_OPEN) renderRiderPanel()
+  if(panel) tenAcc.set(panel, RIDER_OPEN, { display: "block", chevs: [chevron] })
 }
 
 function renderRiderToggleHtml(){
@@ -2019,7 +2014,7 @@ function renderRiderToggleHtml(){
     <div style="margin-top:16px;border-top:1px solid rgba(128,128,128,0.15);padding-top:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleRiderAccordion()">
         <span style="font-weight:600;font-size:15px">Vyplnit podrobnosti pro 10space projekt</span>
-        <span id="chevronRider">${RIDER_OPEN ? "‹" : "›"}</span>
+        <span id="chevronRider" data-acc="${RIDER_OPEN ? "open" : "closed"}">${RIDER_OPEN ? "‹" : "›"}</span>
       </div>
       <div id="riderPanel" style="display:${RIDER_OPEN ? "block" : "none"};margin-top:12px">
         ${RIDER_OPEN ? renderRiderPanelContent() : ""}
@@ -5619,9 +5614,9 @@ function renderCvtTab(){
       <div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">
         <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCvtSection('${section.id}')">
           <span style="font-weight:600">${section.title}</span>
-          <span style="color:var(--muted)">${isOpen ? "‹" : "›"}</span>
+          <span class="acc-chev" id="cvtChev_${section.id}" data-acc="${isOpen ? "open" : "closed"}"></span>
         </div>
-        <div style="display:${isOpen ? "block" : "none"};padding:0 16px 16px">
+        <div id="cvtBody_${section.id}" style="display:${isOpen ? "block" : "none"};padding:0 16px 16px">
           ${section.intro ? `<p class="small" style="margin-bottom:10px;color:var(--muted)">${section.intro}</p>` : ""}
           ${section.diagram ? section.diagram() : ""}
           ${section.items.map(item => `
@@ -5641,8 +5636,16 @@ function renderCvtTab(){
 }
 
 function toggleCvtSection(id){
-  CVT_SECTION_OPEN = CVT_SECTION_OPEN === id ? null : id
-  renderRepertoar()
+  const prev = CVT_SECTION_OPEN
+  CVT_SECTION_OPEN = prev === id ? null : id
+  const body = document.getElementById("cvtBody_" + id)
+  if(!body){ renderRepertoar(); return }
+  const setOne = (sid, open) => {
+    const b = document.getElementById("cvtBody_" + sid)
+    if(b) tenAcc.set(b, open, { display: "block", chevs: [document.getElementById("cvtChev_" + sid)] })
+  }
+  if(prev && prev !== id) setOne(prev, false)   // otevřená je vždy jen jedna sekce
+  setOne(id, CVT_SECTION_OPEN === id)
 }
 
 window.toggleCvtSection = toggleCvtSection
