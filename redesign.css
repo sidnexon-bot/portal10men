@@ -1299,9 +1299,12 @@ html[data-platform="android"] body :is(h2, .event-title, .projekt-title) { font-
 html[data-platform="android"] body :is(h3, .section-title, .event-label, .stat-label, .dashboard-card-title, .projekt-sekce-title, .exp-group-title) { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: .007em; text-transform: none; }
 html[data-platform="android"] body .stat-value { font-size: 24px; line-height: 32px; font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 html[data-platform="android"] body :is(.small, small):not(.bottom *) { font-size: 12px; line-height: 16px; letter-spacing: .033em; }
-html[data-platform="android"] body :is(label, .field label) { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .04em; }
+html[data-platform="android"] body :is(label, .field label):not(.and-unit) { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: .04em; }   /* label.and-unit má popisek skrytý (font-size 0), nahrazuje ho placeholder */
 
 /* spodní lišta: popisek má pevný box (max-height 14 px, overflow hidden), proto vlastní výška řádku, ať se neuřízne spodek písmen */
 html:not([data-platform="android"]) .bottom button small { line-height: 13px; padding-bottom: 1px; }
 /* hlavička rozbalovacího bloku: stejné odsazení nahoře i dole (16 px) na všech platformách, text nesedí u spodní hrany kulaté karty */
 .event-card > .event-label[onclick] { padding-bottom: 16px !important; margin-bottom: 0; align-items: center; }
+
+/* Formulář akce: vnitřní „karta“ uvnitř okna není další karta (okno už je plocha), jen drží rozložení kolonek */
+#eventFormModalBody > .card { background: transparent; box-shadow: none; border: 0; border-radius: 0; padding: 0; margin: 0; animation: none; }
