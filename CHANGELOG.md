@@ -9,6 +9,12 @@ Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor,
 - Odškrtnutí docházky (jen administrátor): u akce, která už začala, v kartě Docházka tlačítko „Odškrtnout docházku“. Otevře seznam členů podle hlasů, předvyplněný podle toho, kdo slíbil, že přijde. Administrátor označí, kdo opravdu přišel (rychlé volby „Podle slibů“ a „Nikdo“) a uloží jako finální stav. Potvrzení jde později upravit nebo zrušit.
 - Skutečná účast se ukládá zvlášť, původní odpovědi členů zůstávají. U potvrzené akce se v detailu i v Docházce skupiny zobrazuje skutečná účast (Přišel / Nepřišel) a aktivita člena se počítá z ní, takže ji nezkreslí zapomenuté zadání. U dosud nepotvrzených proběhlých akcí vidí administrátor v Docházce skupiny odkaz „odškrtnout docházku“.
 - Apple: všechna okna (formuláře, seznamy, volby) jsou plovoucí karta nahoře místo bottom sheetu, jako okno odškrtnutí docházky. Android zůstává u bottom sheetu.
+- Oprava (Apple, 10space): primární a nebezpečná tlačítka v dialozích (modal-btn-primary, modal-btn-danger) se vykreslovala jako bílé sklo místo barvy aplikace.
+- Tlačítka: jedna velikost na Apple (38 px, písmo 14 px; na počítači s myší kompaktních 34 px), na Androidu 40 px. Nebezpečné tlačítko na Androidu je tonální červené, v patičce okna červený text.
+- Okna na Apple (karta): pevné záhlaví a zápatí s tlačítky při rolování, v každém okně křížek, jednotné odsazení aspoň 20 px nahoře i dole.
+- Spodní lišta na iPhonu v aplikaci přidané na plochu: zaoblení soustředné s rohem displeje (odsazení R − 32 px podle modelu iPhonu).
+- Přístupnost: rozbalovací bloky a rozbalovací řádky jdou ovládat klávesnicí (role, tabindex, aria-expanded, Enter a mezerník).
+- Okna docházky (člen, odškrtnutí) mají vlastní křížek; formulář akce má pevné tlačítka dole.
 
 ## 3.18.0 (3. 11. 2026)
 - Správa členů: nová kolonka „V 10men působí od“ (datum) při přidání i úpravě člena. Člen ji vidí v Nastavení mezi osobními údaji.

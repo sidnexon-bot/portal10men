@@ -1839,7 +1839,7 @@ async function openEventForm(id){
       </div>
     </div>
 
-   <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+   <div class="form-foot" style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
       <button class="btn-success" onclick="saveEvent(${isEdit ? `'${id}'` : 'null'}, true)" style="width:100%">
         ${isEdit ? "Uložit a poslat do Discordu" : "Vytvořit a poslat do Discordu"}
       </button>
@@ -5801,7 +5801,7 @@ function ensureHmModal(){
   m.id = "hmModal"
   m.className = "modal hidden"
   m.innerHTML = `<div class="modal-backdrop" onclick="closeHeatmapDetail()"></div>
-    <div class="modal-content" style="max-width:420px"><div id="hmModalBody"></div>
+    <div class="modal-content" style="max-width:420px"><button type="button" class="modal-close hm-x" aria-label="Zavřít" onclick="closeHeatmapDetail()">✕</button><div id="hmModalBody"></div>
       <div class="btn-group" data-ar-skip><button type="button" onclick="closeHeatmapDetail()">Zavřít</button></div></div>`
   document.body.appendChild(m)
   return m
@@ -5865,7 +5865,7 @@ function ensureAttModal(){
   m.id = "attModal"
   m.className = "modal hidden"
   m.innerHTML = `<div class="modal-backdrop" onclick="closeAttendanceCheck()"></div>
-    <div class="modal-content att-content" style="max-width:480px"><div id="attModalBody"></div></div>`
+    <div class="modal-content att-content" style="max-width:480px"><button type="button" class="modal-close hm-x" aria-label="Zavřít" onclick="closeAttendanceCheck()">✕</button><div id="attModalBody"></div></div>`
   document.body.appendChild(m)
   return m
 }
