@@ -1309,8 +1309,8 @@ html:not([data-platform="android"]) .bottom button small { line-height: 13px; pa
 /* Formulář akce: vnitřní „karta“ uvnitř okna není další karta (okno už je plocha), jen drží rozložení kolonek */
 #eventFormModalBody > .card { background: transparent; box-shadow: none; border: 0; border-radius: 0; padding: 0; margin: 0; animation: none; }
 /* ── Docházka skupiny: seskupení podle hlasů, poměr přítomných, stav rozlišitelný i bez barvy ── */
-.hm { --hm-y: #34c759; --hm-m: #ff9f0a; --hm-n: #ff3b30; --hm-u: #8e8e93; --hm-y-bg: rgba(52,199,89,.16); --hm-m-bg: rgba(255,159,10,.18); --hm-n-bg: rgba(255,59,48,.14); }
-body.dark .hm { --hm-y: #30d158; --hm-m: #ffb340; --hm-n: #ff6961; --hm-u: #98989d; --hm-y-bg: rgba(48,209,88,.22); --hm-m-bg: rgba(255,179,64,.22); --hm-n-bg: rgba(255,105,97,.22); }
+.hm, #hmModal { --hm-y: #34c759; --hm-m: #ff9f0a; --hm-n: #ff3b30; --hm-u: #8e8e93; --hm-y-bg: rgba(52,199,89,.16); --hm-m-bg: rgba(255,159,10,.18); --hm-n-bg: rgba(255,59,48,.14); }
+body.dark .hm, body.dark #hmModal { --hm-y: #30d158; --hm-m: #ffb340; --hm-n: #ff6961; --hm-u: #98989d; --hm-y-bg: rgba(48,209,88,.22); --hm-m-bg: rgba(255,179,64,.22); --hm-n-bg: rgba(255,105,97,.22); }
 .hm-event { padding: 14px 0; border-top: 1px solid var(--hair, rgba(60,60,67,.12)); }
 .hm-event:first-of-type { border-top: 0; padding-top: 4px; }
 .hm-head { display: flex; align-items: center; gap: 12px; }
@@ -1361,3 +1361,31 @@ html[data-platform] body .hm-cell { width: 32px; height: 32px; min-height: 0 !im
 .hm-table tbody tr + tr > * { border-top: 1px solid var(--hair, rgba(60,60,67,.08)); }
 .hm-off { opacity: .6; }
 @media (prefers-reduced-motion: no-preference) { .hm-seg { transition: flex .4s ease; } }
+
+/* kuličky a buňky mají pevný rozměr (pravidlo pro dotyk „button[onclick^=heatmap] { min-width: 40px }“ je jinak roztahovalo) */
+html[data-platform] body :is(.hm-dot, .hm-cell) { min-width: 0 !important; max-width: none; flex: none; box-sizing: border-box; }
+html[data-platform] body .hm-dot { width: 26px !important; height: 26px !important; }
+html[data-platform] body .hm-cell { width: 32px !important; height: 32px !important; }
+
+/* okno s podrobnostmi člena */
+.hm-dlg-name { font-size: 22px; font-weight: 700; line-height: 1.2; padding-right: 36px; }
+.hm-dlg-name small { display: block; margin-top: 3px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.hm-dlg-main { display: flex; align-items: center; gap: 12px; margin: 16px 0 6px; padding: 14px; border-radius: 18px; background: color-mix(in srgb, var(--hm-u) 14%, transparent); }
+.hm-dlg-main.hm-y { background: var(--hm-y-bg); } .hm-dlg-main.hm-m { background: var(--hm-m-bg); } .hm-dlg-main.hm-n { background: var(--hm-n-bg); }
+.hm-dlg-main b { display: block; font-size: 16px; font-weight: 600; } .hm-dlg-main small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.hm-chip { flex: none; font-style: normal; font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; white-space: nowrap; background: color-mix(in srgb, var(--hm-u) 18%, transparent); color: var(--muted); }
+.hm-chip.hm-y { background: var(--hm-y); color: #fff; } .hm-chip.hm-m { background: var(--hm-m); color: #fff; } .hm-chip.hm-n { background: var(--hm-n-bg); color: var(--hm-n); }
+.hm-reason { margin: 6px 2px 0; font-size: 13px; color: var(--muted); }
+.hm-next { margin-top: 14px; }
+.hm-next-h { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 6px; }
+.hm-next-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12.5px; color: var(--muted); }
+.hm-next-row .hm-chip { font-size: 11px; padding: 3px 9px; }
+.hm-act { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--hair, rgba(60,60,67,.12)); display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 6px 12px; }
+.hm-act-l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.hm-pct { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.hm-pct.hm-y { color: var(--hm-y); } .hm-pct.hm-m { color: var(--hm-m); } .hm-pct.hm-n { color: var(--hm-n); } .hm-pct.hm-u { color: var(--muted); }
+.hm-act-bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--hm-u) 20%, transparent); overflow: hidden; }
+.hm-act-bar i { display: block; height: 100%; border-radius: inherit; }
+.hm-act-bar i.hm-y { background: var(--hm-y); } .hm-act-bar i.hm-m { background: var(--hm-m); } .hm-act-bar i.hm-n { background: var(--hm-n); }
+.hm-act small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+#hmModal .btn-group { margin-top: 18px; }

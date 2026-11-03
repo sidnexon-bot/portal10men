@@ -5681,11 +5681,8 @@ function hmCounts(e, members, lookup){
   return c
 }
 
-function hmClick(e, m, lookup){
-  const entry = lookup[e.ID + "_" + m.EMAIL] || {}
-  return entry.status
-    ? `onclick="heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(entry.status)}','${escapeHtml(entry.reason || "")}')"`
-    : ""
+function hmClick(e, m){
+  return `onclick="heatmapDetail('${escapeHtml(e.ID)}','${escapeHtml(m.EMAIL)}')"`
 }
 
 function hmDateChip(e){
@@ -5718,7 +5715,7 @@ function heatmapMobileHtml(events, members, lookup){
         const dots = g.list.map(m => {
           const k = hmKey(lookup, e, m)
           const initials = m.NAME.split(" ").map(n => n[0]).join("")
-          return `<button type="button" class="hm-dot hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m, lookup)}>${escapeHtml(initials)}</button>`
+          return `<button type="button" class="hm-dot hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m)}>${escapeHtml(initials)}</button>`
         }).join("")
         return `<div class="hm-voice"><div class="hm-vh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${yes}<small>/${g.list.length}</small></b></div><div class="hm-dots">${dots}</div></div>`
       }).join("")
@@ -5742,12 +5739,80 @@ function heatmapDesktopHtml(events, members, lookup){
     const c = hmCounts(e, members, lookup)
     const cells = groups.map((g, i) => g.list.map((m, j) => {
       const k = hmKey(lookup, e, m)
-      return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m, lookup)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
+      return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
     }).join("")).join("")
     const cancelled = e.STATUS === "Zrušená"
     return `<tr class="${cancelled ? "hm-off" : ""}"><th class="hm-ev" scope="row">${hmDateChip(e)}${hmTitle(e)}</th>${cells}<td class="hm-sum hm-sep">${cancelled ? "" : `<b>${c.y}</b><small>/${members.length}</small>${c.m ? `<em>+${c.m}?</em>` : ""}`}</td></tr>`
   }).join("")
   return `<div class="hm-scroll"><table class="hm-table"><thead><tr>${head1}</tr><tr>${head2}</tr></thead><tbody>${rows}</tbody></table></div>${hmLegend()}`
+}
+
+/* Okno s podrobnostmi člena: účast na vybrané akci, stav na další dvě akce a aktivita v procentech
+   (podíl proběhlých akcí, na které člen potvrdil „Přijdu“; zrušené se nepočítají). 0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně. */
+function hmActivity(member, events, lookup){
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today)
+  const yes = past.filter(e => lookup[e.ID + "_" + member.EMAIL]?.status === "Přijdu").length
+  const pct = past.length ? Math.round(yes / past.length * 100) : null
+  const cls = pct === null ? "u" : pct <= 30 ? "n" : pct <= 65 ? "m" : "y"
+  return { pct, cls, yes, total: past.length }
+}
+
+function ensureHmModal(){
+  let m = document.getElementById("hmModal")
+  if(m) return m
+  m = document.createElement("div")
+  m.id = "hmModal"
+  m.className = "modal hidden"
+  m.innerHTML = `<div class="modal-backdrop" onclick="closeHeatmapDetail()"></div>
+    <div class="modal-content" style="max-width:420px"><div id="hmModalBody"></div>
+      <div class="btn-group" data-ar-skip><button type="button" onclick="closeHeatmapDetail()">Zavřít</button></div></div>`
+  document.body.appendChild(m)
+  return m
+}
+
+function heatmapDetail(eventId, email){
+  const d = window.HM_DATA
+  if(!d) return
+  const member = d.members.find(m => m.EMAIL === email)
+  const event  = d.events.find(e => e.ID === eventId)
+  if(!member || !event) return
+  const entry = d.lookup[eventId + "_" + email] || {}
+  const k = HM_STATUS[entry.status || ""] || "u"
+  const when  = e => `${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}`
+  const short = e => new Date(e.DATE).toLocaleDateString("cs-CZ", {weekday: "short", day: "numeric", month: "numeric"})
+
+  const sorted = d.events.filter(e => e.STATUS !== "Zrušená").sort((a, b) => new Date(a.DATE) - new Date(b.DATE))
+  const next = sorted.filter(e => e.ID !== eventId && new Date(e.DATE) >= new Date(event.DATE) && !(e.DATE === event.DATE && e.ID < eventId)).slice(0, 2)
+  const nextHtml = next.length
+    ? next.map(e => {
+        const kk = HM_STATUS[d.lookup[e.ID + "_" + email]?.status || ""] || "u"
+        return `<div class="hm-next-row"><span>${escapeHtml(e.NAME)} · ${escapeHtml(short(e))}</span><i class="hm-chip hm-${kk}">${HM_LABEL[kk]}</i></div>`
+      }).join("")
+    : `<div class="hm-next-row"><span>Žádná další akce v plánu</span></div>`
+
+  const act = hmActivity(member, d.events, d.lookup)
+  const actHtml = act.pct === null
+    ? `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-u">–</b><small>zatím žádná proběhlá akce</small></div>`
+    : `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-${act.cls}">${act.pct} %</b>
+        <div class="hm-act-bar"><i class="hm-${act.cls}" style="width:${act.pct}%"></i></div>
+        <small>přišel(a) na ${act.yes} z ${act.total} proběhlých akcí</small></div>`
+
+  ensureHmModal()
+  document.getElementById("hmModalBody").innerHTML = `
+    <div class="hm-dlg-name">${escapeHtml(member.NAME)}${member.VOICE ? `<small>${escapeHtml(hmVoiceName(member.VOICE))}</small>` : ""}</div>
+    <div class="hm-dlg-main hm-${k}">
+      <i class="hm-chip hm-${k}">${HM_LABEL[k]}</i>
+      <div><b>${escapeHtml(event.NAME)}</b><small>${escapeHtml(when(event))}</small></div>
+    </div>
+    ${entry.reason ? `<div class="hm-reason">Důvod: ${escapeHtml(entry.reason)}</div>` : ""}
+    <div class="hm-next"><div class="hm-next-h">Další akce</div>${nextHtml}</div>
+    ${actHtml}`
+  document.getElementById("hmModal").classList.remove("hidden")
+}
+
+function closeHeatmapDetail(){
+  document.getElementById("hmModal")?.classList.add("hidden")
 }
 
 async function renderHeatmap(){
@@ -5788,6 +5853,7 @@ async function renderHeatmap(){
     rows.forEach(r => {
       lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
     })
+    window.HM_DATA = { events, members, lookup }   // pro okno s podrobnostmi člena (heatmapDetail)
 
     let html = `<div class="card" style="padding:16px">
       <div class="event-label" style="margin-bottom:12px">Docházka skupiny</div>
@@ -6366,6 +6432,8 @@ window.filterProgSongs      = filterProgSongs
 window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext
 window.heatmapInfo          = heatmapInfo
+window.heatmapDetail        = heatmapDetail
+window.closeHeatmapDetail   = closeHeatmapDetail
 window.eventsMonthPrev      = eventsMonthPrev
 window.eventsMonthNext      = eventsMonthNext
 window.prefetchProgramPdfs  = prefetchProgramPdfs

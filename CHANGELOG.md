@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.17.0 (3. 11. 2026)
+- Docházka skupiny: kuličky členů mají pevný rozměr (na dotykových displejích je dřív roztahovalo pravidlo pro tlačítka s onclick „heatmap…“).
+- Klepnutí na člena otevře okno místo systémového upozornění: jméno a příjmení, účast na vybrané akci (s důvodem), stav na další dvě akce menším písmem a aktivita v procentech (podíl proběhlých akcí, na které člen potvrdil „Přijdu“; zrušené se nepočítají). 0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně.
+
 ## 3.16.0 (3. 11. 2026)
 - Docházka skupiny (10base): přepracovaný přehled se stejnými daty. U každé akce je datumová dlaždice, poměr přítomných (např. 14/16), pruh se zastoupením stavů a členové seskupení podle hlasů (1. a 2. tenor, 1. a 2. bas) s počtem přítomných v hlasu.
 - Stav se rozliší i bez barvy: přijde = plná, možná = oranžová, nepřijde = tónovaná s přeškrtnutými iniciálami, bez odpovědi = čárkovaný obrys. Pod přehledem je legenda.
