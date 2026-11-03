@@ -5749,17 +5749,22 @@ function heatmapDesktopHtml(events, members, lookup){
   return `<div class="hm-scroll"><table class="hm-table"><thead><tr>${head1}</tr><tr>${head2}</tr></thead><tbody>${rows}</tbody></table></div>${hmLegend()}`
 }
 
-/* Okno s podrobnostmi člena: účast na vybrané akci, stav na další dvě akce a aktivita v procentech
-   (podíl proběhlých akcí, na které člen potvrdil „Přijdu“; zrušené se nepočítají). 0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně. */
+/* Okno s podrobnostmi člena: účast na vybrané akci, stav na další dvě akce a aktivita v procentech.
+   Aktivita = podíl proběhlých akcí, na které člen potvrdil „Přijdu“ (zrušené se nepočítají), za aktuální kalendářní rok;
+   1. ledna se počítá znovu od nuly. Má-li člen vyplněno „V 10men působí od“ a nastoupil během roku, počítá se až od toho data.
+   0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně. */
 function hmActivity(member, events, lookup){
   const today = new Date(); today.setHours(0, 0, 0, 0)
-  const from = member.SINCE ? new Date(member.SINCE) : null   // akce před nástupem člena se nepočítají
-  if(from) from.setHours(0, 0, 0, 0)
-  const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today && (!from || new Date(e.DATE) >= from))
+  const yearStart = new Date(today.getFullYear(), 0, 1)
+  const since = member.SINCE ? new Date(member.SINCE) : null
+  if(since) since.setHours(0, 0, 0, 0)
+  const bySince = !!(since && since > yearStart)
+  const from = bySince ? since : yearStart
+  const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today && new Date(e.DATE) >= from)
   const yes = past.filter(e => lookup[e.ID + "_" + member.EMAIL]?.status === "Přijdu").length
   const pct = past.length ? Math.round(yes / past.length * 100) : null
   const cls = pct === null ? "u" : pct <= 30 ? "n" : pct <= 65 ? "m" : "y"
-  return { pct, cls, yes, total: past.length, from }
+  return { pct, cls, yes, total: past.length, from, bySince, year: today.getFullYear() }
 }
 
 function ensureHmModal(){
@@ -5797,10 +5802,10 @@ function heatmapDetail(eventId, email){
 
   const act = hmActivity(member, d.events, d.lookup)
   const actHtml = act.pct === null
-    ? `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-u">–</b><small>zatím žádná proběhlá akce</small></div>`
+    ? `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-u">–</b><small>${act.bySince ? "od " + act.from.toLocaleDateString("cs-CZ") : "v roce " + act.year} zatím žádná proběhlá akce</small></div>`
     : `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-${act.cls}">${act.pct} %</b>
         <div class="hm-act-bar"><i class="hm-${act.cls}" style="width:${act.pct}%"></i></div>
-        <small>přišel(a) na ${act.yes} z ${act.total} proběhlých akcí${act.from ? " od " + act.from.toLocaleDateString("cs-CZ") : ""}</small></div>`
+        <small>přišel(a) na ${act.yes} z ${act.total} proběhlých akcí ${act.bySince ? "od " + act.from.toLocaleDateString("cs-CZ") : "v roce " + act.year}</small></div>`
 
   ensureHmModal()
   document.getElementById("hmModalBody").innerHTML = `

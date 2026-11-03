@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.0.1 (3. 11. 2026)
+- Aktivita člena v docházce se počítá za aktuální kalendářní rok, ne z celé historie. 1. ledna se počítá znovu od nuly. Člen, který nastoupil během roku („V 10men působí od“), se počítá od data nástupu. V okně je u aktivity uvedeno „v roce 2026“, popř. „od 15. 10. 2026“.
+
 ## 3.18.0 (3. 11. 2026)
 - Správa členů: nová kolonka „V 10men působí od“ (datum) při přidání i úpravě člena. Člen ji vidí v Nastavení mezi osobními údaji.
 - Aktivita v okně člena (Docházka skupiny) počítá jen proběhlé akce od tohoto data, takže nepenalizuje členy, kteří nastoupili během roku. Bez vyplněného data se počítají všechny akce jako dosud; u započtených se v textu ukáže „od 15. 10. 2026“.
