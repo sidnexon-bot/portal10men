@@ -8,6 +8,7 @@ Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor,
 - Docházka skupiny: zpětně se zobrazují i proběhlé akce daného měsíce (dřív jen budoucí). Jsou zašedlé a u data je „proběhlo“, ale stav členů zůstává čitelný, aby šla docházka a aktivita zkontrolovat. Měsíc se přepíná stejným posuvným přepínačem.
 - Odškrtnutí docházky (jen administrátor): u akce, která už začala, v kartě Docházka tlačítko „Odškrtnout docházku“. Otevře seznam členů podle hlasů, předvyplněný podle toho, kdo slíbil, že přijde. Administrátor označí, kdo opravdu přišel (rychlé volby „Podle slibů“ a „Nikdo“) a uloží jako finální stav. Potvrzení jde později upravit nebo zrušit.
 - Skutečná účast se ukládá zvlášť, původní odpovědi členů zůstávají. U potvrzené akce se v detailu i v Docházce skupiny zobrazuje skutečná účast (Přišel / Nepřišel) a aktivita člena se počítá z ní, takže ji nezkreslí zapomenuté zadání. U dosud nepotvrzených proběhlých akcí vidí administrátor v Docházce skupiny odkaz „odškrtnout docházku“.
+- Apple: všechna okna (formuláře, seznamy, volby) jsou plovoucí karta nahoře místo bottom sheetu, jako okno odškrtnutí docházky. Android zůstává u bottom sheetu.
 
 ## 3.18.0 (3. 11. 2026)
 - Správa členů: nová kolonka „V 10men působí od“ (datum) při přidání i úpravě člena. Člen ji vidí v Nastavení mezi osobními údaji.
