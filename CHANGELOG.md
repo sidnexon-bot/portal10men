@@ -3,6 +3,12 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.16.0 (3. 11. 2026)
+- Docházka skupiny (10base): přepracovaný přehled se stejnými daty. U každé akce je datumová dlaždice, poměr přítomných (např. 14/16), pruh se zastoupením stavů a členové seskupení podle hlasů (1. a 2. tenor, 1. a 2. bas) s počtem přítomných v hlasu.
+- Stav se rozliší i bez barvy: přijde = plná, možná = oranžová, nepřijde = tónovaná s přeškrtnutými iniciálami, bez odpovědi = čárkovaný obrys. Pod přehledem je legenda.
+- Zrušená akce zabírá jen jeden řádek. Zmizela karta vnořená v kartě. Na počítači je matice seskupená podle hlasů, má sloupec součtů a pevný první sloupec s akcí.
+- Zůstal původní posuvný přepínač měsíců a klepnutí na člena (důvod odpovědi).
+
 ## 3.15.2 (3. 11. 2026)
 - Android: formuláře mají zase jen placeholdery místo popisků kolonek. Popisky se po změně písma (3.15.0) omylem ukázaly znovu vedle placeholderů.
 - Apple: formulář nové a upravované akce už není obalený ještě jednou kartou uvnitř okna.

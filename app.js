@@ -5656,12 +5656,108 @@ window.toggleCvtSection = toggleCvtSection
 
 let HEATMAP_MONTH = null
 
+/* Docházka skupiny: stav člena = Přijdu / Možná / Nepřijdu / bez odpovědi. Členové jsou seskupení podle hlasu, u každé akce je poměr
+   přítomných a pruh se zastoupením stavů. Stav se rozliší i bez barvy (plná, tónovaná s přeškrtnutím, čárkovaný obrys). */
+const HM_STATUS = { "Přijdu": "y", "Možná": "m", "Nepřijdu": "n" }
+const HM_LABEL  = { y: "Přijde", m: "Možná", n: "Nepřijde", u: "Bez odpovědi" }
+const HM_VOICES = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+
+function hmVoiceName(v){
+  return String(v).replace(/^(\d)\. (\S)(\S*)/, (_, n, a, b) => n + ". " + a + b.toLowerCase())
+}
+
+function hmGroups(members){
+  const groups = HM_VOICES.map(v => ({ voice: v, list: members.filter(m => m.VOICE === v) })).filter(g => g.list.length)
+  return groups   // členové bez hlasu (1./2. tenor, 1./2. bas) se do docházky nezapočítávají
+}
+
+function hmKey(lookup, e, m){
+  return HM_STATUS[lookup[e.ID + "_" + m.EMAIL]?.status || ""] || "u"
+}
+
+function hmCounts(e, members, lookup){
+  const c = { y: 0, m: 0, n: 0, u: 0 }
+  members.forEach(m => { c[hmKey(lookup, e, m)]++ })
+  return c
+}
+
+function hmClick(e, m, lookup){
+  const entry = lookup[e.ID + "_" + m.EMAIL] || {}
+  return entry.status
+    ? `onclick="heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(entry.status)}','${escapeHtml(entry.reason || "")}')"`
+    : ""
+}
+
+function hmDateChip(e){
+  const d = new Date(e.DATE)
+  return `<div class="hm-date"><b>${d.getDate()}</b><span>${escapeHtml(d.toLocaleDateString("cs-CZ", {month: "short"}).replace(".", ""))}</span></div>`
+}
+
+function hmTitle(e){
+  const cancelled = e.STATUS === "Zrušená"
+  return `<div class="hm-title">
+    <a class="${cancelled ? "hm-cancel" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</a>
+    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</small>`}
+  </div>`
+}
+
+function hmLegend(){
+  return `<div class="hm-legend"><span><i class="hm-sw hm-y"></i>Přijde</span><span><i class="hm-sw hm-m"></i>Možná</span><span><i class="hm-sw hm-n"></i>Nepřijde</span><span><i class="hm-sw hm-u"></i>Bez odpovědi</span></div>`
+}
+
+function heatmapMobileHtml(events, members, lookup){
+  const groups = hmGroups(members)
+  return events.map(e => {
+    const cancelled = e.STATUS === "Zrušená"
+    const c = hmCounts(e, members, lookup)
+    let body = ""
+    if(!cancelled){
+      const seg = ["y", "m", "n", "u"].filter(k => c[k]).map(k => `<i class="hm-seg hm-${k}" style="flex:${c[k]}"></i>`).join("")
+      const voices = groups.map(g => {
+        const yes = g.list.filter(m => hmKey(lookup, e, m) === "y").length
+        const dots = g.list.map(m => {
+          const k = hmKey(lookup, e, m)
+          const initials = m.NAME.split(" ").map(n => n[0]).join("")
+          return `<button type="button" class="hm-dot hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m, lookup)}>${escapeHtml(initials)}</button>`
+        }).join("")
+        return `<div class="hm-voice"><div class="hm-vh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${yes}<small>/${g.list.length}</small></b></div><div class="hm-dots">${dots}</div></div>`
+      }).join("")
+      body = `<div class="hm-bar" role="img" aria-label="Přijde ${c.y}, možná ${c.m}, nepřijde ${c.n}, bez odpovědi ${c.u}">${seg}</div><div class="hm-voices">${voices}</div>`
+    }
+    return `<div class="hm-event ${cancelled ? "hm-off" : ""}">
+      <div class="hm-head">${hmDateChip(e)}${hmTitle(e)}${cancelled ? "" : `<div class="hm-count" aria-label="${c.y} z ${members.length} přijde"><b>${c.y}</b><small>/${members.length}</small></div>`}</div>
+      ${body}
+    </div>`
+  }).join("") + hmLegend()
+}
+
+function heatmapDesktopHtml(events, members, lookup){
+  const groups = hmGroups(members)
+  const head1 = `<th rowspan="2" class="hm-corner">Akce</th>`
+    + groups.map((g, i) => `<th colspan="${g.list.length}" class="hm-vg ${i ? "hm-sep" : ""}">${escapeHtml(hmVoiceName(g.voice))}</th>`).join("")
+    + `<th rowspan="2" class="hm-sum-h hm-sep">Přijde</th>`
+  const head2 = groups.map((g, i) => g.list.map((m, j) =>
+    `<th class="hm-mh ${i && !j ? "hm-sep" : ""}" title="${escapeHtml(m.NAME)}"><span>${escapeHtml(m.NAME.split(" ")[0])}</span><small>${escapeHtml(m.NAME.split(" ")[1] || "")}</small></th>`).join("")).join("")
+  const rows = events.map(e => {
+    const c = hmCounts(e, members, lookup)
+    const cells = groups.map((g, i) => g.list.map((m, j) => {
+      const k = hmKey(lookup, e, m)
+      return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m, lookup)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
+    }).join("")).join("")
+    const cancelled = e.STATUS === "Zrušená"
+    return `<tr class="${cancelled ? "hm-off" : ""}"><th class="hm-ev" scope="row">${hmDateChip(e)}${hmTitle(e)}</th>${cells}<td class="hm-sum hm-sep">${cancelled ? "" : `<b>${c.y}</b><small>/${members.length}</small>${c.m ? `<em>+${c.m}?</em>` : ""}`}</td></tr>`
+  }).join("")
+  return `<div class="hm-scroll"><table class="hm-table"><thead><tr>${head1}</tr><tr>${head2}</tr></thead><tbody>${rows}</tbody></table></div>${hmLegend()}`
+}
+
 async function renderHeatmap(){
   try{
     const data    = await cachedApi("heatmap")
     const events  = data.events  || []
     const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
-    const members = (data.members || []).sort((a, b) => {
+    // účty s rolí GUEST (např. testovací Host_ZV) do docházky nepatří; server je už vynechává, tohle hlídá i starou uloženou odpověď
+    const guestEmails = new Set((window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() === "GUEST").map(m => (m.EMAIL || m.email || "").toLowerCase()))
+    const members = (data.members || []).filter(m => (m.ROLE || "").toUpperCase() !== "GUEST" && !guestEmails.has((m.EMAIL || "").toLowerCase()) && voiceOrder.includes(m.VOICE)).sort((a, b) => {
      const ai = voiceOrder.indexOf(a.VOICE)
      const bi = voiceOrder.indexOf(b.VOICE)
      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
@@ -5702,117 +5798,7 @@ async function renderHeatmap(){
       return html
     }
 
-    if(isDesktop){
-
-      html += `<div style="overflow-x:auto">
-      <table class="heatmap heatmap-desktop" style="width:auto;border-collapse:separate;border-spacing:0 4px"><thead><tr>
-        <th style="text-align:left;padding:6px 16px 6px 0;font-size:12px;color:var(--muted);font-weight:600">Akce</th>`
-
-      members.forEach(m => {
-        html += `<th style="padding:6px 8px;font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;min-width:60px">
-          ${escapeHtml(m.NAME.split(" ")[0])}<br>
-          <span style="font-weight:400">${escapeHtml(m.NAME.split(" ")[1]||"")}</span>
-        </th>`
-      })
-      html += `</tr></thead><tbody>`
-
-      filtered.forEach(e => {
-        html += `<tr style="border-top:1px solid rgba(128,128,128,0.1)">`
-        html += `<td style="padding:8px 16px 8px 0;font-size:12px;white-space:nowrap;vertical-align:middle">
-          <div style="font-weight:600;cursor:pointer;color:#007aff;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>
-          ${e.STATUS === "Zrušená" ? `<div style="color:#ff3b30;font-size:11px;font-weight:600">Zrušená</div>` : `<div style="color:var(--muted);font-size:11px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>`}
-        </td>`
-        members.forEach(m => {
-          const entry  = lookup[e.ID + "_" + m.EMAIL] || {}
-          const status = entry.status || ""
-          const reason = entry.reason || ""
-          const color  = status === "Přijdu"   ? "#d4f5e2" :
-                         status === "Možná"    ? "#fff4dc" :
-                         status === "Nepřijdu" ? "#fde8e8" : "#f2f2f7"
-          const icon   = status === "Přijdu"   ? "✓" :
-                         status === "Možná"    ? "?" :
-                         status === "Nepřijdu" ? "✗" : ""
-          const click  = status ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')` : ""
-          html += `<td style="padding:2px 4px;text-align:center;vertical-align:middle">
-            <div style="background:${color};${status?"cursor:pointer;":""}width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin:0 auto" onclick="${click}">${icon}</div>
-          </td>`
-        })
-        html += `</tr>`
-      })
-
-      html += `</tbody></table></div>`
-
-    }else{
-
-      // Mobil — jeden blok s kartičkami
-      html += `<div class="card" style="padding:0">`
-
-      filtered.forEach((e, idx) => {
-        const border = idx < filtered.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.15);" : ""
-
-        html += `<div style="padding:14px 16px;${border}">`
-
-        // název a datum
-        html += `<div style="font-weight:600;font-size:15px;margin-bottom:2px;cursor:pointer;color:#007aff;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</div>`
-        html += `${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:4px;text-transform:uppercase">Zrušená</div>` : ""}`
-        html += `<div class="small" style="margin-bottom:10px">${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</div>`
-
-        // avatary
-        html += `<div style="display:flex;flex-wrap:wrap;gap:6px">`
-
-        members.forEach(m => {
-          const entry    = lookup[e.ID + "_" + m.EMAIL] || {}
-          const status   = entry.status || ""
-          const reason   = entry.reason || ""
-          const initials = m.NAME.split(" ").map(n => n[0]).join("")
-
-          const bg = status === "Přijdu"   ? "#34c759" :
-                     status === "Možná"    ? "#ff9f0a" :
-                     status === "Nepřijdu" ? "#ff3b30" : "#c7c7cc"
-
-          const click = status
-            ? `heatmapInfo('${escapeHtml(m.NAME)}','${escapeHtml(e.NAME)}','${escapeHtml(status)}','${escapeHtml(reason)}')`
-            : ""
-
-          html += `<div
-            onclick="${click}"
-            style="width:32px;height:32px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:${status ? "pointer" : "default"};flex-shrink:0"
-            title="${escapeHtml(m.NAME)}: ${escapeHtml(status) || "nevyplněno"}"
-          >${escapeHtml(initials)}</div>`
-        })
-
-        html += `</div>`
-
-        // shrnutí docházky
-        const prijdu  = members.filter(m => (lookup[e.ID + "_" + m.EMAIL]?.status || "") === "Přijdu")
-        const total   = prijdu.length
-        const byVoice = {}
-        prijdu.forEach(m => {
-          const voice = m.VOICE || "?"
-          byVoice[voice] = (byVoice[voice] || 0) + 1
-        })
-
-        html += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(128,128,128,0.1)">`
-        html += `<div class="small" style="margin-bottom:4px">Přítomno: <b>${total} členů</b></div>`
-        html += `<div style="display:flex;gap:12px;flex-wrap:wrap">`
-        const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
-Object.entries(byVoice)
-  .sort((a, b) => {
-    const ai = voiceOrder.indexOf(a[0])
-    const bi = voiceOrder.indexOf(b[0])
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
-  })
-  .forEach(([voice, count]) => {
-
-          html += `<span class="small">${escapeHtml(voice)}: <b>${count}</b></span>`
-        })
-        html += `</div></div>`
-
-        html += `</div>` // konec řádku akce
-      })
-
-      html += `</div>` // konec card bloku
-    }
+    html += `<div class="hm">${isDesktop ? heatmapDesktopHtml(filtered, members, lookup) : heatmapMobileHtml(filtered, members, lookup)}</div></div>`
 
     return html
 
