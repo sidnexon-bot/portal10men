@@ -5687,6 +5687,12 @@ function hmClick(e, m){
   return `onclick="heatmapDetail('${escapeHtml(e.ID)}','${escapeHtml(m.EMAIL)}')"`
 }
 
+function hmIsPast(e){
+  const end = new Date(e.DATE_END || e.DATE); end.setHours(0, 0, 0, 0)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  return end < today
+}
+
 function hmDateChip(e){
   const d = new Date(e.DATE)
   return `<div class="hm-date"><b>${d.getDate()}</b><span>${escapeHtml(d.toLocaleDateString("cs-CZ", {month: "short"}).replace(".", ""))}</span></div>`
@@ -5696,7 +5702,7 @@ function hmTitle(e){
   const cancelled = e.STATUS === "Zrušená"
   return `<div class="hm-title">
     <a class="${cancelled ? "hm-cancel" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</a>
-    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}</small>`}
+    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}${hmIsPast(e) ? " · proběhlo" : ""}</small>`}
   </div>`
 }
 
@@ -5723,7 +5729,7 @@ function heatmapMobileHtml(events, members, lookup){
       }).join("")
       body = `<div class="hm-bar" role="img" aria-label="Přijde ${c.y}, možná ${c.m}, nepřijde ${c.n}, bez odpovědi ${c.u}">${seg}</div><div class="hm-voices">${voices}</div>`
     }
-    return `<div class="hm-event ${cancelled ? "hm-off" : ""}">
+    return `<div class="hm-event ${cancelled ? "hm-off" : ""} ${hmIsPast(e) ? "hm-past" : ""}">
       <div class="hm-head">${hmDateChip(e)}${hmTitle(e)}${cancelled ? "" : `<div class="hm-count" aria-label="${c.y} z ${members.length} přijde"><b>${c.y}</b><small>/${members.length}</small></div>`}</div>
       ${body}
     </div>`
@@ -5744,7 +5750,7 @@ function heatmapDesktopHtml(events, members, lookup){
       return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
     }).join("")).join("")
     const cancelled = e.STATUS === "Zrušená"
-    return `<tr class="${cancelled ? "hm-off" : ""}"><th class="hm-ev" scope="row">${hmDateChip(e)}${hmTitle(e)}</th>${cells}<td class="hm-sum hm-sep">${cancelled ? "" : `<b>${c.y}</b><small>/${members.length}</small>${c.m ? `<em>+${c.m}?</em>` : ""}`}</td></tr>`
+    return `<tr class="${cancelled ? "hm-off" : ""} ${hmIsPast(e) ? "hm-past" : ""}"><th class="hm-ev" scope="row">${hmDateChip(e)}${hmTitle(e)}</th>${cells}<td class="hm-sum hm-sep">${cancelled ? "" : `<b>${c.y}</b><small>/${members.length}</small>${c.m ? `<em>+${c.m}?</em>` : ""}`}</td></tr>`
   }).join("")
   return `<div class="hm-scroll"><table class="hm-table"><thead><tr>${head1}</tr><tr>${head2}</tr></thead><tbody>${rows}</tbody></table></div>${hmLegend()}`
 }
@@ -5853,7 +5859,7 @@ async function renderHeatmap(){
     const filtered = events.filter(e => {
      const d = new Date(e.DATE)
      d.setHours(0,0,0,0)
-     return d.getFullYear() === year && d.getMonth() + 1 === month && d >= today
+     return d.getFullYear() === year && d.getMonth() + 1 === month
    }).sort((a, b) => new Date(a.DATE) - new Date(b.DATE))
 
     const monthName = new Date(year, month - 1, 1).toLocaleDateString("cs-CZ", {month: "long", year: "numeric"})

@@ -5,6 +5,7 @@ Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor,
 
 ## 4.0.1 (3. 11. 2026)
 - Aktivita člena v docházce se počítá za aktuální kalendářní rok, ne z celé historie. 1. ledna se počítá znovu od nuly. Člen, který nastoupil během roku („V 10men působí od“), se počítá od data nástupu. V okně je u aktivity uvedeno „v roce 2026“, popř. „od 15. 10. 2026“.
+- Docházka skupiny: zpětně se zobrazují i proběhlé akce daného měsíce (dřív jen budoucí). Jsou zašedlé a u data je „proběhlo“, ale stav členů zůstává čitelný, aby šla docházka a aktivita zkontrolovat. Měsíc se přepíná stejným posuvným přepínačem.
 
 ## 3.18.0 (3. 11. 2026)
 - Správa členů: nová kolonka „V 10men působí od“ (datum) při přidání i úpravě člena. Člen ji vidí v Nastavení mezi osobními údaji.

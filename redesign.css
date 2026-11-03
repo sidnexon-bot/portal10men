@@ -1389,3 +1389,7 @@ html[data-platform] body .hm-cell { width: 32px !important; height: 32px !import
 .hm-act-bar i.hm-y { background: var(--hm-y); } .hm-act-bar i.hm-m { background: var(--hm-m); } .hm-act-bar i.hm-n { background: var(--hm-n); }
 .hm-act small { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
 #hmModal .btn-group { margin-top: 18px; }
+
+/* proběhlé akce: zašedlé, ale čitelné, aby šla docházka zpětně zkontrolovat */
+.hm-past .hm-date, .hm-past .hm-title, .hm-past .hm-count { opacity: .6; }
+.hm-past .hm-bar, .hm-past .hm-dots, .hm-past .hm-cell, .hm-past .hm-sum { opacity: .72; filter: saturate(.6); }
