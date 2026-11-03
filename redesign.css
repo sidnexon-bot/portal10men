@@ -1393,3 +1393,28 @@ html[data-platform] body .hm-cell { width: 32px !important; height: 32px !import
 /* proběhlé akce: zašedlé, ale čitelné, aby šla docházka zpětně zkontrolovat */
 .hm-past .hm-date, .hm-past .hm-title, .hm-past .hm-count { opacity: .6; }
 .hm-past .hm-bar, .hm-past .hm-dots, .hm-past .hm-cell, .hm-past .hm-sum { opacity: .72; filter: saturate(.6); }
+
+/* odškrtnutí docházky (administrátor) */
+.hm-link { color: var(--accent, #007aff); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.att-admin { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--hair, rgba(60,60,67,.12)); }
+.att-sum { display: flex; align-items: baseline; gap: 4px; margin: 14px 0 6px; font-variant-numeric: tabular-nums; }
+.att-sum b { font-size: 28px; font-weight: 700; color: var(--hm-y); } .att-sum small { font-size: 13px; color: var(--muted); }
+.att-quick { margin-left: auto; display: flex; gap: 6px; }
+.att-quick button { min-height: 0 !important; padding: 5px 11px !important; font-size: 12px !important; border-radius: 999px !important; }
+.att-group { margin-top: 12px; }
+.att-gh { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding-bottom: 4px; }
+.att-gh b { color: var(--text); font-size: 14px; } .att-gh small { color: var(--muted); font-weight: 500; }
+html[data-platform] body .att-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px !important; padding: 6px 4px !important; border: 0; border-top: 1px solid var(--hair, rgba(60,60,67,.1)); border-radius: 0 !important; background: transparent !important; box-shadow: none !important; background-image: none !important; color: var(--text) !important; text-align: left; font-weight: 500; transform: none; justify-content: flex-start; }
+.att-box { flex: none; width: 24px; height: 24px; border-radius: 8px; box-sizing: border-box; border: 2px solid color-mix(in srgb, var(--muted) 70%, transparent); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; line-height: 1; color: #fff; transition: background .15s ease, border-color .15s ease; }
+.att-row.on .att-box { background: var(--hm-y); border-color: var(--hm-y); }
+.att-name { flex: 1; min-width: 0; font-size: 15px; }
+.att-decl { flex: none; font-size: 11px; color: var(--muted); }
+#attModal { --hm-y: #34c759; --hm-m: #ff9f0a; --hm-n: #ff3b30; --hm-u: #8e8e93; }
+body.dark #attModal { --hm-y: #30d158; }
+
+/* okno odškrtnutí: záhlaví a tlačítka zůstávají vidět, seznam se posouvá */
+.modal-content.att-content { display: flex; flex-direction: column; max-height: 90vh; max-height: min(90vh, 90dvh); overflow: hidden; }
+#attModalBody { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.att-head { flex: none; }
+.att-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px; }
+.att-foot { flex: none; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--hair, rgba(60,60,67,.12)); }

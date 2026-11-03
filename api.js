@@ -123,6 +123,7 @@ async function getEvents(){
     DOC_URL:          e.doc_url || "",
     REQUIRES_PROGRAM: e.requires_program !== false,
     IS_TEMPLATE:      e.is_template === true,
+    ATTENDANCE_FINAL: e.attendance_final === true,
     TEMPLATE_ID:      e.template_id     || "",
     RECURRENCE_TYPE:  e.recurrence_type || "",
     SRAZ:             e.sraz           || "",
@@ -167,7 +168,8 @@ async function getEventDetail(id){
         VOICE:      m.voice || "",
         STATUS:     d.status || "",
         REASON:     d.reason || "",
-        UPDATED_AT: d.updated_at || ""
+        UPDATED_AT: d.updated_at || "",
+        ACTUAL:     d.actual || ""
       }
     })
     .sort((a, b) => {
@@ -205,6 +207,8 @@ async function getEventDetail(id){
       NOTE:            akce.note,
       TYPE:            akce.type          || "Zkouška",
       STATUS:          akce.status,
+      ATTENDANCE_FINAL:    akce.attendance_final === true,
+      ATTENDANCE_FINAL_AT: akce.attendance_final_at || "",
       DOC_URL:         akce.doc_url       || "",
       REQUIRES_PROGRAM: akce.requires_program !== false,
       TEMPLATE_ID:     akce.template_id   || "",
@@ -256,6 +260,37 @@ async function setAttendance(params){
   return {status: "saved"}
 }
 
+/* Odškrtnutí docházky (jen administrátor v aplikaci): skutečná účast se ukládá zvlášť (actual = yes / no),
+   původní „Přijdu / Možná / Nepřijdu“ zůstává beze změny. Po potvrzení má akce attendance_final = true
+   a statistiky (aktivita) se řídí skutečnou účastí. Chybějící záznamy člena se doplní. */
+async function finalizeAttendance(params){
+  const id      = params.event
+  const present = new Set((params.present || []).map(e => String(e).toLowerCase()))
+  const members = await dbGet("/members")
+  const dochazka = objToArray(await dbGet("/dochazka"))
+  const now = new Date().toISOString()
+
+  const memberList = objToArray(members).filter(m => (m.role || "").toUpperCase() !== "GUEST")
+  for(const m of memberList){
+    const actual = present.has(String(m.email).toLowerCase()) ? "yes" : "no"
+    const existing = dochazka.find(d => d.id_akce === id && d.email === m.email)
+    const patch = { actual, actual_by: params.by || "", actual_at: now }
+    if(existing){
+      await dbUpdate("/dochazka/" + existing.id, patch)
+    }else{
+      const dRef = push(ref(DB, "/dochazka"))
+      await dbSet("/dochazka/" + dRef.key, { id: dRef.key, id_akce: id, email: m.email, status: "", reason: "", updated_by: "", updated_at: "", ...patch })
+    }
+  }
+  await dbUpdate("/akce/" + id, { attendance_final: true, attendance_final_by: params.by || "", attendance_final_at: now })
+  return {status: "finalized", present: present.size}
+}
+
+async function reopenAttendance(params){
+  await dbUpdate("/akce/" + params.event, { attendance_final: false })
+  return {status: "reopened"}
+}
+
 async function getMyAttendance(email){
   const dochazka = await dbGet("/dochazka")
   const map = {}
@@ -275,7 +310,7 @@ async function getHeatmap(){
   return {
     events: objToArray(akce)
       .filter(e => !e.is_template)
-      .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, DATE_END: e.date_end || "", STATUS: e.status || ""})),
+      .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, DATE_END: e.date_end || "", STATUS: e.status || "", FINAL: e.attendance_final === true})),
     members: objToArray(members)
       .filter(m => (m.role || "").toUpperCase() !== "GUEST")
       .map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice, SINCE: m.since || ""})),
@@ -283,7 +318,8 @@ async function getHeatmap(){
       ID_AKCE: d.id_akce,
       EMAIL:   d.email,
       STATUS:  d.status || "",
-      REASON:  d.reason || ""
+      REASON:  d.reason || "",
+      ACTUAL:  d.actual || ""
     }))
   }
 }
@@ -1305,6 +1341,8 @@ async function api(action, params = {}){
     case "events":           return await getEvents()
     case "eventdetail":      return await getEventDetail(params.id)
     case "setattendance":    return await setAttendance(params)
+    case "finalizeattendance": return await finalizeAttendance(params)
+    case "reopenattendance":   return await reopenAttendance(params)
     case "myattendance":     return await getMyAttendance(params.email)
     case "heatmap":          return await getHeatmap()
     case "addevent":         return await addEvent(params)

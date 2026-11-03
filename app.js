@@ -2863,10 +2863,18 @@ async function openEvent(id){
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
     const myReason = myRow?.REASON || ""
-    const yes   = attendance.filter(a => a.STATUS === "Přijdu").length
-    const maybe = attendance.filter(a => a.STATUS === "Možná").length
-    const no    = attendance.filter(a => a.STATUS === "Nepřijdu").length
-    const open  = attendance.filter(a => !a.STATUS).length
+    const fin   = event.ATTENDANCE_FINAL === true   // docházka potvrzená administrátorem: platí skutečná účast
+    const eff   = a => fin ? (a.ACTUAL === "yes" ? "Přijdu" : "Nepřijdu") : a.STATUS
+    const yes   = attendance.filter(a => eff(a) === "Přijdu").length
+    const maybe = attendance.filter(a => eff(a) === "Možná").length
+    const no    = attendance.filter(a => eff(a) === "Nepřijdu").length
+    const open  = attendance.filter(a => !eff(a)).length
+    const startedAlready = new Date(event.DATE) <= new Date(new Date().setHours(23,59,59,999))
+    const attAdminHtml = (MEMBER_ROLE === "ADMIN" && event.STATUS !== "Zrušená" && startedAlready) ? `
+        <div class="att-admin">
+          ${fin ? `<div class="small" style="margin-bottom:8px">✓ Docházka potvrzena${event.ATTENDANCE_FINAL_AT ? " " + escapeHtml(formatDate(event.ATTENDANCE_FINAL_AT)) : ""}. Do statistik se počítá skutečná účast.</div>` : `<div class="small" style="margin-bottom:8px">Označ, kdo opravdu přišel. Potvrzená docházka platí do statistik místo toho, co si členové zadali.</div>`}
+          <div class="btn-group" data-ar-skip><button class="${fin ? "" : "btn-primary"}" onclick="openAttendanceCheck('${id}')">${fin ? "Upravit docházku" : "Odškrtnout docházku"}</button></div>
+        </div>` : ""
     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
     const statusText  = myStatus || "Nevyplněno"
 
@@ -2896,22 +2904,25 @@ async function openEvent(id){
         </div>
       ` : `<div class="muted">Vyber člena</div>`}
       <div style="margin-top:12px">
+        ${attAdminHtml}
         <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-          <span class="small">✓ Přijdu: <b>${yes}</b></span>
-          <span class="small">? Možná: <b>${maybe}</b></span>
-          <span class="small">✗ Nepřijdu: <b>${no}</b></span>
-          <span class="small">— Nevyplněno: <b>${open}</b></span>
+          <span class="small">✓ ${fin ? "Přišlo" : "Přijdu"}: <b>${yes}</b></span>
+          ${fin ? "" : `<span class="small">? Možná: <b>${maybe}</b></span>`}
+          <span class="small">✗ ${fin ? "Nepřišlo" : "Nepřijdu"}: <b>${no}</b></span>
+          ${fin ? "" : `<span class="small">— Nevyplněno: <b>${open}</b></span>`}
         </div>
         ${attendance.map(a => {
-          const icon  = a.STATUS === "Přijdu"   ? iconCheck() :
-                        a.STATUS === "Možná"    ? iconMaybe() :
-                        a.STATUS === "Nepřijdu" ? iconClose() : iconQuestion()
-          const color = a.STATUS === "Přijdu"   ? "#34c759" :
-                        a.STATUS === "Možná"    ? "#ff9f0a" :
-                        a.STATUS === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
+          const st    = eff(a)
+          const icon  = st === "Přijdu"   ? iconCheck() :
+                        st === "Možná"    ? iconMaybe() :
+                        st === "Nepřijdu" ? iconClose() : iconQuestion()
+          const color = st === "Přijdu"   ? "#34c759" :
+                        st === "Možná"    ? "#ff9f0a" :
+                        st === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
           return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
             <span class="icon" style="color:${color}">${icon}</span>
             ${escapeHtml(a.NAME)}
+            ${fin && a.STATUS && a.STATUS !== st ? `<span style="color:#999"> · přihlášen(a): ${escapeHtml(a.STATUS)}</span>` : ""}
             ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
           </div>`
         }).join("")}
@@ -5673,8 +5684,15 @@ function hmGroups(members){
   return groups   // členové bez hlasu (1./2. tenor, 1./2. bas) se do docházky nezapočítávají
 }
 
+// u akce s potvrzenou docházkou (FINAL) platí skutečná účast: přišel = y, nepřišel = n; jinak to, co člen sám zadal
 function hmKey(lookup, e, m){
-  return HM_STATUS[lookup[e.ID + "_" + m.EMAIL]?.status || ""] || "u"
+  const entry = lookup[e.ID + "_" + m.EMAIL] || {}
+  if(e.FINAL) return entry.actual === "yes" ? "y" : "n"
+  return HM_STATUS[entry.status || ""] || "u"
+}
+
+function hmLabel(e, k){
+  return e.FINAL ? ({ y: "Přišel(a)", n: "Nepřišel(a)" }[k] || HM_LABEL[k]) : HM_LABEL[k]
 }
 
 function hmCounts(e, members, lookup){
@@ -5702,7 +5720,7 @@ function hmTitle(e){
   const cancelled = e.STATUS === "Zrušená"
   return `<div class="hm-title">
     <a class="${cancelled ? "hm-cancel" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</a>
-    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}${hmIsPast(e) ? " · proběhlo" : ""}</small>`}
+    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}${hmIsPast(e) ? " · proběhlo" : ""}${e.FINAL ? " · docházka potvrzena" : hmIsPast(e) && MEMBER_ROLE === "ADMIN" ? ` · <span class="hm-link" onclick="openAttendanceCheck('${escapeHtml(e.ID)}')">odškrtnout docházku</span>` : ""}</small>`}
   </div>`
 }
 
@@ -5723,7 +5741,7 @@ function heatmapMobileHtml(events, members, lookup){
         const dots = g.list.map(m => {
           const k = hmKey(lookup, e, m)
           const initials = m.NAME.split(" ").map(n => n[0]).join("")
-          return `<button type="button" class="hm-dot hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m)}>${escapeHtml(initials)}</button>`
+          return `<button type="button" class="hm-dot hm-${k}" title="${escapeHtml(m.NAME)}: ${hmLabel(e, k).toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${hmLabel(e, k)}" ${hmClick(e, m)}>${escapeHtml(initials)}</button>`
         }).join("")
         return `<div class="hm-voice"><div class="hm-vh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${yes}<small>/${g.list.length}</small></b></div><div class="hm-dots">${dots}</div></div>`
       }).join("")
@@ -5747,7 +5765,7 @@ function heatmapDesktopHtml(events, members, lookup){
     const c = hmCounts(e, members, lookup)
     const cells = groups.map((g, i) => g.list.map((m, j) => {
       const k = hmKey(lookup, e, m)
-      return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${HM_LABEL[k].toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${HM_LABEL[k]}" ${hmClick(e, m)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
+      return `<td class="${i && !j ? "hm-sep" : ""}"><button type="button" class="hm-cell hm-${k}" title="${escapeHtml(m.NAME)}: ${hmLabel(e, k).toLowerCase()}" aria-label="${escapeHtml(m.NAME)}: ${hmLabel(e, k)}" ${hmClick(e, m)}>${{ y: "✓", m: "?", n: "✕", u: "" }[k]}</button></td>`
     }).join("")).join("")
     const cancelled = e.STATUS === "Zrušená"
     return `<tr class="${cancelled ? "hm-off" : ""} ${hmIsPast(e) ? "hm-past" : ""}"><th class="hm-ev" scope="row">${hmDateChip(e)}${hmTitle(e)}</th>${cells}<td class="hm-sum hm-sep">${cancelled ? "" : `<b>${c.y}</b><small>/${members.length}</small>${c.m ? `<em>+${c.m}?</em>` : ""}`}</td></tr>`
@@ -5767,7 +5785,10 @@ function hmActivity(member, events, lookup){
   const bySince = !!(since && since > yearStart)
   const from = bySince ? since : yearStart
   const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today && new Date(e.DATE) >= from)
-  const yes = past.filter(e => lookup[e.ID + "_" + member.EMAIL]?.status === "Přijdu").length
+  const yes = past.filter(e => {
+    const entry = lookup[e.ID + "_" + member.EMAIL] || {}
+    return e.FINAL ? entry.actual === "yes" : entry.status === "Přijdu"   // potvrzená docházka má přednost před tím, co člen zadal
+  }).length
   const pct = past.length ? Math.round(yes / past.length * 100) : null
   const cls = pct === null ? "u" : pct <= 30 ? "n" : pct <= 65 ? "m" : "y"
   return { pct, cls, yes, total: past.length, from, bySince, year: today.getFullYear() }
@@ -5793,7 +5814,7 @@ function heatmapDetail(eventId, email){
   const event  = d.events.find(e => e.ID === eventId)
   if(!member || !event) return
   const entry = d.lookup[eventId + "_" + email] || {}
-  const k = HM_STATUS[entry.status || ""] || "u"
+  const k = hmKey(d.lookup, event, member)
   const when  = e => `${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}`
   const short = e => new Date(e.DATE).toLocaleDateString("cs-CZ", {weekday: "short", day: "numeric", month: "numeric"})
 
@@ -5801,8 +5822,8 @@ function heatmapDetail(eventId, email){
   const next = sorted.filter(e => e.ID !== eventId && new Date(e.DATE) >= new Date(event.DATE) && !(e.DATE === event.DATE && e.ID < eventId)).slice(0, 2)
   const nextHtml = next.length
     ? next.map(e => {
-        const kk = HM_STATUS[d.lookup[e.ID + "_" + email]?.status || ""] || "u"
-        return `<div class="hm-next-row"><span>${escapeHtml(e.NAME)} · ${escapeHtml(short(e))}</span><i class="hm-chip hm-${kk}">${HM_LABEL[kk]}</i></div>`
+        const kk = hmKey(d.lookup, e, member)
+        return `<div class="hm-next-row"><span>${escapeHtml(e.NAME)} · ${escapeHtml(short(e))}</span><i class="hm-chip hm-${kk}">${hmLabel(e, kk)}</i></div>`
       }).join("")
     : `<div class="hm-next-row"><span>Žádná další akce v plánu</span></div>`
 
@@ -5817,9 +5838,10 @@ function heatmapDetail(eventId, email){
   document.getElementById("hmModalBody").innerHTML = `
     <div class="hm-dlg-name">${escapeHtml(member.NAME)}${member.VOICE ? `<small>${escapeHtml(hmVoiceName(member.VOICE))}</small>` : ""}</div>
     <div class="hm-dlg-main hm-${k}">
-      <i class="hm-chip hm-${k}">${HM_LABEL[k]}</i>
-      <div><b>${escapeHtml(event.NAME)}</b><small>${escapeHtml(when(event))}</small></div>
+      <i class="hm-chip hm-${k}">${hmLabel(event, k)}</i>
+      <div><b>${escapeHtml(event.NAME)}</b><small>${escapeHtml(when(event))}${event.FINAL ? " · docházka potvrzena" : ""}</small></div>
     </div>
+    ${event.FINAL && entry.status && HM_STATUS[entry.status] !== k ? `<div class="hm-reason">Přihlásil(a) se: ${escapeHtml(entry.status)}</div>` : ""}
     ${entry.reason ? `<div class="hm-reason">Důvod: ${escapeHtml(entry.reason)}</div>` : ""}
     <div class="hm-next"><div class="hm-next-h">Další akce</div>${nextHtml}</div>
     ${actHtml}`
@@ -5828,6 +5850,135 @@ function heatmapDetail(eventId, email){
 
 function closeHeatmapDetail(){
   document.getElementById("hmModal")?.classList.add("hidden")
+}
+
+/* ===============================
+   ODŠKRTNUTÍ DOCHÁZKY (jen ADMIN)
+   Administrátor po akci označí, kdo opravdu přišel, a uloží to jako finální stav. Skutečná účast se ukládá zvlášť
+   (dochazka/actual), původní odpovědi členů zůstávají. Statistiky (aktivita) pak berou skutečnou účast.
+================================ */
+
+function ensureAttModal(){
+  let m = document.getElementById("attModal")
+  if(m) return m
+  m = document.createElement("div")
+  m.id = "attModal"
+  m.className = "modal hidden"
+  m.innerHTML = `<div class="modal-backdrop" onclick="closeAttendanceCheck()"></div>
+    <div class="modal-content att-content" style="max-width:480px"><div id="attModalBody"></div></div>`
+  document.body.appendChild(m)
+  return m
+}
+
+const ATT_DECLARED = { "Přijdu": "slíbil(a)", "Možná": "možná", "Nepřijdu": "nepřijde" }
+
+function attRender(){
+  const c = window.ATT_CHECK
+  if(!c) return
+  const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+  const groups = voiceOrder.map(v => ({ voice: v, list: c.att.filter(a => a.VOICE === v) })).filter(g => g.list.length)
+  const total = groups.reduce((n, g) => n + g.list.length, 0)
+  const present = groups.reduce((n, g) => n + g.list.filter(a => c.checked.has(a.EMAIL)).length, 0)
+  const rows = groups.map(g => {
+    const here = g.list.filter(a => c.checked.has(a.EMAIL)).length
+    return `<div class="att-group"><div class="att-gh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${here}<small>/${g.list.length}</small></b></div>
+      ${g.list.map(a => {
+        const on = c.checked.has(a.EMAIL)
+        return `<button type="button" class="att-row ${on ? "on" : ""}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${escapeHtml(a.EMAIL)}')">
+          <span class="att-box" aria-hidden="true">${on ? "✓" : ""}</span>
+          <span class="att-name">${escapeHtml(a.NAME)}</span>
+          <small class="att-decl">${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small>
+        </button>`
+      }).join("")}</div>`
+  }).join("")
+  document.getElementById("attModalBody").innerHTML = `
+    <div class="att-head">
+      <div class="hm-dlg-name">Odškrtnout docházku<small>${escapeHtml(c.event.NAME)} · ${escapeHtml(formatDate(c.event.DATE))}</small></div>
+      <div class="att-sum"><b>${present}</b><small>/${total} přišlo</small>
+        <span class="att-quick"><button type="button" onclick="attMark('promised')">Podle slibů</button><button type="button" onclick="attMark('none')">Nikdo</button></span></div>
+    </div>
+    <div class="att-scroll">${rows}</div>
+    <div class="att-foot">
+      <div class="btn-group" data-ar-skip>
+        <button class="btn-primary" onclick="saveAttendanceCheck()">Uložit jako finální</button>
+        <button onclick="closeAttendanceCheck()">Zrušit</button>
+      </div>
+      ${c.event.ATTENDANCE_FINAL ? `<div class="btn-group" data-ar-skip style="margin-top:8px"><button class="btn-danger" onclick="reopenAttendanceCheck()">Zrušit potvrzení docházky</button></div>` : ""}
+    </div>`
+}
+
+async function openAttendanceCheck(id){
+  if(MEMBER_ROLE !== "ADMIN") return
+  try{
+    const d = await api("eventdetail", {id})
+    const att = d.attendance || []
+    const fin = d.event.ATTENDANCE_FINAL === true
+    window.ATT_CHECK = {
+      id, event: d.event, att,
+      checked: new Set(att.filter(a => fin ? a.ACTUAL === "yes" : a.STATUS === "Přijdu").map(a => a.EMAIL))
+    }
+    ensureAttModal()
+    attRender()
+    document.getElementById("attModal").classList.remove("hidden")
+  }catch(err){
+    alert("Docházku se nepodařilo načíst: " + (err?.message || err))
+  }
+}
+
+function toggleAttendanceRow(email){
+  const c = window.ATT_CHECK
+  if(!c) return
+  c.checked.has(email) ? c.checked.delete(email) : c.checked.add(email)
+  attRender()
+}
+
+function attMark(mode){
+  const c = window.ATT_CHECK
+  if(!c) return
+  c.checked = new Set(mode === "promised" ? c.att.filter(a => a.STATUS === "Přijdu").map(a => a.EMAIL) : [])
+  attRender()
+}
+
+function closeAttendanceCheck(){
+  document.getElementById("attModal")?.classList.add("hidden")
+}
+
+function afterAttendanceChange(id, msg){
+  invalidateCache("eventdetail", id)
+  lsDel("heatmap")
+  lsDel("events")
+  hideSaving(msg)
+  if(document.getElementById("heatmap-container")) refreshHeatmap()
+  if(ACTIVE_DETAIL_ID === id) openEvent(id)
+}
+
+async function saveAttendanceCheck(){
+  const c = window.ATT_CHECK
+  if(!c || MEMBER_ROLE !== "ADMIN") return
+  try{
+    closeAttendanceCheck()
+    showSaving()
+    await api("finalizeattendance", {event: c.id, present: [...c.checked], by: MEMBER_EMAIL})
+    afterAttendanceChange(c.id, "Docházka potvrzena ✓")
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba při ukládání docházky: " + (err?.message || err))
+  }
+}
+
+async function reopenAttendanceCheck(){
+  const c = window.ATT_CHECK
+  if(!c || MEMBER_ROLE !== "ADMIN") return
+  if(!confirm("Zrušit potvrzení docházky? Statistiky se pak znovu počítají podle toho, co členové zadali.")) return
+  try{
+    closeAttendanceCheck()
+    showSaving()
+    await api("reopenattendance", {event: c.id})
+    afterAttendanceChange(c.id, "Potvrzení zrušeno ✓")
+  }catch(err){
+    hideSaving("Chyba ✗")
+    alert("Chyba: " + (err?.message || err))
+  }
 }
 
 async function renderHeatmap(){
@@ -5866,7 +6017,7 @@ async function renderHeatmap(){
 
     const lookup = {}
     rows.forEach(r => {
-      lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || ""}
+      lookup[r.ID_AKCE + "_" + r.EMAIL] = {status: r.STATUS || "", reason: r.REASON || "", actual: r.ACTUAL || ""}
     })
     window.HM_DATA = { events, members, lookup }   // pro okno s podrobnostmi člena (heatmapDetail)
 
@@ -6448,6 +6599,12 @@ window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext
 window.heatmapInfo          = heatmapInfo
 window.heatmapDetail        = heatmapDetail
+window.openAttendanceCheck  = openAttendanceCheck
+window.toggleAttendanceRow  = toggleAttendanceRow
+window.attMark              = attMark
+window.closeAttendanceCheck = closeAttendanceCheck
+window.saveAttendanceCheck  = saveAttendanceCheck
+window.reopenAttendanceCheck = reopenAttendanceCheck
 window.closeHeatmapDetail   = closeHeatmapDetail
 window.eventsMonthPrev      = eventsMonthPrev
 window.eventsMonthNext      = eventsMonthNext
