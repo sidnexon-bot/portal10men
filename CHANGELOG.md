@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 3.18.0 (3. 11. 2026)
+- Správa členů: nová kolonka „V 10men působí od“ (datum) při přidání i úpravě člena. Člen ji vidí v Nastavení mezi osobními údaji.
+- Aktivita v okně člena (Docházka skupiny) počítá jen proběhlé akce od tohoto data, takže nepenalizuje členy, kteří nastoupili během roku. Bez vyplněného data se počítají všechny akce jako dosud; u započtených se v textu ukáže „od 15. 10. 2026“.
+- Oprava: formulář „Nový člen“ se odkazoval na neexistující proměnnou (Discord ID) a mohl se při otevření zhroutit.
+
 ## 3.17.0 (3. 11. 2026)
 - Docházka skupiny: kuličky členů mají pevný rozměr (na dotykových displejích je dřív roztahovalo pravidlo pro tlačítka s onclick „heatmap…“).
 - Klepnutí na člena otevře okno místo systémového upozornění: jméno a příjmení, účast na vybrané akci (s důvodem), stav na další dvě akce menším písmem a aktivita v procentech (podíl proběhlých akcí, na které člen potvrdil „Přijdu“; zrušené se nepočítají). 0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně.

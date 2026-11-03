@@ -81,7 +81,7 @@ const fmtBirth = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ""); ret
 function me() {
   const u = user() || {}, list = window.MEMBERS || []
   const m = list.find(x => (x.EMAIL || x.email || "").toLowerCase() === String(u.email || "").toLowerCase()) || {}
-  return { name: m.NAME || m.name || u.name || "", voice: m.VOICE || m.voice || "", role: (m.ROLE || m.role || u.role || "").toUpperCase(), email: u.email || "" }
+  return { name: m.NAME || m.name || u.name || "", voice: m.VOICE || m.voice || "", role: (m.ROLE || m.role || u.role || "").toUpperCase(), email: u.email || "", since: m.SINCE || m.since || "" }
 }
 const ROLE_CS = { ADMIN: "Administrátor (ADMIN)", OWNER: "Vlastník (Owner)", MEMBER: "Člen (MEMBER)", ART: "Umělecký vedoucí (ART)", GUEST: "Host (GUEST)" }
 
@@ -108,7 +108,7 @@ function pageHtml() {
   const m = me()
   const p = priv
   const personal = `<div class="card st-card"><p class="st-hint" style="margin-top:0">Údaje jsou jen pro čtení. Změnu nebo doplnění ti udělá administrátor.</p>
-    ${infoRow("Jméno a příjmení", m.name)}${infoRow("Datum narození", p ? fmtBirth(p.birth) : "")}${infoRow("Adresa", p ? p.address : "")}${infoRow("Hlas", m.voice)}${infoRow("Uživatelská role", ROLE_CS[m.role] || m.role)}
+    ${infoRow("Jméno a příjmení", m.name)}${infoRow("Datum narození", p ? fmtBirth(p.birth) : "")}${infoRow("Adresa", p ? p.address : "")}${infoRow("Hlas", m.voice)}${infoRow("V 10men působí od", m.since ? fmtBirth(m.since) : "")}${infoRow("Uživatelská role", ROLE_CS[m.role] || m.role)}
     <div class="st-sub">Platební údaje</div>${infoRow("Číslo účtu", p ? p.bank : "")}</div>`
   return `<div class="st-wrap"><button type="button" class="st-back" data-back="1">${ICON.back}<span>Zpět</span></button><h2 class="st-title">Nastavení</h2><h3 class="st-h">Přizpůsobit</h3>
     <div class="card st-card"><div class="event-label">Vzhled</div><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">Výchozí režim</div><div class="st-desc">Světlý, tmavý, nebo podle nastavení telefonu či počítače. Platí na všech tvých zařízeních.</div></div><div class="st-seg" role="radiogroup" aria-label="Výchozí režim">${seg}</div></div></div>

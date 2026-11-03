@@ -101,7 +101,8 @@ async function getMembers(){
     DISCORD_ID: m.discord_id || "",
     VOICE: m.voice || "",
     ROLE:  m.role  || "MEMBER",
-    PHONE: m.phone || ""
+    PHONE: m.phone || "",
+    SINCE: m.since || ""
   }))
 }
 
@@ -277,7 +278,7 @@ async function getHeatmap(){
       .map(e => ({ID: e.id, NAME: e.name, DATE: e.date, DATE_END: e.date_end || "", STATUS: e.status || ""})),
     members: objToArray(members)
       .filter(m => (m.role || "").toUpperCase() !== "GUEST")
-      .map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice})),
+      .map(m => ({EMAIL: m.email, NAME: m.name, VOICE: m.voice, SINCE: m.since || ""})),
     rows:    objToArray(dochazka).map(d => ({
       ID_AKCE: d.id_akce,
       EMAIL:   d.email,
@@ -1186,20 +1187,23 @@ async function addMember(params){
     discord_id: params.discord_id || "",
     voice: params.voice || "",
     role:  params.role  || "MEMBER",
-    phone: params.phone || ""
+    phone: params.phone || "",
+    since: params.since || ""
   })
   return {status: "created", id}
 }
 
 async function updateMember(params){
-  await dbUpdate("/members/" + params.id, {
+  const data = {
     name:  params.name  || "",
     email: params.email || "",
     discord_id: params.discord_id || "",
     voice: params.voice || "",
     role:  params.role  || "MEMBER",
     phone: params.phone || ""
-  })
+  }
+  if(params.since !== undefined) data.since = params.since || ""   // starší klient pole neposílá, ať ho nepřepíše
+  await dbUpdate("/members/" + params.id, data)
   return {status: "updated"}
 }
 

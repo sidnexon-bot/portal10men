@@ -3820,10 +3820,11 @@ async function openAddMember(){
   openFormModal("Nový člen", [
     {key: "name",  label: "Jméno",  type: "text"},
     {key: "email", label: "Email",  type: "text"},
-    {key: "discord_id", label: "Discord ID", type: "text", value: m.DISCORD_ID || ""}, 
+    {key: "discord_id", label: "Discord ID", type: "text"},
     {key: "phone", label: "Telefon", type: "text"},
     {key: "voice", label: "Hlas", type: "select", value: "1. TENOR", options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
-    {key: "role",  label: "Role", type: "select", value: "MEMBER", options: ["MEMBER", "ADMIN", "ART", "GUEST"]}
+    {key: "role",  label: "Role", type: "select", value: "MEMBER", options: ["MEMBER", "ADMIN", "ART", "GUEST"]},
+    {key: "since", label: "V 10men působí od", type: "date"}
   ], async (values) => {
     if(!values.name)  { alert("Zadej jméno"); return }
     if(!values.email) { alert("Zadej email"); return }
@@ -3854,6 +3855,7 @@ async function openEditMember(id){
     {key: "phone", label: "Telefon", type: "text",   value: m.PHONE || ""},
     {key: "voice", label: "Hlas",   type: "select", value: m.VOICE, options: ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]},
     {key: "role",  label: "Role",   type: "select", value: m.ROLE,  options: ["MEMBER", "ADMIN", "ART", "GUEST"]},
+    {key: "since", label: "V 10men působí od", type: "date", value: m.SINCE || ""},
     {key: "birth",   label: "Datum narození (jen pro čtení u člena)", type: "date", value: priv.birth || ""},
     {key: "address", label: "Adresa", type: "text", value: priv.address || ""},
     {key: "bank",    label: "Číslo účtu", type: "text", value: priv.bank || "", placeholder: "123456789/0100"}
@@ -5751,11 +5753,13 @@ function heatmapDesktopHtml(events, members, lookup){
    (podíl proběhlých akcí, na které člen potvrdil „Přijdu“; zrušené se nepočítají). 0–30 % červeně, 31–65 % oranžově, 66–100 % zeleně. */
 function hmActivity(member, events, lookup){
   const today = new Date(); today.setHours(0, 0, 0, 0)
-  const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today)
+  const from = member.SINCE ? new Date(member.SINCE) : null   // akce před nástupem člena se nepočítají
+  if(from) from.setHours(0, 0, 0, 0)
+  const past = events.filter(e => e.STATUS !== "Zrušená" && new Date(e.DATE) < today && (!from || new Date(e.DATE) >= from))
   const yes = past.filter(e => lookup[e.ID + "_" + member.EMAIL]?.status === "Přijdu").length
   const pct = past.length ? Math.round(yes / past.length * 100) : null
   const cls = pct === null ? "u" : pct <= 30 ? "n" : pct <= 65 ? "m" : "y"
-  return { pct, cls, yes, total: past.length }
+  return { pct, cls, yes, total: past.length, from }
 }
 
 function ensureHmModal(){
@@ -5796,7 +5800,7 @@ function heatmapDetail(eventId, email){
     ? `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-u">–</b><small>zatím žádná proběhlá akce</small></div>`
     : `<div class="hm-act"><span class="hm-act-l">Aktivita</span><b class="hm-pct hm-${act.cls}">${act.pct} %</b>
         <div class="hm-act-bar"><i class="hm-${act.cls}" style="width:${act.pct}%"></i></div>
-        <small>přišel(a) na ${act.yes} z ${act.total} proběhlých akcí</small></div>`
+        <small>přišel(a) na ${act.yes} z ${act.total} proběhlých akcí${act.from ? " od " + act.from.toLocaleDateString("cs-CZ") : ""}</small></div>`
 
   ensureHmModal()
   document.getElementById("hmModalBody").innerHTML = `
