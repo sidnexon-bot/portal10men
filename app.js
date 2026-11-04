@@ -5884,14 +5884,18 @@ function attRender(){
     return `<div class="att-group"><div class="att-gh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${here}<small>/${g.list.length}</small></b></div>
       ${g.list.map(a => {
         const on = c.checked.has(a.EMAIL)
-        return `<button type="button" class="att-row ${on ? "on" : ""}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${escapeHtml(a.EMAIL)}')">
+        return `<button type="button" class="att-row ${on ? "on" : ""}" data-email="${escapeHtml(a.EMAIL)}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${escapeHtml(a.EMAIL)}')">
           <span class="att-box" aria-hidden="true">${on ? "✓" : ""}</span>
           <span class="att-name">${escapeHtml(a.NAME)}</span>
           <small class="att-decl">${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small>
         </button>`
       }).join("")}</div>`
   }).join("")
-  document.getElementById("attModalBody").innerHTML = `
+  // zaškrtnutí překreslí celé okno; polohu rolování seznamu (i okna) a zaměřený řádek je potřeba zachovat, jinak skočí nahoru
+  const body = document.getElementById("attModalBody"), card = body.closest(".att-content")
+  const listTop = body.querySelector(".att-scroll")?.scrollTop || 0, cardTop = card ? card.scrollTop : 0
+  const focused = document.activeElement?.closest?.(".att-row")?.dataset.email
+  body.innerHTML = `
     <div class="att-head">
       <div class="hm-dlg-name">Odškrtnout docházku<small>${escapeHtml(c.event.NAME)} · ${escapeHtml(formatDate(c.event.DATE))}</small></div>
       <div class="att-sum"><b>${present}</b><small>/${total} přišlo</small>
@@ -5905,6 +5909,10 @@ function attRender(){
       </div>
       ${c.event.ATTENDANCE_FINAL ? `<div class="btn-group" data-ar-skip style="margin-top:8px"><button class="btn-danger" onclick="reopenAttendanceCheck()">Zrušit potvrzení docházky</button></div>` : ""}
     </div>`
+  const list = body.querySelector(".att-scroll")
+  if(list) list.scrollTop = listTop
+  if(card) card.scrollTop = cardTop
+  if(focused) [...body.querySelectorAll(".att-row")].find(r => r.dataset.email === focused)?.focus({preventScroll: true})
 }
 
 async function openAttendanceCheck(id){
