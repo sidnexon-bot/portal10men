@@ -159,7 +159,7 @@ function marketingList(m){
     .map(t => ({
       id: t.id, datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", format: t.format || "",
       ucel: t.ucel || "", napad: t.napad || "", done: t.done === true, doneBy: t.done_by || "", doneAt: t.done_at || "",
-      zPlanu: !!t.z_planu
+      zPlanu: !!t.z_planu, draftId: t.draftId || "", draftStatus: t.draftStatus || "", doneVia: t.doneVia || "", edited: t.edited === true
     }))
     .sort((a, b) => (a.datum + a.cas).localeCompare(b.datum + b.cas) || a.id.localeCompare(b.id))
 }
@@ -176,7 +176,8 @@ async function setMarketingDone(params){
   await dbUpdate(path, {
     done:    params.done === true,
     done_by: params.done === true ? String(params.by || "") : "",
-    done_at: params.done === true ? new Date().toISOString() : ""
+    done_at: params.done === true ? new Date().toISOString() : "",
+    doneVia: params.done === true ? "rucne" : null
   })
   return {status: "updated"}
 }
@@ -196,7 +197,8 @@ async function saveMarketingTask(params){
   if(params.taskId && !old) throw new Error("Úkol už neexistuje")
   if(!(await dbGet("/akce/" + params.id + "/name"))) throw new Error("Akce nenalezena")
   await dbUpdate(path, {id, datum, cas, kanal, format: clip(params.format, 60), ucel, napad,
-    done: old ? old.done === true : false, z_planu: old ? (old.z_planu || null) : null})
+    done: old ? old.done === true : false, z_planu: old ? (old.z_planu || null) : null,
+    edited: old && old.z_planu ? true : null})   // upravený úkol z plánu se při dalším převodu z Marka nepřepíše
   return {status: "saved", id}
 }
 

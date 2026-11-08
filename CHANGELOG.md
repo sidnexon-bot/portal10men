@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.2.0 (9. 11. 2026)
+- Marketingový úkol je propojený s návrhem textu z Marka. U úkolu s kanálem Facebook, Instagram, Plakát nebo Newsletter se (členům s přístupem k Marketingu) zobrazí odkaz „Napsat s Markem“, který otevře Marka s vybranou akcí a kanálem a s předvyplněným zadáním z úkolu. Po vytvoření návrhu je u úkolu vidět jeho stav (Nový návrh, Rozpracováno, Ke schválení, Hotovo) a odkaz na návrh.
+- Když se návrh v Markovi přepne na Hotovo, úkol se sám odškrtne („schválený text z Marka“). Vrátí-li se návrh z Hotovo zpět, automatické odškrtnutí se zruší; ručně odškrtnutý úkol zůstane hotový. Kdo úkol vyřídil jinak než přes Marka, odškrtne ho ručně jako dosud.
+- Opakovaný převod plánu z Marka už nepřepíše úkol, který někdo upravil v 10base nebo který má návrh textu.
+
 ## 4.1.1 (8. 11. 2026)
 - Oprava: po odškrtnutí, úpravě nebo smazání úkolu v detailu akce (a při jakékoli změně akce od někoho jiného) aplikace vrátila uživatele ze seznamu do přehledu akcí a sbalila sekce. Otevřený detail se teď obnoví na místě: rozbalené sekce (Marketing, To-do list…) i pozice na stránce zůstanou a detail se nezakryje načítacím kolečkem.
 

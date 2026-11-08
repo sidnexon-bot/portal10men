@@ -2669,6 +2669,7 @@ async function openEvent(id){
     const attendance = data.attendance || []
     const mkTasks    = Array.isArray(event.MARKETING) ? event.MARKETING : []
     const mkEdit     = await mkCanEdit()
+    const mkAccess   = await mkHasMarketing()
 
     // --- HLAVIČKA ---
    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
@@ -2897,7 +2898,7 @@ async function openEvent(id){
     }
      
     // --- MARKETING (úkoly z plánu Marka) ---
-    html += renderMarketingHtml(id, event, mkTasks, mkEdit)
+    html += renderMarketingHtml(id, event, mkTasks, mkEdit, mkAccess)
 
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
@@ -3101,6 +3102,31 @@ const MK_KANALY = {
 }
 let MK_EDIT = null   // smí upravovat marketingové úkoly (ADMIN, ART, nebo člen v /marketingAccess)
 
+const MAREK_URL = "https://marek.10men.cz/"
+const MK_TEXT_KANALY = ["facebook", "instagram", "plakat", "newsletter"]   // kanály, pro které Marek umí napsat text
+const MK_DRAFT_STAV = {navrh: "Nový návrh", rozpracovano: "Rozpracováno", ke_schvaleni: "Ke schválení", hotovo: "Hotovo", archiv: "Archiv"}
+let MK_ACCESS = null   // člen je v /marketingAccess, tedy smí do Marka (Marek jinak vrátí 403)
+
+async function mkHasMarketing(){
+  if(MK_ACCESS === null){
+    try{ MK_ACCESS = (await api("mymarketingaccess")) === true }catch(e){ return false }
+  }
+  return MK_ACCESS
+}
+
+// Odkaz do Marka: existující návrh, nebo nový text předvyplněný z úkolu. Bez přístupu k Marketingu jen štítek stavu.
+function mkMarekHtml(akceId, t, access){
+  if(!MK_TEXT_KANALY.includes(t.kanal)) return ""
+  const link = (href, label) => `<a href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--blue,#007aff);font-weight:600">${label}</a>`
+  if(t.draftId){
+    const stav = escapeHtml(MK_DRAFT_STAV[t.draftStatus] || "Návrh")
+    return `<div class="small" style="margin-top:2px">Text: ${access ? link(MAREK_URL + "?navrh=" + encodeURIComponent(t.draftId), stav + " ›") : stav}</div>`
+  }
+  if(!access || t.done) return ""
+  const q = new URLSearchParams({akce: akceId, kanal: t.kanal, ukol: t.id})
+  return `<div class="small" style="margin-top:2px">${link(MAREK_URL + "?" + q, "Napsat s Markem ›")}</div>`
+}
+
 async function mkCanEdit(){
   if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") return true
   if(MK_EDIT === null){
@@ -3131,7 +3157,7 @@ function mkMirrorHtml(tasks){
     </div>`).join("")
 }
 
-function renderMarketingHtml(id, event, tasks, canEdit){
+function renderMarketingHtml(id, event, tasks, canEdit, access){
   const external = ["Koncert", "Soutěž", "Jiná akce"].includes(event.TYPE)
   if(!tasks.length && !(canEdit && external)) return ""
   const done = tasks.filter(t => t.done).length, late = tasks.filter(mkLate).length
@@ -3142,7 +3168,8 @@ function renderMarketingHtml(id, event, tasks, canEdit){
         <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
         <div class="small">${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
         ${t.ucel && t.napad ? `<div class="small" style="margin-top:2px">${escapeHtml(t.napad)}</div>` : ""}
-        ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}</div>` : ""}
+        ${mkMarekHtml(id, t, access)}
+        ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}${t.doneVia === "marek" ? " (schválený text z Marka)" : ""}</div>` : ""}
       </div>
       ${canEdit ? `<div style="display:flex;gap:6px;flex-shrink:0">
         <button class="btn-info" type="button" onclick="event.stopPropagation();editMarketingTask('${id}','${escapeHtml(t.id)}')" style="width:auto;padding:6px 10px">Upravit</button>
