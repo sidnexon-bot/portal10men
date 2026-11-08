@@ -3,7 +3,14 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
-## 4.2.0 (9. 11. 2026)
+## 4.3.0 (8. 11. 2026)
+- Zodpovědná osoba u úkolů. Společný úkol i marketingový úkol akce lze přiřadit členovi (formulář, pole Zodpovědný). U marketingového úkolu, který nikdo nemá, je odkaz „Beru to“; vidí ho administrátor, umělecký vedoucí a členové s přístupem k Marketingu. Přiřazení je vidět v seznamech („ty“ u vlastních úkolů).
+- Nová karta Přehledu „Moje úkoly“: nevyřízené úkoly přidělené přihlášenému (společné i marketingové, podle termínu, po termínu červeně). Odškrtnout je jde přímo z karty, klepnutí na marketingový úkol otevře akci. Kartu lze skrýt nebo přesunout v Nastavení; u stávajících uživatelů se zařadí na první místo.
+- Oprava: úprava společného úkolu už neodškrtne dokončený úkol zpět na nevyřízený.
+- Marek zná úkoly přihlášeného člena (otázky typu „co mám udělat“).
+- Společné úkoly smí měnit a mazat jen administrátor; člen, kterému je úkol přidělen, smí jen změnit jeho stav (hotovo / nehotovo). Platí od nasazení pravidel databáze.
+
+## 4.2.0 (8. 11. 2026)
 - Marketingový úkol je propojený s návrhem textu z Marka. U úkolu s kanálem Facebook, Instagram, Plakát nebo Newsletter se (členům s přístupem k Marketingu) zobrazí odkaz „Napsat s Markem“, který otevře Marka s vybranou akcí a kanálem a s předvyplněným zadáním z úkolu. Po vytvoření návrhu je u úkolu vidět jeho stav (Nový návrh, Rozpracováno, Ke schválení, Hotovo) a odkaz na návrh.
 - Když se návrh v Markovi přepne na Hotovo, úkol se sám odškrtne („schválený text z Marka“). Vrátí-li se návrh z Hotovo zpět, automatické odškrtnutí se zruší; ručně odškrtnutý úkol zůstane hotový. Kdo úkol vyřídil jinak než přes Marka, odškrtne ho ručně jako dosud.
 - Opakovaný převod plánu z Marka už nepřepíše úkol, který někdo upravil v 10base nebo který má návrh textu.

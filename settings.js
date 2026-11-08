@@ -8,6 +8,7 @@ import { database, auth, ref, get, set } from "./firebase.js"
 
 const LS = "10base-theme", LSS = "10base-settings", SB = "10base-sidebar-collapsed"
 const CARDS = [
+  { id: "mytasks", title: "Moje úkoly", desc: "Úkoly, které jsou přiřazené tobě" },
   { id: "nearest", title: "Nejbližší akce", desc: "Nejbližší akce s tvou docházkou" },
   { id: "aktuality", title: "Aktuality", desc: "Zprávy pro celý sbor" },
   { id: "todos", title: "Úkoly", desc: "Společné úkoly sboru" },
@@ -32,7 +33,8 @@ function cleanDash(d) {
   d = d || {}
   const order = (Array.isArray(d.order) ? d.order : []).filter((i, p, a) => ids.includes(i) && a.indexOf(i) === p)
   const hidden = (Array.isArray(d.hidden) ? d.hidden : []).filter((i, p, a) => ids.includes(i) && a.indexOf(i) === p)
-  ids.forEach(i => { if (!order.includes(i)) order.push(i) })
+  // nová karta se zařadí podle výchozího pořadí (za předchozí kartu, která v pořadí je), ne na konec
+  ids.forEach((i, k) => { if (!order.includes(i)) { const prev = ids.slice(0, k).reverse().find(p => order.includes(p)); order.splice(prev ? order.indexOf(prev) + 1 : 0, 0, i) } })
   return { order, hidden }
 }
 const legacyTheme = () => { try { return localStorage.getItem("darkMode") === "1" ? "dark" : "light" } catch (e) { return "light" } }

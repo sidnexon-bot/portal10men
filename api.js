@@ -159,6 +159,7 @@ function marketingList(m){
     .map(t => ({
       id: t.id, datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", format: t.format || "",
       ucel: t.ucel || "", napad: t.napad || "", done: t.done === true, doneBy: t.done_by || "", doneAt: t.done_at || "",
+      assignee: t.assignee && t.assignee.email ? {email: t.assignee.email, name: t.assignee.name || ""} : null,
       zPlanu: !!t.z_planu, draftId: t.draftId || "", draftStatus: t.draftStatus || "", doneVia: t.doneVia || "", edited: t.edited === true
     }))
     .sort((a, b) => (a.datum + a.cas).localeCompare(b.datum + b.cas) || a.id.localeCompare(b.id))
@@ -196,10 +197,39 @@ async function saveMarketingTask(params){
   const old = params.taskId ? await dbGet(path) : null
   if(params.taskId && !old) throw new Error("Úkol už neexistuje")
   if(!(await dbGet("/akce/" + params.id + "/name"))) throw new Error("Akce nenalezena")
-  await dbUpdate(path, {id, datum, cas, kanal, format: clip(params.format, 60), ucel, napad,
+  const fields = {id, datum, cas, kanal, format: clip(params.format, 60), ucel, napad,
     done: old ? old.done === true : false, z_planu: old ? (old.z_planu || null) : null,
-    edited: old && old.z_planu ? true : null})   // upravený úkol z plánu se při dalším převodu z Marka nepřepíše
+    edited: old && old.z_planu ? true : null}
+  if(params.assignee !== undefined) fields.assignee = asgn(params.assignee)
+  await dbUpdate(path, fields)   // upravený úkol z plánu se při dalším převodu z Marka nepřepíše
   return {status: "saved", id}
+}
+
+async function setMarketingAssignee(params){
+  const path = "/akce/" + params.id + "/marketing/ukoly/" + params.taskId
+  if(!(await dbGet(path))) throw new Error("Úkol už neexistuje")
+  await dbUpdate(path, {assignee: asgn(params.assignee)})
+  return {status: "updated"}
+}
+
+// Moje úkoly: nevyřízené úkoly přidělené členovi (podle e-mailu): společné úkoly a marketingové úkoly akcí
+async function getMyTasks(email){
+  const me = String(email || "").toLowerCase()
+  if(!me) return []
+  const [todos, akce] = await Promise.all([dbGet("/todos"), dbGet("/akce")])
+  const out = []
+  objToArray(todos).forEach(t => {
+    if(t && !t.done && t.assignee?.email === me) out.push({kind: "todo", id: t.id, text: t.text || "", datum: t.deadline || ""})
+  })
+  const cut = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10)   // úkoly dávno proběhlých akcí už nikoho nezajímají
+  objToArray(akce).forEach(a => {
+    if(!a || !a.marketing?.ukoly || (a.date && String(a.date).slice(0, 10) < cut)) return
+    Object.values(a.marketing.ukoly).forEach(t => {
+      if(t && !t.done && t.assignee?.email === me)
+        out.push({kind: "marketing", id: t.id, akceId: a.id, akceNazev: a.name || "", text: t.ucel || t.napad || "Úkol", datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || ""})
+    })
+  })
+  return out.sort((a, b) => (a.datum || "9999").localeCompare(b.datum || "9999") || (a.cas || "").localeCompare(b.cas || ""))
 }
 
 async function deleteMarketingTask(params){
@@ -1066,13 +1096,18 @@ async function deleteTodoSablona(id){
   return {status: "deleted"}
 }
 
+// zodpovědná osoba úkolu: {email, name}; e-mail malými písmeny, podle něj se úkol páruje s přihlášeným členem
+const asgn = a => (a && a.email) ? {email: String(a.email).toLowerCase().slice(0, 120), name: String(a.name || "").slice(0, 80)} : null
+
 async function addTodo(params){
   const tRef = push(ref(DB, "/todos"))
+  const assignee = asgn(params.assignee)
   await dbSet("/todos/" + tRef.key, {
     id:       tRef.key,
     text:     params.text,
     deadline: params.deadline || "",
-    done:     false
+    done:     false,
+    ...(assignee ? {assignee} : {})
   })
   return {status: "created"}
 }
@@ -1081,6 +1116,7 @@ async function updateTodo(params){
   const updates = {done: params.done === true || params.done === "true"}
   if(params.text     !== undefined) updates.text     = params.text
   if(params.deadline !== undefined) updates.deadline = params.deadline
+  if(params.assignee !== undefined) updates.assignee = asgn(params.assignee)   // null úkol uvolní
   await dbUpdate("/todos/" + params.id, updates)
   return {status: "saved"}
 }
@@ -1470,6 +1506,8 @@ async function api(action, params = {}){
     case "mymarketingaccess": return await myMarketingAccess()
     case "setmarketingdone": return await setMarketingDone(params)
     case "savemarketingtask": return await saveMarketingTask(params)
+    case "setmarketingassignee": return await setMarketingAssignee(params)
+    case "mytasks":          return await getMyTasks(params?.email)
     case "deletemarketingtask": return await deleteMarketingTask(params)
     case "gettodosablony":   return await getTodoSablony()
     case "savetodosablona":  return await saveTodoSablona(params)

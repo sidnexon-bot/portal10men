@@ -1105,6 +1105,8 @@ async function renderDashboard(){
 
     const aktuality = await cachedApi("aktuality")
     const todos     = await cachedApi("todos")
+    let myTasks     = []
+    try{ myTasks = await api("mytasks", {email: MEMBER_EMAIL}) }catch(e){ /* karta ukáže prázdný stav */ }
 
     // --- NEJBLIŽŠÍ AKCE data ---
     let myStatus = ""
@@ -1265,6 +1267,27 @@ async function renderDashboard(){
         ` : ""}
       </div>
     `
+    // Moje úkoly: společné i marketingové úkoly přidělené přihlášenému členovi
+    const myToday = new Date().toLocaleDateString("sv-SE")
+    const myTasksHtml = `
+      <div class="card dash-mytasks" style="padding:0;margin-top:12px">
+        <div class="event-label" style="padding:16px 16px 0">Moje úkoly${myTasks.length ? ` <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${myTasks.length}</span>` : ""}</div>
+        ${myTasks.length ? myTasks.map((t, idx) => {
+          const late = t.datum && t.datum < myToday
+          const border = idx < myTasks.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+          const sub = [t.kind === "marketing" ? "Marketing · " + (MK_KANALY[t.kanal] || t.kanal) + (t.akceNazev ? " · " + t.akceNazev : "") : "Úkol sboru",
+                       t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
+          const open = t.kind === "marketing" ? `openEvent('${escapeHtml(t.akceId)}')` : ""
+          return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('${t.kind}','${escapeHtml(t.akceId || "")}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
+            <div style="flex:1;min-width:0;${open ? "cursor:pointer" : ""}" ${open ? `onclick="${open}"` : ""}>
+              <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
+              <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
+            </div>
+          </div>`
+        }).join("") : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Nic ti nepřipadlo.</p></div>`}
+      </div>
+    `
     // pomocná funkce pro Úkoly
     const todosHtml = `
       <div class="card dash-todos" style="padding:0;margin-top:12px">
@@ -1283,6 +1306,7 @@ async function renderDashboard(){
                   ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
                 </div>
                 <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+                ${t.assignee ? `<span class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</span>` : ""}
                 ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
                 ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
               </div>
@@ -1339,6 +1363,7 @@ async function renderDashboard(){
 
    // karty podle nastavení (Nastavení > Přehled): pořadí a výběr; na počítači do dvou sloupců zleva doprava
    const DASH = {
+     mytasks:   myTasksHtml,
      nearest:   nearestEventHtml,
      spring:    springHtml,
      aktuality: aktualityHtml,
@@ -1348,7 +1373,7 @@ async function renderDashboard(){
      contacts:  contactsHtml
    }
    const WIDE = ["heatmap", "contacts"]
-   const order = window.tenSettings ? window.tenSettings.dashboardCards() : ["nearest","aktuality","todos","spring","autumn","heatmap","contacts"]
+   const order = window.tenSettings ? window.tenSettings.dashboardCards() : ["mytasks","nearest","aktuality","todos","spring","autumn","heatmap","contacts"]
    let html = ""
 
    if(!order.length){
@@ -1357,7 +1382,7 @@ async function renderDashboard(){
      // výchozí Přehled: rozložení beze změny
      // dva nezávislé sloupce, aby pod nižší kartou nevznikala mezera
      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
-     html += `<div>${nearestEventHtml}${aktualityHtml}${todosHtml}</div><div>${springHtml}${autumnHtml}</div></div>`
+     html += `<div>${myTasksHtml}${nearestEventHtml}${aktualityHtml}${todosHtml}</div><div>${springHtml}${autumnHtml}</div></div>`
      html += DASH.heatmap + DASH.contacts
    }else if(isDesktop){
      let run = []
@@ -1415,9 +1440,44 @@ function editDashNote(eventId, currentNote){
 let AKTUALITA_SELECTED = null
 let TODO_SELECTED = null
 
+// Zodpovědná osoba: výběr ze členů. Hodnota ve formuláři je jméno, do databáze jde {email, name}.
+const NOBODY = "— nikdo —"
+let MEMBER_CHOICES = []
+async function loadMemberChoices(){
+  try{
+    const m = await cachedApi("members")
+    MEMBER_CHOICES = (Array.isArray(m) ? m : []).filter(x => x.NAME && x.EMAIL).sort((a, b) => a.NAME.localeCompare(b.NAME, "cs"))
+  }catch(e){ /* bez seznamu zůstane jen „nikdo“ */ }
+}
+const assigneeOptions = () => [NOBODY, ...MEMBER_CHOICES.map(m => m.NAME)]
+const assigneeFromName = name => {
+  const m = MEMBER_CHOICES.find(x => x.NAME === name)
+  return m ? {email: m.EMAIL, name: m.NAME} : null
+}
+const isMine = a => !!a && !!MEMBER_EMAIL && String(a.email).toLowerCase() === String(MEMBER_EMAIL).toLowerCase()
+const assigneeLabel = a => a ? (isMine(a) ? "ty" : a.name) : ""
+
 function toggleAktualita(id){
   toggleAccordion("detailAkt_" + id, "chevronAkt_" + id)
 }
+
+// Odškrtnutí vlastního úkolu přímo z Přehledu (společný úkol i marketingový úkol akce)
+async function finishMyTask(kind, akceId, id){
+  try{
+    if(kind === "marketing"){
+      await api("setmarketingdone", {id: akceId, taskId: id, done: true, by: MEMBER_NAME || MEMBER_EMAIL || ""})
+      invalidateCache("eventdetail", akceId)
+    }else{
+      await api("updatetodo", {id, done: true})
+      lsDel("todos")
+    }
+    renderDashboard()
+  }catch(err){
+    alert("Chyba: " + (err?.message || err))
+    renderDashboard()
+  }
+}
+window.finishMyTask = finishMyTask
 
 async function toggleTodo(id, done){
   try{
@@ -1504,14 +1564,17 @@ function selectTodo(id){
 }
 
 async function editTodoItem(id, text, deadline){
+  await loadMemberChoices()
+  const cur = ((await cachedApi("todos")) || []).find(t => t.id === id)
   openFormModal("Upravit úkol", [
     {key: "text",     label: "Úkol",    type: "text", value: text},
-    {key: "deadline", label: "Deadline", type: "date", value: deadline}
+    {key: "deadline", label: "Deadline", type: "date", value: deadline},
+    {key: "assignee", label: "Zodpovědný", type: "select", options: assigneeOptions(), value: cur?.assignee?.name || NOBODY}
   ], async (values) => {
     if(!values.text){ alert("Zadej text úkolu"); return }
     try{
       closeFormModal()
-      await api("updatetodo", {id, text: values.text, deadline: values.deadline})
+      await api("updatetodo", {id, text: values.text, deadline: values.deadline, assignee: assigneeFromName(values.assignee), done: cur?.done === true})
       lsDel("todos")
       TODO_SELECTED = null
       renderDashboard()
@@ -1520,14 +1583,16 @@ async function editTodoItem(id, text, deadline){
 }
 
 async function addTodoItem(){
+  await loadMemberChoices()
   openFormModal("Nový úkol", [
     {key: "text",     label: "Úkol",    type: "text"},
-    {key: "deadline", label: "Deadline", type: "date"}
+    {key: "deadline", label: "Deadline", type: "date"},
+    {key: "assignee", label: "Zodpovědný", type: "select", options: assigneeOptions(), value: NOBODY}
   ], async (values) => {
     if(!values.text){ alert("Zadej text úkolu"); return }
     try{
       closeFormModal()
-      await api("addtodo", {text: values.text, deadline: values.deadline})
+      await api("addtodo", {text: values.text, deadline: values.deadline, assignee: assigneeFromName(values.assignee)})
       lsDel("todos")
       renderDashboard()
     }catch(err){ alert("Chyba: " + err.message) }
@@ -3157,6 +3222,21 @@ function mkMirrorHtml(tasks){
     </div>`).join("")
 }
 
+function mkAssigneeHtml(akceId, t, canAssign){
+  if(t.assignee) return `<div class="small" style="margin-top:2px;${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}" data-mk-assignee>Zodpovídá: ${escapeHtml(assigneeLabel(t.assignee))}</div>`
+  if(!canAssign || t.done) return ""
+  return `<div class="small" style="margin-top:2px"><a href="#" data-mk-take onclick="event.stopPropagation();takeMarketingTask('${akceId}','${escapeHtml(t.id)}');return false" style="color:var(--blue,#007aff);font-weight:600">Beru to ›</a></div>`
+}
+
+async function takeMarketingTask(akceId, taskId){
+  try{
+    await api("setmarketingassignee", {id: akceId, taskId, assignee: {email: MEMBER_EMAIL, name: MEMBER_NAME}})
+    invalidateCache("eventdetail", akceId)
+    openEvent(akceId)
+  }catch(err){ alert("Chyba: " + (err?.message || err)) }
+}
+window.takeMarketingTask = takeMarketingTask
+
 function renderMarketingHtml(id, event, tasks, canEdit, access){
   const external = ["Koncert", "Soutěž", "Jiná akce"].includes(event.TYPE)
   if(!tasks.length && !(canEdit && external)) return ""
@@ -3168,6 +3248,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
         <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
         <div class="small">${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
         ${t.ucel && t.napad ? `<div class="small" style="margin-top:2px">${escapeHtml(t.napad)}</div>` : ""}
+        ${mkAssigneeHtml(id, t, canEdit || access)}
         ${mkMarekHtml(id, t, access)}
         ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}${t.doneVia === "marek" ? " (schválený text z Marka)" : ""}</div>` : ""}
       </div>
@@ -3216,6 +3297,7 @@ async function toggleMarketingTask(akceId, taskId, done){
 function mkFields(t){
   t = t || {}
   return [
+    {key: "assignee", label: "Zodpovědný", type: "select", options: assigneeOptions(), value: t.assignee?.name || NOBODY},
     {key: "datum",  label: "Termín",  type: "date", value: t.datum || ""},
     {key: "cas",    label: "Čas (volitelné)", type: "time", value: t.cas || ""},
     {key: "kanal",  label: "Kanál",   type: "select", options: Object.values(MK_KANALY), value: MK_KANALY[t.kanal] || MK_KANALY.facebook},
@@ -3229,7 +3311,7 @@ function mkSubmit(akceId, taskId){
   return async values => {
     const kanal = Object.keys(MK_KANALY).find(k => MK_KANALY[k] === values.kanal) || ""
     try{
-      await api("savemarketingtask", {id: akceId, taskId, datum: values.datum, cas: values.cas, kanal, format: values.format, ucel: values.ucel, napad: values.napad})
+      await api("savemarketingtask", {id: akceId, taskId, datum: values.datum, cas: values.cas, kanal, format: values.format, ucel: values.ucel, napad: values.napad, assignee: assigneeFromName(values.assignee)})
       invalidateCache("eventdetail", akceId)
       closeFormModal()
       openEvent(akceId)
@@ -3240,6 +3322,7 @@ function mkSubmit(akceId, taskId){
 }
 
 async function addMarketingTask(akceId){
+  await loadMemberChoices()
   try{ sessionStorage.removeItem("10base_form") }catch(e){ /* bez uloženého stavu */ }
   openFormModal("Nový marketingový úkol", mkFields(null), mkSubmit(akceId, undefined))
 }
@@ -3248,6 +3331,7 @@ async function editMarketingTask(akceId, taskId){
   const data = await cachedApi("eventdetail", {id: akceId})
   const t = (data.event?.MARKETING || []).find(x => x.id === taskId)
   if(!t){ alert("Úkol už neexistuje"); return }
+  await loadMemberChoices()
   try{ sessionStorage.removeItem("10base_form") }catch(e){ /* nevracet rozepsaný formulář jiného úkolu */ }
   openFormModal("Upravit marketingový úkol", mkFields(t), mkSubmit(akceId, taskId))
 }
