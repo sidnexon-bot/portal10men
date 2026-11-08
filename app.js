@@ -2000,12 +2000,25 @@ function renderEventFormExtra(){
 // =============================================
 
 let RIDER_OPEN = false
+let TODO_SABLONY = []   // vlastní šablony úkolů (Nastavení), načtou se při otevření podkladů
+
+async function loadTodoSablony(){
+  try{
+    const r = await api("gettodosablony")
+    TODO_SABLONY = Array.isArray(r) ? r : []
+  }catch(e){ /* zůstane poslední známý seznam, vestavěná šablona funguje dál */ }
+}
 
 function toggleRiderAccordion(){
   RIDER_OPEN = !RIDER_OPEN
   const panel   = document.getElementById("riderPanel")
   const chevron = document.getElementById("chevronRider")
-  if(RIDER_OPEN) renderRiderPanel()
+  if(RIDER_OPEN){
+    renderRiderPanel()
+    // šablony se doptají na pozadí; změní-li se seznam, panel se vykreslí znovu (rider je v paměti, nic se neztratí)
+    const before = JSON.stringify(TODO_SABLONY)
+    loadTodoSablony().then(() => { if(RIDER_OPEN && JSON.stringify(TODO_SABLONY) !== before) renderRiderPanel() })
+  }
   if(panel) tenAcc.set(panel, RIDER_OPEN, { display: "block", chevs: [chevron] })
 }
 
@@ -2090,6 +2103,7 @@ function renderRiderPanelContent(){
       </div>
       <div class="btn-group" style="margin-top:8px">
         <button type="button" onclick="addRiderTodoItem('todo_pred')">+ Přidat úkol</button>
+        ${renderRiderTodoTemplatePicker('todo_pred')}
         <button type="button" onclick="addRiderTodoTemplate('todo_pred')">+ Přidat šablonu</button>
       </div>
     </div>
@@ -2101,6 +2115,7 @@ function renderRiderPanelContent(){
       </div>
       <div class="btn-group" style="margin-top:8px">
         <button type="button" onclick="addRiderTodoItem('todo_den')">+ Přidat úkol</button>
+        ${renderRiderTodoTemplatePicker('todo_den')}
         <button type="button" onclick="addRiderTodoTemplate('todo_den')">+ Přidat šablonu</button>
       </div>
     </div>
@@ -2324,7 +2339,8 @@ window.updateRiderHarmonogramField = updateRiderHarmonogramField
 function renderRiderTodoHtml(fazeKey){
   const rider = getRiderData()
   const items = rider[fazeKey] || []
-  return items.map((item, idx) => `
+  const mirror = fazeKey === "todo_pred" ? mkMirrorHtml(window.EDIT_EVENT?.MARKETING) : ""
+  return mirror + items.map((item, idx) => `
     <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;padding:8px;background:var(--card);border-radius:10px">
       <input type="checkbox" ${item.done ? "checked" : ""}
         onchange="updateRiderTodoField('${fazeKey}', ${idx}, 'done', this.checked)"
@@ -2383,10 +2399,20 @@ const RIDER_TODO_TEMPLATE_DEN = [
   "Asistuje v případě potřeby", "Zajistí zvukový záznam"
 ]
 
+function renderRiderTodoTemplatePicker(fazeKey){
+  if(!TODO_SABLONY.length) return ""
+  return `<select id="riderTodoSablona_${fazeKey}" aria-label="Šablona úkolů" style="width:auto;max-width:100%">
+    <option value="">Vestavěná šablona</option>
+    ${TODO_SABLONY.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.nazev)}</option>`).join("")}
+  </select>`
+}
+
 function addRiderTodoTemplate(fazeKey){
   const rider = getRiderData()
   if(!Array.isArray(rider[fazeKey])) rider[fazeKey] = []
-  const template = fazeKey === "todo_pred" ? RIDER_TODO_TEMPLATE_PRED : RIDER_TODO_TEMPLATE_DEN
+  const chosen = TODO_SABLONY.find(s => s.id === document.getElementById("riderTodoSablona_" + fazeKey)?.value)
+  const template = chosen ? chosen.polozky
+    : fazeKey === "todo_pred" ? RIDER_TODO_TEMPLATE_PRED : RIDER_TODO_TEMPLATE_DEN
   template.forEach(co => rider[fazeKey].push({ co, kdo: "", poznamka: "", done: false }))
   refreshRiderTodo(fazeKey)
 }
@@ -2633,6 +2659,8 @@ async function openEvent(id){
     const event      = data.event      || {}
     const program    = data.program    || []
     const attendance = data.attendance || []
+    const mkTasks    = Array.isArray(event.MARKETING) ? event.MARKETING : []
+    const mkEdit     = await mkCanEdit()
 
     // --- HLAVIČKA ---
    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
@@ -2811,24 +2839,25 @@ async function openEvent(id){
     </div>`
 
    // --- TO-DO LIST (rider) ---
-    if((MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && event.RIDER){
+    if((MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && (event.RIDER || mkTasks.length)){
       let riderData = {}
-      try{ riderData = JSON.parse(event.RIDER) }catch(e){ riderData = {} }
+      try{ riderData = event.RIDER ? JSON.parse(event.RIDER) : {} }catch(e){ riderData = {} }
       const todoPred = riderData.todo_pred || []
       const todoDen  = riderData.todo_den  || []
       const totalTodos = todoPred.length + todoDen.length
       const doneTodos = todoPred.filter(t => t.done).length + todoDen.filter(t => t.done).length
 
-      if(totalTodos > 0){
+      if(totalTodos > 0 || mkTasks.length){
         html += `<div class="event-card" style="margin-bottom:16px;padding:0">
           <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('todo')">
             <span>To-do list <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${doneTodos}/${totalTodos}</span></span>
             <span id="accChevron_todo" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
           </div>
           <div id="accBody_todo" style="display:none;padding:0 16px 16px">
-          ${todoPred.length ? `
+          ${(todoPred.length || mkTasks.length) ? `
             <div style="margin-bottom:12px">
               <span class="small" style="font-weight:600;display:block;margin-bottom:6px">Před koncertem</span>
+              ${mkMirrorHtml(mkTasks)}
               ${todoPred.map((t, idx) => `
                 <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
                   <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${id}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
@@ -2859,6 +2888,9 @@ async function openEvent(id){
       }
     }
      
+    // --- MARKETING (úkoly z plánu Marka) ---
+    html += renderMarketingHtml(id, event, mkTasks, mkEdit)
+
     // --- DOCHÁZKA ---
     const myRow    = attendance.find(a => a.EMAIL === MEMBER_EMAIL)
     const myStatus = myRow?.STATUS || ""
@@ -3037,6 +3069,155 @@ async function toggleRiderTodoDetail(akceId, fazeKey, idx, done){
 }
 
 window.toggleRiderTodoDetail = toggleRiderTodoDetail
+
+// =============================================
+// MARKETING – úkoly z plánu Marka (/akce/{id}/marketing). Plán vzniká v Markovi („Převést do 10base“),
+// tady se odškrtává a upravuje. V podkladech (To-do před koncertem) se tytéž úkoly jen zrcadlí, šedě a bez úprav.
+// =============================================
+const MK_KANALY = {
+  facebook: "Facebook", instagram: "Instagram", plakat: "Plakát", newsletter: "Newsletter",
+  udalost: "Událost na Facebooku", mistni: "Místní kanály", osobne: "Osobní pozvánky"
+}
+let MK_EDIT = null   // smí upravovat marketingové úkoly (ADMIN, ART, nebo člen v /marketingAccess)
+
+async function mkCanEdit(){
+  if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") return true
+  if(MK_EDIT === null){
+    try{ MK_EDIT = (await api("mymarketingaccess")) === true }catch(e){ return false }
+  }
+  return MK_EDIT
+}
+
+const mkToday = () => new Date().toLocaleDateString("sv-SE")   // YYYY-MM-DD v místním čase
+const mkLate  = t => !t.done && !!t.datum && t.datum < mkToday()
+function mkWhen(t){
+  if(!t.datum) return ""
+  const d = new Date(t.datum + "T12:00:00")
+  const den = d.toLocaleDateString("cs-CZ", {weekday: "short", day: "numeric", month: "numeric"})
+  return den + (t.cas ? " · " + t.cas : "")
+}
+const mkTitle = t => t.ucel || t.napad || "Úkol"
+
+function mkMirrorHtml(tasks){
+  if(!Array.isArray(tasks) || !tasks.length) return ""
+  return tasks.map(t => `
+    <div data-mk-mirror="${escapeHtml(t.id)}" title="Spravuje se v sekci Marketing" style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08);opacity:0.5;cursor:default">
+      <input type="checkbox" disabled ${t.done ? "checked" : ""} aria-label="Marketingový úkol (jen informativně)" style="width:auto;margin-top:3px">
+      <div style="flex:1">
+        <div style="${t.done ? "text-decoration:line-through;" : ""}">${escapeHtml(mkTitle(t))}</div>
+        <div class="small">Marketing · ${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.datum ? " · " + escapeHtml(mkWhen(t)) : ""}</div>
+      </div>
+    </div>`).join("")
+}
+
+function renderMarketingHtml(id, event, tasks, canEdit){
+  const external = ["Koncert", "Soutěž", "Jiná akce"].includes(event.TYPE)
+  if(!tasks.length && !(canEdit && external)) return ""
+  const done = tasks.filter(t => t.done).length, late = tasks.filter(mkLate).length
+  const row = t => `
+    <div data-mk-row="${escapeHtml(t.id)}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
+      <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleMarketingTask('${id}','${escapeHtml(t.id)}',this.checked)" aria-label="Hotovo: ${escapeHtml(mkTitle(t))}" style="width:auto;margin-top:3px">
+      <div style="flex:1;min-width:0">
+        <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
+        <div class="small">${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
+        ${t.ucel && t.napad ? `<div class="small" style="margin-top:2px">${escapeHtml(t.napad)}</div>` : ""}
+        ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}</div>` : ""}
+      </div>
+      ${canEdit ? `<div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn-info" type="button" onclick="event.stopPropagation();editMarketingTask('${id}','${escapeHtml(t.id)}')" style="width:auto;padding:6px 10px">Upravit</button>
+        <button class="btn-danger" type="button" onclick="event.stopPropagation();deleteMarketingTask('${id}','${escapeHtml(t.id)}')" style="width:auto;padding:6px 10px" aria-label="Smazat úkol">✕</button>
+      </div>` : ""}
+    </div>`
+  return `<div class="event-card" id="mkCard" style="margin-bottom:16px;padding:0">
+    <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('marketing')">
+      <span>Marketing <span id="mkCount" style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${tasks.length ? done + "/" + tasks.length : "žádné úkoly"}${late ? ` · <span style="color:#ff3b30">${late} po termínu</span>` : ""}</span></span>
+      <span id="accChevron_marketing" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+    </div>
+    <div id="accBody_marketing" style="display:none;padding:0 16px 16px">
+      ${tasks.length ? tasks.map(row).join("") : `<p class="notice" style="margin:12px 0 0">Zatím žádné úkoly. Vygeneruj plán v Markovi a převeď ho sem, nebo přidej úkol ručně.</p>`}
+      ${canEdit ? `<div class="btn-group" style="margin-top:12px"><button type="button" onclick="addMarketingTask('${id}')">+ Přidat úkol</button></div>` : ""}
+    </div>
+  </div>`
+}
+
+async function toggleMarketingTask(akceId, taskId, done){
+  const row = document.querySelector(`[data-mk-row="${CSS.escape(taskId)}"]`)
+  const mirror = document.querySelector(`[data-mk-mirror="${CSS.escape(taskId)}"]`)
+  const paint = d => {
+    row?.querySelector("[data-mk-title]")?.setAttribute("style", "font-weight:600;" + (d ? "text-decoration:line-through;color:var(--muted)" : ""))
+    const lateEl = row?.querySelector("[data-mk-late]"); if(lateEl) lateEl.style.display = d ? "none" : "inline"
+    if(mirror){
+      mirror.querySelector("input").checked = d
+      mirror.firstElementChild.nextElementSibling.firstElementChild.style.textDecoration = d ? "line-through" : ""
+    }
+    const all = document.querySelectorAll("[data-mk-row] input[type=checkbox]")
+    const cnt = document.getElementById("mkCount")
+    if(cnt) cnt.textContent = "· " + [...all].filter(i => i.checked).length + "/" + all.length
+  }
+  paint(done)
+  try{
+    await api("setmarketingdone", {id: akceId, taskId, done, by: MEMBER_NAME || MEMBER_EMAIL || ""})
+    invalidateCache("eventdetail", akceId)
+  }catch(err){
+    paint(!done)
+    if(row) row.querySelector("input[type=checkbox]").checked = !done
+    alert("Chyba: " + (err?.message || err))
+  }
+}
+
+function mkFields(t){
+  t = t || {}
+  return [
+    {key: "datum",  label: "Termín",  type: "date", value: t.datum || ""},
+    {key: "cas",    label: "Čas (volitelné)", type: "time", value: t.cas || ""},
+    {key: "kanal",  label: "Kanál",   type: "select", options: Object.values(MK_KANALY), value: MK_KANALY[t.kanal] || MK_KANALY.facebook},
+    {key: "format", label: "Formát (např. fotka s popiskem)", type: "text", value: escapeHtml(t.format || "")},
+    {key: "ucel",   label: "Co má úkol splnit", type: "text", value: escapeHtml(t.ucel || "")},
+    {key: "napad",  label: "Nápad, text, poznámka", type: "textarea", value: escapeHtml(t.napad || "")}
+  ]
+}
+
+function mkSubmit(akceId, taskId){
+  return async values => {
+    const kanal = Object.keys(MK_KANALY).find(k => MK_KANALY[k] === values.kanal) || ""
+    try{
+      await api("savemarketingtask", {id: akceId, taskId, datum: values.datum, cas: values.cas, kanal, format: values.format, ucel: values.ucel, napad: values.napad})
+      invalidateCache("eventdetail", akceId)
+      closeFormModal()
+      openEvent(akceId)
+    }catch(err){
+      alert(err?.message || err)
+    }
+  }
+}
+
+async function addMarketingTask(akceId){
+  try{ sessionStorage.removeItem("10base_form") }catch(e){ /* bez uloženého stavu */ }
+  openFormModal("Nový marketingový úkol", mkFields(null), mkSubmit(akceId, undefined))
+}
+
+async function editMarketingTask(akceId, taskId){
+  const data = await cachedApi("eventdetail", {id: akceId})
+  const t = (data.event?.MARKETING || []).find(x => x.id === taskId)
+  if(!t){ alert("Úkol už neexistuje"); return }
+  try{ sessionStorage.removeItem("10base_form") }catch(e){ /* nevracet rozepsaný formulář jiného úkolu */ }
+  openFormModal("Upravit marketingový úkol", mkFields(t), mkSubmit(akceId, taskId))
+}
+
+function deleteMarketingTask(akceId, taskId){
+  confirmModal("Smazat marketingový úkol?", async () => {
+    try{
+      await api("deletemarketingtask", {id: akceId, taskId})
+      invalidateCache("eventdetail", akceId)
+      openEvent(akceId)
+    }catch(err){ alert("Chyba: " + (err?.message || err)) }
+  })
+}
+
+window.toggleMarketingTask = toggleMarketingTask
+window.addMarketingTask    = addMarketingTask
+window.editMarketingTask   = editMarketingTask
+window.deleteMarketingTask = deleteMarketingTask
 
 window.openGrilovackaModal  = openGrilovackaModal
 window.deleteGrilovackaItem = deleteGrilovackaItem

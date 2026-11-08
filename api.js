@@ -146,6 +146,65 @@ async function getEvents(){
   }))
 }
 
+// ===============================
+// MARKETING – úkoly z plánu Marka: /akce/{id}/marketing/ukoly/{taskId}
+// Zapisuje je server (převod plánu z Marka) i tato aplikace (odškrtnutí, úpravy). Samostatná větev, takže ji
+// uložení formuláře akce (updateEvent) nepřepíše.
+// ===============================
+const MK_KANALY = ["facebook", "instagram", "plakat", "newsletter", "udalost", "mistni", "osobne"]
+
+function marketingList(m){
+  return Object.values((m && m.ukoly) || {})
+    .filter(t => t && t.id)
+    .map(t => ({
+      id: t.id, datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", format: t.format || "",
+      ucel: t.ucel || "", napad: t.napad || "", done: t.done === true, doneBy: t.done_by || "", doneAt: t.done_at || "",
+      zPlanu: !!t.z_planu
+    }))
+    .sort((a, b) => (a.datum + a.cas).localeCompare(b.datum + b.cas) || a.id.localeCompare(b.id))
+}
+
+async function myMarketingAccess(){
+  const uid = auth.currentUser?.uid
+  if(!uid) return false
+  try{ return (await dbGet("/marketingAccess/" + uid)) === true }catch(e){ return false }
+}
+
+async function setMarketingDone(params){
+  const path = "/akce/" + params.id + "/marketing/ukoly/" + params.taskId
+  if(!(await dbGet(path))) throw new Error("Úkol už neexistuje")
+  await dbUpdate(path, {
+    done:    params.done === true,
+    done_by: params.done === true ? String(params.by || "") : "",
+    done_at: params.done === true ? new Date().toISOString() : ""
+  })
+  return {status: "updated"}
+}
+
+async function saveMarketingTask(params){
+  const clip = (v, n) => String(v || "").replace(/\s+/g, " ").trim().slice(0, n)
+  const datum = String(params.datum || "")
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Error("Zadej termín")
+  const kanal = MK_KANALY.includes(params.kanal) ? params.kanal : ""
+  if(!kanal) throw new Error("Vyber kanál")
+  const ucel = clip(params.ucel, 200), napad = clip(params.napad, 600)
+  if(!ucel && !napad) throw new Error("Vyplň účel nebo nápad")
+  const cas = /^([01]\d|2[0-3]):[0-5]\d$/.test(params.cas || "") ? params.cas : ""
+  const id = params.taskId || genId("m")
+  const path = "/akce/" + params.id + "/marketing/ukoly/" + id
+  const old = params.taskId ? await dbGet(path) : null
+  if(params.taskId && !old) throw new Error("Úkol už neexistuje")
+  if(!(await dbGet("/akce/" + params.id + "/name"))) throw new Error("Akce nenalezena")
+  await dbUpdate(path, {id, datum, cas, kanal, format: clip(params.format, 60), ucel, napad,
+    done: old ? old.done === true : false, z_planu: old ? (old.z_planu || null) : null})
+  return {status: "saved", id}
+}
+
+async function deleteMarketingTask(params){
+  await dbRemove("/akce/" + params.id + "/marketing/ukoly/" + params.taskId)
+  return {status: "deleted"}
+}
+
 async function getEventDetail(id){
   const akce = await dbGet("/akce/" + id)
   if(!akce) throw new Error("Akce nenalezena: " + id)
@@ -229,6 +288,7 @@ async function getEventDetail(id){
       IS_SPOLUPRACE:   akce.is_spoluprace  === true,
       SPOLUPRACE_NAZEV: akce.spoluprace_nazev || "",
       RIDER:            akce.rider || "",
+      MARKETING:        marketingList(akce.marketing),
     },
     attendance,
     program: prog
@@ -976,6 +1036,34 @@ async function getTodos(){
   return objToArray(data).sort((a,b) => (a.deadline||"").localeCompare(b.deadline||""))
 }
 
+// vlastní šablony úkolů ke koncertu: /config/todo_sablony/{id} = {id, nazev, polozky:[text, …]}
+const sablonaPolozka = p => String(typeof p === "string" ? p : p?.co || "")
+
+async function getTodoSablony(){
+  const data = await dbGet("/config/todo_sablony")
+  return objToArray(data)
+    .filter(s => s && s.nazev && Array.isArray(s.polozky))
+    .map(s => ({...s, polozky: s.polozky.map(sablonaPolozka).filter(Boolean)}))
+    .sort((a,b) => String(a.nazev).localeCompare(String(b.nazev), "cs"))
+}
+
+async function saveTodoSablona(params){
+  const nazev   = String(params.nazev || "").trim().slice(0, 80)
+  const polozky = (Array.isArray(params.polozky) ? params.polozky : [])
+    .map(sablonaPolozka).map(p => p.trim().slice(0, 200)).filter(Boolean).slice(0, 100)
+  if(!nazev)          throw new Error("Zadej název šablony")
+  if(!polozky.length) throw new Error("Šablona musí mít aspoň jeden úkol")
+  const id = params.id || genId("s")
+  await dbSet("/config/todo_sablony/" + id, {id, nazev, polozky})
+  return {status: "saved", id}
+}
+
+async function deleteTodoSablona(id){
+  if(!id) throw new Error("Chybí šablona")
+  await dbRemove("/config/todo_sablony/" + id)
+  return {status: "deleted"}
+}
+
 async function addTodo(params){
   const tRef = push(ref(DB, "/todos"))
   await dbSet("/todos/" + tRef.key, {
@@ -1377,6 +1465,13 @@ async function api(action, params = {}){
     case "addaktualita":     return await addAktualita(params)
     case "todos":            return await getTodos()
     case "addtodo":          return await addTodo(params)
+    case "mymarketingaccess": return await myMarketingAccess()
+    case "setmarketingdone": return await setMarketingDone(params)
+    case "savemarketingtask": return await saveMarketingTask(params)
+    case "deletemarketingtask": return await deleteMarketingTask(params)
+    case "gettodosablony":   return await getTodoSablony()
+    case "savetodosablona":  return await saveTodoSablona(params)
+    case "deletetodosablona": return await deleteTodoSablona(params.id)
     case "updatetodo":       return await updateTodo(params)
     case "deletetodo":       return await deleteTodo(params.id)
     case "addrecurring":     return await addRecurring(params)

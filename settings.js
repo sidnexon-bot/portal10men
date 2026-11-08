@@ -22,7 +22,7 @@ const card = id => CARDS.find(c => c.id === id)
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
 const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null
 let S = { theme: "light", dashboard: { order: ids.slice(), hidden: [] } }
-let started = false, saveTimer = 0, area = null, priv = null
+let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}
 
 const user = () => { try { return JSON.parse(localStorage.getItem("10base_user") || "null") } catch (e) { return null } }
 const keyOf = email => String(email || "").replace(/\./g, "_").replace(/@/g, "_")
@@ -95,6 +95,25 @@ const ICON = {
 function infoRow(label, value) {
   return `<div class="st-row st-info"><div class="st-name">${esc(label)}</div><div class="st-val">${value ? esc(value) : '<span class="st-empty-v">nevyplněno</span>'}</div></div>`
 }
+/* ── šablony úkolů ke koncertu (vybírají se v podkladech akce; ukládá /config/todo_sablony přes api.js) ── */
+const canEditSablony = () => ["ADMIN", "OWNER", "ART"].includes(me().role)
+const sbRow = text => `<div class="st-row" data-sb-row style="gap:8px"><input type="text" data-sb-co maxlength="200" value="${esc(text)}" placeholder="Úkol" aria-label="Úkol" style="flex:1 1 auto;min-width:0"><button type="button" class="st-ic" data-sb-rm aria-label="Odebrat úkol" title="Odebrat">${ICON.minus}</button></div>`
+function sablonyHtml() {
+  if (!canEditSablony()) return ""
+  const card = (sb, isNew) => {
+    const id = isNew ? "new" : sb.id, msg = sablonyMsg[id], rows = (isNew ? [""] : sb.polozky)
+    return `<div class="card st-card" data-sablona="${esc(id)}"><div class="event-label">${isNew ? "Nová šablona" : "Šablona"}</div>
+      <label class="st-name" for="sb-n-${esc(id)}">Název</label>
+      <input type="text" id="sb-n-${esc(id)}" data-sb-nazev maxlength="80" value="${esc(isNew ? "" : sb.nazev)}" placeholder="např. Koncert – standardní příprava" style="width:100%;box-sizing:border-box">
+      <div class="st-name" style="margin-top:10px">Úkoly</div>
+      <div data-sb-rows>${rows.map(sbRow).join("")}</div>
+      <div class="st-acts" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-sb-add="${esc(id)}">${ICON.plus}<span>Přidat úkol</span></button><button type="button" class="st-add" data-sb-save="${esc(id)}"><span>Uložit šablonu</span></button>${isNew ? "" : `<button type="button" class="st-add" data-sb-del="${esc(id)}"><span>Smazat</span></button>`}<span class="st-hint" role="status" style="margin:0">${esc(msg || "")}</span></div></div>`
+  }
+  const list = (sablony || []).map(sb => card(sb, false)).join("")
+  return `<h3 class="st-h">Šablony úkolů</h3>
+    <div class="card st-card"><p class="st-hint" style="margin-top:0">Vlastní seznamy úkolů ke koncertům. V podkladech akce (To-do před koncertem i v den koncertu) vybereš šablonu a tlačítkem „Přidat šablonu“ se úkoly přidají k akci. Úpravy šablony se u akcí, kam už byla přidána, neprojeví.</p>${sablony === null ? '<p class="st-hint">Načítám…</p>' : ""}</div>
+    ${list}${sablony === null ? "" : card(null, true)}`
+}
 function aboutHtml() {
   const V = globalThis.TEN_VERSION || {}
   return `<div class="card st-card"><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">10base ${esc(V.version || "")}</div><div class="st-desc">Vydáno ${esc(V.date || "")}. Aplikace sama nabídne obnovení, jakmile vyjde novější verze.</div></div><div class="st-acts"><button type="button" class="st-add" data-check-update="1"><span id="st-upd-label">Zkontrolovat aktualizace</span></button></div></div></div>`
@@ -115,6 +134,7 @@ function pageHtml() {
     <div class="card st-card"><div class="event-label">Přehled</div><p class="st-hint">Vyber, které karty se na Přehledu zobrazují, a přetažením změň jejich pořadí.</p>${shown}</div>
     ${more ? `<div class="card st-card"><div class="event-label">Další karty</div>${more}</div>` : ""}
     <div class="st-foot"><button type="button" class="st-add" data-reset="1" ${isDefault ? "disabled" : ""}><span>Obnovit výchozí Přehled</span></button></div>
+    ${sablonyHtml()}
     <h3 class="st-h">Osobní údaje</h3>${personal}
     <h3 class="st-h">O aplikaci</h3>${aboutHtml()}</div>`
 }
@@ -124,8 +144,12 @@ function refresh() {
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm]")
   if (!t || !area || !area.contains(t)) return
+  if (t.dataset.sbSave) return saveSablona(t)
+  if (t.dataset.sbDel) return delSablona(t)
+  if (t.dataset.sbAdd) { const rows = t.closest("[data-sablona]").querySelector("[data-sb-rows]"); rows.insertAdjacentHTML("beforeend", sbRow("")); return rows.lastElementChild.querySelector("[data-sb-co]").focus() }
+  if ("sbRm" in t.dataset) { const row = t.closest("[data-sb-row]"), rows = row.parentNode; row.remove(); if (!rows.children.length) rows.insertAdjacentHTML("beforeend", sbRow("")); return }
   if (t.dataset.theme) return setTheme(t.dataset.theme)
   if (t.dataset.checkUpdate) {
     const lb = document.getElementById("st-upd-label"); if (lb) lb.textContent = "Kontroluji…"
@@ -135,6 +159,35 @@ function onClick(e) {
   if (t.dataset.hide) return hide(t.dataset.hide)
   if (t.dataset.show) return show(t.dataset.show)
   if (t.dataset.reset) return setDash(null)
+}
+
+async function loadSablony() {
+  if (!canEditSablony() || typeof window.api !== "function") return
+  try { sablony = await window.api("gettodosablony") } catch (e) { sablony = [] }
+  refresh()
+}
+function sablonaMsg(id, text) {
+  sablonyMsg[id] = text
+  const el = area && area.querySelector(`[data-sablona="${id}"] [role=status]`); if (el) el.textContent = text
+}
+async function saveSablona(btn) {
+  const id = btn.dataset.sbSave, box = btn.closest("[data-sablona]"); if (!box) return
+  const nazev = box.querySelector("[data-sb-nazev]").value.trim()
+  const polozky = [...box.querySelectorAll("[data-sb-row]")].map(r => r.querySelector("[data-sb-co]").value.trim()).filter(Boolean)
+  if (!nazev) return sablonaMsg(id, "Zadej název šablony.")
+  if (!polozky.length) return sablonaMsg(id, "Přidej aspoň jeden úkol.")
+  btn.disabled = true; sablonaMsg(id, "Ukládám…")
+  try {
+    await window.api("savetodosablona", { id: id === "new" ? undefined : id, nazev, polozky })
+    sablonyMsg = {}; sablony = await window.api("gettodosablony"); refresh()
+  } catch (e) { btn.disabled = false; sablonaMsg(id, "Uložení se nepodařilo: " + (e && e.message || e)) }
+}
+async function delSablona(btn) {
+  const id = btn.dataset.sbDel, sb = (sablony || []).find(x => x.id === id)
+  if (!sb || !confirm(`Smazat šablonu „${sb.nazev}“?`)) return
+  btn.disabled = true
+  try { await window.api("deletetodosablona", { id }); sablonyMsg = {}; sablony = await window.api("gettodosablony"); refresh() }
+  catch (e) { btn.disabled = false; sablonaMsg(id, "Smazání se nepodařilo: " + (e && e.message || e)) }
 }
 
 /* přetahování karet (myš, dotyk, pero) a klávesnice (šipky na úchytu) */
@@ -179,6 +232,7 @@ async function render(el) {
     area.addEventListener("pointerdown", dragStart); area.addEventListener("pointermove", dragMove); area.addEventListener("pointerup", dragEnd); area.addEventListener("pointercancel", dragEnd)
   }
   const u = user(); if (u?.email) { priv = await privateGet(u.email); refresh() }
+  loadSablony()
 }
 
 /* ── boční panel jen s ikonami ── */
