@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.1.1 (8. 11. 2026)
+- Oprava: po odškrtnutí, úpravě nebo smazání úkolu v detailu akce (a při jakékoli změně akce od někoho jiného) aplikace vrátila uživatele ze seznamu do přehledu akcí a sbalila sekce. Otevřený detail se teď obnoví na místě: rozbalené sekce (Marketing, To-do list…) i pozice na stránce zůstanou a detail se nezakryje načítacím kolečkem.
+
 ## 4.1.0 (8. 11. 2026)
 - Vlastní šablony úkolů ke koncertům. V Nastavení (Šablony úkolů; vidí a upravují administrátor, vlastník a umělecký vedoucí) lze vytvořit libovolný počet pojmenovaných seznamů úkolů, každý úkol je samostatný řádek. V podkladech akce (To-do před koncertem i v den koncertu) se vedle tlačítka „Přidat šablonu“ objeví výběr šablony; vestavěná šablona zůstává jako výchozí volba. Úkoly se k akci přidají nezaškrtnuté a dají se dál upravovat. Pozdější úprava šablony se u akcí, kam už byla přidána, neprojeví.
 - Sekce Marketing v detailu akce. Marketingový plán se vytváří v Markovi a tlačítkem „Převést do 10base“ se jeho harmonogram stane úkoly u akce (termín, čas, kanál, formát, účel, nápad). V 10base je odškrtávají všichni členové (zapíše se kdo a kdy), upravovat, přidávat a mazat je smí administrátor, umělecký vedoucí a lidé s přístupem do Marketingu. Úkol po termínu je označený. Opakovaný převod z Marka nahradí úkoly z plánu, ručně přidané nechá a hotové úkoly se stejným termínem a kanálem zůstanou hotové. Úkoly jsou uložené odděleně od akce, takže je uložení formuláře akce nepřepíše.

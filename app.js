@@ -2650,9 +2650,17 @@ function toggleObleceniSoustredeniDetail(val){
 
 async function openEvent(id){
   window.ACTIVE_EVENT_ID = id
+
+  // Překreslení téhož detailu (po úpravě úkolu, změně od někoho jiného…): zachovat rozbalené sekce a pozici na stránce
+  // a nezakrývat obsah načítacím kolečkem, ať uživatel nepřijde o místo, kde skončil.
+  const refreshing = ACTIVE_DETAIL_ID === id && !!document.querySelector('[id^="accBody_"]')
+  const keepOpen = refreshing
+    ? [...document.querySelectorAll('[id^="accBody_"]')].filter(b => b.style.display !== "none" && getComputedStyle(b).display !== "none").map(b => b.id.slice(8))
+    : []
+  const keepScroll = refreshing ? saveScroll() : 0
   ACTIVE_DETAIL_ID = id
 
-  setLoading()
+  if(!refreshing) setLoading()
 
   try{
     const data       = await cachedApi("eventdetail", {id})
@@ -2987,6 +2995,19 @@ async function openEvent(id){
 
         if(isDesktop) html += `</div>`  
         container().innerHTML = html
+
+    if(refreshing){
+      keepOpen.forEach(key => {
+        const body = document.getElementById("accBody_" + key)
+        if(!body) return
+        // bez animace: sekce má být hned otevřená, jak ji uživatel nechal
+        body.style.display = "block"
+        body.setAttribute("data-acc", "open")
+        body.classList.add("open")
+        document.getElementById("accChevron_" + key)?.setAttribute("data-acc", "open")
+      })
+      restoreScroll(keepScroll)
+    }
 
     saveState()
 
@@ -6492,10 +6513,17 @@ async function handleRealtimeChange(changed){
 
   }else if(changed === "akce"){
     lsDel("events")
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("cache_detail_"))
+      .forEach(k => localStorage.removeItem(k))   // jinak by se otevřený detail obnovil ze starého uloženého stavu
     CACHE.detail = {}
     CACHE.ts     = {}
     if(ACTIVE_TAB === "dashboard")   renderDashboard()
-    else if(ACTIVE_TAB === "events") renderEvents()
+    else if(ACTIVE_TAB === "events"){
+      // otevřený detail se jen obnoví na místě (sekce a pozice zůstanou), nevracíme uživatele do seznamu
+      if(ACTIVE_DETAIL_ID) openEvent(ACTIVE_DETAIL_ID)
+      else renderEvents()
+    }
 
   }else if(changed === "program"){
     CACHE.detail = {}
