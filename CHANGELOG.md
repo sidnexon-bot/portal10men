@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.4.0 (9. 11. 2026)
+- Marketing v 10base slouží jen jako přehled „úkol – hotovo“: seznam úkolů akce, kdo zodpovídá, termín a odškrtnutí. Texty, stavy návrhů, přidělování osob a psaní textů se dělají v Markovi (nová záložka Přehled). Členům s přístupem k Marketingu se v sekci Marketing ukáže odkaz do přehledu v Markovi. Odkazy „Napsat s Markem“ a „Beru to“ z 10base zmizely, přidělovat lze v Markovi nebo formulářem úkolu.
+- Opravy: v kartě Moje úkoly se už nezobrazují úkoly zrušených akcí.
+
 ## 4.3.0 (8. 11. 2026)
 - Zodpovědná osoba u úkolů. Společný úkol i marketingový úkol akce lze přiřadit členovi (formulář, pole Zodpovědný). U marketingového úkolu, který nikdo nemá, je odkaz „Beru to“; vidí ho administrátor, umělecký vedoucí a členové s přístupem k Marketingu. Přiřazení je vidět v seznamech („ty“ u vlastních úkolů).
 - Nová karta Přehledu „Moje úkoly“: nevyřízené úkoly přidělené přihlášenému (společné i marketingové, podle termínu, po termínu červeně). Odškrtnout je jde přímo z karty, klepnutí na marketingový úkol otevře akci. Kartu lze skrýt nebo přesunout v Nastavení; u stávajících uživatelů se zařadí na první místo.

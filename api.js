@@ -223,7 +223,7 @@ async function getMyTasks(email){
   })
   const cut = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10)   // úkoly dávno proběhlých akcí už nikoho nezajímají
   objToArray(akce).forEach(a => {
-    if(!a || !a.marketing?.ukoly || (a.date && String(a.date).slice(0, 10) < cut)) return
+    if(!a || !a.marketing?.ukoly || /zruš/i.test(a.status || "") || (a.date && String(a.date).slice(0, 10) < cut)) return   // zrušené akce se nepočítají
     Object.values(a.marketing.ukoly).forEach(t => {
       if(t && !t.done && t.assignee?.email === me)
         out.push({kind: "marketing", id: t.id, akceId: a.id, akceNazev: a.name || "", text: t.ucel || t.napad || "Úkol", datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || ""})

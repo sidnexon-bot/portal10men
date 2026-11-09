@@ -3168,8 +3168,6 @@ const MK_KANALY = {
 let MK_EDIT = null   // smí upravovat marketingové úkoly (ADMIN, ART, nebo člen v /marketingAccess)
 
 const MAREK_URL = "https://marek.10men.cz/"
-const MK_TEXT_KANALY = ["facebook", "instagram", "plakat", "newsletter"]   // kanály, pro které Marek umí napsat text
-const MK_DRAFT_STAV = {navrh: "Nový návrh", rozpracovano: "Rozpracováno", ke_schvaleni: "Ke schválení", hotovo: "Hotovo", archiv: "Archiv"}
 let MK_ACCESS = null   // člen je v /marketingAccess, tedy smí do Marka (Marek jinak vrátí 403)
 
 async function mkHasMarketing(){
@@ -3177,19 +3175,6 @@ async function mkHasMarketing(){
     try{ MK_ACCESS = (await api("mymarketingaccess")) === true }catch(e){ return false }
   }
   return MK_ACCESS
-}
-
-// Odkaz do Marka: existující návrh, nebo nový text předvyplněný z úkolu. Bez přístupu k Marketingu jen štítek stavu.
-function mkMarekHtml(akceId, t, access){
-  if(!MK_TEXT_KANALY.includes(t.kanal)) return ""
-  const link = (href, label) => `<a href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--blue,#007aff);font-weight:600">${label}</a>`
-  if(t.draftId){
-    const stav = escapeHtml(MK_DRAFT_STAV[t.draftStatus] || "Návrh")
-    return `<div class="small" style="margin-top:2px">Text: ${access ? link(MAREK_URL + "?navrh=" + encodeURIComponent(t.draftId), stav + " ›") : stav}</div>`
-  }
-  if(!access || t.done) return ""
-  const q = new URLSearchParams({akce: akceId, kanal: t.kanal, ukol: t.id})
-  return `<div class="small" style="margin-top:2px">${link(MAREK_URL + "?" + q, "Napsat s Markem ›")}</div>`
 }
 
 async function mkCanEdit(){
@@ -3222,20 +3207,10 @@ function mkMirrorHtml(tasks){
     </div>`).join("")
 }
 
-function mkAssigneeHtml(akceId, t, canAssign){
-  if(t.assignee) return `<div class="small" style="margin-top:2px;${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}" data-mk-assignee>Zodpovídá: ${escapeHtml(assigneeLabel(t.assignee))}</div>`
-  if(!canAssign || t.done) return ""
-  return `<div class="small" style="margin-top:2px"><a href="#" data-mk-take onclick="event.stopPropagation();takeMarketingTask('${akceId}','${escapeHtml(t.id)}');return false" style="color:var(--blue,#007aff);font-weight:600">Beru to ›</a></div>`
+function mkAssigneeHtml(t){
+  if(!t.assignee) return ""
+  return `<div class="small" style="margin-top:2px;${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">Zodpovídá: ${escapeHtml(assigneeLabel(t.assignee))}</div>`
 }
-
-async function takeMarketingTask(akceId, taskId){
-  try{
-    await api("setmarketingassignee", {id: akceId, taskId, assignee: {email: MEMBER_EMAIL, name: MEMBER_NAME}})
-    invalidateCache("eventdetail", akceId)
-    openEvent(akceId)
-  }catch(err){ alert("Chyba: " + (err?.message || err)) }
-}
-window.takeMarketingTask = takeMarketingTask
 
 function renderMarketingHtml(id, event, tasks, canEdit, access){
   const external = ["Koncert", "Soutěž", "Jiná akce"].includes(event.TYPE)
@@ -3248,8 +3223,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
         <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
         <div class="small">${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
         ${t.ucel && t.napad ? `<div class="small" style="margin-top:2px">${escapeHtml(t.napad)}</div>` : ""}
-        ${mkAssigneeHtml(id, t, canEdit || access)}
-        ${mkMarekHtml(id, t, access)}
+        ${mkAssigneeHtml(t)}
         ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}${t.doneVia === "marek" ? " (schválený text z Marka)" : ""}</div>` : ""}
       </div>
       ${canEdit ? `<div style="display:flex;gap:6px;flex-shrink:0">
@@ -3263,6 +3237,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
       <span id="accChevron_marketing" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
     </div>
     <div id="accBody_marketing" style="display:none;padding:0 16px 16px">
+      ${access ? `<div class="small" style="margin-top:8px"><a href="${MAREK_URL}?prehled=1" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--blue,#007aff);font-weight:600">Přehled týmu, texty a přidělování v Markovi ›</a></div>` : ""}
       ${tasks.length ? tasks.map(row).join("") : `<p class="notice" style="margin:12px 0 0">Zatím žádné úkoly. Vygeneruj plán v Markovi a převeď ho sem, nebo přidej úkol ručně.</p>`}
       ${canEdit ? `<div class="btn-group" style="margin-top:12px"><button type="button" onclick="addMarketingTask('${id}')">+ Přidat úkol</button></div>` : ""}
     </div>
