@@ -2116,7 +2116,7 @@ function renderRiderPanelContent(){
         <option value="">Nevybráno</option>
         ${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${garantId === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
       </select>
-      <span class="small">Člen zodpovědný za organizační průběh akce</span>
+      <span class="small">Člen zodpovědný za organizační průběh akce. Jeho e-mail a telefon uvidí spolupracující skupiny ve sdíleném odkazu projektu (10space).</span>
     </label>
 
     <div style="margin-top:16px">
@@ -2736,6 +2736,14 @@ async function openEvent(id){
     const mkEdit     = await mkCanEdit()
     const mkAccess   = await mkHasMarketing()
 
+    // garant akce: jméno z rideru (kontakt na něj je jen ve sdíleném projektu v 10space)
+    let garantJmeno = ""
+    try{
+      const gid = event.RIDER ? JSON.parse(event.RIDER).garant : ""
+      const g = gid ? (window.MEMBERS || []).find(m => (m.ID || m.id) === gid) : null
+      garantJmeno = g ? (g.NAME || g.name || "") : ""
+    }catch(e){ /* poškozený rider: garant se nezobrazí */ }
+
     // --- HLAVIČKA ---
    let html = isDesktop ? `<div style="max-width:560px;margin:0 auto">` : ``
    html += `
@@ -2759,6 +2767,12 @@ async function openEvent(id){
             <span class="info-label">Místo</span>
             <span class="info-value">${escapeHtml(event.PLACE) || (event.CALL_URL ? "Online" : "—")}</span>
           </div>
+          ${garantJmeno ? `
+          <div class="info-row">
+            <span class="info-label">Garant</span>
+            <span class="info-value">${escapeHtml(garantJmeno)}</span>
+          </div>
+          ` : ""}
           ${event.NOTE ? `
           <div class="info-row">
             <span class="info-label">Poznámka</span>

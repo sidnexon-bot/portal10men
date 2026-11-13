@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.5.0 (13. 11. 2026)
+- Detail akce: u akce se ukáže jméno garanta (pole Garant ze záložky rider v editoru akce). Kontakt na garanta (e-mail, telefon) se zobrazuje jen ve sdíleném odkazu projektu v 10space, který dostávají spolupracující skupiny.
+- Editor akce: u výběru garanta je upozornění, že jeho e-mail a telefon uvidí spolupracující skupiny ve sdíleném odkazu projektu.
+
 ## 4.4.0 (9. 11. 2026)
 - Marketing v 10base slouží jen jako přehled „úkol – hotovo“: seznam úkolů akce, kdo zodpovídá, termín a odškrtnutí. Texty, stavy návrhů, přidělování osob a psaní textů se dělají v Markovi (nová záložka Přehled). Členům s přístupem k Marketingu se v sekci Marketing ukáže odkaz do přehledu v Markovi. Odkazy „Napsat s Markem“ a „Beru to“ z 10base zmizely, přidělovat lze v Markovi nebo formulářem úkolu.
 - Opravy: v kartě Moje úkoly se už nezobrazují úkoly zrušených akcí.
