@@ -1267,66 +1267,7 @@ async function renderDashboard(){
         ` : ""}
       </div>
     `
-    // Moje úkoly: společné i marketingové úkoly přidělené přihlášenému členovi
-    const myToday = new Date().toLocaleDateString("sv-SE")
-    const myTasksHtml = `
-      <div class="card dash-mytasks" style="padding:0;margin-top:12px">
-        <div class="event-label" style="padding:16px 16px 0">Moje úkoly${myTasks.length ? ` <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${myTasks.length}</span>` : ""}</div>
-        ${myTasks.length ? myTasks.map((t, idx) => {
-          const late = t.datum && t.datum < myToday
-          const border = idx < myTasks.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
-          const sub = [t.kind === "marketing" ? "Marketing · " + (MK_KANALY[t.kanal] || t.kanal) + (t.akceNazev ? " · " + t.akceNazev : "") : "Úkol sboru",
-                       t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
-          const open = t.kind === "marketing" ? `openEvent('${escapeHtml(t.akceId)}')` : ""
-          return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
-            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('${t.kind}','${escapeHtml(t.akceId || "")}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
-            <div style="flex:1;min-width:0;${open ? "cursor:pointer" : ""}" ${open ? `onclick="${open}"` : ""}>
-              <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
-              <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
-            </div>
-          </div>`
-        }).join("") : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Nic ti nepřipadlo.</p></div>`}
-      </div>
-    `
-    // pomocná funkce pro Úkoly
-    const todosHtml = `
-      <div class="card dash-todos" style="padding:0;margin-top:12px">
-        <div class="event-label" style="padding:16px 16px 0">Úkoly</div>
-        ${Array.isArray(todos) && todos.length ? `
-          ${todos.map((t, idx) => {
-            const done       = t.done === true
-            const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
-            const border     = idx < todos.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
-            return `<div
-              style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-              onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
-            >
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                  ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-                </div>
-                <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-                ${t.assignee ? `<span class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</span>` : ""}
-                ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
-                ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
-              </div>
-              ${isSelected ? `
-                <div class="btn-group" style="margin-top:10px">
-                  <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
-                  <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
-                  <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
-                </div>
-              ` : ""}
-            </div>`
-          }).join("")}
-        ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`}
-        ${MEMBER_ROLE === "ADMIN" ? `
-          <div style="padding:10px 16px;border-top:1px solid var(--card-border)">
-            <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
-          </div>
-        ` : ""}
-      </div>
-    `
+    const todosHtml = ukolyCardHtml(myTasks, todos)   // jedna karta Úkoly s přepínačem Moje / Všechny
 
     // --- SESTAVENÍ HTML ---
     const heatmapHtml = await renderHeatmap()
@@ -1363,7 +1304,6 @@ async function renderDashboard(){
 
    // karty podle nastavení (Nastavení > Přehled): pořadí a výběr; na počítači do dvou sloupců zleva doprava
    const DASH = {
-     mytasks:   myTasksHtml,
      nearest:   nearestEventHtml,
      spring:    springHtml,
      aktuality: aktualityHtml,
@@ -1373,7 +1313,7 @@ async function renderDashboard(){
      contacts:  contactsHtml
    }
    const WIDE = ["heatmap", "contacts"]
-   const order = window.tenSettings ? window.tenSettings.dashboardCards() : ["mytasks","nearest","aktuality","todos","spring","autumn","heatmap","contacts"]
+   const order = window.tenSettings ? window.tenSettings.dashboardCards() : ["todos","nearest","aktuality","spring","autumn","heatmap","contacts"]
    let html = ""
 
    if(!order.length){
@@ -1382,7 +1322,7 @@ async function renderDashboard(){
      // výchozí Přehled: rozložení beze změny
      // dva nezávislé sloupce, aby pod nižší kartou nevznikala mezera
      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;margin-bottom:24px">`
-     html += `<div>${myTasksHtml}${nearestEventHtml}${aktualityHtml}${todosHtml}</div><div>${springHtml}${autumnHtml}</div></div>`
+     html += `<div>${todosHtml}${nearestEventHtml}${aktualityHtml}</div><div>${springHtml}${autumnHtml}</div></div>`
      html += DASH.heatmap + DASH.contacts
    }else if(isDesktop){
      let run = []
@@ -1459,6 +1399,94 @@ const assigneeLabel = a => a ? (isMine(a) ? "ty" : a.name) : ""
 
 function toggleAktualita(id){
   toggleAccordion("detailAkt_" + id, "chevronAkt_" + id)
+}
+
+// Karta Přehledu „Úkoly“ s přepínačem Moje / Všechny. Moje = společné i marketingové úkoly přidělené přihlášenému,
+// Všechny = společné úkoly sboru. Zvolená záložka se pamatuje; bez volby a bez vlastních úkolů se otevře Všechny.
+const UKOLY_TAB_KEY = "10base-ukoly-tab"
+function ukolyTab(myCount){
+  let t = null
+  try{ t = localStorage.getItem(UKOLY_TAB_KEY) }catch(e){ /* bez uložení */ }
+  return t === "moje" || t === "vsechny" ? t : (myCount ? "moje" : "vsechny")
+}
+function ukolyMojeHtml(myTasks){
+  const myToday = new Date().toLocaleDateString("sv-SE")
+  return `
+        ${myTasks.length ? myTasks.map((t, idx) => {
+          const late = t.datum && t.datum < myToday
+          const border = idx < myTasks.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+          const sub = [t.kind === "marketing" ? "Marketing · " + (MK_KANALY[t.kanal] || t.kanal) + (t.akceNazev ? " · " + t.akceNazev : "") : "Úkol sboru",
+                       t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
+          const open = t.kind === "marketing" ? `openEvent('${escapeHtml(t.akceId)}')` : ""
+          return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('${t.kind}','${escapeHtml(t.akceId || "")}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
+            <div style="flex:1;min-width:0;${open ? "cursor:pointer" : ""}" ${open ? `onclick="${open}"` : ""}>
+              <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
+              <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
+            </div>
+          </div>`
+        }).join("") : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Nic ti nepřipadlo.</p></div>`}
+  `
+}
+function ukolyVsechnyHtml(todos){
+  return `
+        ${Array.isArray(todos) && todos.length ? `
+          ${todos.map((t, idx) => {
+            const done       = t.done === true
+            const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
+            const border     = idx < todos.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+            return `<div
+              style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
+              onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
+            >
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
+                </div>
+                <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
+                ${t.assignee ? `<span class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</span>` : ""}
+                ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
+                ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
+              </div>
+              ${isSelected ? `
+                <div class="btn-group" style="margin-top:10px">
+                  <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
+                  <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+                </div>
+              ` : ""}
+            </div>`
+          }).join("")}
+        ` : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`}
+        ${MEMBER_ROLE === "ADMIN" ? `
+          <div style="padding:10px 16px;border-top:1px solid var(--card-border)">
+            <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
+          </div>
+        ` : ""}
+  `
+}
+function ukolyCardHtml(myTasks, todos){
+  const tab = ukolyTab(myTasks.length)
+  const openTodos = Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0
+  const btn = (id, label, n) => `<button type="button" role="tab" data-ukoly-tab="${id}" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" onclick="setUkolyTab('${id}')">${label} <span data-ukoly-count="${id}" style="font-weight:400;opacity:.7">· ${n}</span></button>`
+  return `
+    <div class="card dash-todos" style="padding:0;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 0">
+        <span class="event-label" style="padding:0">Úkoly</span>
+        <div class="st-seg" role="tablist" aria-label="Úkoly">${btn("moje", "Moje", myTasks.length)}${btn("vsechny", "Všechny", openTodos)}</div>
+      </div>
+      <div id="ukolyMoje" ${tab === "moje" ? "" : "hidden"}>${ukolyMojeHtml(myTasks)}</div>
+      <div id="ukolyAll" ${tab === "vsechny" ? "" : "hidden"}>${ukolyVsechnyHtml(todos)}</div>
+    </div>
+  `
+}
+window.setUkolyTab = (tab) => {
+  if(tab !== "moje" && tab !== "vsechny") return
+  try{ localStorage.setItem(UKOLY_TAB_KEY, tab) }catch(e){ /* bez uložení */ }
+  document.querySelectorAll(".dash-todos [data-ukoly-tab]").forEach(b => { const on = b.dataset.ukolyTab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on) })
+  const m = document.getElementById("ukolyMoje"), a = document.getElementById("ukolyAll")
+  if(m) m.hidden = tab !== "moje"
+  if(a) a.hidden = tab !== "vsechny"
 }
 
 // Odškrtnutí vlastního úkolu přímo z Přehledu (společný úkol i marketingový úkol akce)
@@ -6703,42 +6731,25 @@ async function updateDashboardTodos(){
   try{
     const todos = await api("todos")
     lsSet("todos", todos)
+    if(!document.querySelector(".dash-todos")) return
 
-    const container = document.querySelector(".dash-todos")
-    if(!container) return
+    // úkoly přidělené mně se mohly změnit také: když se je nepodaří načíst, panel Moje zůstane, jak je
+    let my = null
+    try{ my = await api("mytasks", {email: MEMBER_EMAIL}) }catch(e){ /* panel Moje beze změny */ }
 
-    if(!Array.isArray(todos) || !todos.length){
-      container.innerHTML = `<div style="padding:14px 16px"><p class="notice" style="margin:0">Žádné úkoly</p></div>`
-      return
+    const all = document.getElementById("ukolyAll")
+    if(all) all.innerHTML = ukolyVsechnyHtml(todos)
+    const setCount = (id, n) => { const el = document.querySelector(`[data-ukoly-count="${id}"]`); if(el) el.textContent = "· " + n }
+    setCount("vsechny", Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0)
+    if(my){
+      const mine = document.getElementById("ukolyMoje")
+      if(mine) mine.innerHTML = ukolyMojeHtml(my)
+      setCount("moje", my.length)
     }
-
-    container.innerHTML = todos.map((t, idx) => {
-      const done       = t.done === true
-      const isSelected = MEMBER_ROLE === "ADMIN" && TODO_SELECTED === t.id
-      const border     = idx < todos.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.08);" : ""
-      return `<div
-        style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
-      >
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
-          </div>
-          <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-          ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
-          ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
-        </div>
-        ${isSelected ? `
-          <div class="btn-group" style="margin-top:10px">
-            <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
-            <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
-            <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
-          </div>
-        ` : ""}
-      </div>`
-    }).join("")
   }catch(e){ console.error("updateDashboardTodos:", e) }
 }
+
+window.updateDashboardTodos = updateDashboardTodos
 
 async function updateDashboardAttendance(){
   try{

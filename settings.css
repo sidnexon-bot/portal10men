@@ -51,6 +51,10 @@ body.settings-page main { padding-bottom: 24px; }
 .dash-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 24px; align-items: start; }
 .dash-col > .card { margin-bottom: 16px; }
 .dash-col .dash-todos { margin-top: 0 !important; }
+/* přepínač Moje / Všechny v kartě Úkoly: nevybraná záložka šedě i v tmavém režimu (obecné pravidlo pro tlačítka je modré) */
+body .dash-todos .st-seg button:not(.on) { color: var(--muted); }
+body .dash-todos .st-seg button.on { color: var(--text, inherit); }
+body.dark .dash-todos .st-seg button.on { color: #fff; }
 
 /* boční panel jen s ikonami (jen počítač) */
 .sidebar-action-sep { height: 1px; margin: 8px 12px; background: var(--card-border, rgba(60, 60, 67, 0.12)); }

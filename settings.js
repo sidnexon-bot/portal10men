@@ -8,10 +8,9 @@ import { database, auth, ref, get, set } from "./firebase.js"
 
 const LS = "10base-theme", LSS = "10base-settings", SB = "10base-sidebar-collapsed"
 const CARDS = [
-  { id: "mytasks", title: "Moje úkoly", desc: "Úkoly, které jsou přiřazené tobě" },
+  { id: "todos", title: "Úkoly", desc: "Moje úkoly a společné úkoly sboru (přepínač Moje / Všechny)" },
   { id: "nearest", title: "Nejbližší akce", desc: "Nejbližší akce s tvou docházkou" },
   { id: "aktuality", title: "Aktuality", desc: "Zprávy pro celý sbor" },
-  { id: "todos", title: "Úkoly", desc: "Společné úkoly sboru" },
   { id: "spring", title: "Jaro / Léto", desc: "Koncerty od ledna do června" },
   { id: "autumn", title: "Podzim / Zima", desc: "Koncerty od července do prosince" },
   { id: "heatmap", title: "Docházka skupiny", desc: "Přehled docházky na zkoušky" },
@@ -29,8 +28,19 @@ const user = () => { try { return JSON.parse(localStorage.getItem("10base_user")
 const keyOf = email => String(email || "").replace(/\./g, "_").replace(/@/g, "_")
 const myKey = () => keyOf(user()?.email)
 
+// Karty „Moje úkoly“ a „Úkoly“ jsou jedna karta „Úkoly“: stojí na dřívější z obou pozic a je skrytá jen tehdy, když byly skryté obě
+function mergeTasks(d) {
+  const ord = Array.isArray(d.order) ? d.order : [], hid = Array.isArray(d.hidden) ? d.hidden : []
+  if (!ord.includes("mytasks") && !hid.includes("mytasks")) return d
+  const shown = id => ord.includes(id) && !hid.includes(id)
+  const order = []
+  ord.forEach(i => { if (i === "mytasks" || i === "todos") { if (!order.includes("todos")) order.push("todos") } else order.push(i) })
+  const hidden = hid.filter(i => i !== "mytasks" && i !== "todos")
+  if (!shown("mytasks") && !shown("todos")) hidden.push("todos")
+  return { order, hidden }
+}
 function cleanDash(d) {
-  d = d || {}
+  d = mergeTasks(d || {})
   const order = (Array.isArray(d.order) ? d.order : []).filter((i, p, a) => ids.includes(i) && a.indexOf(i) === p)
   const hidden = (Array.isArray(d.hidden) ? d.hidden : []).filter((i, p, a) => ids.includes(i) && a.indexOf(i) === p)
   // nová karta se zařadí podle výchozího pořadí (za předchozí kartu, která v pořadí je), ne na konec

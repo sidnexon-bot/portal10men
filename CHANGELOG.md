@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.6.0 (13. 11. 2026)
+- Přehled: karty „Moje úkoly“ a „Úkoly“ jsou sloučené do jedné karty „Úkoly“ s přepínačem Moje / Všechny a počty nevyřízených. Moje = společné i marketingové úkoly přidělené přihlášenému (jako dosud, včetně odškrtnutí a otevření akce), Všechny = společné úkoly sboru s úpravami pro administrátora. Zvolená záložka se pamatuje; bez volby a bez vlastních úkolů se otevře Všechny.
+- Nastavení: v seznamu karet Přehledu je jedna karta „Úkoly“. Stávající nastavení se přenese (karta stojí na dřívější z obou pozic a je skrytá jen tehdy, když byly skryté obě).
+- Oprava: změna úkolů od někoho jiného už nepřepíše celou kartu jen seznamem (zmizel z ní nadpis, jména přidělených osob a tlačítko Přidat úkol); obnoví se jen obsah panelů a počty.
+
 ## 4.5.0 (13. 11. 2026)
 - Detail akce: u akce se ukáže jméno garanta (pole Garant ze záložky rider v editoru akce). Kontakt na garanta (e-mail, telefon) se zobrazuje jen ve sdíleném odkazu projektu v 10space, který dostávají spolupracující skupiny.
 - Editor akce: u výběru garanta je upozornění, že jeho e-mail a telefon uvidí spolupracující skupiny ve sdíleném odkazu projektu.
