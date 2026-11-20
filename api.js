@@ -237,6 +237,18 @@ async function deleteMarketingTask(params){
   return {status: "deleted"}
 }
 
+// Počty skladeb programu podle akce (jedno čtení /program): {akceId: {main, encore}}. Slouží výběru zdroje při převzetí programu.
+async function getProgramSummary(){
+  const out = {}
+  for(const p of objToArray(await dbGet("/program"))){
+    if(!p.id_akce) continue
+    const o = out[p.id_akce] || (out[p.id_akce] = {main: 0, encore: 0})
+    if(Number(p.order) >= 900) o.encore++
+    else o.main++
+  }
+  return out
+}
+
 async function getEventDetail(id){
   const akce = await dbGet("/akce/" + id)
   if(!akce) throw new Error("Akce nenalezena: " + id)
@@ -1466,6 +1478,7 @@ async function api(action, params = {}){
     case "members":          return await getMembers()
     case "events":           return await getEvents()
     case "eventdetail":      return await getEventDetail(params.id)
+    case "programsummary":   return await getProgramSummary()
     case "setattendance":    return await setAttendance(params)
     case "finalizeattendance": return await finalizeAttendance(params)
     case "reopenattendance":   return await reopenAttendance(params)

@@ -3573,6 +3573,85 @@ async function copyProgramFromPrevious(){
   }
 }
 
+// Převzetí programu z libovolné akce (dřívější i pozdější, jakéhokoli typu): seznam akcí, které mají program.
+// Výchozí je nahrazení; se zaškrtnutým „Přidat k současnému“ se k programu doplní jen skladby, které v něm ještě nejsou.
+async function toggleProgSource(){
+  const panel = document.getElementById("progSrcPanel")
+  const btn   = document.getElementById("progSrcBtn")
+  if(!panel) return
+  const open = panel.classList.contains("hidden")
+  panel.classList.toggle("hidden", !open)
+  btn.setAttribute("aria-expanded", open)
+  if(!open) return
+  const have = window.PROG_MAIN.length + window.PROG_ENCORE.filter(Boolean).length
+  document.getElementById("progSrcAppend").checked = have > 0
+  document.getElementById("progSrcList").innerHTML = `<div class="small" style="padding:10px 2px">Načítám akce…</div>`
+  try{
+    const [events, summary] = await Promise.all([cachedApi("events"), api("programsummary")])
+    window.PROG_SRC = events
+      .filter(e => !e.IS_TEMPLATE && e.ID !== window.PROG_EVENT && summary[e.ID] && (summary[e.ID].main + summary[e.ID].encore) > 0)
+      .map(e => ({ID: e.ID, NAME: e.NAME || "", DATE: e.DATE || "", TYPE: e.TYPE || "", main: summary[e.ID].main, encore: summary[e.ID].encore}))
+    // nejblíže aktuální akci nahoře (po datu), tedy nedávné zkoušky a koncerty dřív než staré
+    const cur = new Date((window.PROG_EVENT_DATA || {}).DATE).getTime() || Date.now()
+    window.PROG_SRC.sort((a, b) => Math.abs(new Date(a.DATE) - cur) - Math.abs(new Date(b.DATE) - cur))
+    renderProgSource()
+  }catch(err){
+    document.getElementById("progSrcList").innerHTML = `<div class="small" style="padding:10px 2px">Akce se nepodařilo načíst</div>`
+  }
+}
+
+function renderProgSource(){
+  const list = document.getElementById("progSrcList")
+  if(!list) return
+  const q = (document.getElementById("progSrcSearch")?.value || "").toLowerCase().trim()
+  const rows = (window.PROG_SRC || []).filter(e => !q || `${e.NAME} ${formatDate(e.DATE)} ${e.DATE} ${e.TYPE}`.toLowerCase().includes(q)).slice(0, 60)
+  list.innerHTML = rows.length ? rows.map(e => `
+    <div class="prog-src-row" role="button" tabindex="0" onclick="copyProgramFrom('${escapeHtml(e.ID)}')">
+      <div class="prog-song-text">
+        <b>${escapeHtml(e.NAME)}</b>
+        <div class="small">${escapeHtml(formatDate(e.DATE))}${e.TYPE ? " · " + escapeHtml(e.TYPE) : ""}</div>
+      </div>
+      <span class="prog-badge" title="Skladeb v programu">${e.main}${e.encore ? " +" + e.encore : ""}</span>
+    </div>`).join("") : `<div class="small" style="padding:10px 2px">Žádná akce s programem${q ? " pro toto hledání" : ""}</div>`
+}
+
+async function copyProgramFrom(eventId){
+  const src = (window.PROG_SRC || []).find(e => e.ID === eventId)
+  if(!src) return
+  try{
+    const d    = await cachedApi("eventdetail", {id: eventId})
+    const prog = (d.program || []).filter(p => window.PROG_SONGS.some(s => s.ID === p.SONG_ID))
+    if(!prog.length){ showToast("Program této akce se nepodařilo převzít"); return }
+    const main   = prog.filter(p => !p.ENCORE).map(p => p.SONG_ID)
+    const encore = prog.filter(p => p.ENCORE).map(p => p.SONG_ID).slice(0, 2)
+    const append = document.getElementById("progSrcAppend")?.checked
+    const when   = formatDate(src.DATE)
+    const have   = window.PROG_MAIN.length + window.PROG_ENCORE.filter(Boolean).length
+
+    if(append){
+      const used = new Set([...window.PROG_MAIN, ...window.PROG_ENCORE.filter(Boolean)])
+      const addMain = main.filter(id => !used.has(id))
+      addMain.forEach(id => used.add(id))
+      const slots = window.PROG_ENCORE.map(Boolean)
+      const addEnc = []
+      encore.filter(id => !used.has(id)).forEach(id => { const at = slots.indexOf(false); if(at > -1){ window.PROG_ENCORE[at] = id; slots[at] = true; addEnc.push(id) } })
+      window.PROG_MAIN.push(...addMain)
+      showToast(`Přidáno z „${src.NAME}“ (${when}): ${addMain.length} skladeb${addEnc.length ? " + " + addEnc.length + " přídavky" : ""}`, 3500)
+    }else{
+      if(have && !confirm(`Nahradit současný program programem z akce „${src.NAME}“ (${when})?`)) return
+      window.PROG_MAIN   = main
+      window.PROG_ENCORE = [encore[0] || "", encore[1] || ""]
+      showToast(`Převzato z „${src.NAME}“ (${when}): ${main.length} skladeb${encore.length ? " + " + encore.length + " přídavky" : ""}`, 3500)
+    }
+    markModalDirty('programEditorModal')
+    refreshProgSelected()
+    document.getElementById("progSrcPanel")?.classList.add("hidden")
+    document.getElementById("progSrcBtn")?.setAttribute("aria-expanded", "false")
+  }catch(err){
+    showToast("Program se nepodařilo načíst")
+  }
+}
+
 /* ===============================
    OCHRANA OKEN PŘED NECHTĚNÝM ZAVŘENÍM
    Klik mimo okno jen zatřese (viz nudgeModal). Zrušit a Esc se u okna s neuloženými změnami nejdřív zeptají.
@@ -3605,7 +3684,7 @@ function anyModalDirty(){
 ;(function initModalGuard(){
   const onEdit = e => {
     const m = e.target.closest && e.target.closest(".modal")
-    if(m && GUARDED_MODALS[m.id] && e.target.id !== "progSearch") markModalDirty(m.id)
+    if(m && GUARDED_MODALS[m.id] && e.target.id !== "progSearch" && e.target.id !== "progSrcSearch" && e.target.id !== "progSrcAppend") markModalDirty(m.id)
   }
   document.addEventListener("input", onEdit)
   document.addEventListener("change", onEdit)
@@ -3627,7 +3706,15 @@ function renderProgramEditor(songs, currentIds, event){
   let html = `
   <h2>Program: ${escapeHtml(event.NAME || "")}</h2>
 
-  <button type="button" class="prog-copy" id="progCopyBtn" onclick="copyProgramFromPrevious()">Převzít program z minulé akce</button>
+  <div class="prog-copy-row">
+    <button type="button" class="prog-copy" id="progCopyBtn" onclick="copyProgramFromPrevious()">Z minulé akce</button>
+    <button type="button" class="prog-copy" id="progSrcBtn" aria-expanded="false" onclick="toggleProgSource()">Z jiné akce…</button>
+  </div>
+  <div class="prog-src hidden" id="progSrcPanel">
+    <input id="progSrcSearch" class="prog-search" type="search" placeholder="Hledat akci nebo datum…" oninput="renderProgSource()">
+    <label class="prog-src-mode"><input type="checkbox" id="progSrcAppend"> Přidat k současnému programu (nenahrazovat)</label>
+    <div id="progSrcList" class="prog-src-list"></div>
+  </div>
 
   <div class="prog-seg" role="tablist">
     <button type="button" role="tab" id="btnSectionMain" class="active" onclick="setProgSection('main')">Program <span class="prog-count" id="progCountMain">0</span></button>
@@ -6922,6 +7009,9 @@ window.removeProgSong       = removeProgSong
 window.moveProgSong         = moveProgSong
 window.setProgSection       = setProgSection
 window.copyProgramFromPrevious = copyProgramFromPrevious
+window.toggleProgSource = toggleProgSource
+window.renderProgSource = renderProgSource
+window.copyProgramFrom = copyProgramFrom
 window.filterProgSongs      = filterProgSongs
 window.heatmapPrev          = heatmapPrev
 window.heatmapNext          = heatmapNext

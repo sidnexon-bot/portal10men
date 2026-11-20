@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.7.0 (20. 11. 2026)
+- Program akce: vedle „Z minulé akce“ je nové tlačítko „Z jiné akce…“. Otevře seznam všech akcí, které mají vyplněný program (nejblíž datu této akce nahoře, s hledáním podle názvu nebo data a s počtem skladeb). Program z vybrané akce se převezme místo současného, nebo se zaškrtnutím „Přidat k současnému programu“ doplní jen skladby, které tam ještě nejsou. Hodí se na cvičení z koncertního programu a na zkopírování programu z jiné zkoušky.
+- Server (api.js): nová akce `programsummary` s počty skladeb programu podle akce.
+
 ## 4.6.0 (13. 11. 2026)
 - Přehled: karty „Moje úkoly“ a „Úkoly“ jsou sloučené do jedné karty „Úkoly“ s přepínačem Moje / Všechny a počty nevyřízených. Moje = společné i marketingové úkoly přidělené přihlášenému (jako dosud, včetně odškrtnutí a otevření akce), Všechny = společné úkoly sboru s úpravami pro administrátora. Zvolená záložka se pamatuje; bez volby a bez vlastních úkolů se otevře Všechny.
 - Nastavení: v seznamu karet Přehledu je jedna karta „Úkoly“. Stávající nastavení se přenese (karta stojí na dřívější z obou pozic a je skrytá jen tehdy, když byly skryté obě).
