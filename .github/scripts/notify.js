@@ -86,24 +86,24 @@ async function main(){
     eventDate.setHours(0,0,0,0);
     const daysUntil = Math.ceil((eventDate - todayDate) / (1000 * 60 * 60 * 24));
 
-    // 3 dny pred akci
-    if(daysUntil === 3){
+    // 5 dní před akcí
+    if(daysUntil === 5){
       if(event.requires_program !== false){
         const hasProgram = progEntries.some(p => p.id_akce === event.id);
         if(!hasProgram){
           await sendDiscord(
-            '📋 Akce **' + event.name + '** je za 3 dny a nema program. ' + kajaPing + ', doplň ho prosim v 10base!',
+            '📋 Akce **' + event.name + '** je za 5 dní a nemá program. ' + kajaPing + ', doplň ho prosím v 10base!',
             config
           );
         }
       }
       await sendDiscord(
-        rolePing + ' ✋ Akce **' + event.name + '** je za 3 dny. Kluci, zkontrolujte si dochazku v 10base a doplnte ji, pokud jeste neni vyplnena.',
+        rolePing + ' ✋ Akce **' + event.name + '** je za 5 dní. Kluci, zkontrolujte si docházku v 10base a doplňte ji, pokud ještě není vyplněná.',
         config
       );
     }
 
-    // 1 den pred akci
+    // 1 den před akcí
     if(daysUntil === 1){
       const nevyplneni = memberList.filter(m => {
         if((m.role || '').toUpperCase() === 'GUEST') return false;
@@ -120,7 +120,7 @@ async function main(){
         }).join(' ');
 
         await sendDiscord(
-          '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' jeste jste nevyplnili dochazku. Prijdete, nebo ne? Doplnte si ji v 10base.',
+          '⚠️ Zítra je **' + event.name + '**!\n\n' + mentions + ' ještě jste nevyplnili docházku. Přijdete, nebo ne? Doplňte si ji v 10base.',
           config
         );
       }
@@ -145,7 +145,7 @@ async function main(){
           }).join('\n');
         }
       }else{
-        programText = event.requires_program !== false ? kajaPing + ' program zatim neni vyplnen 🎵' : '—';
+        programText = event.requires_program !== false ? kajaPing + ' program zatím není vyplněn 🎵' : '—';
       }
 
       const datum = new Date(event.date).toLocaleDateString('cs-CZ', {day: 'numeric', month: 'long'});
@@ -164,7 +164,7 @@ async function main(){
     }
   }
 
-  // Nedelni prehled celeho tydne
+  // Nedělní přehled celého týdne
   if(isNedele){
     const pondeli = new Date(todayDate);
     pondeli.setDate(pondeli.getDate() + 1);
@@ -205,7 +205,7 @@ async function main(){
             }).join('\n');
           }
         }else{
-          progText = ev.requires_program !== false ? kajaPing + ' program zatim neni vyplnen 🎵' : '—';
+          progText = ev.requires_program !== false ? kajaPing + ' program zatím není vyplněn 🎵' : '—';
         }
 
         const datum = new Date(ev.date).toLocaleDateString('cs-CZ', {weekday: 'long', day: 'numeric', month: 'long'});
