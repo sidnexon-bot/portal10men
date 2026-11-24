@@ -698,7 +698,7 @@ async function setProgram(params){
       const rolePing = roleId ? ('<@&' + roleId + '>') : ''
     
       await sendDiscordMessage({
-        message: `${rolePing} 📋 **Kája právě doplnil program:**\n\n- **${akceData?.name || ""}**\n- **Kdy:** ${akceData?.date ? formatDateSimple(akceData.date) : "—"}${akceData?.start ? " · " + akceData.start : ""}${akceData?.end ? " – " + akceData.end : ""}\n- **Místo:** ${akceData?.place || "—"}\n\nPodívej se, co budeme zpívat. 🎵`
+        message: `${rolePing} 📋 **Kája právě doplnil program:**\n\n- **${akceData?.name || ""}**\n- **Kdy:** ${akceData?.date ? formatDateSimple(akceData.date) : "—"}${akceData?.start ? " · " + akceData.start : ""}${akceData?.end ? " – " + akceData.end : ""}\n- **Místo:** ${akceData?.place || "—"}\n\nPodívej se, co budeme zpívat a stáhni si noty dopředu - stačí pouze otevřít 10space. 🎵`
       })
 
   return {status: "saved"}
@@ -1230,7 +1230,7 @@ async function addRecurring(params){
   }
 
       await sendDiscordMessage({
-      message: `📅 **Nové opakující se akce: ${params.name}**\nVytvořeno ${instances} akcí`
+      message: `📅 **Nové opakující se akce: ${params.name}**\nVytvořeno ${createdIds.length} akcí`
     })
 
   return { status: "created", templateId, instances: createdIds.length }
