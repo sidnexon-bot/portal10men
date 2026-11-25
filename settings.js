@@ -138,7 +138,7 @@ function autoForm(a) {
     <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
     <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
     <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
-    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba (l/100 km, nepovinné)</label>
+    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba dle technického průkazu (l/100 km, u elektřiny kWh/100 km, nepovinné)</label>
     <input type="number" id="au-s-${esc(id)}" data-au-spotreba min="0" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
     <div class="st-acts" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="st-add" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
@@ -153,7 +153,7 @@ function autaHtml() {
   if (auta === null) return ""
   const karty = auta.map(a => autoEdit === a.id ? autoForm(a) : autoKarta(a)).join("")
   return `<h3 class="st-h">Moje auta</h3>
-    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba budou sloužit k vyúčtování paliva. Klepnutím na kartu auto upravíš nebo smažeš.</p></div>
+    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba se předvyplní při proplácení paliva v 10korun (spotřebu uveď podle technického průkazu). Klepnutím na kartu auto upravíš nebo smažeš.</p></div>
     ${autoEdit === "new" ? autoForm(null) : ""}${karty}
     ${autoEdit !== null ? "" : `<div class="st-foot"><button type="button" class="st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
 }

@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.8.2 (26. 11. 2026)
+- Moje auta: spotřeba se zadává podle technického průkazu (u elektřiny v kWh/100 km); údaje z auta teď předvyplní proplácení paliva v 10korun.
+
 ## 4.8.1 (25. 11. 2026)
 - Nastavení, Moje auta: auta jsou přehledné karty (název, počet míst, palivo, spotřeba, značka Výchozí). Klepnutím na kartu se otevře úprava s tlačítky Uložit, Zrušit a Smazat. Tlačítko „Přidat auto“ otevře formulářovou kartu pro nové auto.
 
