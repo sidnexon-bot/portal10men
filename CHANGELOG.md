@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.9.0 (26. 11. 2026)
+- Posádky: u auta s určeným typem je pole „Místa obsazená jinými (rodina, hosté)“. Tato místa se započítají do obsazenosti („5/7 · 2 volná místa (z toho 2 pro jiné než členy)“), takže řidič, který veze rodinu, nemá k dispozici celou kapacitu. Hodnota se ukládá do posádky jako `auto_rezervovano` a zobrazí se i v detailu akce a v Discordu. Starší posádky bez ní se počítají jako dřív (0).
+
 ## 4.8.3 (26. 11. 2026)
 - Moje auta: spotřeba podle technického průkazu je povinná (ukládá se jen s hodnotou nad 0 a do 40). Auta uložená dřív bez spotřeby mají na kartě upozornění „doplň spotřebu“ a při úpravě se spotřeba musí doplnit; pravidla databáze se nemění, stará data zůstávají čitelná.
 
