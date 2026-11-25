@@ -23,7 +23,7 @@ const card = id => CARDS.find(c => c.id === id)
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
 const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null
 let S = { theme: "light", dashboard: { order: ids.slice(), hidden: [] } }
-let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}, auta = null, autaMsg = {}
+let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}, auta = null, autaMsg = {}, autoEdit = null
 
 const user = () => { try { return JSON.parse(localStorage.getItem("10base_user") || "null") } catch (e) { return null } }
 const keyOf = email => String(email || "").replace(/\./g, "_").replace(/@/g, "_")
@@ -123,25 +123,39 @@ function autoMsg(id, text) {
   autaMsg[id] = text
   const el = area && area.querySelector(`[data-auto="${id}"] [role=status]`); if (el) el.textContent = text
 }
+function autoSouhrn(a) {
+  const dily = [`${a.mist} ${a.mist === 1 ? "místo" : (a.mist >= 2 && a.mist <= 4 ? "místa" : "míst")}`]
+  if (a.palivo) dily.push(a.palivo)
+  if (a.spotreba) dily.push(`${String(a.spotreba).replace(".", ",")} l/100 km`)
+  return dily.join(" · ")
+}
+function autoForm(a) {
+  const isNew = !a, id = isNew ? "new" : a.id, msg = autaMsg[id] || ""
+  return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Upravit auto"}</div>
+    <label class="st-name" for="au-n-${esc(id)}">Název</label>
+    <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="width:100%;box-sizing:border-box">
+    <label class="st-name" for="au-m-${esc(id)}" style="margin-top:10px;display:block">Počet míst (včetně řidiče)</label>
+    <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
+    <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
+    <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba (l/100 km, nepovinné)</label>
+    <input type="number" id="au-s-${esc(id)}" data-au-spotreba min="0" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
+    <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
+    <div class="st-acts" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="st-add" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
+    <div role="status" class="st-hint" style="margin:8px 0 0">${esc(msg)}</div></div>`
+}
+function autoKarta(a) {
+  return `<button type="button" class="card st-card" data-au-open="${esc(a.id)}" aria-label="Upravit auto ${esc(a.nazev)}" style="display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div class="st-name" style="font-weight:600">${esc(a.nazev)}</div>${a.vychozi ? '<span class="st-hint" style="margin:0">Výchozí</span>' : ""}</div>
+    <div class="st-hint" style="margin:4px 0 0">${esc(autoSouhrn(a))}</div></button>`
+}
 function autaHtml() {
   if (auta === null) return ""
-  const card = (a, isNew) => {
-    const id = isNew ? "new" : a.id, msg = autaMsg[id] || ""
-    return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Auto"}</div>
-      <label class="st-name" for="au-n-${esc(id)}">Název</label>
-      <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="width:100%;box-sizing:border-box">
-      <label class="st-name" for="au-m-${esc(id)}" style="margin-top:10px;display:block">Počet míst (včetně řidiče)</label>
-      <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
-      <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
-      <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
-      <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba (l/100 km, nepovinné)</label>
-      <input type="number" id="au-s-${esc(id)}" data-au-spotreba min="0" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
-      <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
-      <div class="st-acts" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}<span role="status" class="st-hint" style="margin:0">${esc(msg)}</span></div></div>`
-  }
+  const karty = auta.map(a => autoEdit === a.id ? autoForm(a) : autoKarta(a)).join("")
   return `<h3 class="st-h">Moje auta</h3>
-    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba budou sloužit k vyúčtování paliva.</p></div>
-    ${auta.map(a => card(a, false)).join("")}${card(null, true)}`
+    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba budou sloužit k vyúčtování paliva. Klepnutím na kartu auto upravíš nebo smažeš.</p></div>
+    ${autoEdit === "new" ? autoForm(null) : ""}${karty}
+    ${autoEdit === "new" ? "" : `<div class="st-foot"><button type="button" class="st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
 }
 async function saveAuto(btn) {
   const id = btn.dataset.auSave, box = btn.closest("[data-auto]"); if (!box) return
@@ -156,14 +170,14 @@ async function saveAuto(btn) {
   const nove = { id: id === "new" ? "a" + Date.now().toString(36) : id, nazev, mist, palivo, spotreba, vychozi }
   const list = (auta || []).filter(a => a.id !== nove.id).map(a => vychozi ? { ...a, vychozi: false } : a).concat(nove)
   btn.disabled = true; autoMsg(id, "Ukládám…")
-  try { await autaWrite(list); autaMsg = {}; await autaLoad() }
+  try { await autaWrite(list); autaMsg = {}; autoEdit = null; await autaLoad() }
   catch (e) { btn.disabled = false; autoMsg(id, "Uložení se nepodařilo: " + (e && e.message || e)) }
 }
 async function delAuto(btn) {
   const id = btn.dataset.auDel, a = (auta || []).find(x => x.id === id)
   if (!a || !confirm(`Smazat auto „${a.nazev}“? V už uložených posádkách akcí zůstane.`)) return
   btn.disabled = true
-  try { await autaWrite(auta.filter(x => x.id !== id)); autaMsg = {}; await autaLoad() }
+  try { await autaWrite(auta.filter(x => x.id !== id)); autaMsg = {}; autoEdit = null; await autaLoad() }
   catch (e) { btn.disabled = false; autoMsg(id, "Smazání se nepodařilo: " + (e && e.message || e)) }
 }
 
@@ -227,8 +241,11 @@ function refresh() {
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del],[data-au-open],[data-au-new],[data-au-cancel]")
   if (!t || !area || !area.contains(t)) return
+  if (t.dataset.auOpen) { autoEdit = t.dataset.auOpen; autaMsg = {}; refresh(); const f = area.querySelector(`[data-auto="${autoEdit}"]`); if (f) { f.scrollIntoView({ block: "nearest" }); f.querySelector("[data-au-nazev]").focus() } return }
+  if (t.dataset.auNew) { autoEdit = "new"; autaMsg = {}; refresh(); const f = area.querySelector('[data-auto="new"]'); if (f) { f.scrollIntoView({ block: "nearest" }); f.querySelector("[data-au-nazev]").focus() } return }
+  if (t.dataset.auCancel) { autoEdit = null; autaMsg = {}; return refresh() }
   if (t.dataset.auSave) return saveAuto(t)
   if (t.dataset.auDel) return delAuto(t)
   if (t.dataset.sbSave) return saveSablona(t)
