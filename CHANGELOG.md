@@ -3,6 +3,12 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.8.0 (25. 11. 2026)
+- Nastavení: nová sekce „Moje auta“. Každý člen si může založit víc aut (název, počet míst včetně řidiče, palivo, spotřeba, výchozí auto). Údaje jsou v nové větvi databáze `memberAuta` (viz pravidla v `database.rules.json`).
+- Editor akce, posádky: po výběru řidiče se nabídne jeho auto (výchozí se předvybere) a ukáže se obsazenost, např. „4/7 · 3 volná místa“; při přeplnění se zvýrazní červeně, přidání dalšího člověka ale zůstává možné. Do posádky se ukládá kopie názvu a počtu míst, takže pozdější změna nebo smazání auta starší akce nezmění.
+- Detail akce a Discord (nová akce a změna akce): u posádky je auto a obsazenost.
+- Server (api.js): nová akce `auta`.
+
 ## 4.7.0 (20. 11. 2026)
 - Program akce: vedle „Z minulé akce“ je nové tlačítko „Z jiné akce…“. Otevře seznam všech akcí, které mají vyplněný program (nejblíž datu této akce nahoře, s hledáním podle názvu nebo data a s počtem skladeb). Program z vybrané akce se převezme místo současného, nebo se zaškrtnutím „Přidat k současnému programu“ doplní jen skladby, které tam ještě nejsou. Hodí se na cvičení z koncertního programu a na zkopírování programu z jiné zkoušky.
 - Server (api.js): nová akce `programsummary` s počty skladeb programu podle akce.
