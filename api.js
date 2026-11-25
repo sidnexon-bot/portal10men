@@ -64,6 +64,21 @@ async function addToCalendarQueue(action, eventId, eventData){
   })
 }
 
+// Obsazenost auta podle počtu míst uloženého v posádce (řidič se počítá do míst)
+function posadkaObsazenost(p){
+  const mist = Number(p?.auto_mist) || 0
+  if(!mist) return null
+  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0)
+  return {mist, obs, volno: mist - obs}
+}
+
+function obsazenostText(o){
+  if(o.volno < 0) return `${o.obs}/${o.mist}, přeplněno o ${-o.volno}`
+  if(o.volno === 0) return `${o.obs}/${o.mist}, plno`
+  const slovo = o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")
+  return `${o.obs}/${o.mist}, ${o.volno} ${slovo}`
+}
+
 function formatPosadkyForDiscord(doprava, dopravaPosadkyJson, membersRaw){
   if(doprava !== "Auta" || !dopravaPosadkyJson) return ""
   let posadky = []
@@ -83,6 +98,8 @@ function formatPosadkyForDiscord(doprava, dopravaPosadkyJson, membersRaw){
     if(Array.isArray(p.posadka) && p.posadka.length){
       text += ", " + p.posadka.map(id => getName(id)).join(", ")
     }
+    const obs = posadkaObsazenost(p)
+    if(obs) text += ` _(${p.auto_nazev ? p.auto_nazev + ": " : ""}${obsazenostText(obs)})_`
     text += "\n"
   })
   return text
@@ -1476,6 +1493,7 @@ async function toggleRiderTodo(params){
 async function api(action, params = {}){
   switch(action){
     case "members":          return await getMembers()
+    case "auta":             return await dbGet("/memberAuta") || {}
     case "events":           return await getEvents()
     case "eventdetail":      return await getEventDetail(params.id)
     case "programsummary":   return await getProgramSummary()
