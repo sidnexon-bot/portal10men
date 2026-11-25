@@ -541,14 +541,33 @@ function renderPosadkyDetail(json){
     return m ? (m.NAME || m.name) : "—"
   }
 
-  return posadky.map(p => `
-    <div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-      <span class="small" style="display:block">Auto: ${escapeHtml(p.nazev || "—")}${p.auto_nazev ? " · " + escapeHtml(p.auto_nazev) : ""}</span>
-      ${obsazenostHtml(p)}
-      <div>Řidič: <b>${escapeHtml(getName(p.ridic))}</b></div>
-      ${Array.isArray(p.posadka) && p.posadka.length ? `<div>Posádka: ${p.posadka.map(id => escapeHtml(getName(id))).join(", ")}</div>` : ""}
-    </div>
-  `).join("")
+  return posadky.map(p => {
+    const o = posadkaObsazenost(p)
+    const barva = !o ? "" : (o.volno < 0 ? "#ff3b30" : (o.volno === 0 ? "#ff9500" : "#34c759"))
+    const volnoTxt = !o ? "" : (o.volno < 0 ? `přeplněno o ${-o.volno}` : (o.volno === 0 ? "plno" : `${o.volno} ${o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")}`))
+    // segmenty: obsazeno členy (barva stavu), místa pro jiné než členy (šedá), volno (světle šedá)
+    const seg = !o ? "" : (() => {
+      const celkem = Math.min(o.mist, 12), clenove = Math.max(0, o.obs - o.rez)
+      return Array.from({length: celkem}, (_, i) => {
+        const bg = o.volno < 0 ? "#ff3b30" : (i < clenove ? barva : (i < clenove + o.rez ? "rgba(128,128,128,0.55)" : "rgba(128,128,128,0.2)"))
+        return `<span style="flex:1;height:6px;border-radius:3px;background:${bg}"></span>`
+      }).join("")
+    })()
+    return `
+    <div style="padding:14px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="min-width:0"><b>${escapeHtml(p.nazev || "Auto")}</b>${p.auto_nazev ? `<span class="small"> · ${escapeHtml(p.auto_nazev)}</span>` : ""}</div>
+        ${o ? `<span style="flex:none;font-size:13px;font-weight:600;color:${barva};background:${barva}22;padding:2px 10px;border-radius:999px">${o.obs}/${o.mist}</span>` : ""}
+      </div>
+      ${o ? `
+      <div style="display:flex;gap:4px;margin:10px 0 8px">${seg}</div>
+      <div class="small"><b style="color:${barva}">${volnoTxt}</b>${o.rez ? ` · ${o.rez} pro jiné než členy` : ""}</div>` : ""}
+      <div style="display:grid;grid-template-columns:64px 1fr;gap:6px 12px;align-items:baseline;margin-top:12px">
+        <span class="small">Řidič</span><b>${escapeHtml(getName(p.ridic))}</b>
+        ${Array.isArray(p.posadka) && p.posadka.length ? `<span class="small">Posádka</span><span>${p.posadka.map(id => escapeHtml(getName(id))).join(", ")}</span>` : ""}
+      </div>
+    </div>`
+  }).join("")
 }
 
 function renderHarmonogramDetail(json){
