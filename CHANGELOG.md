@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.8.3 (26. 11. 2026)
+- Moje auta: spotřeba podle technického průkazu je povinná (ukládá se jen s hodnotou nad 0 a do 40). Auta uložená dřív bez spotřeby mají na kartě upozornění „doplň spotřebu“ a při úpravě se spotřeba musí doplnit; pravidla databáze se nemění, stará data zůstávají čitelná.
+
 ## 4.8.2 (26. 11. 2026)
 - Moje auta: spotřeba se zadává podle technického průkazu (u elektřiny v kWh/100 km); údaje z auta teď předvyplní proplácení paliva v 10korun.
 

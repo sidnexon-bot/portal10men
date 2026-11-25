@@ -126,7 +126,7 @@ function autoMsg(id, text) {
 function autoSouhrn(a) {
   const dily = [`${a.mist} ${a.mist === 1 ? "místo" : (a.mist >= 2 && a.mist <= 4 ? "místa" : "míst")}`]
   if (a.palivo) dily.push(a.palivo)
-  if (a.spotreba) dily.push(`${String(a.spotreba).replace(".", ",")} l/100 km`)
+  dily.push(a.spotreba ? `${String(a.spotreba).replace(".", ",")} l/100 km` : "doplň spotřebu")
   return dily.join(" · ")
 }
 function autoForm(a) {
@@ -138,8 +138,8 @@ function autoForm(a) {
     <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
     <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
     <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
-    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba dle technického průkazu (l/100 km, u elektřiny kWh/100 km, nepovinné)</label>
-    <input type="number" id="au-s-${esc(id)}" data-au-spotreba min="0" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
+    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba dle technického průkazu (l/100 km, u elektřiny kWh/100 km) *</label>
+    <input type="number" id="au-s-${esc(id)}" data-au-spotreba required min="0.1" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
     <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
     <div class="st-acts" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="st-add" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
     <div role="status" class="st-hint" style="margin:8px 0 0">${esc(msg)}</div></div>`
@@ -166,7 +166,7 @@ async function saveAuto(btn) {
   const vychozi = box.querySelector("[data-au-vychozi]").checked
   if (!nazev) return autoMsg(id, "Zadej název auta.")
   if (!(mist >= 2 && mist <= 9)) return autoMsg(id, "Počet míst musí být 2 až 9.")
-  if (spotreba < 0 || spotreba > 40) return autoMsg(id, "Spotřeba musí být 0 až 40 l/100 km.")
+  if (!(spotreba > 0 && spotreba <= 40)) return autoMsg(id, "Zadej spotřebu podle technického průkazu (do 40 l/100 km, u elektřiny kWh/100 km).")
   const nove = { id: id === "new" ? "a" + Date.now().toString(36) : id, nazev, mist, palivo, spotreba, vychozi }
   const list = (auta || []).filter(a => a.id !== nove.id).map(a => vychozi ? { ...a, vychozi: false } : a).concat(nove)
   btn.disabled = true; autoMsg(id, "Ukládám…")
