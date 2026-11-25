@@ -68,15 +68,17 @@ async function addToCalendarQueue(action, eventId, eventData){
 function posadkaObsazenost(p){
   const mist = Number(p?.auto_mist) || 0
   if(!mist) return null
-  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0)
-  return {mist, obs, volno: mist - obs}
+  const rez = Math.max(0, Math.floor(Number(p.auto_rezervovano) || 0))   // místa obsazená jinými lidmi než členy (rodina, hosté)
+  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0) + rez
+  return {mist, obs, rez, volno: mist - obs}
 }
 
 function obsazenostText(o){
-  if(o.volno < 0) return `${o.obs}/${o.mist}, přeplněno o ${-o.volno}`
-  if(o.volno === 0) return `${o.obs}/${o.mist}, plno`
+  const pro = o.rez ? ` (z toho ${o.rez} pro jiné než členy)` : ""
+  if(o.volno < 0) return `${o.obs}/${o.mist}, přeplněno o ${-o.volno}${pro}`
+  if(o.volno === 0) return `${o.obs}/${o.mist}, plno${pro}`
   const slovo = o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")
-  return `${o.obs}/${o.mist}, ${o.volno} ${slovo}`
+  return `${o.obs}/${o.mist}, ${o.volno} ${slovo}${pro}`
 }
 
 function formatPosadkyForDiscord(doprava, dopravaPosadkyJson, membersRaw){
