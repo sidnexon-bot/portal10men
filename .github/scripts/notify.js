@@ -86,6 +86,17 @@ async function main(){
     eventDate.setHours(0,0,0,0);
     const daysUntil = Math.ceil((eventDate - todayDate) / (1000 * 60 * 60 * 24));
 
+    // V den akce dopoledne - výzva ke stažení not
+    if(daysUntil === 0){
+      const maProgram = progEntries.some(p => p.id_akce === event.id);
+      if(maProgram){
+        await sendDiscord(
+          rolePing + ' 🎼 Dnes je **' + event.name + '**! Stáhni si noty – stačí otevřít 10space.',
+          config
+        );
+      }
+    }
+
     // 5 dní před akcí
     if(daysUntil === 5){
       if(event.requires_program !== false){
