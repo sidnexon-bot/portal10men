@@ -510,15 +510,17 @@ function loadState(){
 function posadkaObsazenost(p){
   const mist = Number(p?.auto_mist) || 0
   if(!mist) return null
-  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0)
-  return {mist, obs, volno: mist - obs}
+  const rez = Math.max(0, Math.floor(Number(p.auto_rezervovano) || 0))   // místa obsazená jinými lidmi než členy (rodina, hosté)
+  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0) + rez
+  return {mist, obs, rez, volno: mist - obs}
 }
 
 function obsazenostText(o){
-  if(o.volno < 0) return `${o.obs}/${o.mist} · přeplněno o ${-o.volno}`
-  if(o.volno === 0) return `${o.obs}/${o.mist} · plno`
+  const pro = o.rez ? ` (z toho ${o.rez} pro jiné než členy)` : ""
+  if(o.volno < 0) return `${o.obs}/${o.mist} · přeplněno o ${-o.volno}${pro}`
+  if(o.volno === 0) return `${o.obs}/${o.mist} · plno${pro}`
   const slovo = o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")
-  return `${o.obs}/${o.mist} · ${o.volno} ${slovo}`
+  return `${o.obs}/${o.mist} · ${o.volno} ${slovo}${pro}`
 }
 
 function obsazenostHtml(p){
@@ -2660,6 +2662,14 @@ function nastavAutoPosadky(p, auto){
   p.auto_id = auto ? auto.id : ""
   p.auto_nazev = auto ? auto.nazev : ""
   p.auto_mist = auto ? Number(auto.mist) || 0 : 0
+  if(!auto) p.auto_rezervovano = 0
+}
+
+function setPosadkaRezervace(idx, value){
+  const p = getInitialPosadky()[idx]
+  if(!p) return
+  p.auto_rezervovano = Math.max(0, Math.floor(Number(value) || 0))
+  refreshPosadkyList()
 }
 
 function setPosadkaRidic(idx, value){
@@ -2691,6 +2701,12 @@ function renderPosadkaAutoSelect(p, idx){
         ${auta.map(a => `<option value="${escapeHtml(a.id)}" ${p.auto_id === a.id ? "selected" : ""}>${escapeHtml(a.nazev)} (${Number(a.mist) || "?"} míst)</option>`).join("")}
       </select>
     </label>
+    ${p.auto_id && p.auto_mist ? `
+    <label style="margin-top:8px;display:block">Místa obsazená jinými (rodina, hosté)<br>
+      <input type="number" min="0" max="${Math.max(0, p.auto_mist - 1)}" step="1" inputmode="numeric" value="${Number(p.auto_rezervovano) || 0}"
+        onchange="setPosadkaRezervace(${idx}, this.value)">
+    </label>
+    <div class="small" style="margin-top:2px">Tato místa se započítají do obsazenosti, i když tam nejsou členové sboru.</div>` : ""}
     ${obsazenostHtml(p)}
   `
 }
@@ -7139,6 +7155,7 @@ window.removePosadka        = removePosadka
 window.updatePosadkaField   = updatePosadkaField
 window.setPosadkaRidic      = setPosadkaRidic
 window.setPosadkaAuto       = setPosadkaAuto
+window.setPosadkaRezervace  = setPosadkaRezervace
 window.togglePosadkaMember  = togglePosadkaMember
 window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
