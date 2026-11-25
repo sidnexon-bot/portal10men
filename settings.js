@@ -2,6 +2,7 @@
    • Přizpůsobit: výchozí režim (světlý / tmavý / podle systému) a karty Přehledu (zobrazit, odebrat, pořadí přetahováním),
    • Osobní údaje: jen pro čtení (jméno, datum narození, adresa, hlas, role, číslo účtu).
    Nastavení: /userActivity/{e-mail}/settings10base (smí jen sám člen) + localStorage.
+   Moje auta: /memberAuta/{e-mail}/{id auta} (zapisuje člen sám a administrátor, čtou všichni členy; slouží k obsazenosti aut v posádkách akcí).
    Osobní údaje: /memberPrivate/{e-mail} (čte je člen sám a administrátor, zapisuje jen administrátor; viz database.rules.json).
    Rozhraní: window.tenSettings { boot, start, render, setTheme, dashboardCards, privateGet, privateSet }. */
 import { database, auth, ref, get, set } from "./firebase.js"
@@ -22,7 +23,7 @@ const card = id => CARDS.find(c => c.id === id)
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
 const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null
 let S = { theme: "light", dashboard: { order: ids.slice(), hidden: [] } }
-let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}
+let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}, auta = null, autaMsg = {}
 
 const user = () => { try { return JSON.parse(localStorage.getItem("10base_user") || "null") } catch (e) { return null } }
 const keyOf = email => String(email || "").replace(/\./g, "_").replace(/@/g, "_")
@@ -97,6 +98,75 @@ function me() {
 }
 const ROLE_CS = { ADMIN: "Administrátor (ADMIN)", OWNER: "Vlastník (Owner)", MEMBER: "Člen (MEMBER)", ART: "Umělecký vedoucí (ART)", GUEST: "Host (GUEST)" }
 
+/* ── moje auta (počet míst pro posádky akcí, palivo a spotřeba pro budoucí vyúčtování paliva) ── */
+const PALIVA = ["Benzín", "Nafta", "LPG", "CNG", "Elektro", "Hybrid"]
+const autaKey = () => String(user()?.email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
+async function autaLoad() {
+  const k = autaKey(); if (!k) return
+  try {
+    const v = (await get(ref(database, "/memberAuta/" + k))).val() || {}
+    auta = Object.entries(v).map(([id, a]) => ({ id, ...a })).sort((x, y) => String(x.nazev).localeCompare(String(y.nazev), "cs"))
+  } catch (e) { auta = null }
+  refresh()
+}
+async function autaWrite(list) {
+  const out = {}
+  list.forEach(a => {
+    out[a.id] = { nazev: a.nazev, mist: a.mist }
+    if (a.palivo) out[a.id].palivo = a.palivo
+    if (a.spotreba) out[a.id].spotreba = a.spotreba
+    if (a.vychozi) out[a.id].vychozi = true
+  })
+  await set(ref(database, "/memberAuta/" + autaKey()), list.length ? out : null)
+}
+function autoMsg(id, text) {
+  autaMsg[id] = text
+  const el = area && area.querySelector(`[data-auto="${id}"] [role=status]`); if (el) el.textContent = text
+}
+function autaHtml() {
+  if (auta === null) return ""
+  const card = (a, isNew) => {
+    const id = isNew ? "new" : a.id, msg = autaMsg[id] || ""
+    return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Auto"}</div>
+      <label class="st-name" for="au-n-${esc(id)}">Název</label>
+      <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="width:100%;box-sizing:border-box">
+      <label class="st-name" for="au-m-${esc(id)}" style="margin-top:10px;display:block">Počet míst (včetně řidiče)</label>
+      <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
+      <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
+      <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+      <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba (l/100 km, nepovinné)</label>
+      <input type="number" id="au-s-${esc(id)}" data-au-spotreba min="0" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
+      <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
+      <div class="st-acts" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}<span role="status" class="st-hint" style="margin:0">${esc(msg)}</span></div></div>`
+  }
+  return `<h3 class="st-h">Moje auta</h3>
+    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba budou sloužit k vyúčtování paliva.</p></div>
+    ${auta.map(a => card(a, false)).join("")}${card(null, true)}`
+}
+async function saveAuto(btn) {
+  const id = btn.dataset.auSave, box = btn.closest("[data-auto]"); if (!box) return
+  const nazev = box.querySelector("[data-au-nazev]").value.trim()
+  const mist = Math.round(Number(box.querySelector("[data-au-mist]").value))
+  const palivo = box.querySelector("[data-au-palivo]").value
+  const spotreba = Math.round(Number(String(box.querySelector("[data-au-spotreba]").value).replace(",", ".")) * 10) / 10 || 0
+  const vychozi = box.querySelector("[data-au-vychozi]").checked
+  if (!nazev) return autoMsg(id, "Zadej název auta.")
+  if (!(mist >= 2 && mist <= 9)) return autoMsg(id, "Počet míst musí být 2 až 9.")
+  if (spotreba < 0 || spotreba > 40) return autoMsg(id, "Spotřeba musí být 0 až 40 l/100 km.")
+  const nove = { id: id === "new" ? "a" + Date.now().toString(36) : id, nazev, mist, palivo, spotreba, vychozi }
+  const list = (auta || []).filter(a => a.id !== nove.id).map(a => vychozi ? { ...a, vychozi: false } : a).concat(nove)
+  btn.disabled = true; autoMsg(id, "Ukládám…")
+  try { await autaWrite(list); autaMsg = {}; await autaLoad() }
+  catch (e) { btn.disabled = false; autoMsg(id, "Uložení se nepodařilo: " + (e && e.message || e)) }
+}
+async function delAuto(btn) {
+  const id = btn.dataset.auDel, a = (auta || []).find(x => x.id === id)
+  if (!a || !confirm(`Smazat auto „${a.nazev}“? V už uložených posádkách akcí zůstane.`)) return
+  btn.disabled = true
+  try { await autaWrite(auta.filter(x => x.id !== id)); autaMsg = {}; await autaLoad() }
+  catch (e) { btn.disabled = false; autoMsg(id, "Smazání se nepodařilo: " + (e && e.message || e)) }
+}
+
 /* ── stránka ── */
 const ICON = {
   grip: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>',
@@ -147,6 +217,7 @@ function pageHtml() {
     ${more ? `<div class="card st-card"><div class="event-label">Další karty</div>${more}</div>` : ""}
     <div class="st-foot"><button type="button" class="st-add" data-reset="1" ${isDefault ? "disabled" : ""}><span>Obnovit výchozí Přehled</span></button></div>
     ${sablonyHtml()}
+    ${autaHtml()}
     <h3 class="st-h">Osobní údaje</h3>${personal}
     <h3 class="st-h">O aplikaci</h3>${aboutHtml()}</div>`
 }
@@ -156,8 +227,10 @@ function refresh() {
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del]")
   if (!t || !area || !area.contains(t)) return
+  if (t.dataset.auSave) return saveAuto(t)
+  if (t.dataset.auDel) return delAuto(t)
   if (t.dataset.sbSave) return saveSablona(t)
   if (t.dataset.sbDel) return delSablona(t)
   if (t.dataset.sbAdd) { const rows = t.closest("[data-sablona]").querySelector("[data-sb-rows]"); rows.insertAdjacentHTML("beforeend", sbRow("")); return rows.lastElementChild.querySelector("[data-sb-co]").focus() }
@@ -245,6 +318,7 @@ async function render(el) {
   }
   const u = user(); if (u?.email) { priv = await privateGet(u.email); refresh() }
   loadSablony()
+  autaLoad()
 }
 
 /* ── boční panel jen s ikonami ── */
