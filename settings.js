@@ -145,9 +145,9 @@ function autoForm(a) {
     <div role="status" class="st-hint" style="margin:8px 0 0">${esc(msg)}</div></div>`
 }
 function autoKarta(a) {
-  return `<button type="button" class="card st-card" data-au-open="${esc(a.id)}" aria-label="Upravit auto ${esc(a.nazev)}" style="display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
+  return `<div role="button" tabindex="0" class="card st-card" data-au-open="${esc(a.id)}" aria-label="Upravit auto ${esc(a.nazev)}" style="cursor:pointer">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div class="st-name" style="font-weight:600">${esc(a.nazev)}</div>${a.vychozi ? '<span class="st-hint" style="margin:0">Výchozí</span>' : ""}</div>
-    <div class="st-hint" style="margin:4px 0 0">${esc(autoSouhrn(a))}</div></button>`
+    <div class="st-hint" style="margin:4px 0 0">${esc(autoSouhrn(a))}</div></div>`
 }
 function autaHtml() {
   if (auta === null) return ""
@@ -155,7 +155,7 @@ function autaHtml() {
   return `<h3 class="st-h">Moje auta</h3>
     <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba budou sloužit k vyúčtování paliva. Klepnutím na kartu auto upravíš nebo smažeš.</p></div>
     ${autoEdit === "new" ? autoForm(null) : ""}${karty}
-    ${autoEdit === "new" ? "" : `<div class="st-foot"><button type="button" class="st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
+    ${autoEdit !== null ? "" : `<div class="st-foot"><button type="button" class="st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
 }
 async function saveAuto(btn) {
   const id = btn.dataset.auSave, box = btn.closest("[data-auto]"); if (!box) return
@@ -323,6 +323,7 @@ function dragEnd(e) {
   if (order.join() !== dashboardCards().join()) setDash({ order: order.concat(S.dashboard.order.filter(i => !order.includes(i))), hidden: S.dashboard.hidden })
 }
 function onKey(e) {
+  const k = e.target.closest && e.target.closest("[data-au-open]"); if (k && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return k.click() }
   const g = e.target.closest && e.target.closest(".st-grip"); if (!g || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return
   e.preventDefault(); const id = g.dataset.grip; move(id, e.key === "ArrowUp" ? -1 : 1)
   const again = area && area.querySelector(`.st-grip[data-grip="${id}"]`); if (again) again.focus()
