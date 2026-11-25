@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.8.1 (25. 11. 2026)
+- Nastavení, Moje auta: auta jsou přehledné karty (název, počet míst, palivo, spotřeba, značka Výchozí). Klepnutím na kartu se otevře úprava s tlačítky Uložit, Zrušit a Smazat. Tlačítko „Přidat auto“ otevře formulářovou kartu pro nové auto.
+
 ## 4.8.0 (25. 11. 2026)
 - Nastavení: nová sekce „Moje auta“. Každý člen si může založit víc aut (název, počet míst včetně řidiče, palivo, spotřeba, výchozí auto). Údaje jsou v nové větvi databáze `memberAuta` (viz pravidla v `database.rules.json`).
 - Editor akce, posádky: po výběru řidiče se nabídne jeho auto (výchozí se předvybere) a ukáže se obsazenost, např. „4/7 · 3 volná místa“; při přeplnění se zvýrazní červeně, přidání dalšího člověka ale zůstává možné. Do posádky se ukládá kopie názvu a počtu míst, takže pozdější změna nebo smazání auta starší akce nezmění.
