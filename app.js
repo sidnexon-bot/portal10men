@@ -507,6 +507,27 @@ function loadState(){
   }
 }
 
+function posadkaObsazenost(p){
+  const mist = Number(p?.auto_mist) || 0
+  if(!mist) return null
+  const obs = (p.ridic ? 1 : 0) + (Array.isArray(p.posadka) ? p.posadka.length : 0)
+  return {mist, obs, volno: mist - obs}
+}
+
+function obsazenostText(o){
+  if(o.volno < 0) return `${o.obs}/${o.mist} · přeplněno o ${-o.volno}`
+  if(o.volno === 0) return `${o.obs}/${o.mist} · plno`
+  const slovo = o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")
+  return `${o.obs}/${o.mist} · ${o.volno} ${slovo}`
+}
+
+function obsazenostHtml(p){
+  const o = posadkaObsazenost(p)
+  if(!o) return ""
+  const barva = o.volno < 0 ? "#ff3b30" : (o.volno === 0 ? "#ff9500" : "#34c759")
+  return `<div class="small" style="font-weight:600;color:${barva}">${escapeHtml(obsazenostText(o))}</div>`
+}
+
 function renderPosadkyDetail(json){
   let posadky = []
   try{ posadky = JSON.parse(json) }catch(e){ return "" }
@@ -520,7 +541,8 @@ function renderPosadkyDetail(json){
 
   return posadky.map(p => `
     <div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-      <span class="small" style="display:block">Auto: ${escapeHtml(p.nazev || "—")}</span>
+      <span class="small" style="display:block">Auto: ${escapeHtml(p.nazev || "—")}${p.auto_nazev ? " · " + escapeHtml(p.auto_nazev) : ""}</span>
+      ${obsazenostHtml(p)}
       <div>Řidič: <b>${escapeHtml(getName(p.ridic))}</b></div>
       ${Array.isArray(p.posadka) && p.posadka.length ? `<div>Posádka: ${p.posadka.map(id => escapeHtml(getName(id))).join(", ")}</div>` : ""}
     </div>
@@ -2619,7 +2641,66 @@ function getInitialPosadky(){
   return posadky
 }
 
+// Auta členů z profilů: window.AUTA = { klíč e-mailu: { id auta: {nazev, mist, palivo, spotreba, vychozi} } }
+const autaKey = email => String(email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
+
+async function loadAuta(){
+  try{ window.AUTA = (await api("auta")) || {} }catch(e){ window.AUTA = window.AUTA || {} }
+  window.AUTA_AT = Date.now()
+}
+
+function autaRidice(memberId){
+  const m = (window.MEMBERS || []).find(m => (m.ID || m.id) === memberId)
+  const mine = (window.AUTA || {})[autaKey(m?.EMAIL || m?.email)] || {}
+  return Object.entries(mine).map(([id, a]) => ({id, ...a}))
+    .sort((x, y) => (y.vychozi ? 1 : 0) - (x.vychozi ? 1 : 0) || String(x.nazev).localeCompare(String(y.nazev), "cs"))
+}
+
+function nastavAutoPosadky(p, auto){
+  p.auto_id = auto ? auto.id : ""
+  p.auto_nazev = auto ? auto.nazev : ""
+  p.auto_mist = auto ? Number(auto.mist) || 0 : 0
+}
+
+function setPosadkaRidic(idx, value){
+  const p = getInitialPosadky()[idx]
+  if(!p) return
+  p.ridic = value
+  const auta = value ? autaRidice(value) : []
+  nastavAutoPosadky(p, auta.length === 1 ? auta[0] : (auta.find(a => a.vychozi) || null))
+  refreshPosadkyList()
+}
+
+function setPosadkaAuto(idx, autoId){
+  const p = getInitialPosadky()[idx]
+  if(!p) return
+  nastavAutoPosadky(p, autaRidice(p.ridic).find(a => a.id === autoId) || null)
+  refreshPosadkyList()
+}
+
+function renderPosadkaAutoSelect(p, idx){
+  if(!p.ridic) return ""
+  const auta = autaRidice(p.ridic)
+  // auto uložené v posádce, které řidič mezitím smazal: nabídne se z uložené kopie
+  if(p.auto_id && !auta.some(a => a.id === p.auto_id)) auta.push({id: p.auto_id, nazev: p.auto_nazev || "Auto", mist: p.auto_mist})
+  if(!auta.length) return `<div class="small" style="margin-top:6px">Řidič zatím nemá v profilu žádné auto (Nastavení → Moje auta).</div>`
+  return `
+    <label style="margin-top:8px;display:block">Auto řidiče<br>
+      <select onchange="setPosadkaAuto(${idx}, this.value)">
+        <option value="">Bez určení</option>
+        ${auta.map(a => `<option value="${escapeHtml(a.id)}" ${p.auto_id === a.id ? "selected" : ""}>${escapeHtml(a.nazev)} (${Number(a.mist) || "?"} míst)</option>`).join("")}
+      </select>
+    </label>
+    ${obsazenostHtml(p)}
+  `
+}
+
 function renderPosadkyHtml(){
+  if(!window.AUTA || Date.now() - (window.AUTA_AT || 0) > 60000){
+    window.AUTA = window.AUTA || {}
+    window.AUTA_AT = Date.now()
+    loadAuta().then(refreshPosadkyList)
+  }
   const posadky = getInitialPosadky()
   const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
 
@@ -2651,18 +2732,19 @@ function renderPosadkaCard(p, idx, members, allPosadky){
   return `
     <div class="card" style="margin-bottom:10px;padding:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <label style="flex:1;margin:0">Auto<br>
+        <label style="flex:1;margin:0">Označení<br>
           <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
             oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
         </label>
         <button class="btn-danger" type="button" onclick="removePosadka(${idx})" style="margin-left:8px;width:auto;padding:8px 12px">✕</button>
       </div>
       <label>Řidič<br>
-        <select onchange="updatePosadkaField(${idx}, 'ridic', this.value)">
+        <select onchange="setPosadkaRidic(${idx}, this.value)">
           <option value="">Vyber řidiče</option>
           ${dostupniProRidice.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${p.ridic === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
         </select>
       </label>
+      ${renderPosadkaAutoSelect(p, idx)}
       <div style="margin-top:8px">
         <span class="small">Posádka</span>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
@@ -7055,6 +7137,8 @@ window.toggleDopravaPosadky = toggleDopravaPosadky
 window.addPosadka           = addPosadka
 window.removePosadka        = removePosadka
 window.updatePosadkaField   = updatePosadkaField
+window.setPosadkaRidic      = setPosadkaRidic
+window.setPosadkaAuto       = setPosadkaAuto
 window.togglePosadkaMember  = togglePosadkaMember
 window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
