@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.16.1 (26. 11. 2026)
+- Formulář akce, úspora místa: pryč jsou vysvětlivky pod přepínači, nabídky data, času a míst z historie i popisky karet typu. Zbyla jen pole a volby.
+- Formulář akce, přepínače místo tlačítek: všude, kde se nepíše text, je segmentový přepínač s plynulým přesunem vybrané volby (typ akce, délka, opakování, stav akce, doprava, oblečení, spacáky, strava, druh koncertního oblečení). Vždy je vybraná právě jedna volba, takže ji nejde omylem zrušit; „Nezadáno“ je samostatná volba. Doprava a oblečení mají rovnoměrně rozložené volby s ikonami (SVG). Ano / Ne jsou běžné přepínače (koncertní oblečení na soustředění).
+- Formulář akce, ochrana před omyly: konec akce před začátkem a opakování končící před první akcí se zachytí u pole, souhrn upozorní na datum v minulosti, konec po půlnoci a konec před začátkem.
+
 ## 4.16.0 (26. 11. 2026)
 - Formulář akce přepracovaný na průvodce. Nejdřív se vybere typ akce (Zkouška, Koncert, Soustředění, Soutěž, Jiná akce) kartami s ikonou a popiskem, zbytek formuláře se ukáže podle typu. Ikony jsou SVG, žádné emotikony.
 - Kdy: rychlé volby data (Dnes, Zítra a dva nejbližší dny v týdnu, kdy se u daného typu akce obvykle koná), začátek tlačítky (17:00 až 20:00 a nejčastější čas daného typu) a délka tlačítky 1 h / 2 h / 2,5 h / 3 h / Celý den, konec se dopočítá. Živý souhrn („Středa 9. 12. · 18:00–20:30, za 13 dní · 2,5 h“). Datum konce se ukáže až po zapnutí „Trvá víc dní“. Název se při výběru typu a data předvyplní („Zkouška 9. 12.“), ruční úprava ho přestane měnit.
