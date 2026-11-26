@@ -1150,6 +1150,9 @@ async function renderDashboard(){
     const todos     = await cachedApi("todos")
     let myTasks     = []
     try{ myTasks = await api("mytasks", {email: MEMBER_EMAIL}) }catch(e){ /* karta ukáže prázdný stav */ }
+    let mkAll       = []
+    try{ mkAll = await api("marketingtasks") }catch(e){ /* záložka Všechny bez marketingových úkolů */ }
+    window.MK_ALL_LAST = mkAll
 
     // --- NEJBLIŽŠÍ AKCE data ---
     let myStatus = ""
@@ -1310,7 +1313,7 @@ async function renderDashboard(){
         ` : ""}
       </div>
     `
-    const todosHtml = ukolyCardHtml(myTasks, todos)   // jedna karta Úkoly s přepínačem Moje / Všechny
+    const todosHtml = ukolyCardHtml(myTasks, todos, mkAll)   // jedna karta Úkoly s přepínačem Moje / Všechny
 
     // --- SESTAVENÍ HTML ---
     const heatmapHtml = await renderHeatmap()
@@ -1471,7 +1474,28 @@ function ukolyMojeHtml(myTasks){
         }).join("") : `<div style="padding:14px 16px"><p class="notice" style="margin:0">Nic ti nepřipadlo.</p></div>`}
   `
 }
-function ukolyVsechnyHtml(todos){
+// Marketingové úkoly akcí v záložce Všechny: odškrtnutí je stejné jako v detailu akce (/akce/{id}/marketing/ukoly/{id}/done)
+function ukolyMarketingHtml(mkAll){
+  if(!Array.isArray(mkAll) || !mkAll.length) return ""
+  const myToday = new Date().toLocaleDateString("sv-SE")
+  return `
+        <div class="event-label" style="padding:14px 16px 4px;border-top:1px solid var(--card-border)">Marketing <span data-ukoly-mkcount style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${mkAll.length}</span></div>
+        ${mkAll.map((t, idx) => {
+          const late = t.datum && t.datum < myToday
+          const border = idx < mkAll.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
+          const sub = [mkKanalyText(t), t.akceNazev, t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
+          return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('marketing','${escapeHtml(t.akceId)}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="openEvent('${escapeHtml(t.akceId)}')">
+              <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
+              <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
+              ${t.assignee ? `<div class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</div>` : ""}
+            </div>
+          </div>`
+        }).join("")}
+  `
+}
+function ukolyVsechnyHtml(todos, mkAll){
   return `
         ${Array.isArray(todos) && todos.length ? `
           ${todos.map((t, idx) => {
@@ -1506,11 +1530,12 @@ function ukolyVsechnyHtml(todos){
             <button onclick="addTodoItem()" style="width:100%">+ Přidat úkol</button>
           </div>
         ` : ""}
+        ${ukolyMarketingHtml(mkAll)}
   `
 }
-function ukolyCardHtml(myTasks, todos){
+function ukolyCardHtml(myTasks, todos, mkAll){
   const tab = ukolyTab(myTasks.length)
-  const openTodos = Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0
+  const openTodos = (Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0) + (Array.isArray(mkAll) ? mkAll.length : 0)
   const btn = (id, label, n) => `<button type="button" role="tab" data-ukoly-tab="${id}" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" onclick="setUkolyTab('${id}')">${label} <span data-ukoly-count="${id}" style="font-weight:400;opacity:.7">· ${n}</span></button>`
   return `
     <div class="card dash-todos" style="padding:0;margin-top:12px">
@@ -1519,7 +1544,7 @@ function ukolyCardHtml(myTasks, todos){
         <div class="st-seg" role="tablist" aria-label="Úkoly">${btn("moje", "Moje", myTasks.length)}${btn("vsechny", "Všechny", openTodos)}</div>
       </div>
       <div id="ukolyMoje" ${tab === "moje" ? "" : "hidden"}>${ukolyMojeHtml(myTasks)}</div>
-      <div id="ukolyAll" ${tab === "vsechny" ? "" : "hidden"}>${ukolyVsechnyHtml(todos)}</div>
+      <div id="ukolyAll" ${tab === "vsechny" ? "" : "hidden"}>${ukolyVsechnyHtml(todos, mkAll)}</div>
     </div>
   `
 }
@@ -6888,8 +6913,9 @@ async function handleRealtimeChange(changed){
         if(activeCard?.dataset?.id) openEvent(activeCard.dataset.id)
       }
     }else if(ACTIVE_TAB === "dashboard"){
-      // aktualizuj program v dashboardu
+      // aktualizuj program v dashboardu a marketingové úkoly v kartě Úkoly (odškrtnuté v detailu akce nebo jinde)
       updateDashboardAttendance()
+      updateDashboardTodos()
     }
 
   }else if(changed === "aktuality"){
@@ -6960,10 +6986,15 @@ async function updateDashboardTodos(){
     let my = null
     try{ my = await api("mytasks", {email: MEMBER_EMAIL}) }catch(e){ /* panel Moje beze změny */ }
 
+    // marketingové úkoly se mohly změnit v detailu akce nebo u někoho jiného: když se nenačtou, zůstane předchozí stav
+    let mk = null
+    try{ mk = await api("marketingtasks") }catch(e){ /* sekce Marketing beze změny */ }
+
     const all = document.getElementById("ukolyAll")
-    if(all) all.innerHTML = ukolyVsechnyHtml(todos)
+    if(all) all.innerHTML = ukolyVsechnyHtml(todos, mk === null ? (window.MK_ALL_LAST || []) : mk)
+    if(mk !== null) window.MK_ALL_LAST = mk
     const setCount = (id, n) => { const el = document.querySelector(`[data-ukoly-count="${id}"]`); if(el) el.textContent = "· " + n }
-    setCount("vsechny", Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0)
+    setCount("vsechny", (Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0) + (window.MK_ALL_LAST || []).length)
     if(my){
       const mine = document.getElementById("ukolyMoje")
       if(mine) mine.innerHTML = ukolyMojeHtml(my)
