@@ -172,11 +172,17 @@ async function getEvents(){
 // ===============================
 const MK_KANALY = ["facebook", "instagram", "plakat", "newsletter", "udalost", "mistni", "osobne"]
 
+// Kanály úkolu: nově pole `kanaly`, starší úkoly (a úkoly z Marka) mají jen jeden `kanal`
+function kanalyUkolu(t){
+  const k = Array.isArray(t?.kanaly) ? t.kanaly.filter(x => MK_KANALY.includes(x)) : []
+  return k.length ? k : (t?.kanal ? [t.kanal] : [])
+}
+
 function marketingList(m){
   return Object.values((m && m.ukoly) || {})
     .filter(t => t && t.id)
     .map(t => ({
-      id: t.id, datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", format: t.format || "",
+      id: t.id, datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", kanaly: kanalyUkolu(t), format: t.format || "",
       ucel: t.ucel || "", napad: t.napad || "", done: t.done === true, doneBy: t.done_by || "", doneAt: t.done_at || "",
       assignee: t.assignee && t.assignee.email ? {email: t.assignee.email, name: t.assignee.name || ""} : null,
       zPlanu: !!t.z_planu, draftId: t.draftId || "", draftStatus: t.draftStatus || "", doneVia: t.doneVia || "", edited: t.edited === true
@@ -206,8 +212,10 @@ async function saveMarketingTask(params){
   const clip = (v, n) => String(v || "").replace(/\s+/g, " ").trim().slice(0, n)
   const datum = String(params.datum || "")
   if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)) throw new Error("Zadej termín")
-  const kanal = MK_KANALY.includes(params.kanal) ? params.kanal : ""
-  if(!kanal) throw new Error("Vyber kanál")
+  const zadane = Array.isArray(params.kanaly) ? params.kanaly : [params.kanal]
+  const kanaly = [...new Set(zadane.filter(k => MK_KANALY.includes(k)))]
+  if(!kanaly.length) throw new Error("Vyber aspoň jeden kanál")
+  const kanal = kanaly[0]   // první kanál zůstává i ve starém poli `kanal`, které čte Marek
   const ucel = clip(params.ucel, 200), napad = clip(params.napad, 600)
   if(!ucel && !napad) throw new Error("Vyplň účel nebo nápad")
   const cas = /^([01]\d|2[0-3]):[0-5]\d$/.test(params.cas || "") ? params.cas : ""
@@ -216,7 +224,7 @@ async function saveMarketingTask(params){
   const old = params.taskId ? await dbGet(path) : null
   if(params.taskId && !old) throw new Error("Úkol už neexistuje")
   if(!(await dbGet("/akce/" + params.id + "/name"))) throw new Error("Akce nenalezena")
-  const fields = {id, datum, cas, kanal, format: clip(params.format, 60), ucel, napad,
+  const fields = {id, datum, cas, kanal, kanaly, format: clip(params.format, 60), ucel, napad,
     done: old ? old.done === true : false, z_planu: old ? (old.z_planu || null) : null,
     edited: old && old.z_planu ? true : null}
   if(params.assignee !== undefined) fields.assignee = asgn(params.assignee)
@@ -245,7 +253,7 @@ async function getMyTasks(email){
     if(!a || !a.marketing?.ukoly || /zruš/i.test(a.status || "") || (a.date && String(a.date).slice(0, 10) < cut)) return   // zrušené akce se nepočítají
     Object.values(a.marketing.ukoly).forEach(t => {
       if(t && !t.done && t.assignee?.email === me)
-        out.push({kind: "marketing", id: t.id, akceId: a.id, akceNazev: a.name || "", text: t.ucel || t.napad || "Úkol", datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || ""})
+        out.push({kind: "marketing", id: t.id, akceId: a.id, akceNazev: a.name || "", text: t.ucel || t.napad || "Úkol", datum: t.datum || "", cas: t.cas || "", kanal: t.kanal || "", kanaly: kanalyUkolu(t)})
     })
   })
   return out.sort((a, b) => (a.datum || "9999").localeCompare(b.datum || "9999") || (a.cas || "").localeCompare(b.cas || ""))
