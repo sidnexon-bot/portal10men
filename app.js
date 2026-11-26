@@ -2622,8 +2622,8 @@ async function loadAuta(){
 // Zapisuje se přes api("dopravazmena") do pole doprava_posadky; formulář akce posádky neupravuje.
 // =============================================
 
-window.DOPRAVA_UI = window.DOPRAVA_UI || {eventId: null, open: false, auto: "", volna: 3, busy: false, admin: false}
-const dopravaUiNew = eventId => ({eventId, open: false, auto: "", volna: 3, busy: false, admin: false})
+window.DOPRAVA_UI = window.DOPRAVA_UI || {eventId: null, open: false, auto: "", volna: 3, busy: false, admin: false, draft: null, ops: []}
+const dopravaUiNew = eventId => ({eventId, open: false, auto: "", volna: 3, busy: false, admin: false, draft: null, ops: []})
 
 function dopravaJa(){
   const email = String(MEMBER_EMAIL || "").toLowerCase()
@@ -2649,6 +2649,7 @@ function dopravaCardHtml(){
   try{ posadky = event.DOPRAVA_POSADKY ? JSON.parse(event.DOPRAVA_POSADKY) : [] }catch(e){ posadky = [] }
   if(!Array.isArray(posadky)) posadky = []
   const ui = window.DOPRAVA_UI
+  if(ui.admin && ui.draft) posadky = ui.draft       // režim úprav: pracuje se s rozpracovanou verzí, na server jde až po Uložit
   const ja = dopravaJa()
   const muzu = !!ja && !ja.host
   const adminRezim = !!ja && ja.admin && ui.admin       // administrátor po kliknutí na „Upravit (admin)“
@@ -2760,16 +2761,16 @@ function dopravaCardHtml(){
 
   return `
     <div class="event-label" style="margin:0">Doprava · auta</div>
-    <div class="btn-group" style="margin-top:10px">
-        ${!adminRezim && muzu && !maMisto && !ui.open ? `<button type="button" class="btn-primary" onclick="dopravaForm(true)">Vezmu auto</button>` : ""}
-        ${ja && ja.admin ? `<button type="button" class="btn-secondary" onclick="dopravaAdmin(${adminRezim ? "false" : "true"})">${adminRezim ? "Hotovo" : "Upravit (admin)"}</button>` : ""}
-    </div>
-    ${adminRezim ? `<div class="small" style="margin-top:8px">Režim úprav: změny se ukládají hned.</div>` : ""}
+    ${!adminRezim && muzu && !maMisto && !ui.open ? `<div class="btn-group" style="margin-top:10px"><button type="button" class="btn-primary" onclick="dopravaForm(true)">Vezmu auto</button></div>` : ""}
+    ${adminRezim ? `<div class="small" style="margin-top:8px">Režim úprav: změny se uloží až tlačítkem Uložit, Zrušit je zahodí.</div>` : ""}
     ${!adminRezim && muzu && !maMisto && ui.open ? form() : ""}
     ${posadky.length ? posadky.map(karta).join("") : `<div class="small" style="margin-top:12px">Zatím nikdo nebere auto.</div>`}
     ${adminRezim && bezMista.length ? `<select style="margin-top:12px" onchange="dopravaAdminNovy(this.value)"><option value="">+ Přidat auto za řidiče…</option>
       ${bezMista.map(m => `<option value="${escapeHtml(m.ID || m.id)}">${escapeHtml(m.NAME || m.name)}</option>`).join("")}</select>` : ""}
-    ${!muzu && ja && ja.host ? `<div class="small" style="margin-top:8px">Dopravu mohou měnit jen členové.</div>` : ""}`
+    ${!muzu && ja && ja.host ? `<div class="small" style="margin-top:8px">Dopravu mohou měnit jen členové.</div>` : ""}
+    ${ja && ja.admin ? `<div class="btn-group" style="margin-top:12px">${adminRezim
+      ? `<button type="button" class="btn-primary" ${ui.busy ? "disabled" : ""} onclick="dopravaAdminUlozit()">Uložit</button><button type="button" class="btn-secondary" ${ui.busy ? "disabled" : ""} onclick="dopravaAdmin(false)">Zrušit</button>`
+      : `<button type="button" class="btn-secondary" onclick="dopravaAdmin(true)">Upravit (admin)</button>`}</div>` : ""}`
 }
 
 function renderDopravaCard(eventId, event){
@@ -2787,7 +2788,7 @@ function refreshDopravaCard(){
   if(el) el.innerHTML = dopravaCardHtml()
 }
 
-const dopravaCelaPosadka = () => { try{ return JSON.parse(window.DOPRAVA_EVENT?.event?.DOPRAVA_POSADKY || "[]") }catch(e){ return [] } }
+const dopravaCelaPosadka = () => { if(window.DOPRAVA_UI.admin && window.DOPRAVA_UI.draft) return window.DOPRAVA_UI.draft; try{ return JSON.parse(window.DOPRAVA_EVENT?.event?.DOPRAVA_POSADKY || "[]") }catch(e){ return [] } }
 const dopravaCislo = (v, min, max, def) => Math.max(min, Math.min(max, Math.floor(Number(v) || def)))
 
 function dopravaForm(open){ window.DOPRAVA_UI.open = open; refreshDopravaCard() }
@@ -2798,16 +2799,19 @@ async function dopravaOp(op, hotovo){
   const ui = window.DOPRAVA_UI, id = ui.eventId
   if(ui.busy || !id) return
   ui.busy = true
+  let ok = false
   try{
     await api("dopravazmena", {id, ...op})
     ui.open = false
     showToast(hotovo || "Uloženo ✓")
+    ok = true
   }catch(e){
     showToast(e.message || "Změnu se nepodařilo uložit")
   }
   ui.busy = false
   invalidateCache("eventdetail", id)
   if(ACTIVE_DETAIL_ID === id) openEvent(id)
+  return ok
 }
 
 function dopravaVezmu(){
@@ -2819,12 +2823,12 @@ function dopravaVezmu(){
 }
 function dopravaPridat(ridic){ dopravaOp({op: "pridat", ridic}, "Jedeš s ním ✓") }
 function dopravaOdejit(){ dopravaOp({op: "odejit"}, "Místo uvolněno") }
-function dopravaOdebrat(ridic, clen){ dopravaOp({op: "odebrat", ridic, clen}, "Odebráno") }
+function dopravaOdebrat(ridic, clen){ dopravaZmena({op: "odebrat", ridic, clen}, "Odebráno") }
 function dopravaZrusit(ridic){
   const moje = dopravaCelaPosadka().find(x => x.ridic === ridic)
   const n = moje && Array.isArray(moje.posadka) ? moje.posadka.length : 0
-  if(!confirm(n ? `Zrušit auto? Spolucestující (${n}) zůstanou bez dopravy.` : "Zrušit auto?")) return
-  dopravaOp({op: "zrusit", ridic}, "Auto zrušeno")
+  if(!window.DOPRAVA_UI.draft && !confirm(n ? `Zrušit auto? Spolucestující (${n}) zůstanou bez dopravy.` : "Zrušit auto?")) return
+  dopravaZmena({op: "zrusit", ridic}, "Auto zrušeno")
 }
 function dopravaMista(){
   const v = prompt("Kolik volných míst pro ostatní (bez tebe)?", "3")
@@ -2837,28 +2841,53 @@ function dopravaRezervace(ridic){
   dopravaOp({op: "rezervace", ridic, pocet: v}, "Uloženo ✓")
 }
 
-// administrátor: režim úprav, změny se ukládají hned
-function dopravaAdmin(zapnout){ window.DOPRAVA_UI.admin = zapnout; refreshDopravaCard() }
+// administrátor: režim úprav pracuje s rozpracovanou verzí (ui.draft); na server jde dávka změn až po Uložit
+const dopravaAutaObj = ridic => Object.fromEntries(dopravaAutaClena(ridic).map(a => [a.id, a]))
+function dopravaAdmin(zapnout){
+  const ui = window.DOPRAVA_UI
+  ui.admin = zapnout
+  ui.draft = zapnout ? JSON.parse(JSON.stringify(dopravaCelaPosadka())) : null
+  ui.ops = []
+  refreshDopravaCard()
+}
+// změna se v režimu úprav jen zapíše do rozpracované verze (stejná kontrola jako na serveru), jinak se pošle hned
+function dopravaZmena(op, hotovo){
+  const ui = window.DOPRAVA_UI
+  if(!(ui.admin && ui.draft)) return dopravaOp(op, hotovo)
+  try{
+    ui.draft = window.dopravaApply(ui.draft, op, {me: dopravaJa()?.id, admin: true, autaDe: dopravaAutaObj})
+    ui.ops.push(op)
+  }catch(e){ showToast(e.message || "Změna se nepodařila") }
+  refreshDopravaCard()
+}
+async function dopravaAdminUlozit(){
+  const ui = window.DOPRAVA_UI
+  if(ui.busy) return
+  if(!ui.ops.length){ dopravaAdmin(false); return }
+  refreshDopravaCard()
+  if(await dopravaOp({op: "davka", ops: ui.ops}, "Doprava uložena ✓")){ ui.admin = false; ui.draft = null; ui.ops = [] }
+  refreshDopravaCard()
+}
 const dopravaCrew = ridic => dopravaCelaPosadka().find(x => x.ridic === ridic)
 function dopravaAdminAuto(ridic, auto){
   const p = dopravaCrew(ridic)
   if(!p || !auto) return
   const a = dopravaAutaClena(ridic).find(x => x.id === auto)
   const mist = a && Number(a.mist) ? Number(a.mist) : (Number(p.auto_mist) || (auto === "carsharing" ? 4 : 5))   // místa z profilu auta, jinak beze změny
-  dopravaOp({op: "auto", ridic, auto, mist}, "Auto upraveno ✓")
+  dopravaZmena({op: "auto", ridic, auto, mist})
 }
 function dopravaAdminMist(ridic, v){
   const p = dopravaCrew(ridic)
-  if(p) dopravaOp({op: "auto", ridic, auto: p.auto_id || "", mist: v}, "Počet míst upraven ✓")
+  if(p) dopravaZmena({op: "auto", ridic, auto: p.auto_id || "", mist: v})
 }
-function dopravaAdminRez(ridic, v){ dopravaOp({op: "rezervace", ridic, pocet: v}, "Uloženo ✓") }
+function dopravaAdminRez(ridic, v){ dopravaZmena({op: "rezervace", ridic, pocet: v}) }
 function dopravaAdminPridat(ridic, clen){
-  if(clen) dopravaOp({op: "pridat", ridic, clen}, "Spolucestující přidán ✓")
+  if(clen) dopravaZmena({op: "pridat", ridic, clen})
 }
 function dopravaAdminNovy(clen){   // auto za řidiče: výchozí auto z jeho profilu (jinak carsharing), počet míst se pak upraví v kartě
   if(!clen) return
   const auta = dopravaAutaClena(clen)
-  dopravaOp(auta[0] ? {op: "vezmu", za: clen, auto: auta[0].id} : {op: "vezmu", za: clen, auto: "carsharing", volna: 3}, "Auto přidáno, upravte ho podle potřeby")
+  dopravaZmena(auta[0] ? {op: "vezmu", za: clen, auto: auta[0].id} : {op: "vezmu", za: clen, auto: "carsharing", volna: 3})
 }
 
 window.dopravaForm = dopravaForm
@@ -2872,6 +2901,7 @@ window.dopravaZrusit = dopravaZrusit
 window.dopravaMista = dopravaMista
 window.dopravaRezervace = dopravaRezervace
 window.dopravaAdmin = dopravaAdmin
+window.dopravaAdminUlozit = dopravaAdminUlozit
 window.dopravaAdminAuto = dopravaAdminAuto
 window.dopravaAdminMist = dopravaAdminMist
 window.dopravaAdminRez = dopravaAdminRez

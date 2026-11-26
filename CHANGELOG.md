@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.14.0 (26. 11. 2026)
+- Karta Doprava, administrátor: tlačítko „Upravit (admin)“ je v zápatí karty. V režimu úprav jsou v zápatí tlačítka „Uložit“ a „Zrušit“. Změny se už neukládají po každém výběru: provádějí se v rozpracované verzi (stejné kontroly jako na serveru) a na server jdou jedním zápisem po kliknutí na „Uložit“. „Zrušit“ všechny změny zahodí.
+- Server (api.js): nová akce dopravy „davka“ (jen administrátor) provede všechny změny najednou, nebo žádnou; na Discord jde jedna zpráva o úpravě dopravy.
+
 ## 4.13.1 (26. 11. 2026)
 - Karta Doprava: tlačítka podle pravidel vzhledu. Hlavní akce („Vezmu auto“, „Potvrdit“, „Pojedu tímto autem“) jsou `btn-primary` (na Androidu plná barva aplikace, na Apple kapsle), „Zrušit auto“ je `btn-danger`, všechna tlačítka mají jednotnou výšku a písmo z pravidel (dřív vlastní inline velikost 34 px / 13 px).
 - Karta Doprava: řady tlačítek jsou v `.btn-group`, takže na mobilu platí mřížka (hlavní nahoře přes celou šířku, pod ním dvě vedle sebe). Tlačítka v záhlaví karty jsou pod nadpisem.

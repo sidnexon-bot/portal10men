@@ -1531,6 +1531,13 @@ function dopravaApply(posadky, op, ctx){
   }
   const mistaOk = v => { const n = Math.floor(Number(v)); if(!(n >= 2 && n <= 9)) throw new Error("Počet míst v autě musí být 2 až 9."); return n }
   const volnaOk = v => { const n = Math.floor(Number(v)); if(!(n >= 1 && n <= 8)) throw new Error("Počet volných míst musí být 1 až 8."); return n }
+  // auta z profilu řidiče: u jedné změny je ctx.auta, u dávky ctx.autaDe(id řidiče)
+  const autaDe = ridic => ctx.autaDe ? (ctx.autaDe(ridic) || {}) : (ctx.auta || {})
+  if(op.op === "davka"){   // administrátor: více změn najednou (tlačítko Uložit v režimu úprav), vše se provede, nebo nic
+    if(!admin) throw new Error("Dávku změn může uložit jen administrátor.")
+    if(!Array.isArray(op.ops) || op.ops.length > 80) throw new Error("Neplatná dávka změn.")
+    return op.ops.reduce((cur, o) => { if(!o || o.op === "davka") throw new Error("Neplatná dávka změn."); return dopravaApply(cur, o, ctx) }, list)
+  }
   const autoRidice = ridic => { const p = list.find(x => x.ridic === ridic); if(!p) throw new Error(ridic === me ? "Nejezdíš s žádným autem." : "Tento člen nejezdí s žádným autem."); return p }
 
   if(op.op === "vezmu"){
@@ -1541,7 +1548,7 @@ function dopravaApply(posadky, op, ctx){
       const volna = volnaOk(op.volna)
       nove = {auto_id: "carsharing", auto_nazev: "Carsharing", auto_mist: volna + 1, carsharing: true}
     }else{
-      const a = (ctx.auta || {})[op.auto]
+      const a = autaDe(ridic)[op.auto]
       if(!a) throw new Error(ridic === me ? "Auto nenalezeno v profilu (Nastavení → Moje auta)." : "Auto nenalezeno v profilu řidiče.")
       nove = {auto_id: op.auto, auto_nazev: a.nazev, auto_mist: Number(a.mist) || 0}
       if(op.mist != null && op.mist !== ""){ if(!admin) throw new Error("Počet míst přepíše jen administrátor."); nove.auto_mist = mistaOk(op.mist) }
@@ -1601,7 +1608,7 @@ function dopravaApply(posadky, op, ctx){
     if(op.auto === "carsharing") nove = {auto_id: "carsharing", auto_nazev: "Carsharing", carsharing: true}
     else if((op.auto || "") === (p.auto_id || "")) nove = {auto_id: p.auto_id || "", auto_nazev: p.auto_nazev || "Auto"}   // beze změny auta, jen počet míst
     else{
-      const a = (ctx.auta || {})[op.auto]
+      const a = autaDe(op.ridic)[op.auto]
       if(!a) throw new Error("Auto nenalezeno v profilu řidiče.")
       nove = {auto_id: op.auto, auto_nazev: a.nazev}
     }
@@ -1649,13 +1656,16 @@ async function dopravaZmena(params){
   const majitel = clenove.find(x => x.id === vlastnik)
   const key = String(majitel?.email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
   const auta = key ? ((await dbGet("/memberAuta/" + key)) || {}) : {}
+  const keyClena = id => String(clenove.find(x => x.id === id)?.email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
+  const vsechnaAuta = params.op === "davka" ? ((await dbGet("/memberAuta")) || {}) : null
+  const autaDe = vsechnaAuta ? (id => vsechnaAuta[keyClena(id)] || {}) : null
   let chyba = null, nove = null
   // transakce: dva členové, kteří si berou místo současně, se nepřepíší
   const tx = await runTransaction(ref(DB, "/akce/" + params.id + "/doprava_posadky"), cur => {
     chyba = null
     let posadky = []
     try{ posadky = cur ? JSON.parse(cur) : [] }catch(e){ posadky = [] }
-    try{ nove = dopravaApply(posadky, params, {me: m.id, admin, auta}); return JSON.stringify(nove) }
+    try{ nove = dopravaApply(posadky, params, {me: m.id, admin, auta, autaDe}); return JSON.stringify(nove) }
     catch(e){ chyba = e; return cur == null ? cur : undefined }   // undefined = zrušení beze změny; při prázdné předpovědi (null) se vrátí null, aby se transakce ještě zopakovala se skutečnými daty
   })
   if(chyba) throw chyba
@@ -1664,6 +1674,12 @@ async function dopravaZmena(params){
   if(params.op === "vezmu" || params.op === "pridat"){
     try{ await sendDiscordMessage({message: dopravaDiscordText(akce, nove, m, params, clenove)}) }
     catch(e){ console.warn("Discord (doprava):", e.message) }
+  }
+  if(params.op === "davka"){
+    try{
+      const kdy = `**${akce.name || "akce"}**${akce.date ? " (" + formatDateSimple(akce.date) + ")" : ""}`
+      await sendDiscordMessage({message: `🚗 Administrátor **${m.name}** upravil dopravu na akci ${kdy}.` + formatPosadkyForDiscord("Auta", JSON.stringify(nove), await dbGet("/members"))})
+    }catch(e){ console.warn("Discord (doprava):", e.message) }
   }
   return {status: "updated"}
 }
@@ -1747,4 +1763,5 @@ async function api(action, params = {}){
 }
 
 window.api = api
+window.dopravaApply = dopravaApply   // místní náhled změn v režimu úprav karty Doprava (app.js)
 window.watchChanges = watchChanges
