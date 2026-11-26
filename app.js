@@ -2614,8 +2614,6 @@ document.addEventListener("keydown", e => {
 Object.assign(window, { hgField, hgStart, hgToggle, hgAdd, hgAddSong, hgRemoveItem, hgRemoveSong, hgUpdateSummary })
 // HG_END
 
-window.updateRiderHarmonogramField = updateRiderHarmonogramField
-
 // =============================================
 // RIDER — To-do list (Před koncertem / V den koncertu)
 // =============================================

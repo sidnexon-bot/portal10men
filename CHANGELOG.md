@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.17.1 (26. 11. 2026)
+- Oprava: verze 4.17.0 nešla spustit (chyba „updateRiderHarmonogramField is not defined“ při načtení aplikace). V 4.17.0 zbyl odkaz na odstraněnou funkci starého editoru harmonogramu.
+
 ## 4.17.0 (26. 11. 2026)
 - Podrobnosti pro 10space, Harmonogram koncertu: nový editor „banka dílků + osa programu“. V bance jsou dílky Příchod, Odchod, Moderace, Společná skladba, Prázdný blok a všechny skladby z programu akce, které ještě nejsou na ose. Dílek se na osu přidá klepnutím, nebo se přetáhne za úchyt (myší i prstem, stránka se při tažení u okraje sama posouvá). Na ose se položky řadí tažením nebo šipkami nahoru a dolů na úchytu.
 - Skladby se dají přetahovat mezi bloky, z banky do bloku a z bloku zpět do banky. Moderace, příchod nebo odchod přetažené doprostřed bloku skladeb blok rozdělí na dvě části (druhá se jmenuje „… (pokračování)“). Skladba přetažená z banky na osu založí nový blok.
