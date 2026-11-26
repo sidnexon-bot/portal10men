@@ -2238,12 +2238,6 @@ function renderRiderPanelContent(){
       <div id="riderHarmonogramList" style="margin-top:8px">
         ${renderRiderHarmonogramHtml()}
       </div>
-      <div class="btn-group" style="margin-top:8px;flex-wrap:wrap">
-        <button type="button" class="btn-secondary" onclick="addRiderBlokZeSkladeb()">+ Blok ze skladeb</button>
-        <button type="button" class="btn-secondary" onclick="addRiderHarmonogramItem('moderace')">+ Moderace</button>
-        <button type="button" class="btn-secondary" onclick="addRiderHarmonogramItem('pribeh')">+ Příchod/odchod</button>
-        <button type="button" class="btn-secondary" onclick="addRiderHarmonogramItem('spolecna')">+ Společná skladba</button>
-      </div>
     </div>
 
     <div style="margin-top:16px">
@@ -2379,128 +2373,247 @@ window.updateRiderField     = updateRiderField
 window.updateRiderHospoda   = updateRiderHospoda
 
 // =============================================
-// RIDER — Harmonogram koncertu (bloky skladeb, moderace)
-// Vlož mezi Přípravné akce a Ukončení akce
+// RIDER — Harmonogram koncertu: editor s bankou dílků a osou programu
+// Dílky (skladby z programu, příchod, odchod, moderace, společná skladba, blok) se přidávají klepnutím nebo tažením
+// a pak se na ose uspořádají. Moderaci, příchod nebo odchod lze vložit i doprostřed bloku skladeb (blok se rozdělí).
+// Data zůstávají ve starém tvaru rider.harmonogram_koncertu (typ blok / moderace / pribeh / spolecna), nově je u příchodu a
+// odchodu pole smer a v riderovi harmonogram_start. Rozpracovaný stav je jen v paměti, na server jde až při uložení akce.
 // =============================================
-
-function renderRiderHarmonogramHtml(){
-  const rider = getRiderData()
-  const items = rider.harmonogram_koncertu || []
-  return items.map((item, idx) => renderRiderHarmonogramItem(item, idx)).join("")
+// HG_START
+const hgSvg = p => `<svg viewBox="0 0 24 24" class="ev-ic" aria-hidden="true">${p}</svg>`
+const HG_IC = {
+  grip:     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  blok:     hgSvg('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
+  moderace: hgSvg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>'),
+  prichod:  hgSvg('<path d="M3 12h12M11 7l5 5-5 5M20 5v14"/>'),
+  odchod:   hgSvg('<path d="M21 12H9M13 7l-5 5 5 5M4 5v14"/>'),
+  pribeh:   hgSvg('<path d="M4 9h13M13 5l4 4-4 4M20 15H7M11 11l-4 4 4 4"/>'),
+  spolecna: hgSvg('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 6 1.5 6 5"/>'),
+  chev:     hgSvg('<path d="M9 6l6 6-6 6"/>'),
+  close:    hgSvg('<path d="M6 6l12 12M18 6L6 18"/>')
 }
-
-function renderRiderHarmonogramItem(item, idx){
-  const typLabel = {
-    blok: "🎵 Blok skladeb",
-    moderace: "🎤 Moderace",
-    pribeh: "↔️ Příchod/odchod pódia",
-    spolecna: "🤝 Společná skladba"
-  }
-
-  return `
-    <div class="card" style="margin-bottom:10px;padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span class="small" style="font-weight:600">${typLabel[item.typ] || "Položka"}</span>
-        <button class="btn-danger" type="button" onclick="removeRiderHarmonogramItem(${idx})" style="width:auto;padding:6px 10px">✕</button>
-      </div>
-
-      <label>Název<br>
-        <input type="text" value="${escapeHtml(item.nazev || "")}" placeholder="Název bloku / moderace"
-          oninput="updateRiderHarmonogramField(${idx}, 'nazev', this.value)">
-      </label>
-
-      ${item.typ === "moderace" ? `
-        <label style="margin-top:8px">Moderuje<br>
-          <select onchange="updateRiderHarmonogramField(${idx}, 'moderator', this.value)">
-            <option value="">Nevybráno</option>
-            ${(window.MEMBERS || []).filter(m => (m.ROLE||m.role||"").toUpperCase() !== "GUEST").map(m => `
-              <option value="${escapeHtml(m.ID||m.id)}" ${item.moderator === (m.ID||m.id) ? "selected" : ""}>${escapeHtml(m.NAME||m.name)}</option>
-            `).join("")}
-          </select>
-        </label>
-      ` : ""}
-
-      ${item.typ === "blok" && Array.isArray(item.skladby) && item.skladby.length ? `
-        <div style="margin-top:8px">
-          <span class="small">Skladby v bloku:</span>
-          ${item.skladby.map((s, sIdx) => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px">
-              <span>${sIdx+1}. ${escapeHtml(s.name)}</span>
-              <button class="btn-danger" type="button" onclick="removeSongFromRiderBlock(${idx}, ${sIdx})" style="width:auto;padding:2px 8px;font-size:11px">✕</button>
-            </div>
-          `).join("")}
-        </div>
-      ` : ""}
-
-      <label style="margin-top:8px">Odhad stopáže (min)<br>
-        <input type="number" value="${escapeHtml(item.stopaz_min || "")}" placeholder="např. 12"
-          oninput="updateRiderHarmonogramField(${idx}, 'stopaz_min', this.value)">
-      </label>
-
-      <label style="margin-top:8px">Poznámka<br>
-        <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Volitelné"
-          oninput="updateRiderHarmonogramField(${idx}, 'poznamka', this.value)">
-      </label>
-    </div>
-  `
+const HG_LABEL = { blok: "Blok skladeb", moderace: "Moderace", prichod: "Příchod", odchod: "Odchod", pribeh: "Příchod / odchod", spolecna: "Společná skladba" }
+const HG_PIECES = [["prichod", "Příchod"], ["odchod", "Odchod"], ["moderace", "Moderace"], ["spolecna", "Společná skladba"], ["blok", "Prázdný blok"]]
+const HG_OPEN = new WeakSet()
+const hgKind = it => it.typ === "pribeh" ? (it.smer === "odchod" ? "odchod" : it.smer === "prichod" ? "prichod" : "pribeh") : (it.typ || "blok")
+const hgArr = () => { const r = getRiderData(); if(!Array.isArray(r.harmonogram_koncertu)) r.harmonogram_koncertu = []; return r.harmonogram_koncertu }
+const hgSongs = () => (window.EDIT_PROGRAM || []).filter(p => p.SONG_ID).map(p => ({ song_id: p.SONG_ID, name: p.NAME }))
+const HG_NEW = {
+  prichod:  { typ: "pribeh", smer: "prichod", nazev: "Příchod na pódium" },
+  odchod:   { typ: "pribeh", smer: "odchod", nazev: "Odchod z pódia" },
+  moderace: { typ: "moderace", nazev: "Moderace" },
+  spolecna: { typ: "spolecna", nazev: "Společná skladba" },
+  blok:     { typ: "blok", nazev: "Blok skladeb" }
 }
+const hgNewPiece = kind => ({ ...HG_NEW[kind], ...(kind === "blok" ? { skladby: [] } : {}), stopaz_min: "", poznamka: "" })
 
-function addRiderHarmonogramItem(typ){
-  const rider = getRiderData()
-  if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
-  rider.harmonogram_koncertu.push({ typ, nazev: "", stopaz_min: "", poznamka: "" })
-  refreshRiderHarmonogram()
-}
-
-function addRiderBlokZeSkladeb(){
-  const rider = getRiderData()
-  if(!Array.isArray(rider.harmonogram_koncertu)) rider.harmonogram_koncertu = []
-
-  const program = window.EDIT_PROGRAM || []
-  if(!program.length){
-    alert("Tato akce zatím nemá vyplněný program. Nejprve vytvoř program v sekci Program.")
-    return
-  }
-
-  const skladby = program.map(p => ({ song_id: p.SONG_ID, name: p.NAME }))
-
-  rider.harmonogram_koncertu.push({
-    typ: "blok",
-    nazev: "Blok — 10men",
-    skladby,
-    stopaz_min: "",
-    poznamka: ""
+// časy: od začátku programu, dokud mají všechny předchozí položky vyplněnou stopáž
+function hgTimes(){
+  const items = hgArr(), r = getRiderData()
+  let t = evMin(r.harmonogram_start || document.getElementById("fStart")?.value), known = t != null
+  let total = 0
+  const out = items.map(it => {
+    const m = Number(it.stopaz_min)
+    const has = it.stopaz_min !== "" && it.stopaz_min != null && m >= 0
+    if(has) total += m
+    let label = ""
+    if(known){ label = evHM(t) + (has ? "–" + evHM(t + m) : ""); if(has) t += m; else known = false }
+    return label
   })
-  refreshRiderHarmonogram()
+  return { out, total }
+}
+function hgSummaryHtml(){
+  const { total } = hgTimes()
+  const s = evMin(document.getElementById("fStart")?.value), e = evMin(document.getElementById("fEnd")?.value)
+  const slot = s != null && e != null ? (e - s + 1440) % 1440 : 0
+  const diff = slot ? slot - total : null
+  return `<b>${total} min</b> celkem` + (slot ? ` · slot ${slot} min · ` + (diff >= 0 ? `<span class="hg-ok">zbývá ${diff} min</span>` : `<span class="ev-warn">o ${-diff} min víc</span>`) : "")
+}
+function hgUpdateSummary(){
+  const el = document.getElementById("hgSum"); if(el) el.innerHTML = hgSummaryHtml()
+  const { out } = hgTimes()
+  document.querySelectorAll("#hgAxis > .hg-item").forEach((n, i) => { const t = n.querySelector(".hg-time"); if(t) t.textContent = out[i] || "" })
 }
 
-function removeSongFromRiderBlock(itemIdx, songIdx){
-  const rider = getRiderData()
-  const item = rider.harmonogram_koncertu?.[itemIdx]
-  if(item?.skladby) item.skladby.splice(songIdx, 1)
-  refreshRiderHarmonogram()
+function hgSongHtml(s, bi, si){
+  return `<div class="hg-song" data-hg-src="song" data-bidx="${bi}" data-sidx="${si}">
+    <button type="button" class="hg-grip" aria-label="Přesunout skladbu ${escapeHtml(s.name)} (tažením nebo šipkami)">${HG_IC.grip}</button>
+    <span class="hg-sname">${escapeHtml(s.name)}</span>
+    <button type="button" class="hg-ib" aria-label="Vrátit ${escapeHtml(s.name)} do banky" onclick="hgRemoveSong(${bi}, ${si})">${HG_IC.close}</button></div>`
 }
-
-function removeRiderHarmonogramItem(idx){
-  const rider = getRiderData()
-  rider.harmonogram_koncertu.splice(idx, 1)
-  refreshRiderHarmonogram()
+function hgItemHtml(it, idx, times){
+  const k = hgKind(it), open = HG_OPEN.has(it)
+  const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
+  const detail = open ? `<div class="hg-detail">
+      ${k === "moderace" ? `<label>Moderuje<select onchange="hgField(${idx}, 'moderator', this.value)"><option value="">Nevybráno</option>${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${it.moderator === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}</select></label>` : ""}
+      <label>Poznámka<input type="text" value="${escapeHtml(it.poznamka || "")}" oninput="hgField(${idx}, 'poznamka', this.value)"></label></div>` : ""
+  const songs = k === "blok" ? `<div class="hg-songs" data-bidx="${idx}">${(it.skladby || []).map((s, si) => hgSongHtml(s, idx, si)).join("")}${(it.skladby || []).length ? "" : `<div class="hg-hint">Přetáhni sem skladby z banky</div>`}</div>` : ""
+  return `<div class="hg-item hg-${k}" data-hg-src="item" data-idx="${idx}">
+    <div class="hg-head">
+      <button type="button" class="hg-grip" aria-label="Přesunout: ${escapeHtml(HG_LABEL[k] || "položka")} (tažením nebo šipkami)">${HG_IC.grip}</button>
+      <span class="hg-badge">${HG_IC[k] || HG_IC.blok}${HG_LABEL[k] || "Položka"}</span>
+      <span class="hg-time">${escapeHtml(times[idx] || "")}</span>
+      <button type="button" class="hg-ib${open ? " on" : ""}" aria-label="Detail" aria-expanded="${open}" onclick="hgToggle(${idx})">${HG_IC.chev}</button>
+      <button type="button" class="hg-ib" aria-label="Odebrat" onclick="hgRemoveItem(${idx})">${HG_IC.close}</button>
+    </div>
+    <div class="hg-fields">
+      <input type="text" class="hg-name" value="${escapeHtml(it.nazev || "")}" placeholder="Název" oninput="hgField(${idx}, 'nazev', this.value)">
+      <label class="hg-min"><input type="number" min="0" max="240" inputmode="numeric" value="${escapeHtml(it.stopaz_min ?? "")}" placeholder="min" aria-label="Stopáž v minutách" oninput="hgField(${idx}, 'stopaz_min', this.value);hgUpdateSummary()"></label>
+    </div>${detail}${songs}</div>`
 }
-
-function updateRiderHarmonogramField(idx, field, value){
-  const rider = getRiderData()
-  if(rider.harmonogram_koncertu?.[idx]) rider.harmonogram_koncertu[idx][field] = value
+function renderRiderHarmonogramHtml(){
+  const items = hgArr(), r = getRiderData(), { out } = hgTimes()
+  const placed = new Set(); items.forEach(it => (it.skladby || []).forEach(s => placed.add(String(s.song_id))))
+  const bank = hgSongs().filter(s => !placed.has(String(s.song_id)))
+  const startVal = r.harmonogram_start || ""
+  return `
+    <div class="hg-bar"><label>Začátek programu<input type="time" value="${escapeHtml(startVal)}" placeholder="${escapeHtml(document.getElementById("fStart")?.value || "")}" oninput="hgStart(this.value)"></label><div class="hg-sum" id="hgSum">${hgSummaryHtml()}</div></div>
+    <div class="hg">
+      <div class="hg-bank" id="hgBank">
+        <div class="hg-bt">Banka dílků</div>
+        <div class="hg-chips">${HG_PIECES.map(([k, l]) => `<div class="hg-chip" data-hg-src="bank-piece" data-kind="${k}"><button type="button" class="hg-grip" aria-label="Přetáhnout dílek ${l}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAdd('${k}')">${HG_IC[k]}${l}</button></div>`).join("")}</div>
+        <div class="hg-bt">Skladby z programu</div>
+        <div class="hg-chips">${bank.length ? bank.map(s => `<div class="hg-chip" data-hg-src="bank-song" data-sid="${escapeHtml(String(s.song_id))}"><button type="button" class="hg-grip" aria-label="Přetáhnout skladbu ${escapeHtml(s.name)}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAddSong('${escapeHtml(String(s.song_id))}')">${escapeHtml(s.name)}</button></div>`).join("")
+          : `<div class="hg-hint" style="padding:0">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
+      </div>
+      <div class="hg-axis" id="hgAxis">${items.map((it, i) => hgItemHtml(it, i, out)).join("") || `<div class="hg-empty">Klepni na dílek v bance nebo ho přetáhni sem.</div>`}</div>
+    </div>`
 }
-
-function refreshRiderHarmonogram(){
-  const wrap = document.getElementById("riderHarmonogramList")
-  if(wrap) wrap.innerHTML = renderRiderHarmonogramHtml()
+function refreshRiderHarmonogram(focus){
+  const wrap = document.getElementById("riderHarmonogramList"); if(!wrap) return
+  wrap.innerHTML = renderRiderHarmonogramHtml()
+  if(focus) wrap.querySelector(focus)?.focus()
 }
+const hgChanged = () => document.getElementById("riderHarmonogramList")?.dispatchEvent(new Event("input", { bubbles: true }))
 
-window.addRiderHarmonogramItem     = addRiderHarmonogramItem
-window.addRiderBlokZeSkladeb       = addRiderBlokZeSkladeb
-window.removeSongFromRiderBlock    = removeSongFromRiderBlock
-window.removeRiderHarmonogramItem  = removeRiderHarmonogramItem
+function hgField(idx, field, value){ const it = hgArr()[idx]; if(it) it[field] = value }
+function hgStart(v){ getRiderData().harmonogram_start = v; hgUpdateSummary() }
+function hgToggle(idx){ const it = hgArr()[idx]; if(!it) return; HG_OPEN.has(it) ? HG_OPEN.delete(it) : HG_OPEN.add(it); refreshRiderHarmonogram() }
+function hgAdd(kind){ hgArr().push(hgNewPiece(kind)); refreshRiderHarmonogram(); hgChanged() }
+function hgAddSong(sid){
+  const song = hgSongs().find(s => String(s.song_id) === String(sid)); if(!song) return
+  const a = hgArr(), last = a[a.length - 1]
+  if(last && last.typ === "blok") last.skladby = [...(last.skladby || []), song]
+  else a.push({ ...hgNewPiece("blok"), skladby: [song] })
+  refreshRiderHarmonogram(); hgChanged()
+}
+function hgRemoveItem(idx){ hgArr().splice(idx, 1); refreshRiderHarmonogram(); hgChanged() }
+function hgRemoveSong(bi, si){ const b = hgArr()[bi]; if(b?.skladby) b.skladby.splice(si, 1); refreshRiderHarmonogram(); hgChanged() }
+
+// tažení (ukazatel myši i dotyk; táhne se za úchyt, takže posouvání stránky prstem funguje)
+const HG = { d: null }
+function hgPoint(sel, x, y){ const r = document.querySelector(sel)?.getBoundingClientRect(); return !!r && x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8 }
+function hgIndexAt(container, selector, y){
+  const kids = [...container.querySelectorAll(selector)].filter(n => !n.classList.contains("hg-dragging") && n.parentElement === container)
+  let i = 0; for(const n of kids){ const r = n.getBoundingClientRect(); if(y > r.top + r.height / 2) i++; else break }
+  return i
+}
+function hgTarget(d){
+  const isSong = d.kind === "bank-song" || d.kind === "song"
+  const dragsBlock = d.kind === "item" && hgArr()[+d.src.dataset.idx]?.typ === "blok"
+  if(!dragsBlock){
+    for(const list of document.querySelectorAll("#hgAxis .hg-songs")){
+      if(list.closest(".hg-dragging")) continue
+      const r = list.getBoundingClientRect()
+      if(d.x >= r.left && d.x <= r.right && d.y >= r.top - 4 && d.y <= r.bottom + 4) return { mode: "block", bidx: +list.dataset.bidx, index: hgIndexAt(list, ".hg-song", d.y), list }
+    }
+  }
+  if(hgPoint("#hgAxis", d.x, d.y)){ const axis = document.getElementById("hgAxis"); return { mode: "axis", index: hgIndexAt(axis, ".hg-item", d.y), axis } }
+  if(isSong && d.kind === "song" && hgPoint("#hgBank", d.x, d.y)) return { mode: "bank" }
+  return null
+}
+function hgDragStart(d){
+  d.ghost = document.createElement("div"); d.ghost.className = "hg-ghost"
+  d.ghost.textContent = d.src.querySelector(".hg-sname, .hg-add, .hg-name")?.textContent?.trim() || d.src.querySelector(".hg-badge")?.textContent?.trim() || d.src.querySelector(".hg-name")?.value || "Dílek"
+  if(d.src.querySelector(".hg-name")) d.ghost.textContent = d.src.querySelector(".hg-name").value || d.src.querySelector(".hg-badge").textContent.trim()
+  document.body.appendChild(d.ghost)
+  d.ins = document.createElement("div"); d.ins.className = "hg-ins"
+  d.src.classList.add("hg-dragging"); document.body.classList.add("hg-active")
+  const loop = () => {
+    if(!HG.d) return
+    const sc = d.scroller || (d.scroller = (() => { let n = document.getElementById("hgAxis"); while(n && n !== document.body){ const o = getComputedStyle(n).overflowY; if((o === "auto" || o === "scroll") && n.scrollHeight > n.clientHeight) return n; n = n.parentElement } return document.scrollingElement })())
+    const r = sc === document.scrollingElement ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect()
+    if(d.y < r.top + 70) sc.scrollBy(0, -12); else if(d.y > r.bottom - 70) sc.scrollBy(0, 12)
+    d.raf = requestAnimationFrame(loop)
+  }
+  d.raf = requestAnimationFrame(loop)
+}
+function hgDragMove(d){
+  d.ghost.style.transform = `translate(${d.x + 12}px, ${d.y - 16}px)`
+  const t = d.target = hgTarget(d)
+  document.getElementById("hgBank")?.classList.toggle("hg-over", !!t && t.mode === "bank")
+  if(!t || t.mode === "bank"){ d.ins.remove(); return }
+  if(t.mode === "axis"){
+    const kids = [...t.axis.querySelectorAll(":scope > .hg-item")].filter(n => !n.classList.contains("hg-dragging"))
+    t.axis.insertBefore(d.ins, kids[t.index] || t.axis.querySelector(":scope > .hg-empty") || null)
+  }else{
+    const kids = [...t.list.querySelectorAll(".hg-song")].filter(n => !n.classList.contains("hg-dragging"))
+    t.list.insertBefore(d.ins, kids[t.index] || t.list.querySelector(".hg-hint") || null)
+  }
+}
+function hgCommit(d, t){
+  const a = hgArr()
+  let song = null, item = null
+  const k = d.kind
+  if(k === "bank-song") song = hgSongs().find(s => String(s.song_id) === d.src.dataset.sid)
+  else if(k === "song"){ const b = a[+d.src.dataset.bidx]; song = b?.skladby?.splice(+d.src.dataset.sidx, 1)[0] }
+  else if(k === "bank-piece") item = hgNewPiece(d.src.dataset.kind)
+  else if(k === "item"){ const i = +d.src.dataset.idx; item = a.splice(i, 1)[0]; if(t.mode === "block" && i < t.bidx) t.bidx-- }
+  if(!song && !item) return
+  if(t.mode === "bank") return                                    // skladba vyjmutá z bloku se sama vrátí do banky
+  if(t.mode === "axis"){
+    a.splice(t.index, 0, item || { ...hgNewPiece("blok"), skladby: [song] })
+  }else{
+    const b = a[t.bidx]; if(!b) return
+    if(song){ b.skladby = b.skladby || []; b.skladby.splice(t.index, 0, song) }
+    else{                                                          // moderace, příchod… uprostřed bloku = blok se rozdělí
+      const sk = b.skladby || [], before = sk.slice(0, t.index), after = sk.slice(t.index)
+      if(!before.length) a.splice(t.bidx, 0, item)
+      else if(!after.length) a.splice(t.bidx + 1, 0, item)
+      else{ b.skladby = before; a.splice(t.bidx + 1, 0, item, { ...hgNewPiece("blok"), nazev: b.nazev ? b.nazev + " (pokračování)" : "Blok skladeb", skladby: after }) }
+    }
+  }
+}
+function hgDragEnd(e, cancel){
+  const d = HG.d; if(!d || e.pointerId !== d.pid) return
+  HG.d = null
+  d.grip.releasePointerCapture?.(d.pid)
+  if(!d.moved) return
+  cancelAnimationFrame(d.raf); d.ghost.remove(); d.ins.remove(); d.src.classList.remove("hg-dragging"); document.body.classList.remove("hg-active")
+  document.getElementById("hgBank")?.classList.remove("hg-over")
+  if(!cancel && d.target){ hgCommit(d, d.target); refreshRiderHarmonogram(); hgChanged() }
+}
+document.addEventListener("pointerdown", e => {
+  const g = e.target.closest && e.target.closest("#riderHarmonogramList .hg-grip"); if(!g || e.button) return
+  const src = g.closest("[data-hg-src]"); if(!src) return
+  e.preventDefault()
+  HG.d = { src, kind: src.dataset.hgSrc, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, moved: false, pid: e.pointerId, grip: g }
+  g.setPointerCapture?.(e.pointerId)
+})
+document.addEventListener("pointermove", e => {
+  const d = HG.d; if(!d || e.pointerId !== d.pid) return
+  if(!d.moved){ if(Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 6) return; d.moved = true; hgDragStart(d) }
+  d.x = e.clientX; d.y = e.clientY; hgDragMove(d)
+})
+document.addEventListener("pointerup", e => hgDragEnd(e, false))
+document.addEventListener("pointercancel", e => hgDragEnd(e, true))
+// šipkami nahoru a dolů na úchytu (bez myši)
+document.addEventListener("keydown", e => {
+  const g = e.target.closest && e.target.closest("#riderHarmonogramList .hg-grip"); if(!g || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return
+  const src = g.closest("[data-hg-src]"), dir = e.key === "ArrowUp" ? -1 : 1, a = hgArr()
+  if(!src) return
+  e.preventDefault()
+  if(src.dataset.hgSrc === "item"){
+    const i = +src.dataset.idx, j = i + dir; if(j < 0 || j >= a.length) return
+    ;[a[i], a[j]] = [a[j], a[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item:nth-child(${j + 1}) .hg-grip`); hgChanged()
+  }else if(src.dataset.hgSrc === "song"){
+    const b = a[+src.dataset.bidx]?.skladby, i = +src.dataset.sidx, j = i + dir; if(!b || j < 0 || j >= b.length) return
+    ;[b[i], b[j]] = [b[j], b[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item:nth-child(${+src.dataset.bidx + 1}) .hg-song:nth-child(${j + 1}) .hg-grip`); hgChanged()
+  }
+})
+Object.assign(window, { hgField, hgStart, hgToggle, hgAdd, hgAddSong, hgRemoveItem, hgRemoveSong, hgUpdateSummary })
+// HG_END
+
 window.updateRiderHarmonogramField = updateRiderHarmonogramField
 
 // =============================================

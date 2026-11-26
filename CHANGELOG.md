@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.17.0 (26. 11. 2026)
+- Podrobnosti pro 10space, Harmonogram koncertu: nový editor „banka dílků + osa programu“. V bance jsou dílky Příchod, Odchod, Moderace, Společná skladba, Prázdný blok a všechny skladby z programu akce, které ještě nejsou na ose. Dílek se na osu přidá klepnutím, nebo se přetáhne za úchyt (myší i prstem, stránka se při tažení u okraje sama posouvá). Na ose se položky řadí tažením nebo šipkami nahoru a dolů na úchytu.
+- Skladby se dají přetahovat mezi bloky, z banky do bloku a z bloku zpět do banky. Moderace, příchod nebo odchod přetažené doprostřed bloku skladeb blok rozdělí na dvě části (druhá se jmenuje „… (pokračování)“). Skladba přetažená z banky na osu založí nový blok.
+- Časy: zadáš začátek programu (jinak se vezme začátek akce) a stopáž u položek, osa dopočítá časy od–do. Nahoře je souhrn „18 min celkem · slot 60 min · zbývá 42 min“ (červeně, když program přetéká). Detail položky (moderátor, poznámka) se rozbalí šipkou. Data zůstávají ve stejném tvaru jako dřív (nově jen pole smer u příchodu a odchodu a harmonogram_start), takže 10space se nemění.
+
 ## 4.16.1 (26. 11. 2026)
 - Formulář akce, úspora místa: pryč jsou vysvětlivky pod přepínači, nabídky data, času a míst z historie i popisky karet typu. Zbyla jen pole a volby.
 - Formulář akce, přepínače místo tlačítek: všude, kde se nepíše text, je segmentový přepínač s plynulým přesunem vybrané volby (typ akce, délka, opakování, stav akce, doprava, oblečení, spacáky, strava, druh koncertního oblečení). Vždy je vybraná právě jedna volba, takže ji nejde omylem zrušit; „Nezadáno“ je samostatná volba. Doprava a oblečení mají rovnoměrně rozložené volby s ikonami (SVG). Ano / Ne jsou běžné přepínače (koncertní oblečení na soustředění).
