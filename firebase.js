@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js"
-import { getDatabase, ref, onValue, set, push, update, remove, get } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js"
+import { getDatabase, ref, onValue, set, push, update, remove, get, runTransaction } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js"
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js"
 
 const firebaseConfig = {
@@ -16,4 +16,4 @@ const app      = initializeApp(firebaseConfig)
 const database = getDatabase(app)
 const auth     = getAuth(app)
 
-export { database, auth, ref, onValue, set, push, update, remove, get, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
+export { database, auth, ref, onValue, set, push, update, remove, get, runTransaction, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut }
