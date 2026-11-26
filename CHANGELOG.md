@@ -3,6 +3,15 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.16.0 (26. 11. 2026)
+- Formulář akce přepracovaný na průvodce. Nejdřív se vybere typ akce (Zkouška, Koncert, Soustředění, Soutěž, Jiná akce) kartami s ikonou a popiskem, zbytek formuláře se ukáže podle typu. Ikony jsou SVG, žádné emotikony.
+- Kdy: rychlé volby data (Dnes, Zítra a dva nejbližší dny v týdnu, kdy se u daného typu akce obvykle koná), začátek tlačítky (17:00 až 20:00 a nejčastější čas daného typu) a délka tlačítky 1 h / 2 h / 2,5 h / 3 h / Celý den, konec se dopočítá. Živý souhrn („Středa 9. 12. · 18:00–20:30, za 13 dní · 2,5 h“). Datum konce se ukáže až po zapnutí „Trvá víc dní“. Název se při výběru typu a data předvyplní („Zkouška 9. 12.“), ruční úprava ho přestane měnit.
+- Kde: místo s nabídkou nedávných míst z historie akcí, odkaz na online call se ukáže po zapnutí „Online“.
+- Podrobnosti podle typu jsou rozbalovací sekce s ukazatelem vyplnění (Koncert: Sraz a oblečení, Doprava, Hospoda, Spolupráce, Harmonogram dne; Soustředění a Soutěž: Spaní a strava, Koncertní oblečení, Doprava, Harmonogram po dnech). Doprava, oblečení, spacáky a strava jsou tlačítka místo rozbalovacích seznamů. Rozepsané hodnoty přežijí přepnutí typu a změna typu se projeví hned (dřív zůstala stará pole).
+- Opakování: tlačítka Jednorázově / Každý týden / Co 2 týdny, rychlé volby konce (+4 týdny, +8 týdnů, do konce měsíce) a hláška „Vytvoří se 9 akcí, vždy ve středu 18:00–20:30“.
+- Dole jedno hlavní tlačítko „Vytvořit akci“ / „Uložit“ (modré) a přepínač „Poslat do Discordu“, který je ve výchozím stavu zapnutý a pamatuje si poslední volbu. Při úpravě je samostatné červené tlačítko „Smazat akci“; stav „Zrušená“ se už v seznamu nenabízí (dřív akci smazal).
+- Chyby (chybí název, datum, konec opakování) se zobrazí přímo u pole místo vyskakovacího okna. Poznámka a ostatní pole mají vzhled podle pravidel, tlačítka v harmonogramu a podkladech pro 10space mají třídy tlačítek.
+
 ## 4.15.0 (26. 11. 2026)
 - Nastavení, Moje auta: formulář auta podle pravidel vzhledu. Hlavní tlačítko („Uložit“ / „Přidat auto“) je `btn-primary`, „Zrušit“ `btn-secondary`, „Smazat“ `btn-danger`, vše ve skupině tlačítek (na mobilu mřížka: hlavní nahoře přes celou šířku, pod ním dvě). „Přidat auto“ pod seznamem je hlavní tlačítko.
 - Moje auta, přívětivost: formulář auta je interaktivní. Nahoře je živý náhled (dlaždice míst: „Ty“ + spolucestující, název a souhrn přesně jako v seznamu aut). Počet míst se nastavuje posuvníkem 2 až 9 s velkým číslem a nové dlaždice naskakují s animací. Palivo se vybírá tlačítky místo seznamu (druhé klepnutí volbu zruší). Spotřeba má posuvník, tlačítka − / + po 0,1 a pole pro přesné číslo; jednotka se mění podle paliva (kWh/100 km u elektřiny) a posuvník je do zadání hodnoty zašedlý, takže se spotřeba nepředvyplňuje (musí být podle technického průkazu).
