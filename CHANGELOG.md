@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.10.0 (26. 11. 2026)
+- Marketingové úkoly: v úkolu lze zaškrtnout víc kanálů najednou (např. Facebook i Instagram). Formulář má místo výběru jednoho kanálu zaškrtávací pole, v seznamech a kartách se kanály vypíšou čárkou. Úkol drží seznam `kanaly` a první kanál navíc ve starém poli `kanal`, které čte Marek; starší úkoly s jedním kanálem fungují beze změny. Formulář (`openFormModal`) umí nový typ pole `checkboxes` a pamatuje si zaškrtnutí i při obnovení rozepsaného formuláře.
+- Server (api.js): `savemarketingtask` přijímá `kanaly` (pole, bez duplicit, nejméně jeden), úkoly v přehledu a v Mých úkolech vrací `kanaly`.
+
 ## 4.9.1 (26. 11. 2026)
 - Detail akce, Další informace: posádky mají přehlednější vzhled. U každého auta je název a štítek s obsazeností (např. 6/7), pruh míst (obsazeno členy, místa pro jiné než členy, volno), stav textem (volné místo, plno, přeplněno) a pod tím řidič a posádka v oddělených řádcích.
 
