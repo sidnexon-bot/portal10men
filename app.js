@@ -2710,8 +2710,8 @@ function dopravaCardHtml(){
     <div style="padding:14px 0;border-top:1px solid rgba(128,128,128,0.1)">
       ${hlavicka(p, o, barva)}
       ${omezene ? "" : `<label style="${lbl}">Auto<br><select onchange="dopravaAdminAuto('${r}', this.value)">${moznosti(p.ridic, p.auto_id || "", p)}</select></label>`}
-      <div style="display:flex;gap:10px">
-        ${omezene ? (p.carsharing ? `<label style="${lbl};flex:1">Volná místa pro ostatní (bez tebe)<br><input type="number" min="1" max="8" step="1" inputmode="numeric" value="${Math.max(1, (Number(p.auto_mist) || 2) - 1)}" onchange="dopravaRidicVolna('${r}', this.value)"></label>` : "")
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        ${omezene ? (p.carsharing ? `<label style="${lbl};flex:1">Volná místa<br><input type="number" min="1" max="8" step="1" inputmode="numeric" value="${Math.max(1, (Number(p.auto_mist) || 2) - 1)}" onchange="dopravaRidicVolna('${r}', this.value)"></label>` : "")
         : `<label style="${lbl};flex:1">Míst včetně řidiče<br><input type="number" min="2" max="9" step="1" inputmode="numeric" value="${Number(p.auto_mist) || ""}" onchange="dopravaAdminMist('${r}', this.value)"></label>`}
         <label style="${lbl};flex:1">Pro jiné než členy<br><input type="number" min="0" max="8" step="1" inputmode="numeric" value="${Number(p.auto_rezervovano) || 0}" onchange="dopravaAdminRez('${r}', this.value)"></label>
       </div>
