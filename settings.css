@@ -71,3 +71,30 @@ body.dark .dash-todos .st-seg button.on { color: #fff; }
   body.sb-collapsed .sidebar-nav-item.active { box-shadow: none; }
   body.sb-collapsed .sidebar-collapse-label { display: none; }
 }
+
+/* Moje auta: živý náhled (dlaždice míst), posuvníky a volba paliva */
+.au-prev { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 16px; background: rgba(120, 120, 128, 0.1); }
+.au-seats { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; }
+.au-seat { width: 28px; height: 34px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1.5px solid var(--card-border, rgba(60, 60, 67, 0.2)); background: var(--card); color: var(--muted); font-size: 11px; font-weight: 700; }
+.au-seat svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }
+.au-drv { background: var(--au-acc, #007aff); border-color: transparent; color: #fff; }
+.au-new { animation: au-pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes au-pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.au-pt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.au-pt b { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.au-ph { color: var(--muted); font-weight: 500 !important; }
+.au-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 16px; }
+.au-big { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.au-big.au-sm { font-size: 15px; font-weight: 600; }
+.au-range { width: 100%; box-sizing: border-box; margin: 6px 0 0; padding: 0; height: 32px; min-height: 0; accent-color: var(--au-acc, #007aff); background: transparent; border: 0; cursor: pointer; }
+.au-range.au-s:not(.au-set) { opacity: 0.45; }
+.au-ticks { display: flex; justify-content: space-between; padding: 0 9px 0 8px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.au-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.au-chip { min-height: 30px !important; height: 30px; padding: 0 14px !important; border-radius: 999px !important; font-size: 13px !important; font-weight: 600; border: 0 !important; background: rgba(120, 120, 128, 0.14) !important; color: var(--text, inherit) !important; box-shadow: none !important; }
+.au-chip.on { background: var(--au-acc, #007aff) !important; color: #fff !important; }
+body.dark .au-chip.on { color: #0b0b0c !important; }
+.au-step { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.au-step input { flex: 1 1 auto; min-width: 0; text-align: center; }
+.au-step [data-au-unit] { flex: none; white-space: nowrap; }
+.au-step .btn-secondary { flex: none; width: 44px; padding: 0 !important; font-size: 20px !important; }
+html[data-platform="android"] body { --au-acc: var(--and-accent); }

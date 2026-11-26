@@ -131,21 +131,54 @@ function autoSouhrn(a) {
   dily.push(a.spotreba ? `${String(a.spotreba).replace(".", ",")} ${a.palivo === "Elektro" ? "kWh" : "l"}/100 km` : "doplň spotřebu")
   return dily.join(" · ")
 }
+/* živý náhled auta: místa jako dlaždice (řidič + spolucestující), název a souhrn přesně tak, jak je uvidí seznam aut */
+const auUnit = palivo => palivo === "Elektro" ? "kWh/100 km" : "l/100 km"
+const auFmt = n => String(n).replace(".", ",")
+const AU_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-6.4 7-6.4s7 2.5 7 6.4"/></svg>'
+function auSeats(n, grew) {
+  return Array.from({ length: n }, (_, i) => i === 0
+    ? '<span class="au-seat au-drv" title="Ty (řidič)">Ty</span>'
+    : `<span class="au-seat${grew && i === n - 1 ? " au-new" : ""}">${AU_PERSON}</span>`).join("")
+}
+function auSync(box, grew) {
+  const q = s => box.querySelector(s)
+  const mist = Number(q("[data-au-mist]").value) || 5, palivo = q("[data-au-palivo]").value
+  const sp = Number(String(q("[data-au-spotreba]").value).replace(",", ".")) || 0
+  const nazev = q("[data-au-nazev]").value.trim()
+  q("[data-au-seats]").innerHTML = auSeats(mist, grew)
+  q("[data-au-mistv]").textContent = mist
+  const t = q("[data-au-pname]"); t.textContent = nazev || "Název auta"; t.classList.toggle("au-ph", !nazev)
+  q("[data-au-psub]").textContent = autoSouhrn({ mist, palivo, spotreba: sp })
+  q("[data-au-unit]").textContent = auUnit(palivo)
+  q("[data-au-sslider]").classList.toggle("au-set", sp > 0)
+  q("[data-au-spv]").textContent = sp > 0 ? auFmt(sp.toFixed(1)) + " " + auUnit(palivo) : "nezadáno"
+}
 function autoForm(a) {
   const isNew = !a, id = isNew ? "new" : a.id, msg = autaMsg[id] || ""
   const mist = isNew ? 5 : Math.min(9, Math.max(2, Number(a.mist) || 5))
+  const palivo = isNew ? "" : (a.palivo || "")
+  const sp = isNew || !a.spotreba ? "" : a.spotreba
   const vychozi = isNew ? !(auta || []).length : !!a.vychozi   // první auto je rovnou výchozí
   const fld = "width:100%;box-sizing:border-box"
+  const el = palivo === "Elektro"
   return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Upravit auto"}</div>
-    <label class="st-name" for="au-n-${esc(id)}">Název</label>
+    <div class="au-prev"><div class="au-seats" data-au-seats>${auSeats(mist)}</div>
+      <div class="au-pt"><b data-au-pname class="${isNew || !a.nazev ? "au-ph" : ""}">${esc(isNew || !a.nazev ? "Název auta" : a.nazev)}</b><span class="st-hint" data-au-psub style="margin:0">${esc(autoSouhrn({ mist, palivo, spotreba: Number(sp) || 0 }))}</span></div></div>
+    <label class="st-name" for="au-n-${esc(id)}" style="display:block;margin-top:14px">Jak se auto jmenuje?</label>
     <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" autocomplete="off" enterkeyhint="next" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="${fld}">
-    <label class="st-name" for="au-m-${esc(id)}" style="margin-top:12px;display:block">Počet míst (včetně řidiče)</label>
-    <select id="au-m-${esc(id)}" data-au-mist style="${fld}">${[2, 3, 4, 5, 6, 7, 8, 9].map(n => `<option value="${n}" ${n === mist ? "selected" : ""}>${n}</option>`).join("")}</select>
-    <label class="st-name" for="au-p-${esc(id)}" style="margin-top:12px;display:block">Palivo</label>
-    <select id="au-p-${esc(id)}" data-au-palivo style="${fld}"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
-    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:12px;display:block">Spotřeba</label>
-    <input type="number" id="au-s-${esc(id)}" data-au-spotreba required min="0.1" max="40" step="0.1" inputmode="decimal" enterkeyhint="done" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" placeholder="např. 5,4" style="${fld}">
-    <div class="st-hint" style="margin:4px 0 0">Podle technického průkazu, v l/100 km (u elektřiny v kWh/100 km).</div>
+    <div class="au-row"><label class="st-name" for="au-m-${esc(id)}">Kolik lidí se vejde (s řidičem)</label><output class="au-big" data-au-mistv>${mist}</output></div>
+    <input type="range" class="au-range" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" value="${mist}" aria-valuetext="${mist} míst">
+    <div class="au-ticks" aria-hidden="true">${[2, 3, 4, 5, 6, 7, 8, 9].map(n => `<span>${n}</span>`).join("")}</div>
+    <div class="st-name" style="margin-top:14px" id="au-pl-${esc(id)}">Čím jezdí</div>
+    <div class="au-chips" role="group" aria-labelledby="au-pl-${esc(id)}">${PALIVA.map(p => `<button type="button" class="au-chip${palivo === p ? " on" : ""}" data-au-pal="${p}" aria-pressed="${palivo === p}">${p}</button>`).join("")}</div>
+    <input type="hidden" data-au-palivo value="${esc(palivo)}">
+    <div class="au-row"><label class="st-name" for="au-s-${esc(id)}">Spotřeba</label><output class="au-big au-sm" data-au-spv>${sp ? esc(auFmt(Number(sp).toFixed(1))) + " " + auUnit(palivo) : "nezadáno"}</output></div>
+    <input type="range" class="au-range au-s${sp ? " au-set" : ""}" data-au-sslider min="${el ? 8 : 3}" max="${el ? 30 : 20}" step="0.1" value="${sp || (el ? 16 : 7)}" aria-label="Spotřeba, posuvník">
+    <div class="au-step"><button type="button" class="btn-secondary" data-au-step="-1" aria-label="Spotřeba o 0,1 méně">−</button>
+      <input type="number" id="au-s-${esc(id)}" data-au-spotreba required min="0.1" max="40" step="0.1" inputmode="decimal" enterkeyhint="done" value="${esc(sp)}" placeholder="např. 5,4">
+      <span class="st-hint" data-au-unit style="margin:0">${auUnit(palivo)}</span>
+      <button type="button" class="btn-secondary" data-au-step="1" aria-label="Spotřeba o 0,1 více">+</button></div>
+    <div class="st-hint" style="margin:6px 0 0">Zadej podle technického průkazu (posuvník je jen pomůcka, přesné číslo napiš do pole).</div>
     <label style="display:flex;align-items:center;gap:8px;margin:14px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
     <div class="st-hint" style="margin:2px 0 0 26px">Předvybere se, když si na akci bereš auto.</div>
     <div class="btn-group" style="margin-top:14px"><button type="button" class="btn-primary" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="btn-secondary" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="btn-danger" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
@@ -249,8 +282,25 @@ function refresh() {
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del],[data-au-open],[data-au-new],[data-au-cancel]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del],[data-au-open],[data-au-new],[data-au-cancel],[data-au-pal],[data-au-step]")
   if (!t || !area || !area.contains(t)) return
+  if (t.dataset.auPal != null) {   // palivo: volba se dá zrušit druhým klepnutím; posuvník spotřeby dostane rozsah podle paliva
+    const box = t.closest("[data-auto]"), on = t.classList.contains("on")
+    box.querySelectorAll("[data-au-pal]").forEach(c => { c.classList.remove("on"); c.setAttribute("aria-pressed", "false") })
+    if (!on) { t.classList.add("on"); t.setAttribute("aria-pressed", "true") }
+    const p = on ? "" : t.dataset.auPal, sl = box.querySelector("[data-au-sslider]"), el = p === "Elektro"
+    box.querySelector("[data-au-palivo]").value = p
+    sl.min = el ? 8 : 3; sl.max = el ? 30 : 20
+    if (!box.querySelector("[data-au-spotreba]").value) sl.value = el ? 16 : 7
+    return auSync(box)
+  }
+  if (t.dataset.auStep != null) {   // spotřeba po 0,1
+    const box = t.closest("[data-auto]"), inp = box.querySelector("[data-au-spotreba]"), sl = box.querySelector("[data-au-sslider]")
+    const cur = Number(String(inp.value).replace(",", ".")) || Number(sl.value) || 0
+    inp.value = Math.min(40, Math.max(0.1, Math.round((cur + 0.1 * Number(t.dataset.auStep)) * 10) / 10)).toFixed(1)
+    sl.value = inp.value
+    return auSync(box)
+  }
   if (t.dataset.auOpen) { autoEdit = t.dataset.auOpen; autaMsg = {}; refresh(); const f = area.querySelector(`[data-auto="${autoEdit}"]`); if (f) { f.scrollIntoView({ block: "nearest" }); f.querySelector("[data-au-nazev]").focus() } return }
   if (t.dataset.auNew) { autoEdit = "new"; autaMsg = {}; refresh(); const f = area.querySelector('[data-auto="new"]'); if (f) { f.scrollIntoView({ block: "nearest" }); f.querySelector("[data-au-nazev]").focus() } return }
   if (t.dataset.auCancel) { autoEdit = null; autaMsg = {}; return refresh() }
@@ -336,10 +386,19 @@ function onKey(e) {
   e.preventDefault(); const id = g.dataset.grip; move(id, e.key === "ArrowUp" ? -1 : 1)
   const again = area && area.querySelector(`.st-grip[data-grip="${id}"]`); if (again) again.focus()
 }
+function onInput(e) {   // živé úpravy karty auta: nic se nepřekresluje, mění se jen to, co je vidět
+  const t = e.target, box = t.closest && t.closest("[data-auto]"); if (!box) return
+  if (t.matches("[data-au-mist]")) {
+    const prev = box.querySelectorAll("[data-au-seats] .au-seat").length
+    t.setAttribute("aria-valuetext", t.value + " míst"); auSync(box, Number(t.value) > prev)
+  } else if (t.matches("[data-au-nazev]")) auSync(box)
+  else if (t.matches("[data-au-sslider]")) { box.querySelector("[data-au-spotreba]").value = Number(t.value).toFixed(1); auSync(box) }
+  else if (t.matches("[data-au-spotreba]")) { const v = Number(String(t.value).replace(",", ".")); if (v > 0) box.querySelector("[data-au-sslider]").value = v; auSync(box) }
+}
 async function render(el) {
   area = el; area.innerHTML = pageHtml()
   if (!area.__stBound) {
-    area.__stBound = true; area.addEventListener("click", onClick); area.addEventListener("keydown", onKey)
+    area.__stBound = true; area.addEventListener("click", onClick); area.addEventListener("keydown", onKey); area.addEventListener("input", onInput)
     area.addEventListener("pointerdown", dragStart); area.addEventListener("pointermove", dragMove); area.addEventListener("pointerup", dragEnd); area.addEventListener("pointercancel", dragEnd)
   }
   const u = user(); if (u?.email) { priv = await privateGet(u.email); refresh() }
