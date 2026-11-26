@@ -5,7 +5,8 @@ Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor,
 
 ## 4.14.0 (26. 11. 2026)
 - Karta Doprava, administrátor: tlačítko „Upravit (admin)“ je v zápatí karty. V režimu úprav jsou v zápatí tlačítka „Uložit“ a „Zrušit“. Změny se už neukládají po každém výběru: provádějí se v rozpracované verzi (stejné kontroly jako na serveru) a na server jdou jedním zápisem po kliknutí na „Uložit“. „Zrušit“ všechny změny zahodí.
-- Server (api.js): nová akce dopravy „davka“ (jen administrátor) provede všechny změny najednou, nebo žádnou; na Discord jde jedna zpráva o úpravě dopravy.
+- Karta Doprava, řidič: u svého auta má tlačítko „Upravit“ (místo „Místa pro jiné“). Režim úprav je jako u administrátora, ale jen pro jeho auto: místa pro jiné než členy, u carsharingu počet volných míst, odebrání spolucestujících a zrušení auta; Uložit / Zrušit v zápatí.
+- Server (api.js): nová akce dopravy „davka“ provede všechny změny najednou, nebo žádnou; každá změna se kontroluje s oprávněními toho, kdo ukládá (řidič tedy změní jen své auto). Na Discord jde jedna zpráva o úpravě dopravy.
 
 ## 4.13.1 (26. 11. 2026)
 - Karta Doprava: tlačítka podle pravidel vzhledu. Hlavní akce („Vezmu auto“, „Potvrdit“, „Pojedu tímto autem“) jsou `btn-primary` (na Androidu plná barva aplikace, na Apple kapsle), „Zrušit auto“ je `btn-danger`, všechna tlačítka mají jednotnou výšku a písmo z pravidel (dřív vlastní inline velikost 34 px / 13 px).

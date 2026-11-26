@@ -1533,8 +1533,7 @@ function dopravaApply(posadky, op, ctx){
   const volnaOk = v => { const n = Math.floor(Number(v)); if(!(n >= 1 && n <= 8)) throw new Error("Počet volných míst musí být 1 až 8."); return n }
   // auta z profilu řidiče: u jedné změny je ctx.auta, u dávky ctx.autaDe(id řidiče)
   const autaDe = ridic => ctx.autaDe ? (ctx.autaDe(ridic) || {}) : (ctx.auta || {})
-  if(op.op === "davka"){   // administrátor: více změn najednou (tlačítko Uložit v režimu úprav), vše se provede, nebo nic
-    if(!admin) throw new Error("Dávku změn může uložit jen administrátor.")
+  if(op.op === "davka"){   // více změn najednou (tlačítko Uložit v režimu úprav), vše se provede, nebo nic; každá změna se kontroluje s oprávněními toho, kdo ukládá
     if(!Array.isArray(op.ops) || op.ops.length > 80) throw new Error("Neplatná dávka změn.")
     return op.ops.reduce((cur, o) => { if(!o || o.op === "davka") throw new Error("Neplatná dávka změn."); return dopravaApply(cur, o, ctx) }, list)
   }
@@ -1678,7 +1677,7 @@ async function dopravaZmena(params){
   if(params.op === "davka"){
     try{
       const kdy = `**${akce.name || "akce"}**${akce.date ? " (" + formatDateSimple(akce.date) + ")" : ""}`
-      await sendDiscordMessage({message: `🚗 Administrátor **${m.name}** upravil dopravu na akci ${kdy}.` + formatPosadkyForDiscord("Auta", JSON.stringify(nove), await dbGet("/members"))})
+      await sendDiscordMessage({message: `🚗 ${admin ? "Administrátor " : ""}**${m.name}** upravil ${admin ? "dopravu" : "své auto"} na akci ${kdy}.` + formatPosadkyForDiscord("Auta", JSON.stringify(nove), await dbGet("/members"))})
     }catch(e){ console.warn("Discord (doprava):", e.message) }
   }
   return {status: "updated"}
