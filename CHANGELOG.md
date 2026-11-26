@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.13.1 (26. 11. 2026)
+- Karta Doprava: tlačítka podle pravidel vzhledu. Hlavní akce („Vezmu auto“, „Potvrdit“, „Pojedu tímto autem“) jsou `btn-primary` (na Androidu plná barva aplikace, na Apple kapsle), „Zrušit auto“ je `btn-danger`, všechna tlačítka mají jednotnou výšku a písmo z pravidel (dřív vlastní inline velikost 34 px / 13 px).
+- Karta Doprava: řady tlačítek jsou v `.btn-group`, takže na mobilu platí mřížka (hlavní nahoře přes celou šířku, pod ním dvě vedle sebe). Tlačítka v záhlaví karty jsou pod nadpisem.
+
 ## 4.13.0 (26. 11. 2026)
 - Karta Doprava, administrátor: v záhlaví je tlačítko „Upravit (admin)“. Po kliknutí se karta přepne do režimu úprav, kde u každého auta vybere jiné auto (z profilu řidiče nebo carsharing), nastaví počet míst včetně řidiče a místa pro jiné než členy, přidá nebo odebere spolucestujícího a auto zruší; dole „Přidat auto za řidiče“. Změny se ukládají hned po výběru, tlačítko „Hotovo“ režim ukončí. Mimo režim úprav vidí administrátor kartu jako ostatní členové.
 - Počet míst nejde snížit pod aktuální obsazenost; člen má stále místo jen v jednom autě. Řidič dál spravuje jen své auto. Zprávy na Discord o zápisu za jiného nesou poznámku „zapsáno adminem …“.

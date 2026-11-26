@@ -2658,7 +2658,6 @@ function dopravaCardHtml(){
   const maMisto = !!(muzu && (posadky.some(p => p.ridic === ja.id) || jedu))
   const bezMista = clenove.filter(m => { const id = m.ID || m.id; return !posadky.some(p => p.ridic === id || (Array.isArray(p.posadka) && p.posadka.includes(id))) })
   const q = v => escapeHtml(String(v ?? "").replace(/['"\\]/g, ""))
-  const btn = "padding:6px 14px;min-height:34px;font-size:13px;width:auto;margin:0"
   const box = "padding:12px;margin:12px 0;border:1px solid rgba(128,128,128,0.2);border-radius:12px"
   const volnaTxt = n => n <= 0 ? "plno" : `${n} ${n === 1 ? "volné místo" : (n <= 4 ? "volná místa" : "volných míst")}`
 
@@ -2683,9 +2682,9 @@ function dopravaCardHtml(){
         <label style="display:block;margin:10px 0 0">Volná místa pro ostatní (bez tebe)<br>
           <input type="number" id="dopravaVolna" min="1" max="8" step="1" inputmode="numeric" value="${Number(ui.volna) || 3}" onchange="dopravaVolna(this.value)">
         </label>` : (auta.length ? "" : `<div class="small" style="margin-top:8px">Vlastní auto si můžeš přidat v Nastavení → Moje auta.</div>`)}
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button type="button" style="${btn}" ${ui.busy ? "disabled" : ""} onclick="dopravaVezmu()">Potvrdit</button>
-          <button type="button" class="btn-secondary" style="${btn}" onclick="dopravaForm(false)">Zrušit</button>
+        <div class="btn-group" style="margin-top:12px">
+          <button type="button" class="btn-primary" ${ui.busy ? "disabled" : ""} onclick="dopravaVezmu()">Potvrdit</button>
+          <button type="button" class="btn-secondary" onclick="dopravaForm(false)">Zrušit</button>
         </div>
       </div>`
   }
@@ -2715,11 +2714,11 @@ function dopravaCardHtml(){
       <div style="${lbl}"><span class="small">Spolucestující</span>
         ${spolu.length ? spolu.map(id => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px">
           <span>${escapeHtml(jmeno(id))}</span>
-          <button type="button" class="btn-secondary" style="${btn};padding:2px 10px;min-height:28px" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button></div>`).join("") : `<div class="small" style="margin-top:4px">Zatím nikdo.</div>`}
+          <button type="button" class="btn-secondary" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button></div>`).join("") : `<div class="small" style="margin-top:4px">Zatím nikdo.</div>`}
         ${bezMista.length ? `<select style="margin-top:8px" onchange="dopravaAdminPridat('${r}', this.value)"><option value="">+ Přidat spolucestujícího…</option>
           ${bezMista.map(m => `<option value="${escapeHtml(m.ID || m.id)}">${escapeHtml(m.NAME || m.name)}</option>`).join("")}</select>` : ""}
       </div>
-      <div style="margin-top:12px"><button type="button" class="btn-secondary" style="${btn};color:#ff3b30" onclick="dopravaZrusit('${r}')">Zrušit auto</button></div>
+      <div class="btn-group" style="margin-top:12px"><button type="button" class="btn-danger" onclick="dopravaZrusit('${r}')">Zrušit auto</button></div>
     </div>`
   }
 
@@ -2746,26 +2745,24 @@ function dopravaCardHtml(){
       ${spolu.length ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
         ${spolu.map(id => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span>${escapeHtml(jmeno(id))}${ja && id === ja.id ? ` <span class="small">(ty)</span>` : ""}</span>
-          ${moje ? `<button type="button" class="btn-secondary" style="${btn};padding:2px 10px;min-height:28px" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button>` : ""}
+          ${moje ? `<button type="button" class="btn-secondary" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button>` : ""}
         </div>`).join("")}</div>` : ""}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
-        ${muzu && !maMisto && !plno ? `<button type="button" style="${btn}" onclick="dopravaPridat('${r}')">Pojedu tímto autem</button>` : ""}
+      <div class="btn-group" style="margin-top:12px">
+        ${muzu && !maMisto && !plno ? `<button type="button" class="btn-primary" onclick="dopravaPridat('${r}')">Pojedu tímto autem</button>` : ""}
         ${muzu && !maMisto && plno ? `<span class="small">Auto je plné.</span>` : ""}
-        ${muzu && jedu === p ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaOdejit()">Nepojedu</button>` : ""}
-        ${moje && o ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaRezervace('${r}')">Místa pro jiné</button>` : ""}
-        ${moje && p.carsharing ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaMista()">Změnit počet míst</button>` : ""}
-        ${moje ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaZrusit('${r}')">Zrušit auto</button>` : ""}
+        ${muzu && jedu === p ? `<button type="button" class="btn-secondary" onclick="dopravaOdejit()">Nepojedu</button>` : ""}
+        ${moje && o ? `<button type="button" class="btn-secondary" onclick="dopravaRezervace('${r}')">Místa pro jiné</button>` : ""}
+        ${moje && p.carsharing ? `<button type="button" class="btn-secondary" onclick="dopravaMista()">Změnit počet míst</button>` : ""}
+        ${moje ? `<button type="button" class="btn-danger" onclick="dopravaZrusit('${r}')">Zrušit auto</button>` : ""}
       </div>
     </div>`
   }
 
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div class="event-label" style="margin:0">Doprava · auta</div>
-      <div style="display:flex;gap:8px">
-        ${!adminRezim && muzu && !maMisto && !ui.open ? `<button type="button" style="${btn}" onclick="dopravaForm(true)">Vezmu auto</button>` : ""}
-        ${ja && ja.admin ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaAdmin(${adminRezim ? "false" : "true"})">${adminRezim ? "Hotovo" : "Upravit (admin)"}</button>` : ""}
-      </div>
+    <div class="event-label" style="margin:0">Doprava · auta</div>
+    <div class="btn-group" style="margin-top:10px">
+        ${!adminRezim && muzu && !maMisto && !ui.open ? `<button type="button" class="btn-primary" onclick="dopravaForm(true)">Vezmu auto</button>` : ""}
+        ${ja && ja.admin ? `<button type="button" class="btn-secondary" onclick="dopravaAdmin(${adminRezim ? "false" : "true"})">${adminRezim ? "Hotovo" : "Upravit (admin)"}</button>` : ""}
     </div>
     ${adminRezim ? `<div class="small" style="margin-top:8px">Režim úprav: změny se ukládají hned.</div>` : ""}
     ${!adminRezim && muzu && !maMisto && ui.open ? form() : ""}
