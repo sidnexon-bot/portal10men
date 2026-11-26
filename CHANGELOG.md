@@ -3,6 +3,10 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.15.0 (26. 11. 2026)
+- Nastavení, Moje auta: formulář auta podle pravidel vzhledu. Hlavní tlačítko („Uložit“ / „Přidat auto“) je `btn-primary`, „Zrušit“ `btn-secondary`, „Smazat“ `btn-danger`, vše ve skupině tlačítek (na mobilu mřížka: hlavní nahoře přes celou šířku, pod ním dvě). „Přidat auto“ pod seznamem je hlavní tlačítko.
+- Moje auta, přívětivost: počet míst se vybírá ze seznamu 2 až 9 (předvybráno 5, nejde zadat neplatná hodnota), spotřeba má krátký popisek a nápovědu s jednotkami pod polem, první auto je rovnou výchozí a u volby „Moje výchozí auto“ je vysvětlení, chybová hláška je červená, karta auta má šipku jako ukazatel, že ji lze otevřít, a u elektra se spotřeba zobrazuje v kWh/100 km. Úvodní text vysvětluje, že auto si člen vybere sám v kartě Doprava (dřív mluvil o výběru administrátorem).
+
 ## 4.14.0 (26. 11. 2026)
 - Karta Doprava, administrátor: tlačítko „Upravit (admin)“ je v zápatí karty. V režimu úprav jsou v zápatí tlačítka „Uložit“ a „Zrušit“. Změny se už neukládají po každém výběru: provádějí se v rozpracované verzi (stejné kontroly jako na serveru) a na server jdou jedním zápisem po kliknutí na „Uložit“. „Zrušit“ všechny změny zahodí.
 - Karta Doprava, řidič: u svého auta má tlačítko „Upravit“ (místo „Místa pro jiné“). Režim úprav je jako u administrátora, ale jen pro jeho auto: místa pro jiné než členy, u carsharingu počet volných míst, odebrání spolucestujících a zrušení auta; Uložit / Zrušit v zápatí.

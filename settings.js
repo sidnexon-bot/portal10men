@@ -121,41 +121,48 @@ async function autaWrite(list) {
 }
 function autoMsg(id, text) {
   autaMsg[id] = text
-  const el = area && area.querySelector(`[data-auto="${id}"] [role=status]`); if (el) el.textContent = text
+  const el = area && area.querySelector(`[data-auto="${id}"] [role=status]`)
+  if (el) { el.textContent = text; el.style.color = autoMsgColor(text) }
 }
+const autoMsgColor = text => text && !/^Ukládám/.test(text) ? "#ff3b30" : ""   // chyba červeně, průběh šedě
 function autoSouhrn(a) {
   const dily = [`${a.mist} ${a.mist === 1 ? "místo" : (a.mist >= 2 && a.mist <= 4 ? "místa" : "míst")}`]
   if (a.palivo) dily.push(a.palivo)
-  dily.push(a.spotreba ? `${String(a.spotreba).replace(".", ",")} l/100 km` : "doplň spotřebu")
+  dily.push(a.spotreba ? `${String(a.spotreba).replace(".", ",")} ${a.palivo === "Elektro" ? "kWh" : "l"}/100 km` : "doplň spotřebu")
   return dily.join(" · ")
 }
 function autoForm(a) {
   const isNew = !a, id = isNew ? "new" : a.id, msg = autaMsg[id] || ""
+  const mist = isNew ? 5 : Math.min(9, Math.max(2, Number(a.mist) || 5))
+  const vychozi = isNew ? !(auta || []).length : !!a.vychozi   // první auto je rovnou výchozí
+  const fld = "width:100%;box-sizing:border-box"
   return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Upravit auto"}</div>
     <label class="st-name" for="au-n-${esc(id)}">Název</label>
-    <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="width:100%;box-sizing:border-box">
-    <label class="st-name" for="au-m-${esc(id)}" style="margin-top:10px;display:block">Počet míst (včetně řidiče)</label>
-    <input type="number" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" inputmode="numeric" value="${esc(isNew ? "" : a.mist)}" placeholder="5" style="width:100%;box-sizing:border-box">
-    <label class="st-name" for="au-p-${esc(id)}" style="margin-top:10px;display:block">Palivo</label>
-    <select id="au-p-${esc(id)}" data-au-palivo style="width:100%;box-sizing:border-box"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
-    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:10px;display:block">Spotřeba dle technického průkazu (l/100 km, u elektřiny kWh/100 km) *</label>
-    <input type="number" id="au-s-${esc(id)}" data-au-spotreba required min="0.1" max="40" step="0.1" inputmode="decimal" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" style="width:100%;box-sizing:border-box">
-    <label style="display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${!isNew && a.vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
-    <div class="st-acts" style="margin-top:12px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="st-add" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="st-add" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
-    <div role="status" class="st-hint" style="margin:8px 0 0">${esc(msg)}</div></div>`
+    <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" autocomplete="off" enterkeyhint="next" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="${fld}">
+    <label class="st-name" for="au-m-${esc(id)}" style="margin-top:12px;display:block">Počet míst (včetně řidiče)</label>
+    <select id="au-m-${esc(id)}" data-au-mist style="${fld}">${[2, 3, 4, 5, 6, 7, 8, 9].map(n => `<option value="${n}" ${n === mist ? "selected" : ""}>${n}</option>`).join("")}</select>
+    <label class="st-name" for="au-p-${esc(id)}" style="margin-top:12px;display:block">Palivo</label>
+    <select id="au-p-${esc(id)}" data-au-palivo style="${fld}"><option value="">Neuvedeno</option>${PALIVA.map(p => `<option ${!isNew && a.palivo === p ? "selected" : ""}>${p}</option>`).join("")}</select>
+    <label class="st-name" for="au-s-${esc(id)}" style="margin-top:12px;display:block">Spotřeba</label>
+    <input type="number" id="au-s-${esc(id)}" data-au-spotreba required min="0.1" max="40" step="0.1" inputmode="decimal" enterkeyhint="done" value="${esc(isNew || !a.spotreba ? "" : a.spotreba)}" placeholder="např. 5,4" style="${fld}">
+    <div class="st-hint" style="margin:4px 0 0">Podle technického průkazu, v l/100 km (u elektřiny v kWh/100 km).</div>
+    <label style="display:flex;align-items:center;gap:8px;margin:14px 0 0;font-weight:normal"><input type="checkbox" data-au-vychozi ${vychozi ? "checked" : ""} style="width:auto;margin:0"><span>Moje výchozí auto</span></label>
+    <div class="st-hint" style="margin:2px 0 0 26px">Předvybere se, když si na akci bereš auto.</div>
+    <div class="btn-group" style="margin-top:14px"><button type="button" class="btn-primary" data-au-save="${esc(id)}"><span>${isNew ? "Přidat auto" : "Uložit"}</span></button><button type="button" class="btn-secondary" data-au-cancel="1"><span>Zrušit</span></button>${isNew ? "" : `<button type="button" class="btn-danger" data-au-del="${esc(id)}"><span>Smazat</span></button>`}</div>
+    <div role="status" class="st-hint" style="margin:8px 0 0;color:${autoMsgColor(msg) || "inherit"}">${esc(msg)}</div></div>`
 }
 function autoKarta(a) {
   return `<div role="button" tabindex="0" class="card st-card" data-au-open="${esc(a.id)}" aria-label="Upravit auto ${esc(a.nazev)}" style="cursor:pointer">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div class="st-name" style="font-weight:600">${esc(a.nazev)}</div>${a.vychozi ? '<span class="st-hint" style="margin:0">Výchozí</span>' : ""}</div>
-    <div class="st-hint" style="margin:4px 0 0">${esc(autoSouhrn(a))}</div></div>`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="min-width:0"><div class="st-name" style="font-weight:600">${esc(a.nazev)}${a.vychozi ? ' <span class="st-hint" style="margin:0 0 0 6px;font-weight:500">· Výchozí</span>' : ""}</div>
+    <div class="st-hint" style="margin:4px 0 0">${esc(autoSouhrn(a))}</div></div><span class="st-ic" style="flex:none;pointer-events:none;display:inline-flex;align-items:center;justify-content:center" aria-hidden="true">${ICON.chev}</span></div></div>`
 }
 function autaHtml() {
   if (auta === null) return ""
   const karty = auta.map(a => autoEdit === a.id ? autoForm(a) : autoKarta(a)).join("")
   return `<h3 class="st-h">Moje auta</h3>
-    <div class="card st-card"><p class="st-hint" style="margin-top:0">Počet míst se použije v posádkách akcí: administrátor u řidiče vybere jedno z tvých aut a v posádce uvidí, kolik míst je obsazeno a kolik volných. Palivo a spotřeba se předvyplní při proplácení paliva v 10korun (spotřebu uveď podle technického průkazu). Klepnutím na kartu auto upravíš nebo smažeš.</p></div>
+    <div class="card st-card"><p class="st-hint" style="margin-top:0">Až budeš na akci s dopravou „Auta“ brát auto (tlačítko „Vezmu auto“), vybereš si jedno odsud a ostatní uvidí, kolik v něm zbývá míst. Palivo a spotřeba se předvyplní při proplácení paliva v 10korun. Klepnutím na auto ho upravíš nebo smažeš.</p></div>
     ${autoEdit === "new" ? autoForm(null) : ""}${karty}
-    ${autoEdit !== null ? "" : `<div class="st-foot"><button type="button" class="st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
+    ${autoEdit !== null ? "" : `<div class="st-foot" style="margin-top:12px"><button type="button" class="btn-primary st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
 }
 async function saveAuto(btn) {
   const id = btn.dataset.auSave, box = btn.closest("[data-auto]"); if (!box) return
@@ -186,6 +193,7 @@ const ICON = {
   grip: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>',
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>',
   minus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>',
+  chev: '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
   plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
 }
 function infoRow(label, value) {
