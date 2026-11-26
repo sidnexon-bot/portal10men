@@ -3,6 +3,13 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.12.0 (26. 11. 2026)
+- Detail akce s dopravou „Auta“: nová samostatná karta Doprava. Tlačítko „Vezmu auto“: člen vybere jedno ze svých aut z profilu (Nastavení → Moje auta) nebo carsharing, u carsharingu zadá jen počet volných míst. Ostatní členové u aut vidí obsazenost a jedním klikem si vyberou, s kým pojedou („Pojedu tímto autem“), případně se zase uvolní („Nepojedu“). Řidič může spolucestujícího odebrat, u carsharingu změnit počet míst a auto zrušit.
+- Každý člen jezdí jen v jednom autě a do plného auta se nelze přidat; dva členové, kteří si berou místo současně, se nepřepíší (zápis v transakci). Hosté dopravu měnit nemohou.
+- Řidiči a posádky se přesouvají z formuláře akce do karty Doprava. Formulář už posádky neobsahuje a při ukládání je nemění; vymažou se jen tehdy, když se změní druh dopravy. Dříve zadané posádky se v kartě zobrazují dál. Řidič v kartě nastaví i místa obsazená jinými než členy („Místa pro jiné“).
+- Discord: zpráva přijde, když si někdo vezme auto nebo carsharing („bere auto … , 3 volná místa“) a když se někdo přidá k někomu do auta („pojede s …“). Ostatní změny (uvolnění místa, zrušení auta) zprávu neposílají.
+- Server (api.js): nová akce `dopravazmena`.
+
 ## 4.11.0 (26. 11. 2026)
 - Přehled, karta Úkoly: záložka Všechny kromě společných úkolů sboru ukazuje i nevyřízené marketingové úkoly nadcházejících akcí (sekce Marketing: úkol, kanály, akce, termín, kdo ho má, „po termínu“). Odškrtnout je jde na Přehledu i v detailu akce; je to týž údaj, takže se změna na jednom místě projeví na druhém (na Přehledu hned při změně akce, jinak po obnovení). Klepnutím na úkol se otevře akce. Počet na záložce Všechny zahrnuje i marketingové úkoly. Záložka Moje zůstává beze změny.
 - Server (api.js): nová akce `marketingtasks`.
