@@ -1514,36 +1514,48 @@ async function toggleRiderTodo(params){
 // ===============================
 
 // Čistá funkce: z posádek a požadované změny vyrobí nové posádky, nebo vyhodí chybu s českým textem.
-// ctx = { me: id člena, auta: auta člena z profilu { id: {nazev, mist} } }; posádku určuje řidič (každý jezdí jen v jednom autě).
+// ctx = { me: id člena, admin: je administrátor, auta: auta řidiče z profilu { id: {nazev, mist} } }; posádku určuje řidič (každý jezdí jen v jednom autě).
+// Člen mění jen sebe; administrátor může totéž za kohokoli (op.za = řidič nového auta, op.ridic = auto, op.clen = spolucestující).
 // DOPRAVA_ZACATEK
 function dopravaApply(posadky, op, ctx){
   const list = (Array.isArray(posadky) ? posadky : []).map(p => ({...p, posadka: Array.isArray(p.posadka) ? [...p.posadka] : []}))
-  const me = ctx.me
+  const me = ctx.me, admin = !!ctx.admin
   if(!me) throw new Error("Nepodařilo se zjistit, kdo jsi.")
-  const mojePosadka = () => list.find(p => p.ridic === me || p.posadka.includes(me))
+  const vPosadce = id => list.find(p => p.ridic === id || p.posadka.includes(id))
   const volnoV = p => { const o = posadkaObsazenost(p); return o ? o.volno : Infinity }
+  // za koho se změna dělá: sám za sebe, cizího smí zastoupit jen administrátor
+  const cil = id => {
+    if(!id || id === me) return me
+    if(!admin) throw new Error("Cizí dopravu může měnit jen administrátor.")
+    return id
+  }
+  const mistaOk = v => { const n = Math.floor(Number(v)); if(!(n >= 2 && n <= 9)) throw new Error("Počet míst v autě musí být 2 až 9."); return n }
+  const volnaOk = v => { const n = Math.floor(Number(v)); if(!(n >= 1 && n <= 8)) throw new Error("Počet volných míst musí být 1 až 8."); return n }
+  const autoRidice = ridic => { const p = list.find(x => x.ridic === ridic); if(!p) throw new Error(ridic === me ? "Nejezdíš s žádným autem." : "Tento člen nejezdí s žádným autem."); return p }
 
   if(op.op === "vezmu"){
-    if(mojePosadka()) throw new Error("V dopravě už máš místo. Nejdřív ho zruš.")
+    const ridic = cil(op.za)
+    if(vPosadce(ridic)) throw new Error(ridic === me ? "V dopravě už máš místo. Nejdřív ho zruš." : "Tento člen už má v dopravě místo.")
     let nove
     if(op.auto === "carsharing"){
-      const volna = Math.floor(Number(op.volna))
-      if(!(volna >= 1 && volna <= 8)) throw new Error("Počet volných míst musí být 1 až 8.")
+      const volna = volnaOk(op.volna)
       nove = {auto_id: "carsharing", auto_nazev: "Carsharing", auto_mist: volna + 1, carsharing: true}
     }else{
       const a = (ctx.auta || {})[op.auto]
-      if(!a) throw new Error("Auto nenalezeno v profilu (Nastavení → Moje auta).")
+      if(!a) throw new Error(ridic === me ? "Auto nenalezeno v profilu (Nastavení → Moje auta)." : "Auto nenalezeno v profilu řidiče.")
       nove = {auto_id: op.auto, auto_nazev: a.nazev, auto_mist: Number(a.mist) || 0}
+      if(op.mist != null && op.mist !== ""){ if(!admin) throw new Error("Počet míst přepíše jen administrátor."); nove.auto_mist = mistaOk(op.mist) }
     }
-    list.push({nazev: "", ridic: me, posadka: [], auto_rezervovano: 0, ...nove})
+    list.push({nazev: "", ridic, posadka: [], auto_rezervovano: 0, ...nove})
     return list
   }
   if(op.op === "pridat"){
-    if(mojePosadka()) throw new Error("V dopravě už máš místo.")
+    const clen = cil(op.clen)
+    if(vPosadce(clen)) throw new Error(clen === me ? "V dopravě už máš místo." : "Tento člen už má v dopravě místo.")
     const p = list.find(x => x.ridic && x.ridic === op.ridic)
     if(!p) throw new Error("Toto auto už neexistuje.")
     if(volnoV(p) <= 0) throw new Error("Auto je mezitím plné.")
-    p.posadka.push(me)
+    p.posadka.push(clen)
     return list
   }
   if(op.op === "odejit"){
@@ -1553,34 +1565,50 @@ function dopravaApply(posadky, op, ctx){
     return list
   }
   if(op.op === "zrusit"){
-    if(!list.some(x => x.ridic === me)) throw new Error("Nejezdíš s žádným autem.")
-    return list.filter(x => x.ridic !== me)
+    const ridic = cil(op.ridic)
+    autoRidice(ridic)
+    return list.filter(x => x.ridic !== ridic)
   }
   if(op.op === "odebrat"){
-    const p = list.find(x => x.ridic === me)
-    if(!p) throw new Error("Nejezdíš s žádným autem.")
+    const p = autoRidice(cil(op.ridic))
     p.posadka = p.posadka.filter(id => id !== op.clen)
     return list
   }
   if(op.op === "mista"){   // carsharing: změna počtu volných míst
-    const p = list.find(x => x.ridic === me)
-    if(!p || !p.carsharing) throw new Error("Počet míst jde měnit jen u carsharingu.")
-    const volna = Math.floor(Number(op.volna))
-    if(!(volna >= 1 && volna <= 8)) throw new Error("Počet volných míst musí být 1 až 8.")
-    const obsazeno = (p.posadka.length) + (Number(p.auto_rezervovano) || 0)
+    const p = autoRidice(cil(op.ridic))
+    if(!p.carsharing) throw new Error("Počet míst jde takto měnit jen u carsharingu.")
+    const volna = volnaOk(op.volna)
+    const obsazeno = p.posadka.length + (Number(p.auto_rezervovano) || 0)
     if(volna < obsazeno) throw new Error(`V autě už je ${obsazeno} spolucestujících, míst nemůže být méně.`)
     p.auto_mist = volna + 1
     return list
   }
   if(op.op === "rezervace"){   // místa obsazená jinými než členy (rodina, hosté)
-    const p = list.find(x => x.ridic === me)
-    if(!p) throw new Error("Nejezdíš s žádným autem.")
+    const p = autoRidice(cil(op.ridic))
     const n = Math.floor(Number(op.pocet))
     if(!(n >= 0)) throw new Error("Zadej počet míst.")
     const mist = Number(p.auto_mist) || 0
     if(!mist) throw new Error("U tohoto auta není známý počet míst.")
     if(n > mist - 1 - p.posadka.length) throw new Error("Tolik míst v autě není.")
     p.auto_rezervovano = n
+    return list
+  }
+  if(op.op === "auto"){   // administrátor: jiné auto nebo jiný počet míst za řidiče
+    if(!admin) throw new Error("Auto za řidiče může změnit jen administrátor.")
+    const p = autoRidice(op.ridic)
+    const mist = mistaOk(op.mist)
+    let nove
+    if(op.auto === "carsharing") nove = {auto_id: "carsharing", auto_nazev: "Carsharing", carsharing: true}
+    else if((op.auto || "") === (p.auto_id || "")) nove = {auto_id: p.auto_id || "", auto_nazev: p.auto_nazev || "Auto"}   // beze změny auta, jen počet míst
+    else{
+      const a = (ctx.auta || {})[op.auto]
+      if(!a) throw new Error("Auto nenalezeno v profilu řidiče.")
+      nove = {auto_id: op.auto, auto_nazev: a.nazev}
+    }
+    const obsazeno = 1 + p.posadka.length + (Number(p.auto_rezervovano) || 0)
+    if(mist < obsazeno) throw new Error(`V autě je už ${obsazeno} lidí, míst nemůže být méně.`)
+    delete p.carsharing
+    Object.assign(p, nove, {auto_mist: mist})
     return list
   }
   throw new Error("Neznámá změna dopravy.")
@@ -1594,13 +1622,16 @@ function volnaMistaText(n){
 function dopravaDiscordText(akce, posadky, ja, op, members){
   const kdy = `**${akce.name || "akce"}**${akce.date ? " (" + formatDateSimple(akce.date) + ")" : ""}`
   const volno = p => { const o = posadkaObsazenost(p); return o ? ", " + volnaMistaText(o.volno) : "" }
+  const jmeno = id => members.find(x => x.id === id)?.name || "člen"
+  const subjekt = op.op === "vezmu" ? (op.za || ja.id) : (op.clen || ja.id)
+  const admin = subjekt !== ja.id ? ` _(zapsáno adminem ${ja.name})_` : ""
   if(op.op === "vezmu"){
-    const p = (posadky || []).find(x => x.ridic === ja.id) || {}
-    return `🚗 **${ja.name}** bere na akci ${kdy} ${p.carsharing ? "carsharing" : "auto" + (p.auto_nazev ? " (" + p.auto_nazev + ")" : "")}${volno(p)}.`
+    const p = (posadky || []).find(x => x.ridic === subjekt) || {}
+    return `🚗 **${jmeno(subjekt)}** bere na akci ${kdy} ${p.carsharing ? "carsharing" : "auto" + (p.auto_nazev ? " (" + p.auto_nazev + ")" : "")}${volno(p)}.${admin}`
   }
   const p = (posadky || []).find(x => x.ridic === op.ridic) || {}
   const ridic = members.find(x => x.id === op.ridic)
-  return `🙋 **${ja.name}** pojede na akci ${kdy} s ${ridic ? "**" + ridic.name + "**" : "jiným členem"}${volno(p)}.`
+  return `🙋 **${jmeno(subjekt)}** pojede na akci ${kdy} s ${ridic ? "**" + ridic.name + "**" : "jiným členem"}${volno(p)}.${admin}`
 }
 
 async function dopravaZmena(params){
@@ -1611,22 +1642,27 @@ async function dopravaZmena(params){
   const akce = await dbGet("/akce/" + params.id)
   if(!akce) throw new Error("Akce nenalezena")
   if(akce.doprava !== "Auta") throw new Error("Doprava u této akce není nastavená na auta.")
-  const key = String(email).toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
-  const auta = (await dbGet("/memberAuta/" + key)) || {}
+  const admin = ["ADMIN", "OWNER"].includes(String(m.role || "").toUpperCase())
+  // auta se berou z profilu řidiče, o kterého jde (u zastoupení administrátorem jeho)
+  const vlastnik = admin ? (params.za || params.ridic || m.id) : m.id
+  const clenove = objToArray(await dbGet("/members"))
+  const majitel = clenove.find(x => x.id === vlastnik)
+  const key = String(majitel?.email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
+  const auta = key ? ((await dbGet("/memberAuta/" + key)) || {}) : {}
   let chyba = null, nove = null
   // transakce: dva členové, kteří si berou místo současně, se nepřepíší
   const tx = await runTransaction(ref(DB, "/akce/" + params.id + "/doprava_posadky"), cur => {
     chyba = null
     let posadky = []
     try{ posadky = cur ? JSON.parse(cur) : [] }catch(e){ posadky = [] }
-    try{ nove = dopravaApply(posadky, params, {me: m.id, auta}); return JSON.stringify(nove) }
+    try{ nove = dopravaApply(posadky, params, {me: m.id, admin, auta}); return JSON.stringify(nove) }
     catch(e){ chyba = e; return cur == null ? cur : undefined }   // undefined = zrušení beze změny; při prázdné předpovědi (null) se vrátí null, aby se transakce ještě zopakovala se skutečnými daty
   })
   if(chyba) throw chyba
   if(!tx.committed) throw new Error("Změnu se nepodařilo uložit, zkus to znovu.")
   // Discord: když si někdo bere auto nebo se přidá k někomu do auta (nepodaří-li se zpráva, změna zůstává uložená)
   if(params.op === "vezmu" || params.op === "pridat"){
-    try{ await sendDiscordMessage({message: dopravaDiscordText(akce, nove, m, params, objToArray(await dbGet("/members")))}) }
+    try{ await sendDiscordMessage({message: dopravaDiscordText(akce, nove, m, params, clenove)}) }
     catch(e){ console.warn("Discord (doprava):", e.message) }
   }
   return {status: "updated"}
