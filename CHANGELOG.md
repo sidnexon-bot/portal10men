@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.13.0 (26. 11. 2026)
+- Karta Doprava, administrátor: v záhlaví je tlačítko „Upravit (admin)“. Po kliknutí se karta přepne do režimu úprav, kde u každého auta vybere jiné auto (z profilu řidiče nebo carsharing), nastaví počet míst včetně řidiče a místa pro jiné než členy, přidá nebo odebere spolucestujícího a auto zruší; dole „Přidat auto za řidiče“. Změny se ukládají hned po výběru, tlačítko „Hotovo“ režim ukončí. Mimo režim úprav vidí administrátor kartu jako ostatní členové.
+- Počet míst nejde snížit pod aktuální obsazenost; člen má stále místo jen v jednom autě. Řidič dál spravuje jen své auto. Zprávy na Discord o zápisu za jiného nesou poznámku „zapsáno adminem …“.
+- Server (api.js): akce `dopravazmena` rozšířená o administrátorské změny (kontrola role při zápisu).
+
 ## 4.12.0 (26. 11. 2026)
 - Detail akce s dopravou „Auta“: nová samostatná karta Doprava. Tlačítko „Vezmu auto“: člen vybere jedno ze svých aut z profilu (Nastavení → Moje auta) nebo carsharing, u carsharingu zadá jen počet volných míst. Ostatní členové u aut vidí obsazenost a jedním klikem si vyberou, s kým pojedou („Pojedu tímto autem“), případně se zase uvolní („Nepojedu“). Řidič může spolucestujícího odebrat, u carsharingu změnit počet míst a auto zrušit.
 - Každý člen jezdí jen v jednom autě a do plného auta se nelze přidat; dva členové, kteří si berou místo současně, se nepřepíší (zápis v transakci). Hosté dopravu měnit nemohou.
