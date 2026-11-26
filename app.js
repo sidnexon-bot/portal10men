@@ -1458,7 +1458,7 @@ function ukolyMojeHtml(myTasks){
         ${myTasks.length ? myTasks.map((t, idx) => {
           const late = t.datum && t.datum < myToday
           const border = idx < myTasks.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
-          const sub = [t.kind === "marketing" ? "Marketing · " + (MK_KANALY[t.kanal] || t.kanal) + (t.akceNazev ? " · " + t.akceNazev : "") : "Úkol sboru",
+          const sub = [t.kind === "marketing" ? "Marketing · " + mkKanalyText(t) + (t.akceNazev ? " · " + t.akceNazev : "") : "Úkol sboru",
                        t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
           const open = t.kind === "marketing" ? `openEvent('${escapeHtml(t.akceId)}')` : ""
           return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
@@ -3324,6 +3324,11 @@ const MK_KANALY = {
   facebook: "Facebook", instagram: "Instagram", plakat: "Plakát", newsletter: "Newsletter",
   udalost: "Událost na Facebooku", mistni: "Místní kanály", osobne: "Osobní pozvánky"
 }
+// Kanály úkolu jako text: víc kanálů se vypíše čárkou, starší úkoly mají jen `kanal`
+function mkKanalyText(t){
+  const k = Array.isArray(t?.kanaly) && t.kanaly.length ? t.kanaly : [t?.kanal].filter(Boolean)
+  return k.map(x => MK_KANALY[x] || x).join(", ")
+}
 let MK_EDIT = null   // smí upravovat marketingové úkoly (ADMIN, ART, nebo člen v /marketingAccess)
 
 const MAREK_URL = "https://marek.10men.cz/"
@@ -3361,7 +3366,7 @@ function mkMirrorHtml(tasks){
       <input type="checkbox" disabled ${t.done ? "checked" : ""} aria-label="Marketingový úkol (jen informativně)" style="width:auto;margin-top:3px">
       <div style="flex:1">
         <div style="${t.done ? "text-decoration:line-through;" : ""}">${escapeHtml(mkTitle(t))}</div>
-        <div class="small">Marketing · ${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.datum ? " · " + escapeHtml(mkWhen(t)) : ""}</div>
+        <div class="small">Marketing · ${escapeHtml(mkKanalyText(t))}${t.datum ? " · " + escapeHtml(mkWhen(t)) : ""}</div>
       </div>
     </div>`).join("")
 }
@@ -3380,7 +3385,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
       <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleMarketingTask('${id}','${escapeHtml(t.id)}',this.checked)" aria-label="Hotovo: ${escapeHtml(mkTitle(t))}" style="width:auto;margin-top:3px">
       <div style="flex:1;min-width:0">
         <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
-        <div class="small">${escapeHtml(MK_KANALY[t.kanal] || t.kanal)}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
+        <div class="small">${escapeHtml(mkKanalyText(t))}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
         ${t.ucel && t.napad ? `<div class="small" style="margin-top:2px">${escapeHtml(t.napad)}</div>` : ""}
         ${mkAssigneeHtml(t)}
         ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}${t.doneVia === "marek" ? " (schválený text z Marka)" : ""}</div>` : ""}
@@ -3434,7 +3439,8 @@ function mkFields(t){
     {key: "assignee", label: "Zodpovědný", type: "select", options: assigneeOptions(), value: t.assignee?.name || NOBODY},
     {key: "datum",  label: "Termín",  type: "date", value: t.datum || ""},
     {key: "cas",    label: "Čas (volitelné)", type: "time", value: t.cas || ""},
-    {key: "kanal",  label: "Kanál",   type: "select", options: Object.values(MK_KANALY), value: MK_KANALY[t.kanal] || MK_KANALY.facebook},
+    {key: "kanaly", label: "Kanály", type: "checkboxes", options: Object.values(MK_KANALY),
+      value: (Array.isArray(t.kanaly) && t.kanaly.length ? t.kanaly : [t.kanal || "facebook"]).map(k => MK_KANALY[k]).filter(Boolean)},
     {key: "format", label: "Formát (např. fotka s popiskem)", type: "text", value: escapeHtml(t.format || "")},
     {key: "ucel",   label: "Co má úkol splnit", type: "text", value: escapeHtml(t.ucel || "")},
     {key: "napad",  label: "Nápad, text, poznámka", type: "textarea", value: escapeHtml(t.napad || "")}
@@ -3443,9 +3449,10 @@ function mkFields(t){
 
 function mkSubmit(akceId, taskId){
   return async values => {
-    const kanal = Object.keys(MK_KANALY).find(k => MK_KANALY[k] === values.kanal) || ""
+    const kanaly = Object.keys(MK_KANALY).filter(k => values.kanaly.includes(MK_KANALY[k]))
+    if(!kanaly.length){ alert("Vyber aspoň jeden kanál"); return }
     try{
-      await api("savemarketingtask", {id: akceId, taskId, datum: values.datum, cas: values.cas, kanal, format: values.format, ucel: values.ucel, napad: values.napad, assignee: assigneeFromName(values.assignee)})
+      await api("savemarketingtask", {id: akceId, taskId, datum: values.datum, cas: values.cas, kanaly, format: values.format, ucel: values.ucel, napad: values.napad, assignee: assigneeFromName(values.assignee)})
       invalidateCache("eventdetail", akceId)
       closeFormModal()
       openEvent(akceId)
@@ -6742,6 +6749,12 @@ function initPullToRefresh(){
    FORMULÁŘ
 ================================ */
 
+function readFormField(f){
+  const el = document.getElementById("fModal_" + f.key)
+  if(f.type === "checkboxes") return el ? [...el.querySelectorAll("input:checked")].map(i => i.value) : []
+  return el?.value || ""
+}
+
 function openFormModal(title, fields, onSubmit){
   const modal     = document.getElementById("formModal")
   const titleEl   = document.getElementById("formModalTitle")
@@ -6752,7 +6765,11 @@ function openFormModal(title, fields, onSubmit){
   bodyEl.innerHTML = fields.map(f => `
     <label style="display:block;margin-bottom:12px">
       ${f.label}<br>
-      ${f.type === "textarea"
+      ${f.type === "checkboxes"
+        ? `<div id="fModal_${f.key}" style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            ${(f.options||[]).map(o => `<label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:normal"><input type="checkbox" value="${escapeHtml(o)}" ${(f.value||[]).includes(o) ? "checked" : ""} style="width:auto;margin:0"><span>${escapeHtml(o)}</span></label>`).join("")}
+           </div>`
+        : f.type === "textarea"
         ? `<textarea id="fModal_${f.key}" style="width:100%;min-height:80px;margin-top:4px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px">${f.value||""}</textarea>`
         : f.type === "select"
         ? `<select id="fModal_${f.key}" style="margin-top:4px">
@@ -6768,7 +6785,9 @@ function openFormModal(title, fields, onSubmit){
   if(savedForm && savedForm.title === title && Date.now() - savedForm.timestamp < SESSION_TTL){
     fields.forEach(f => {
       const el = document.getElementById("fModal_" + f.key)
-      if(el && savedForm.fields[f.key] !== undefined) el.value = savedForm.fields[f.key]
+      if(!el || savedForm.fields[f.key] === undefined) return
+      if(f.type === "checkboxes") el.querySelectorAll("input").forEach(i => { i.checked = savedForm.fields[f.key].includes(i.value) })
+      else el.value = savedForm.fields[f.key]
     })
   }
 
@@ -6779,7 +6798,7 @@ function openFormModal(title, fields, onSubmit){
       el.addEventListener("input", () => {
         const formState = {}
         fields.forEach(f => {
-          formState[f.key] = document.getElementById("fModal_" + f.key)?.value || ""
+          formState[f.key] = readFormField(f)
         })
         sessionStorage.setItem("10base_form", JSON.stringify({
           title,
@@ -6793,7 +6812,7 @@ function openFormModal(title, fields, onSubmit){
   submitBtn.onclick = () => {
     const values = {}
     fields.forEach(f => {
-      values[f.key] = document.getElementById("fModal_" + f.key)?.value.trim() || ""
+      values[f.key] = f.type === "checkboxes" ? readFormField(f) : (document.getElementById("fModal_" + f.key)?.value.trim() || "")
     })
     onSubmit(values)
   }
