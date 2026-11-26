@@ -515,61 +515,6 @@ function posadkaObsazenost(p){
   return {mist, obs, rez, volno: mist - obs}
 }
 
-function obsazenostText(o){
-  const pro = o.rez ? ` (z toho ${o.rez} pro jiné než členy)` : ""
-  if(o.volno < 0) return `${o.obs}/${o.mist} · přeplněno o ${-o.volno}${pro}`
-  if(o.volno === 0) return `${o.obs}/${o.mist} · plno${pro}`
-  const slovo = o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")
-  return `${o.obs}/${o.mist} · ${o.volno} ${slovo}${pro}`
-}
-
-function obsazenostHtml(p){
-  const o = posadkaObsazenost(p)
-  if(!o) return ""
-  const barva = o.volno < 0 ? "#ff3b30" : (o.volno === 0 ? "#ff9500" : "#34c759")
-  return `<div class="small" style="font-weight:600;color:${barva}">${escapeHtml(obsazenostText(o))}</div>`
-}
-
-function renderPosadkyDetail(json){
-  let posadky = []
-  try{ posadky = JSON.parse(json) }catch(e){ return "" }
-  if(!Array.isArray(posadky) || !posadky.length) return ""
-
-  const members = window.MEMBERS || []
-  const getName = id => {
-    const m = members.find(m => (m.ID || m.id) === id)
-    return m ? (m.NAME || m.name) : "—"
-  }
-
-  return posadky.map(p => {
-    const o = posadkaObsazenost(p)
-    const barva = !o ? "" : (o.volno < 0 ? "#ff3b30" : (o.volno === 0 ? "#ff9500" : "#34c759"))
-    const volnoTxt = !o ? "" : (o.volno < 0 ? `přeplněno o ${-o.volno}` : (o.volno === 0 ? "plno" : `${o.volno} ${o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")}`))
-    // segmenty: obsazeno členy (barva stavu), místa pro jiné než členy (šedá), volno (světle šedá)
-    const seg = !o ? "" : (() => {
-      const celkem = Math.min(o.mist, 12), clenove = Math.max(0, o.obs - o.rez)
-      return Array.from({length: celkem}, (_, i) => {
-        const bg = o.volno < 0 ? "#ff3b30" : (i < clenove ? barva : (i < clenove + o.rez ? "rgba(128,128,128,0.55)" : "rgba(128,128,128,0.2)"))
-        return `<span style="flex:1;height:6px;border-radius:3px;background:${bg}"></span>`
-      }).join("")
-    })()
-    return `
-    <div style="padding:14px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-        <div style="min-width:0"><b>${escapeHtml(p.nazev || "Auto")}</b>${p.auto_nazev ? `<span class="small"> · ${escapeHtml(p.auto_nazev)}</span>` : ""}</div>
-        ${o ? `<span style="flex:none;font-size:13px;font-weight:600;color:${barva};background:${barva}22;padding:2px 10px;border-radius:999px">${o.obs}/${o.mist}</span>` : ""}
-      </div>
-      ${o ? `
-      <div style="display:flex;gap:4px;margin:10px 0 8px">${seg}</div>
-      <div class="small"><b style="color:${barva}">${volnoTxt}</b>${o.rez ? ` · ${o.rez} pro jiné než členy` : ""}</div>` : ""}
-      <div style="display:grid;grid-template-columns:64px 1fr;gap:6px 12px;align-items:baseline;margin-top:12px">
-        <span class="small">Řidič</span><b>${escapeHtml(getName(p.ridic))}</b>
-        ${Array.isArray(p.posadka) && p.posadka.length ? `<span class="small">Posádka</span><span>${p.posadka.map(id => escapeHtml(getName(id))).join(", ")}</span>` : ""}
-      </div>
-    </div>`
-  }).join("")
-}
-
 function renderHarmonogramDetail(json){
   let items = []
   try{ items = JSON.parse(json) }catch(e){ return "" }
@@ -1907,7 +1852,6 @@ async function openEventForm(id){
  window.EDIT_EVENT = {}
  window.EDIT_RIDER = null
  window.EDIT_HARMONOGRAM = null
- window.EDIT_POSADKY = null
 
   let event = {}
   if(id){
@@ -2017,7 +1961,6 @@ async function openEventForm(id){
 
 function closeEventFormModal(){
   document.getElementById("eventFormModal").classList.add("hidden")
-  window.EDIT_POSADKY = null
 }
 
 function toggleEventFormExtra(){
@@ -2052,16 +1995,13 @@ function renderEventFormExtra(){
         </select>
       </label>
       <label style="margin-top:12px">Doprava<br>
-        <select id="fDoprava" onchange="toggleDopravaPosadky(this.value)">
+        <select id="fDoprava">
           <option value="">Nezadáno</option>
           <option value="Veřejná doprava" ${window.EDIT_EVENT?.DOPRAVA === "Veřejná doprava" ? "selected" : ""}>Veřejná doprava</option>
           <option value="Auta" ${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "selected" : ""}>Auta</option>
           <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
         </select>
       </label>
-      <div id="dopravaPosadky" style="display:${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "block" : "none"};margin-top:12px">
-        ${renderPosadkyHtml()}
-      </div>
       <label style="margin-top:12px">Hospoda<br>
         <textarea id="fHospoda" style="width:100%;min-height:60px;border:1px solid #ddd;border-radius:6px;padding:8px;font-family:inherit;font-size:14px" placeholder="Název/adresa, čas rezervace, na jaké jméno...">${escapeHtml(window.EDIT_EVENT?.HOSPODA || "")}</textarea>
       </label>
@@ -2134,16 +2074,13 @@ function renderEventFormExtra(){
         </label>
       </div>
       <label style="margin-top:12px">Doprava<br>
-        <select id="fDoprava" onchange="toggleDopravaPosadky(this.value)">
+        <select id="fDoprava">
           <option value="">Nezadáno</option>
           <option value="Veřejná doprava" ${window.EDIT_EVENT?.DOPRAVA === "Veřejná doprava" ? "selected" : ""}>Veřejná doprava</option>
           <option value="Auta" ${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "selected" : ""}>Auta</option>
           <option value="Každý po své ose" ${window.EDIT_EVENT?.DOPRAVA === "Každý po své ose" ? "selected" : ""}>Každý po své ose</option>
         </select>
       </label>
-      <div id="dopravaPosadky" style="display:${window.EDIT_EVENT?.DOPRAVA === "Auta" ? "block" : "none"};margin-top:12px">
-        ${renderPosadkyHtml()}
-      </div>
       <div style="margin-top:12px">
         <span class="small" style="font-weight:600">Harmonogram</span>
         <div id="harmonogramWrap" style="margin-top:8px"></div>
@@ -2671,22 +2608,6 @@ window.toggleSpolupraceField  = toggleSpolupraceField
 // POSÁDKY (Doprava: Auta)
 // =============================================
 
-function getInitialPosadky(){
-  // window.EDIT_POSADKY drží pracovní stav (array objektů)
-  if(window.EDIT_POSADKY) return window.EDIT_POSADKY
-
-  let posadky = []
-  try{
-    posadky = window.EDIT_EVENT?.DOPRAVA_POSADKY
-      ? JSON.parse(window.EDIT_EVENT.DOPRAVA_POSADKY)
-      : []
-  }catch(e){ posadky = [] }
-
-  if(!Array.isArray(posadky)) posadky = []
-  window.EDIT_POSADKY = posadky
-  return posadky
-}
-
 // Auta členů z profilů: window.AUTA = { klíč e-mailu: { id auta: {nazev, mist, palivo, spotreba, vychozi} } }
 const autaKey = email => String(email || "").toLowerCase().replace(/\./g, "_").replace(/@/g, "_")
 
@@ -2695,183 +2616,188 @@ async function loadAuta(){
   window.AUTA_AT = Date.now()
 }
 
-function autaRidice(memberId){
-  const m = (window.MEMBERS || []).find(m => (m.ID || m.id) === memberId)
-  const mine = (window.AUTA || {})[autaKey(m?.EMAIL || m?.email)] || {}
+// =============================================
+// DOPRAVA: interaktivní karta v detailu akce (Doprava: Auta)
+// Člen si vezme auto z profilu nebo carsharing (jen počet volných míst), ostatní si vyberou, s kým pojedou.
+// Zapisuje se přes api("dopravazmena") do pole doprava_posadky; formulář akce posádky neupravuje.
+// =============================================
+
+window.DOPRAVA_UI = window.DOPRAVA_UI || {eventId: null, open: false, auto: "", volna: 3, busy: false}
+
+function dopravaJa(){
+  const email = String(MEMBER_EMAIL || "").toLowerCase()
+  const m = (window.MEMBERS || []).find(m => String(m.EMAIL || m.email || "").toLowerCase() === email)
+  if(!m) return null
+  return {id: m.ID || m.id, host: String(m.ROLE || m.role || "").toUpperCase() === "GUEST"}
+}
+
+function dopravaMojeAuta(){
+  const mine = (window.AUTA || {})[autaKey(MEMBER_EMAIL)] || {}
   return Object.entries(mine).map(([id, a]) => ({id, ...a}))
     .sort((x, y) => (y.vychozi ? 1 : 0) - (x.vychozi ? 1 : 0) || String(x.nazev).localeCompare(String(y.nazev), "cs"))
 }
 
-function nastavAutoPosadky(p, auto){
-  p.auto_id = auto ? auto.id : ""
-  p.auto_nazev = auto ? auto.nazev : ""
-  p.auto_mist = auto ? Number(auto.mist) || 0 : 0
-  if(!auto) p.auto_rezervovano = 0
-}
+function dopravaCardHtml(){
+  const {eventId, event} = window.DOPRAVA_EVENT || {}
+  if(!event) return ""
+  let posadky = []
+  try{ posadky = event.DOPRAVA_POSADKY ? JSON.parse(event.DOPRAVA_POSADKY) : [] }catch(e){ posadky = [] }
+  if(!Array.isArray(posadky)) posadky = []
+  const ui = window.DOPRAVA_UI
+  const ja = dopravaJa()
+  const muzu = !!ja && !ja.host
+  const jmeno = id => { const m = (window.MEMBERS || []).find(m => (m.ID || m.id) === id); return m ? (m.NAME || m.name) : "—" }
+  const mojeAuto = muzu ? posadky.find(p => p.ridic === ja.id) : null
+  const jedu = muzu ? posadky.find(p => Array.isArray(p.posadka) && p.posadka.includes(ja.id)) : null
+  const maMisto = !!(mojeAuto || jedu)
+  const q = v => escapeHtml(String(v ?? "").replace(/'/g, ""))
+  const btn = "padding:6px 14px;min-height:34px;font-size:13px;width:auto;margin:0"
 
-function setPosadkaRezervace(idx, value){
-  const p = getInitialPosadky()[idx]
-  if(!p) return
-  p.auto_rezervovano = Math.max(0, Math.floor(Number(value) || 0))
-  refreshPosadkyList()
-}
-
-function setPosadkaRidic(idx, value){
-  const p = getInitialPosadky()[idx]
-  if(!p) return
-  p.ridic = value
-  const auta = value ? autaRidice(value) : []
-  nastavAutoPosadky(p, auta.length === 1 ? auta[0] : (auta.find(a => a.vychozi) || null))
-  refreshPosadkyList()
-}
-
-function setPosadkaAuto(idx, autoId){
-  const p = getInitialPosadky()[idx]
-  if(!p) return
-  nastavAutoPosadky(p, autaRidice(p.ridic).find(a => a.id === autoId) || null)
-  refreshPosadkyList()
-}
-
-function renderPosadkaAutoSelect(p, idx){
-  if(!p.ridic) return ""
-  const auta = autaRidice(p.ridic)
-  // auto uložené v posádce, které řidič mezitím smazal: nabídne se z uložené kopie
-  if(p.auto_id && !auta.some(a => a.id === p.auto_id)) auta.push({id: p.auto_id, nazev: p.auto_nazev || "Auto", mist: p.auto_mist})
-  if(!auta.length) return `<div class="small" style="margin-top:6px">Řidič zatím nemá v profilu žádné auto (Nastavení → Moje auta).</div>`
-  return `
-    <label style="margin-top:8px;display:block">Auto řidiče<br>
-      <select onchange="setPosadkaAuto(${idx}, this.value)">
-        <option value="">Bez určení</option>
-        ${auta.map(a => `<option value="${escapeHtml(a.id)}" ${p.auto_id === a.id ? "selected" : ""}>${escapeHtml(a.nazev)} (${Number(a.mist) || "?"} míst)</option>`).join("")}
-      </select>
-    </label>
-    ${p.auto_id && p.auto_mist ? `
-    <label style="margin-top:8px;display:block">Místa obsazená jinými (rodina, hosté)<br>
-      <input type="number" min="0" max="${Math.max(0, p.auto_mist - 1)}" step="1" inputmode="numeric" value="${Number(p.auto_rezervovano) || 0}"
-        onchange="setPosadkaRezervace(${idx}, this.value)">
-    </label>
-    <div class="small" style="margin-top:2px">Tato místa se započítají do obsazenosti, i když tam nejsou členové sboru.</div>` : ""}
-    ${obsazenostHtml(p)}
-  `
-}
-
-function renderPosadkyHtml(){
-  if(!window.AUTA || Date.now() - (window.AUTA_AT || 0) > 60000){
-    window.AUTA = window.AUTA || {}
-    window.AUTA_AT = Date.now()
-    loadAuta().then(refreshPosadkyList)
-  }
-  const posadky = getInitialPosadky()
-  const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
-
-  return `
-    <div class="small" style="font-weight:600;margin-bottom:8px">Posádky</div>
-    <div id="posadkyList">
-      ${posadky.map((p, idx) => renderPosadkaCard(p, idx, members, posadky)).join("")}
-    </div>
-    <button type="button" onclick="addPosadka()" style="width:100%;margin-top:8px">+ Přidat auto</button>
-  `
-}
-
-function renderPosadkaCard(p, idx, members, allPosadky){
-  // zjisti kdo už je přiřazen v jiných autech
-  const obsazeniJinde = new Set()
-  allPosadky.forEach((other, otherIdx) => {
-    if(otherIdx === idx) return
-    if(other.ridic) obsazeniJinde.add(other.ridic)
-    if(Array.isArray(other.posadka)) other.posadka.forEach(id => obsazeniJinde.add(id))
-  })
-
-  const dostupniProRidice = members.filter(m => !obsazeniJinde.has(m.ID || m.id) || (m.ID || m.id) === p.ridic)
-  const dostupniProPosadku = members.filter(m => {
-    const mid = m.ID || m.id
-    if(mid === p.ridic) return false
-    return !obsazeniJinde.has(mid) || (Array.isArray(p.posadka) && p.posadka.includes(mid))
-  })
-
-  return `
-    <div class="card" style="margin-bottom:10px;padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <label style="flex:1;margin:0">Označení<br>
-          <input type="text" value="${escapeHtml(p.nazev || "")}" placeholder="A1"
-            oninput="updatePosadkaField(${idx}, 'nazev', this.value)">
+  const form = () => {
+    const auta = dopravaMojeAuta()
+    const vybrane = ui.auto || (auta[0] ? auta[0].id : "carsharing")
+    return `
+      <div style="padding:12px;margin-bottom:12px;border:1px solid rgba(128,128,128,0.2);border-radius:12px">
+        <label style="display:block;margin:0">Čím pojedeš<br>
+          <select onchange="dopravaVyberAuto(this.value)">
+            ${auta.map(a => `<option value="${escapeHtml(a.id)}" ${vybrane === a.id ? "selected" : ""}>${escapeHtml(a.nazev)} (${Number(a.mist) || "?"} míst)</option>`).join("")}
+            <option value="carsharing" ${vybrane === "carsharing" ? "selected" : ""}>Carsharing</option>
+          </select>
         </label>
-        <button class="btn-danger" type="button" onclick="removePosadka(${idx})" style="margin-left:8px;width:auto;padding:8px 12px">✕</button>
-      </div>
-      <label>Řidič<br>
-        <select onchange="setPosadkaRidic(${idx}, this.value)">
-          <option value="">Vyber řidiče</option>
-          ${dostupniProRidice.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${p.ridic === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}
-        </select>
-      </label>
-      ${renderPosadkaAutoSelect(p, idx)}
-      <div style="margin-top:8px">
-        <span class="small">Posádka</span>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
-          ${dostupniProPosadku.map(m => {
-            const mid = m.ID || m.id
-            const checked = Array.isArray(p.posadka) && p.posadka.includes(mid)
-            return `
-              <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:normal">
-                <input type="checkbox" value="${escapeHtml(mid)}" ${checked ? "checked" : ""}
-                  onchange="togglePosadkaMember(${idx}, '${escapeHtml(mid)}', this.checked)"
-                  style="width:auto;margin:0">
-                <span>${escapeHtml(m.NAME || m.name)}</span>
-              </label>
-            `
-          }).join("")}
+        ${vybrane === "carsharing" ? `
+        <label style="display:block;margin:10px 0 0">Volná místa pro ostatní (bez tebe)<br>
+          <input type="number" id="dopravaVolna" min="1" max="8" step="1" inputmode="numeric" value="${Number(ui.volna) || 3}" onchange="dopravaVolna(this.value)">
+        </label>` : (auta.length ? "" : `<div class="small" style="margin-top:8px">Vlastní auto si můžeš přidat v Nastavení → Moje auta.</div>`)}
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button type="button" style="${btn}" ${ui.busy ? "disabled" : ""} onclick="dopravaVezmu()">Potvrdit</button>
+          <button type="button" class="btn-secondary" style="${btn}" onclick="dopravaForm(false)">Zrušit</button>
         </div>
+      </div>`
+  }
+
+  const karta = p => {
+    const o = posadkaObsazenost(p)
+    const barva = !o ? "" : (o.volno < 0 ? "#ff3b30" : (o.volno === 0 ? "#ff9500" : "#34c759"))
+    const volnoTxt = !o ? "" : (o.volno < 0 ? `přeplněno o ${-o.volno}` : (o.volno === 0 ? "plno" : `${o.volno} ${o.volno === 1 ? "volné místo" : (o.volno <= 4 ? "volná místa" : "volných míst")}`))
+    const seg = !o ? "" : (() => {
+      const celkem = Math.min(o.mist, 12), clenove = Math.max(0, o.obs - o.rez)
+      return Array.from({length: celkem}, (_, i) => {
+        const bg = o.volno < 0 ? "#ff3b30" : (i < clenove ? barva : (i < clenove + o.rez ? "rgba(128,128,128,0.55)" : "rgba(128,128,128,0.2)"))
+        return `<span style="flex:1;height:6px;border-radius:3px;background:${bg}"></span>`
+      }).join("")
+    })()
+    const moje = !!ja && p.ridic === ja.id
+    const spolu = Array.isArray(p.posadka) ? p.posadka : []
+    const plno = o && o.volno <= 0
+    return `
+    <div style="padding:14px 0;border-top:1px solid rgba(128,128,128,0.1)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="min-width:0"><b>${escapeHtml(jmeno(p.ridic))}</b>
+          <span class="small"> · ${escapeHtml(p.nazev ? p.nazev + " · " : "")}${escapeHtml(p.auto_nazev || "auto")}</span></div>
+        ${o ? `<span style="flex:none;font-size:13px;font-weight:600;color:${barva};background:${barva}22;padding:2px 10px;border-radius:999px">${o.obs}/${o.mist}</span>` : ""}
       </div>
+      ${o ? `<div style="display:flex;gap:4px;margin:10px 0 8px">${seg}</div>
+      <div class="small"><b style="color:${barva}">${volnoTxt}</b>${o.rez ? ` · ${o.rez} pro jiné než členy` : ""}</div>` : ""}
+      ${spolu.length ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
+        ${spolu.map(id => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span>${escapeHtml(jmeno(id))}${ja && id === ja.id ? ` <span class="small">(ty)</span>` : ""}</span>
+          ${moje ? `<button type="button" class="btn-secondary" style="${btn};padding:2px 10px;min-height:28px" onclick="dopravaOdebrat('${q(id)}')">Odebrat</button>` : ""}
+        </div>`).join("")}</div>` : ""}
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        ${muzu && !maMisto && !plno ? `<button type="button" style="${btn}" onclick="dopravaPridat('${q(p.ridic)}')">Pojedu tímto autem</button>` : ""}
+        ${muzu && !maMisto && plno ? `<span class="small">Auto je plné.</span>` : ""}
+        ${muzu && jedu === p ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaOdejit()">Nepojedu</button>` : ""}
+        ${moje && o ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaRezervace()">Místa pro jiné</button>` : ""}
+        ${moje && p.carsharing ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaMista()">Změnit počet míst</button>` : ""}
+        ${moje ? `<button type="button" class="btn-secondary" style="${btn}" onclick="dopravaZrusit()">Zrušit auto</button>` : ""}
+      </div>
+    </div>`
+  }
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:${posadky.length || (muzu && ui.open && !maMisto) ? 12 : 0}px">
+      <div class="event-label" style="margin:0">Doprava · auta</div>
+      ${muzu && !maMisto && !ui.open ? `<button type="button" style="${btn}" onclick="dopravaForm(true)">Vezmu auto</button>` : ""}
     </div>
-  `
+    ${muzu && !maMisto && ui.open ? form() : ""}
+    ${posadky.length ? posadky.map(karta).join("") : `<div class="small">Zatím nikdo nebere auto.</div>`}
+    ${!muzu && ja && ja.host ? `<div class="small" style="margin-top:8px">Dopravu mohou měnit jen členové.</div>` : ""}`
 }
 
-function toggleDopravaPosadky(value){
-  const el = document.getElementById("dopravaPosadky")
-  if(!el) return
-  if(value === "Auta"){
-    el.style.display = "block"
-    el.innerHTML = renderPosadkyHtml()
-  }else{
-    el.style.display = "none"
+function renderDopravaCard(eventId, event){
+  window.DOPRAVA_EVENT = {eventId, event}
+  if(window.DOPRAVA_UI.eventId !== eventId) window.DOPRAVA_UI = {eventId, open: false, auto: "", volna: 3, busy: false}
+  if(!window.AUTA){   // auta z profilů se dotáhnou při prvním zobrazení karty
+    window.AUTA = {}
+    loadAuta().then(refreshDopravaCard)
   }
+  return `<div class="event-card" id="dopravaCard" style="margin-bottom:16px;padding:16px">${dopravaCardHtml()}</div>`
 }
 
-function addPosadka(){
-  const posadky = getInitialPosadky()
-  posadky.push({ nazev: "", ridic: "", posadka: [] })
-  refreshPosadkyList()
+function refreshDopravaCard(){
+  const el = document.getElementById("dopravaCard")
+  if(el) el.innerHTML = dopravaCardHtml()
 }
 
-function removePosadka(idx){
-  const posadky = getInitialPosadky()
-  posadky.splice(idx, 1)
-  refreshPosadkyList()
-}
+function dopravaForm(open){ window.DOPRAVA_UI.open = open; refreshDopravaCard() }
+function dopravaVyberAuto(v){ window.DOPRAVA_UI.auto = v; refreshDopravaCard() }
+function dopravaVolna(v){ window.DOPRAVA_UI.volna = Math.max(1, Math.min(8, Math.floor(Number(v) || 1))) }
 
-function updatePosadkaField(idx, key, value){
-  const posadky = getInitialPosadky()
-  if(posadky[idx]) posadky[idx][key] = value
-}
-
-function togglePosadkaMember(idx, memberId, checked){
-  const posadky = getInitialPosadky()
-  if(!posadky[idx]) return
-  if(!Array.isArray(posadky[idx].posadka)) posadky[idx].posadka = []
-
-  if(checked){
-    if(!posadky[idx].posadka.includes(memberId)) posadky[idx].posadka.push(memberId)
-  }else{
-    posadky[idx].posadka = posadky[idx].posadka.filter(id => id !== memberId)
+async function dopravaOp(op, hotovo){
+  const ui = window.DOPRAVA_UI, id = ui.eventId
+  if(ui.busy || !id) return
+  ui.busy = true
+  try{
+    await api("dopravazmena", {id, ...op})
+    ui.open = false
+    showToast(hotovo || "Uloženo ✓")
+  }catch(e){
+    showToast(e.message || "Změnu se nepodařilo uložit")
   }
-
-  refreshPosadkyList()
+  ui.busy = false
+  invalidateCache("eventdetail", id)
+  if(ACTIVE_DETAIL_ID === id) openEvent(id)
 }
 
-function refreshPosadkyList(){
-  const wrap = document.getElementById("dopravaPosadky")
-  if(wrap) wrap.innerHTML = renderPosadkyHtml()
+function dopravaVezmu(){
+  const ui = window.DOPRAVA_UI
+  const auto = ui.auto || (dopravaMojeAuta()[0]?.id) || "carsharing"
+  const el = document.getElementById("dopravaVolna")
+  if(el) dopravaVolna(el.value)
+  dopravaOp({op: "vezmu", auto, volna: ui.volna}, "Auto přidáno ✓")
 }
+function dopravaPridat(ridic){ dopravaOp({op: "pridat", ridic}, "Jedeš s ním ✓") }
+function dopravaOdejit(){ dopravaOp({op: "odejit"}, "Místo uvolněno") }
+function dopravaOdebrat(clen){ dopravaOp({op: "odebrat", clen}, "Odebráno") }
+function dopravaZrusit(){
+  const p = (() => { try{ return JSON.parse(window.DOPRAVA_EVENT.event.DOPRAVA_POSADKY || "[]") }catch(e){ return [] } })()
+  const ja = dopravaJa(), moje = ja && p.find(x => x.ridic === ja.id)
+  const n = moje && Array.isArray(moje.posadka) ? moje.posadka.length : 0
+  if(!confirm(n ? `Zrušit auto? Spolucestující (${n}) zůstanou bez dopravy.` : "Zrušit auto?")) return
+  dopravaOp({op: "zrusit"}, "Auto zrušeno")
+}
+function dopravaMista(){
+  const v = prompt("Kolik volných míst pro ostatní (bez tebe)?", "3")
+  if(v === null) return
+  dopravaOp({op: "mista", volna: v}, "Počet míst změněn ✓")
+}
+
+window.dopravaForm = dopravaForm
+window.dopravaVyberAuto = dopravaVyberAuto
+window.dopravaVolna = dopravaVolna
+window.dopravaVezmu = dopravaVezmu
+window.dopravaPridat = dopravaPridat
+window.dopravaOdejit = dopravaOdejit
+window.dopravaOdebrat = dopravaOdebrat
+window.dopravaZrusit = dopravaZrusit
+function dopravaRezervace(){
+  const v = prompt("Kolik míst v autě obsadí jiní než členové sboru (rodina, hosté)?", "0")
+  if(v === null) return
+  dopravaOp({op: "rezervace", pocet: v}, "Uloženo ✓")
+}
+
+window.dopravaMista = dopravaMista
+window.dopravaRezervace = dopravaRezervace
 
 function toggleStravaNote(val){
   const el = document.getElementById("stravaNote")
@@ -2975,6 +2901,9 @@ async function openEvent(id){
           ` : ""}
         </div>`
 
+    // --- DOPRAVA (interaktivní karta: kdo vezme auto a s kým kdo jede) ---
+    if(event.DOPRAVA === "Auta") html += renderDopravaCard(id, event)
+
     // --- DALŠÍ INFORMACE ---
     if(event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.HOSPODA || event.SPACAKY || event.STRAVA || event.OBLECENI_S){
       html += `<div class="event-card" style="margin-bottom:16px;padding:0">
@@ -2986,7 +2915,6 @@ async function openEvent(id){
         ${event.SRAZ      ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Sraz</span><b>${escapeHtml(event.SRAZ)}</b></div>` : ""}
         ${event.OBLECENI  ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Dresscode</span><b>${escapeHtml(formatObleceni(event.OBLECENI))}</b></div>` : ""}
         ${event.DOPRAVA ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Doprava</span><b>${escapeHtml(event.DOPRAVA)}</b></div>` : ""}
-        ${event.DOPRAVA === "Auta" && event.DOPRAVA_POSADKY ? renderPosadkyDetail(event.DOPRAVA_POSADKY) : ""}
         ${event.HARMONOGRAM_ITEMS ? renderHarmonogramDetail(event.HARMONOGRAM_ITEMS) : (event.HARMONOGRAM ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block;margin-bottom:4px">Harmonogram akce</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HARMONOGRAM)}</div></div>` : "")}
         ${event.IS_SPOLUPRACE ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Spolupráce</span><b>${escapeHtml(event.SPOLUPRACE_NAZEV || "Ano")}</b></div>` : ""}
         ${event.HOSPODA   ? `<div style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)"><span class="small" style="display:block">Hospoda</span><div style="white-space:pre-wrap;font-size:15px">${escapeHtml(event.HOSPODA)}</div></div>` : ""}
@@ -4695,9 +4623,6 @@ async function saveEvent(id, notify = true){
   const sraz            = document.getElementById("fSraz")?.value          ?? window.EDIT_EVENT?.SRAZ           ?? ""
   const obleceni        = document.getElementById("fObleceni")?.value      ?? window.EDIT_EVENT?.OBLECENI       ?? ""
   const doprava         = document.getElementById("fDoprava")?.value       ?? window.EDIT_EVENT?.DOPRAVA        ?? ""
-  const dopravaPosadky  = doprava === "Auta" 
-  ? JSON.stringify(window.EDIT_POSADKY || (window.EDIT_EVENT?.DOPRAVA_POSADKY ? JSON.parse(window.EDIT_EVENT.DOPRAVA_POSADKY) : []))
-  : ""
   const hospoda         = document.getElementById("fHospoda")?.value       ?? window.EDIT_EVENT?.HOSPODA        ?? ""
   const harmonogram     = document.getElementById("fHarmonogram")?.value   ?? window.EDIT_EVENT?.HARMONOGRAM    ?? ""
   const spacaky         = document.getElementById("fSpacaky")?.value       ?? window.EDIT_EVENT?.SPACAKY        ?? ""
@@ -4749,7 +4674,7 @@ async function saveEvent(id, notify = true){
         call_url: callUrl,
         recurrence_type: recurrenceType,
         recurrence_until: recurrenceUntil,
-        sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
+        sraz, obleceni, doprava, hospoda, harmonogram,
         harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
@@ -4774,7 +4699,7 @@ async function saveEvent(id, notify = true){
 
       }else{
         await api("updateevent", {id, name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
-          sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
+          sraz, obleceni, doprava, hospoda, harmonogram,
           harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
           spacaky, strava, strava_nota: stravaNota,
           obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
@@ -4789,7 +4714,7 @@ async function saveEvent(id, notify = true){
       openEvent(id)
     }else{
       await api("addevent", {name, date, date_end: dateEnd, start, end, place, note, type, status, requires_program: requiresProgram, call_url: callUrl,
-        sraz, obleceni, doprava, doprava_posadky: dopravaPosadky, hospoda, harmonogram,
+        sraz, obleceni, doprava, hospoda, harmonogram,
         harmonogram_items: harmonogramItems, is_spoluprace: isSpolupraceVal, spoluprace_nazev: spolupraceNazev, rider: riderJson,
         spacaky, strava, strava_nota: stravaNota,
         obleceni_s: obleceniS, obleceni_s_typ: obleceniSTyp,
@@ -7218,15 +7143,6 @@ window.openContactModal     = openContactModal
 window.closeContactModal    = closeContactModal
 window.closeEventFormModal  = closeEventFormModal
 window.closeProgramEditorModal = closeProgramEditorModal
-window.toggleDopravaPosadky = toggleDopravaPosadky
-window.addPosadka           = addPosadka
-window.removePosadka        = removePosadka
-window.updatePosadkaField   = updatePosadkaField
-window.setPosadkaRidic      = setPosadkaRidic
-window.setPosadkaAuto       = setPosadkaAuto
-window.setPosadkaRezervace  = setPosadkaRezervace
-window.togglePosadkaMember  = togglePosadkaMember
-window.renderPosadkyDetail  = renderPosadkyDetail
 window.toggleCvtSection     = toggleCvtSection
 window.setZkusebnaTab       = setZkusebnaTab
 window.renderHarmonogramDetail = renderHarmonogramDetail
