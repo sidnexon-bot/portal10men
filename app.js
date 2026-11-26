@@ -1898,17 +1898,9 @@ const evPlural = (n, one, few, many) => n === 1 ? one : (n >= 2 && n <= 4 ? few 
 
 const evSvg = p => `<svg viewBox="0 0 24 24" class="ev-ic" aria-hidden="true">${p}</svg>`
 const EV_ICON = {
-  "Zkouška":     evSvg('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
-  "Koncert":     evSvg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>'),
-  "Soustředění": evSvg('<path d="M3 20 10 8l4 6 2-3 5 9z"/>'),
-  "Soutěž":      evSvg('<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8.5 20h7"/>'),
-  "Jiná akce":   evSvg('<path d="M12 3l2.1 5.4L20 9.3l-4.3 3.7L17 19l-5-3-5 3 1.3-6L4 9.3l5.9-.9z"/>'),
   "Veřejná doprava":  evSvg('<rect x="4" y="4" width="16" height="13" rx="3"/><path d="M4 11h16M8 20l1-3M16 20l-1-3"/>'),
   "Auta":             evSvg('<path d="M5 16v-5l2-5h10l2 5v5M3 16h18M5 16v2M19 16v2"/><circle cx="8" cy="13" r=".8"/><circle cx="16" cy="13" r=".8"/>'),
   "Každý po své ose": evSvg('<circle cx="13" cy="4.5" r="1.8"/><path d="M12 8l-3 4 3 2v6M12 8l3 3 3 1M9 12l-2 4"/>'),
-  "Formální":    evSvg('<path d="M9 3l3 3 3-3 3 4-3 2v12H9V9L6 7z"/>'),
-  "Neformální":  evSvg('<path d="M8 4l-5 3 2.5 4L8 10v10h8V10l2.5 1L21 7l-5-3c-.8 1.5-2.2 2.2-4 2.2S8.8 5.5 8 4z"/>'),
-  "Zimní civil": evSvg('<path d="M12 3v18M4.5 7.5l15 9M19.5 7.5l-15 9M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/>'),
   cal:   evSvg('<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>'),
   check: evSvg('<path d="M5 12.5l4.5 4.5L19 7.5"/>')
 }
@@ -1925,14 +1917,25 @@ const evBool = (id, key, def = false) => { const k = window.EV_KEEP; return id i
 function evSegHtml(id, options, value, onpick){
   const i = options.findIndex(o => o[0] === value)
   return `<input type="hidden" id="${id}" value="${escapeHtml(value || "")}">
-    <div class="ev-seg${i < 0 ? " none" : ""}" role="radiogroup" data-ev-for="${id}" style="--n:${options.length};--i:${Math.max(i, 0)}">` +
+    <div class="ev-seg${i < 0 ? " none" : ""}" role="radiogroup" data-ev-for="${id}">` +
     options.map(([v, l, ic], k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-v="${escapeHtml(v)}" onclick="${onpick || "evPick"}('${id}', this)">${ic || ""}<span>${escapeHtml(l)}</span></button>`).join("") + `</div>`
+}
+// pilulka vybrané volby se přesouvá podle změřené polohy (volby mají různou šířku); ResizeObserver ji dopočítá, když se přepínač ukáže nebo změní velikost
+function evSegLayout(seg){
+  const on = seg.querySelector(".ev-segb.on")
+  seg.classList.toggle("none", !on)
+  if(!on || !on.offsetWidth) return
+  seg.style.setProperty("--x", (on.offsetLeft - 3) + "px"); seg.style.setProperty("--w", on.offsetWidth + "px")
+}
+function evSegObserve(root){
+  if(!window.ResizeObserver){ (root || document).querySelectorAll(".ev-seg").forEach(evSegLayout); return }
+  if(!window.EV_RO) window.EV_RO = new ResizeObserver(es => es.forEach(e => evSegLayout(e.target)))
+  ;(root || document).querySelectorAll(".ev-seg").forEach(s => { if(!s.__evObs){ s.__evObs = true; window.EV_RO.observe(s) } })
 }
 function evSegSet(seg, btn){
   const btns = [...seg.querySelectorAll(".ev-segb")]
-  seg.style.setProperty("--i", String(Math.max(0, btns.indexOf(btn))))
-  seg.classList.toggle("none", !btn)
   btns.forEach(b => { const on = b === btn; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)) })
+  evSegLayout(seg)
 }
 function evPick(id, btn){
   const inp = document.getElementById(id); if(!inp) return
@@ -1971,7 +1974,7 @@ function evFormHtml(isEdit, id, event, dateVal){
           <div><label>Konec<input id="fEnd" type="time" value="${escapeHtml(event.END || "")}" oninput="evKdyUpdate()"></label></div>
         </div>
         <div class="ev-q" style="margin-top:14px">Jak dlouho</div>
-        <div class="ev-seg none" role="radiogroup" id="evDurSeg" style="--n:5;--i:0">${[[60, "1 h"], [120, "2 h"], [150, "2,5 h"], [180, "3 h"], [0, "Celý den"]].map(([m, l]) => `<button type="button" role="radio" class="ev-segb" aria-checked="false" data-ev-dur="${m}" onclick="evSetDur(${m})"><span>${l}</span></button>`).join("")}</div>
+        <div class="ev-seg none" role="radiogroup" id="evDurSeg">${[[60, "1 h"], [120, "2 h"], [150, "2,5 h"], [180, "3 h"], [0, "Celý den"]].map(([m, l]) => `<button type="button" role="radio" class="ev-segb" aria-checked="false" data-ev-dur="${m}" onclick="evSetDur(${m})"><span>${l}</span></button>`).join("")}</div>
         <div class="ev-sum">${EV_ICON.cal}<div><div class="big" id="evSum1"></div><small id="evSum2"></small></div></div>
         ${evSwitch("fMulti", "Trvá víc dní", multi, "evMulti(this.checked)")}
         <div id="evEndWrap" style="display:${multi ? "block" : "none"}"><label>Datum konce<input id="fDateEnd" type="date" value="${dateEnd}" onchange="evClearErr(this);evKdyUpdate()"></label></div>
@@ -2012,8 +2015,8 @@ function evFormHtml(isEdit, id, event, dateVal){
 }
 function evTypeHtml(sel){
   const i = EV_TYPES.indexOf(sel)
-  return `<div class="ev-seg ev-types${i < 0 ? " none" : ""}" role="radiogroup" aria-label="Typ akce" style="--n:${EV_TYPES.length};--i:${Math.max(i, 0)}">` +
-    EV_TYPES.map((t, k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" onclick="evOnType('${t}', this)">${EV_ICON[t]}<span>${t}</span></button>`).join("") + `</div>`
+  return `<div class="ev-seg ev-types${i < 0 ? " none" : ""}" role="radiogroup" aria-label="Typ akce">` +
+    EV_TYPES.map((t, k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-t="${t}" onclick="evOnType('${t}', this)"><span>${t === "Jiná akce" ? "Jiná" : t}</span></button>`).join("") + `</div>`
 }
 
 const evNotify = () => { const v = !!document.getElementById("fNotify")?.checked; try{ localStorage.setItem("tenEvNotify", v ? "1" : "0") }catch(e){} return v }
@@ -2034,10 +2037,10 @@ function evClearErr(el){ if(!el) return; el.classList.remove("ev-err"); const n 
 function evOnType(t, btn){
   const inp = document.getElementById("fType"); if(!inp) return
   inp.value = t
-  evSegSet(document.querySelector("#evTypes .ev-seg"), btn || [...document.querySelectorAll("#evTypes .ev-segb")].find(b => b.textContent.trim() === t))
+  evSegSet(document.querySelector("#evTypes .ev-seg"), btn || document.querySelector(`#evTypes .ev-segb[data-t="${t}"]`))
   document.getElementById("evRest").style.display = ""
   document.querySelectorAll(".ev-needs-type").forEach(el => { el.style.display = "" })
-  evCapture(); renderEventFormExtra(); evAutoName(); evKdyUpdate()
+  evCapture(); renderEventFormExtra(); evAutoName(); evKdyUpdate(); evSegObserve(document.getElementById("eventFormModalBody"))
   inp.dispatchEvent(new Event("input", { bubbles: true }))
 }
 function evCapture(){   // rozepsané hodnoty podrobností přežijí přepnutí typu
@@ -2095,6 +2098,7 @@ function evFormInit(isEdit){
   }
   if(isEdit) renderEventFormExtra()
   evKdyUpdate()
+  evSegObserve(body)
 }
 function evAccUpdate(det){
   const ids = (det.dataset.evF || "").split(",").filter(Boolean)
@@ -2127,7 +2131,7 @@ function renderEventFormExtra(){
       evAcc("Sraz a oblečení", "fSraz,fObleceni",
         `<label>Čas srazu<input id="fSraz" type="time" value="${escapeHtml(evVal("fSraz", "SRAZ"))}"></label>
          <div class="ev-q" style="margin-top:14px">Oblečení</div>`
-        + evSegHtml("fObleceni", [["", "Nezadáno"], ["Formální", "Formální", EV_ICON["Formální"]], ["Neformální", "Neformální", EV_ICON["Neformální"]], ["Zimní civil", "Zimní civil", EV_ICON["Zimní civil"]]], evVal("fObleceni", "OBLECENI")), true)
+        + evSegHtml("fObleceni", [["", "Nezadáno"], ["Formální", "Formální"], ["Neformální", "Neformální"], ["Zimní civil", "Zimní civil"]], evVal("fObleceni", "OBLECENI")), true)
       + dopravaAcc()
       + evAcc("Hospoda", "fHospoda", `<textarea id="fHospoda" class="ev-ta" rows="3" placeholder="Název/adresa, čas rezervace, na jaké jméno...">${escapeHtml(evVal("fHospoda", "HOSPODA"))}</textarea>`, false)
       + (type === "Koncert" ? evAcc("Spolupráce s jiným tělesem", "fIsSpoluprace,fSpolupraceNazev",
@@ -2149,7 +2153,7 @@ function renderEventFormExtra(){
         `<input type="hidden" id="fObleceniSoustredeni" value="${ob}">`
         + evSwitch("fObleceniSoustredeniSw", "Bude se zpívat v koncertním oblečení", ob === "Ano", "evObS(this.checked)")
         + `<div id="obleceniSoustredeniDetail" style="display:${ob === "Ano" ? "block" : "none"};margin-top:10px">`
-        + evSegHtml("fObleceniSoustredeniTyp", [["Formální", "Formální", EV_ICON["Formální"]], ["Neformální", "Neformální", EV_ICON["Neformální"]], ["Zimní civil", "Zimní civil", EV_ICON["Zimní civil"]], ["Vše", "Vše"]], evVal("fObleceniSoustredeniTyp", "OBLECENI_S_TYP", "Formální") || "Formální") + `</div>`, false)
+        + evSegHtml("fObleceniSoustredeniTyp", [["Formální", "Formální"], ["Neformální", "Neformální"], ["Zimní civil", "Zimní civil"], ["Vše", "Vše"]], evVal("fObleceniSoustredeniTyp", "OBLECENI_S_TYP", "Formální") || "Formální") + `</div>`, false)
       + dopravaAcc()
       + evAcc("Harmonogram po dnech", "", `<div id="harmonogramWrap"></div>`, false)
     setTimeout(() => renderMultiDayHarmonogram(), 0)

@@ -73,7 +73,7 @@ body.dark .dash-todos .st-seg button.on { color: #fff; }
 }
 
 /* Moje auta: živý náhled (dlaždice míst), posuvníky a volba paliva */
-.au-prev { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 16px; background: rgba(120, 120, 128, 0.1); }
+.au-prev { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 14px; border-radius: var(--r-ctl, 18px); background: rgba(120, 120, 128, 0.1); }
 .au-seats { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; }
 .au-seat { width: 28px; height: 34px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1.5px solid var(--card-border, rgba(60, 60, 67, 0.2)); background: var(--card); color: var(--muted); font-size: 11px; font-weight: 700; }
 .au-seat svg { width: 16px; height: 16px; fill: currentColor; stroke: none; }

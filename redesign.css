@@ -1498,31 +1498,38 @@ html[data-platform="android"] body { --ev-acc: var(--and-accent); }
 .ev-q small, .ev-q label small { margin-left: 8px; font-weight: 500; color: var(--muted); font-size: 12px; }
 .ev .nm { width: 100%; box-sizing: border-box; }
 
-/* přepínač voleb (segmentový): vybraná volba je pilulka, která se plynule přesune; vždy je vybraná právě jedna */
-.ev-seg { position: relative; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); padding: 3px; border-radius: 16px; background: rgba(120, 120, 128, 0.14); }
-.ev-seg::before { content: ""; position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / var(--n, 2)); border-radius: 13px; background: var(--ev-acc); transform: translateX(calc(var(--i, 0) * 100%)); transition: transform 0.32s cubic-bezier(0.2, 1.2, 0.3, 1), opacity 0.2s ease; }
+/* přepínač voleb (segmentový) podle pravidel přepínačů: rodič padding 3 px a mezera 2 px, volby 30 px, písmo 13 px, pilulka;
+   vybraná volba je pilulka v barvě aplikace, která se plynule přesune (polohu měří evSegLayout) */
+.ev-seg { position: relative; display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(120, 120, 128, 0.14); overflow-x: auto; scrollbar-width: none; }
+.ev-seg::-webkit-scrollbar { display: none; }
+html[data-platform="apple"] .ev-seg { border-radius: 999px; }
+.ev-seg::before { content: ""; position: absolute; top: 3px; left: 3px; height: 30px; width: var(--w, 0px); border-radius: 999px; background: var(--ev-acc); transform: translateX(var(--x, 0px)); transition: transform 0.32s cubic-bezier(0.2, 1.2, 0.3, 1), width 0.32s cubic-bezier(0.2, 1.2, 0.3, 1), opacity 0.2s ease; }
 .ev-seg.none::before { opacity: 0; }
-.ev .ev-segb { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 46px !important; height: auto; padding: 6px 2px !important; border: 0 !important; border-radius: 13px !important; background: transparent !important; box-shadow: none !important; color: var(--text, inherit) !important; font-size: 12px !important; font-weight: 600; line-height: 1.15; transition: color 0.2s ease; }
-.ev .ev-segb:not(:has(.ev-ic)) { min-height: 40px !important; flex-direction: row; font-size: 13px !important; }
-.ev .ev-segb span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev .ev-segb { position: relative; z-index: 1; flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 30px; min-height: 30px !important; padding: 0 8px !important; border: 0 !important; border-radius: 999px !important; background: transparent !important; box-shadow: none !important; color: var(--text, inherit) !important; font-size: 13px !important; font-weight: 600 !important; line-height: 1; white-space: nowrap; transition: color 0.2s ease; }
+html[data-platform="android"] .ev .ev-segb { font-weight: 500 !important; }
+.ev .ev-segb .ev-ic { width: 16px; height: 16px; }
+.ev .ev-types .ev-segb, .ev .ev-acc .ev-segb { padding: 0 5px !important; gap: 4px; }
 .ev .ev-segb.on { color: #fff !important; }
 body.dark .ev .ev-segb.on { color: #0b0b0c !important; }
-.ev .ev-types .ev-segb { font-size: 11px !important; }
-.ev .ev-warn { color: #ff3b30; }
 .ev-grid3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-top: 12px; }
 .ev-grid3 > div { min-width: 0; }
 .ev-grid3 label { margin-top: 0; }
-.ev-sum { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(120, 120, 128, 0.1); }
+.ev-sum { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: var(--r-ctl, 18px); background: rgba(120, 120, 128, 0.1); }
 .ev-sum .ev-ic { width: 24px; height: 24px; color: var(--ev-acc); }
 .ev-sum .big { font-size: 16px; font-weight: 700; }
 .ev-sum small { color: var(--muted); font-size: 13px; }
 .ev .ev-sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; font-size: 14px; color: var(--text, inherit); }
-.ev .ev-swin { -webkit-appearance: none; appearance: none; flex: none; width: 48px !important; height: 28px !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 14px !important; background: rgba(120, 120, 128, 0.32); position: relative; cursor: pointer; transition: background 0.2s ease; }
-.ev .ev-swin::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s cubic-bezier(0.2, 1, 0.3, 1); }
+.ev .ev-swin { -webkit-appearance: none; appearance: none; flex: none; width: 51px !important; height: 31px !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 16px !important; background: rgba(120, 120, 128, 0.32); position: relative; cursor: pointer; transition: background 0.2s ease; }
+.ev .ev-swin::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s cubic-bezier(0.2, 1, 0.3, 1); }
 .ev .ev-swin:checked { background: var(--ev-acc); }
 .ev .ev-swin:checked::after { transform: translateX(20px); }
 .ev .ev-swin:focus-visible { outline: 2px solid var(--ev-acc); outline-offset: 2px; }
-.ev-acc { margin-top: 10px; border-radius: 16px; background: rgba(120, 120, 128, 0.08); overflow: hidden; }
+/* Android (Material 3): dráha 52 × 32, vypnuto = obrys a malý palec, zapnuto = plná dráha a velký bílý palec */
+html[data-platform="android"] .ev .ev-swin { width: 52px !important; height: 32px !important; background: transparent; box-shadow: inset 0 0 0 2px var(--and-muted, #79747e); }
+html[data-platform="android"] .ev .ev-swin::after { top: 8px; left: 8px; width: 16px; height: 16px; background: var(--and-muted, #79747e); box-shadow: none; transition: transform 0.2s cubic-bezier(0.2, 1, 0.3, 1), width 0.2s, height 0.2s, top 0.2s, left 0.2s, background 0.2s; }
+html[data-platform="android"] .ev .ev-swin:checked { background: var(--ev-acc); box-shadow: none; }
+html[data-platform="android"] .ev .ev-swin:checked::after { top: 4px; left: 4px; width: 24px; height: 24px; background: #fff; transform: translateX(20px); }
+.ev-acc { margin-top: 10px; border-radius: var(--r-ctl, 18px); background: rgba(120, 120, 128, 0.08); overflow: hidden; }
 .ev-acc > summary { display: flex; align-items: center; gap: 10px; padding: 13px 14px; font-weight: 600; cursor: pointer; list-style: none; }
 .ev-acc > summary::-webkit-details-marker { display: none; }
 .ev-acc > summary::after { content: "›"; margin-left: 4px; color: var(--muted); font-size: 18px; transition: transform 0.2s ease; }
@@ -1532,10 +1539,15 @@ body.dark .ev .ev-segb.on { color: #0b0b0c !important; }
 .ev-acc .ck { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--card-border, rgba(60, 60, 67, 0.3)); box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; color: transparent; }
 .ev-acc .ck .ev-ic { width: 14px; height: 14px; stroke-width: 3; }
 .ev-acc.done .ck { background: #34c759; border-color: #34c759; color: #fff; }
+html[data-platform="android"] .ev-acc.done .ck { background: var(--ev-acc); border-color: var(--ev-acc); }
+html[data-platform="android"] :is(.ev-acc, .ev-sum, .au-prev) { border-radius: 20px; }
 .ev-acc .b { padding: 0 14px 14px; }
 .ev-hint { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.4; }
-.ev .ev-ta { width: 100%; box-sizing: border-box; min-height: 72px; padding: 10px 12px; font-family: inherit; font-size: 14px; border: 1px solid var(--card-border, rgba(60, 60, 67, 0.2)); border-radius: 12px; background: var(--card); color: var(--text, inherit); }
+.ev .ev-ta { width: 100%; box-sizing: border-box; min-height: 72px; font-family: inherit; }
 .ev .ev-err { border-color: #ff3b30 !important; }
+html[data-platform="android"] .ev .ev-err { border-color: #b3261c !important; }
 .ev .ev-errmsg { margin-top: 4px; font-size: 12px; color: #ff3b30; }
+html[data-platform="android"] :is(.ev .ev-errmsg, .ev .ev-warn) { color: #b3261c; }
+html[data-platform="android"] body.dark :is(.ev .ev-errmsg, .ev .ev-warn) { color: #f2b8b5; }
 .ev .ev-foot .ev-sw { margin-top: 0; margin-bottom: 12px; }
 @media (max-width: 640px) { .ev-grid3 { grid-template-columns: 1fr 1fr; } .ev-grid3 > div:first-child { grid-column: 1 / -1; } }
