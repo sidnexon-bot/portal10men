@@ -1603,3 +1603,15 @@ html[data-platform="android"] .hg .hg-add { font-weight: 500 !important; }
 .hg-ghost { position: fixed; left: 0; top: 0; z-index: 100000; pointer-events: none; max-width: 70vw; padding: 7px 14px; border-radius: 999px; background: var(--ev-acc); color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
 body.dark .hg-ghost { color: #0b0b0c; }
 body.hg-active { user-select: none; -webkit-user-select: none; cursor: grabbing; }
+
+/* telefon: banka dílků je pod osou a zůstává přilepená dole nad zápatím formuláře; dílky se v ní posouvají do strany */
+@media (max-width: 819px) {
+  .hg { display: flex; flex-direction: column; }
+  .hg-axis { order: 1; }
+  .hg-bank { order: 2; position: sticky; bottom: var(--hg-bottom, 0px); z-index: 6; padding: 8px 10px; background: color-mix(in srgb, var(--card, #fff) 90%, #808080 10%); box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.14); }
+  .hg-bank .hg-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .hg-bank .hg-chips::-webkit-scrollbar { display: none; }
+  .hg-bank .hg-chip { flex: none; }
+  .hg-bank .hg-bt { margin: 0 0 6px; }
+  .hg-bank .hg-bt:not(:first-child) { margin-top: 8px; }
+}

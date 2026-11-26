@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.17.2 (26. 11. 2026)
+- Harmonogram koncertu na telefonu: banka dílků je pod osou programu a zůstává přilepená dole nad zápatím formuláře (dílky se v ní posouvají do strany), takže je při tažení pořád po ruce i u dlouhé osy. Stránka se při tažení u okraje posouvá rychleji, čím blíž je prst k okraji, a nad přilepenou bankou a zápatím se neposouvá.
+
 ## 4.17.1 (26. 11. 2026)
 - Oprava: verze 4.17.0 nešla spustit (chyba „updateRiderHarmonogramField is not defined“ při načtení aplikace). V 4.17.0 zbyl odkaz na odstraněnou funkci starého editoru harmonogramu.
 

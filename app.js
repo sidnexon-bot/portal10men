@@ -2210,6 +2210,7 @@ function renderRiderToggleHtml(){
 function renderRiderPanel(){
   const panel = document.getElementById("riderPanel")
   if(panel) panel.innerHTML = renderRiderPanelContent()
+  hgPinBank()
 }
 
 function renderRiderPanelContent(){
@@ -2479,9 +2480,17 @@ function renderRiderHarmonogramHtml(){
       <div class="hg-axis" id="hgAxis">${items.map((it, i) => hgItemHtml(it, i, out)).join("") || `<div class="hg-empty">Klepni na dílek v bance nebo ho přetáhni sem.</div>`}</div>
     </div>`
 }
+// na telefonu je banka dílků přilepená dole nad zápatím formuláře, takže je při tažení pořád po ruce (výšku zápatí zná jen skript)
+function hgPinBank(){
+  const wrap = document.getElementById("riderHarmonogramList"); if(!wrap) return
+  const f = document.querySelector("#eventFormModalBody .form-foot")
+  wrap.style.setProperty("--hg-bottom", (f && getComputedStyle(f).position === "sticky" ? f.offsetHeight : 0) + "px")
+}
+window.addEventListener("resize", hgPinBank)
 function refreshRiderHarmonogram(focus){
   const wrap = document.getElementById("riderHarmonogramList"); if(!wrap) return
   wrap.innerHTML = renderRiderHarmonogramHtml()
+  hgPinBank()
   if(focus) wrap.querySelector(focus)?.focus()
 }
 const hgChanged = () => document.getElementById("riderHarmonogramList")?.dispatchEvent(new Event("input", { bubbles: true }))
@@ -2533,7 +2542,13 @@ function hgDragStart(d){
     if(!HG.d) return
     const sc = d.scroller || (d.scroller = (() => { let n = document.getElementById("hgAxis"); while(n && n !== document.body){ const o = getComputedStyle(n).overflowY; if((o === "auto" || o === "scroll") && n.scrollHeight > n.clientHeight) return n; n = n.parentElement } return document.scrollingElement })())
     const r = sc === document.scrollingElement ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect()
-    if(d.y < r.top + 70) sc.scrollBy(0, -12); else if(d.y > r.bottom - 70) sc.scrollBy(0, 12)
+    let bottom = r.bottom                                        // dolní okraj oblasti, kde se posouvá: nad přilepenou bankou a zápatím
+    const bank = document.getElementById("hgBank"), foot = document.querySelector("#eventFormModalBody .form-foot")
+    if(bank && getComputedStyle(bank).position === "sticky") bottom = Math.min(bottom, bank.getBoundingClientRect().top)
+    if(foot && getComputedStyle(foot).position === "sticky") bottom = Math.min(bottom, foot.getBoundingClientRect().top)
+    const zone = 90, sp = 26                                     // čím blíž okraji, tím rychleji
+    if(d.y < r.top + zone) sc.scrollBy(0, -Math.ceil(Math.min(1, (r.top + zone - d.y) / zone) * sp))
+    else if(d.y > bottom - zone) sc.scrollBy(0, Math.ceil(Math.min(1, (d.y - (bottom - zone)) / zone) * sp))
     d.raf = requestAnimationFrame(loop)
   }
   d.raf = requestAnimationFrame(loop)
