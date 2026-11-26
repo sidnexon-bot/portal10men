@@ -259,6 +259,21 @@ async function getMyTasks(email){
   return out.sort((a, b) => (a.datum || "9999").localeCompare(b.datum || "9999") || (a.cas || "").localeCompare(b.cas || ""))
 }
 
+// Všechny nevyřízené marketingové úkoly nadcházejících akcí (karta Úkoly na Přehledu, záložka Všechny)
+async function getMarketingTasks(){
+  const cut = new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10)   // jako u Mých úkolů: dávno proběhlé akce se nezobrazují
+  const out = []
+  objToArray(await dbGet("/akce")).forEach(a => {
+    if(!a || !a.marketing?.ukoly || /zruš/i.test(a.status || "") || (a.date && String(a.date).slice(0, 10) < cut)) return
+    Object.values(a.marketing.ukoly).forEach(t => {
+      if(!t || !t.id || t.done) return
+      out.push({kind: "marketing", id: t.id, akceId: a.id, akceNazev: a.name || "", text: t.ucel || t.napad || "Úkol", datum: t.datum || "", cas: t.cas || "",
+        kanal: t.kanal || "", kanaly: kanalyUkolu(t), assignee: t.assignee && t.assignee.email ? {email: t.assignee.email, name: t.assignee.name || ""} : null})
+    })
+  })
+  return out.sort((x, y) => (x.datum || "9999").localeCompare(y.datum || "9999") || (x.cas || "").localeCompare(y.cas || ""))
+}
+
 async function deleteMarketingTask(params){
   await dbRemove("/akce/" + params.id + "/marketing/ukoly/" + params.taskId)
   return {status: "deleted"}
@@ -1549,6 +1564,7 @@ async function api(action, params = {}){
     case "savemarketingtask": return await saveMarketingTask(params)
     case "setmarketingassignee": return await setMarketingAssignee(params)
     case "mytasks":          return await getMyTasks(params?.email)
+    case "marketingtasks":   return await getMarketingTasks()
     case "deletemarketingtask": return await deleteMarketingTask(params)
     case "gettodosablony":   return await getTodoSablony()
     case "savetodosablona":  return await saveTodoSablona(params)
