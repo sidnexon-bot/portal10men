@@ -100,7 +100,9 @@ function screenForm() {
         <p class="hint" style="margin:0 0 12px">Názvy položek se mohou podle verze Discordu mírně lišit.</p></details>`
   } else {
     body = `<h1>Zkontroluj a potvrď</h1><p class="lead">Administrátor údaje před založením členství prověří. Adresu a číslo účtu vidí jen on a ty.</p>${summaryRows({ ...data, email: user.email }, true)}
-      <h2>Podmínky členství</h2><div class="terms" tabindex="0" role="region" aria-label="Podmínky členství">${TERMS.map(p => `<p>${esc(p)}</p>`).join("")}</div>
+      <h2>Podmínky členství</h2>
+      <a class="doc" href="stanovy.pdf" target="_blank" rel="noopener"><span class="docic" aria-hidden="true">PDF</span><span class="doct"><b>Stanovy spolku</b><small>Přečti si je před potvrzením. Otevře se v novém okně.</small></span><span class="docch" aria-hidden="true">›</span></a>
+      <div class="terms" style="margin-top:10px" tabindex="0" role="region" aria-label="Podmínky členství">${TERMS.map(p => `<p>${esc(p)}</p>`).join("")}</div>
       <label class="check"><input type="checkbox" id="agree" data-act="agree"><span>Přečetl(a) jsem si výše uvedené a potvrzuji to.</span></label>${errLine(["send"])}`
   }
   const last = step === STEPS.length - 1

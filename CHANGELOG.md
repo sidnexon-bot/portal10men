@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.20.1 (27. 11. 2026)
+- Žádost o členství: v posledním kroku je nad podmínkami odkaz na Stanovy spolku (soubor stanovy.pdf, otevře se v novém okně), aby si je nový člen mohl přečíst, než je potvrdí.
+
 ## 4.20.0 (27. 11. 2026)
 - Žádost o členství pro nové členy (onboarding.html): zájemce se přihlásí Googlem (e-mail je tak ověřený a jméno předvyplněné), projde čtyřmi kroky (O tobě, Kontakt a platby, Discord s návodem na zjištění Discord ID, Zkontroluj a potvrď) a na závěr potvrdí podmínky členství a souhlas se zpracováním údajů. Rozpracovaný formulář se ukládá, odeslanou žádost lze upravit nebo zrušit a po schválení se stránka sama změní. Kdo se sem dostal omylem, může kdykoli odejít (tlačítko „Nejsem z 10men“ odhlásí a vrátí na 10men.cz). Kdo se do 10base přihlásí a ještě není členem, je místo chyby „Přístup zamítnut“ přesměrován na tento formulář.
 - Správa členů (jen administrátor): nahoře sekce „Žádosti o členství“ s počtem i odznakem u tlačítka v bočním panelu. Detail žádosti ukazuje všechny údaje, před schválením lze opravit jméno, telefon, hlas, Discord ID i datum „působí od“. Schválení vytvoří člena s rolí MEMBER, osobní údaje uloží do Osobních údajů a žadatel se hned dostane do aplikace; zamítnutí může mít důvod, který žadatel uvidí.
