@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.18.3 (27. 11. 2026)
+- Nastavení, přidání auta: popisky „Jak se auto jmenuje?“ → „Název“ a „Čím jezdí“ → „Vyber palivo“.
+
 ## 4.18.2 (27. 11. 2026)
 - Oprava: na Androidu se 10base otevíralo jako záložka prohlížeče s lištou app.10men.cz. Soubor manifest.json v repu byl, ale stránky na něj neodkazovaly, takže Chrome nemohl aplikaci nainstalovat. Přidán odkaz na manifest, ikony 192 a 512 px (původní byla 2000 px), `id`, `scope`, `lang`, barvy podle vzhledu aplikace a meta značky pro režim aplikace. Po novém přidání na plochu („Nainstalovat aplikaci“) se otevře na celou obrazovku bez adresního řádku. Už dříve přidanou zkratku je potřeba odebrat a přidat znovu.
 

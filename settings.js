@@ -164,12 +164,12 @@ function autoForm(a) {
   return `<div class="card st-card" data-auto="${esc(id)}"><div class="event-label">${isNew ? "Nové auto" : "Upravit auto"}</div>
     <div class="au-prev"><div class="au-seats" data-au-seats>${auSeats(mist)}</div>
       <div class="au-pt"><b data-au-pname class="${isNew || !a.nazev ? "au-ph" : ""}">${esc(isNew || !a.nazev ? "Název auta" : a.nazev)}</b><span class="st-hint" data-au-psub style="margin:0">${esc(autoSouhrn({ mist, palivo, spotreba: Number(sp) || 0 }))}</span></div></div>
-    <label class="st-name" for="au-n-${esc(id)}" style="display:block;margin-top:14px">Jak se auto jmenuje?</label>
+    <label class="st-name" for="au-n-${esc(id)}" style="display:block;margin-top:14px">Název</label>
     <input type="text" id="au-n-${esc(id)}" data-au-nazev maxlength="60" autocomplete="off" enterkeyhint="next" value="${esc(isNew ? "" : a.nazev)}" placeholder="např. Octavia kombi" style="${fld}">
     <div class="au-row"><label class="st-name" for="au-m-${esc(id)}">Kolik lidí se vejde (s řidičem)</label><output class="au-big" data-au-mistv>${mist}</output></div>
     <input type="range" class="au-range" id="au-m-${esc(id)}" data-au-mist min="2" max="9" step="1" value="${mist}" aria-valuetext="${mist} míst">
     <div class="au-ticks" aria-hidden="true">${[2, 3, 4, 5, 6, 7, 8, 9].map(n => `<span>${n}</span>`).join("")}</div>
-    <div class="st-name" style="margin-top:14px" id="au-pl-${esc(id)}">Čím jezdí</div>
+    <div class="st-name" style="margin-top:14px" id="au-pl-${esc(id)}">Vyber palivo</div>
     <div class="au-chips" role="group" aria-labelledby="au-pl-${esc(id)}">${PALIVA.map(p => `<button type="button" class="au-chip${palivo === p ? " on" : ""}" data-au-pal="${p}" aria-pressed="${palivo === p}">${p}</button>`).join("")}</div>
     <input type="hidden" data-au-palivo value="${esc(palivo)}">
     <div class="au-row"><label class="st-name" for="au-s-${esc(id)}">Spotřeba</label><output class="au-big au-sm" data-au-spv>${sp ? esc(auFmt(Number(sp).toFixed(1))) + " " + auUnit(palivo) : "nezadáno"}</output></div>
