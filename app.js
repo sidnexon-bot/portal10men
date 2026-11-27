@@ -2652,7 +2652,6 @@ const HG_DESC = { prichod: "nástup na pódium", odchod: "sestup z pódia", mode
 const hgMobile = () => matchMedia("(max-width: 819px), (pointer: coarse)").matches
 const hgPieceLabel = k => (HG_PIECES.find(p => p[0] === k) || [])[1] || k
 let HG_PICK = null          // co se právě vkládá: { kind: "piece", piece } | { kind: "song", sid } | { kind: "item", idx }
-let HG_IO = null, HG_VIS = false
 
 const hgNoBlock = () => !!HG_PICK && (HG_PICK.kind === "piece" ? HG_PICK.piece === "blok" : HG_PICK.kind === "item" && hgArr()[HG_PICK.idx]?.typ === "blok")   // blok se do bloku vložit nedá
 function hgSlotHtml(mode, a, b){
@@ -2674,18 +2673,30 @@ function hgUiEnsure(){
     `<button type="button" id="hgFab" class="hg-ui hg-fab" aria-label="Přidat dílek do harmonogramu" aria-haspopup="dialog" onclick="hgSheetOpen()">${HG_IC.plus}</button><div id="hgPickBar" class="hg-ui hg-pickbar" role="status"></div>`)
   const f = document.querySelector("#eventFormModalBody .form-foot")
   document.getElementById("hgFab").style.bottom = ((f && getComputedStyle(f).position === "sticky" ? f.offsetHeight : 0) + 16) + "px"   // nad přilepeným zápatím formuláře
-  if(!HG_IO) HG_IO = new IntersectionObserver(es => {
-    const w = document.getElementById("riderHarmonogramList")
-    HG_VIS = !!es[es.length - 1].isIntersecting
-    if(!w || !w.offsetParent){ HG_PICK = null; HG_VIS = false; hgSheetClose(true); hgPickBarSet() }   // formulář je zavřený
-    hgFabSync()
-  })
-  HG_IO.disconnect()
-  const wrap = document.getElementById("riderHarmonogramList"); if(wrap) HG_IO.observe(wrap)
+  const modal = document.getElementById("eventFormModal")
+  if(modal && !modal._hgMo){ modal._hgMo = new MutationObserver(hgVisSync); modal._hgMo.observe(modal, { attributes: true, attributeFilter: ["class"] }) }   // zavřený modal je jen visibility:hidden, žádná jiná událost to neohlásí
+  if(!window._hgPoll){
+    window._hgPoll = setInterval(() => { const m = document.getElementById("eventFormModal"); if((m && !m.classList.contains("hidden")) || HG_PICK || document.getElementById("hgSheetRoot")) hgVisSync() }, 400)   // pojistka: sbalení panelu podrobností nemusí vyvolat žádnou událost
+    document.addEventListener("scroll", () => hgFabSync(), true)
+    window.addEventListener("resize", () => hgFabSync())
+  }
+  hgVisSync()
+}
+// je harmonogram vidět? Zavřený formulář (.modal.hidden = visibility:hidden) i sbalený panel znamenají ne.
+function hgOnScreen(){
+  const w = document.getElementById("riderHarmonogramList"); if(!w) return false
+  const r = w.getBoundingClientRect(); return r.height > 0 && r.bottom > 0 && r.top < innerHeight
+}
+function hgFormOpen(){
+  const w = document.getElementById("riderHarmonogramList")
+  return !!w && w.isConnected && !!w.offsetParent && !w.closest(".modal.hidden") && getComputedStyle(w).visibility !== "hidden"
+}
+function hgVisSync(){
+  if(!hgFormOpen()){ HG_PICK = null; hgSheetClose(true); hgPickBarSet() }
   hgFabSync()
 }
 function hgFabSync(){
-  document.getElementById("hgFab")?.classList.toggle("on", HG_VIS && hgMobile() && !HG_PICK && !document.getElementById("hgSheetRoot"))
+  document.getElementById("hgFab")?.classList.toggle("on", hgFormOpen() && hgOnScreen() && hgMobile() && !HG_PICK && !document.getElementById("hgSheetRoot"))
 }
 
 function hgSheetHtml(){

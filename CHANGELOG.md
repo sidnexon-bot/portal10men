@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.18.1 (27. 11. 2026)
+- Oprava: plovoucí tlačítko + (a lišta při vkládání) u harmonogramu zůstávalo na obrazovce i po zavření formuláře akce, pokud zůstal rozbalený panel Podrobnosti pro 10space. Zavřený formulář je v aplikaci jen skrytý (visibility), takže ho dřívější kontrola nepoznala. Teď se tlačítko, panel i lišta schovají při zavření formuláře hned a při jeho znovuotevření se tlačítko vrátí.
+
 ## 4.18.0 (27. 11. 2026)
 - Harmonogram koncertu na telefonu a dotykových zařízeních je bez tažení (stránka při něm sama ujížděla dolů, protože prst byl v pásmu posouvání už v okamžiku uchopení dílku z přilepené banky). Banka dílků je schovaná pod plovoucí tlačítko + (dole vpravo, nad zápatím formuláře), které zespodu vysune panel s dílky (Příchod, Odchod, Moderace, Společná skladba, Prázdný blok) a se skladbami z programu, které ještě nejsou na ose. Po výběru se panel zavře, mezi položkami se objeví pruhy „Vložit sem“ (u bloku i „Mezi skladby 1 a 2“) a dílek se vloží klepnutím na pruh; moderace, příchod nebo odchod vložené doprostřed bloku ho stejně jako dřív rozdělí. Lišta dole ukazuje, co se vkládá, a nabízí Zrušit (Esc také). Vzhled podle pravidel aplikace: Apple tónované sklo a okno 34 px, Android Material 3 (tonální FAB, okno 28 px), bez držátka, jen křížek; písmo, zaoblení a časování ze stupnic a z motion.css.
 - Položky na ose mají tlačítka ↑ ↓ (dotykový cíl 44 px), skladby v bloku také. Přesun na vzdálenější místo a Odebrat jsou v rozbaleném detailu položky („Přesunout jinam“ spustí stejné vkládání pruhem), takže se položka už nesmaže omylem. Přesunutá nebo vložená položka krátce zabliká.
