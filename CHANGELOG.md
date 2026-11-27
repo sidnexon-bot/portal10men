@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.18.2 (27. 11. 2026)
+- Oprava: na Androidu se 10base otevíralo jako záložka prohlížeče s lištou app.10men.cz. Soubor manifest.json v repu byl, ale stránky na něj neodkazovaly, takže Chrome nemohl aplikaci nainstalovat. Přidán odkaz na manifest, ikony 192 a 512 px (původní byla 2000 px), `id`, `scope`, `lang`, barvy podle vzhledu aplikace a meta značky pro režim aplikace. Po novém přidání na plochu („Nainstalovat aplikaci“) se otevře na celou obrazovku bez adresního řádku. Už dříve přidanou zkratku je potřeba odebrat a přidat znovu.
+
 ## 4.18.1 (27. 11. 2026)
 - Oprava: plovoucí tlačítko + (a lišta při vkládání) u harmonogramu zůstávalo na obrazovce i po zavření formuláře akce, pokud zůstal rozbalený panel Podrobnosti pro 10space. Zavřený formulář je v aplikaci jen skrytý (visibility), takže ho dřívější kontrola nepoznala. Teď se tlačítko, panel i lišta schovají při zavření formuláře hned a při jeho znovuotevření se tlačítko vrátí.
 
