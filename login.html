@@ -44,6 +44,11 @@
       const user     = result.user
       const email    = user.email
 
+      // kdo ještě není člen (nemá přístup přes /membersByUid), pokračuje žádostí o členství
+      let mapped = false
+      try { mapped = (await get(ref(database, "/membersByUid/" + user.uid))).exists() } catch(e) { mapped = false }
+      if(!mapped){ window.location.href = "onboarding.html"; return }
+
       // ověř uživatele v Firebase databázi
       const snapshot = await get(ref(database, "/members"))
       const members  = snapshot.val()

@@ -1687,9 +1687,24 @@ async function dopravaZmena(params){
 // HLAVNÍ API FUNKCE
 // ===============================
 
+// Rozhodnutí o žádosti o členství (jen ADMIN / Owner): schválí nebo zamítne server (functions/memberRequests.js)
+async function decideMemberRequest(body){
+  const token = await auth.currentUser.getIdToken()
+  const res = await fetch("https://decidememberrequest-etp6s2ynnq-uc.a.run.app", {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+    body: JSON.stringify(body)
+  })
+  const json = await res.json().catch(() => ({}))
+  if(!res.ok) throw new Error(json.error || "Chyba serveru")
+  return json
+}
+
 async function api(action, params = {}){
   switch(action){
     case "members":          return await getMembers()
+    case "memberrequests":   return await dbGet("/memberRequests") || {}
+    case "memberrequestdecide": return await decideMemberRequest(params)
     case "auta":             return await dbGet("/memberAuta") || {}
     case "dopravazmena":     return await dopravaZmena(params)
     case "events":           return await getEvents()

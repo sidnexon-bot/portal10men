@@ -3,6 +3,11 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.20.0 (27. 11. 2026)
+- Žádost o členství pro nové členy (onboarding.html): zájemce se přihlásí Googlem (e-mail je tak ověřený a jméno předvyplněné), projde čtyřmi kroky (O tobě, Kontakt a platby, Discord s návodem na zjištění Discord ID, Zkontroluj a potvrď) a na závěr potvrdí podmínky členství a souhlas se zpracováním údajů. Rozpracovaný formulář se ukládá, odeslanou žádost lze upravit nebo zrušit a po schválení se stránka sama změní. Kdo se sem dostal omylem, může kdykoli odejít (tlačítko „Nejsem z 10men“ odhlásí a vrátí na 10men.cz). Kdo se do 10base přihlásí a ještě není členem, je místo chyby „Přístup zamítnut“ přesměrován na tento formulář.
+- Správa členů (jen administrátor): nahoře sekce „Žádosti o členství“ s počtem i odznakem u tlačítka v bočním panelu. Detail žádosti ukazuje všechny údaje, před schválením lze opravit jméno, telefon, hlas, Discord ID i datum „působí od“. Schválení vytvoří člena s rolí MEMBER, osobní údaje uloží do Osobních údajů a žadatel se hned dostane do aplikace; zamítnutí může mít důvod, který žadatel uvidí.
+- Server (functions/memberRequests.js, pravidla databáze): žádosti jsou v /memberRequests/{uid}, žadatel smí zapsat a číst jen svou, rozhoduje jen server; volitelné upozornění adminům do Discordu (/config/discord_webhook_admin), zamítnuté žádosti se po 30 dnech mažou.
+
 ## 4.19.0 (27. 11. 2026)
 - Nastavení je rozcestník místo jedné dlouhé stránky: nahoře profil (iniciály, jméno, hlas a role, proklik na Osobní údaje), pod ním skupiny Přizpůsobit (Vzhled, Přehled), Akce a doprava (Moje auta, Šablony úkolů pro ty, kdo je smějí upravovat), Účet (Osobní údaje) a O aplikaci (verze a kontrola aktualizací). Řádky mají barevnou ikonu, aktuální hodnotu (režim, počet karet, počet aut) a šipku. Každá položka otevře vlastní podstránku s tlačítkem „Nastavení“ a nadpisem; podstránka se zapisuje do historie, takže tlačítko Zpět (i na Androidu) vrací na rozcestník. Obsah a ukládání jsou beze změny. Vzhled podle platformy: iPhone seskupené bloky s ikonami v barevných čtvercích, Android Material 3 s tonálními kolečky a hodnotou pod názvem.
 

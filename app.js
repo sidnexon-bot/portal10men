@@ -933,6 +933,7 @@ function initSidebar(){
   membersBtn.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Správa členů`
   membersBtn.onclick = () => setActiveTab("members")
   document.querySelector(".sidebar-bottom").prepend(membersBtn)
+  refreshRequestsBadge()
 }
 
   const driveBtn = document.createElement("button")
@@ -4818,6 +4819,70 @@ async function openAddMember(){
   })
 }
 
+/* Žádosti o členství (onboarding.html): admin zkontroluje údaje, upraví je a schválí (vznikne člen s rolí MEMBER), nebo zamítne */
+async function loadMemberRequests(){
+  if(AUTH_ROLE !== "ADMIN" && AUTH_ROLE !== "OWNER") return []
+  try{
+    const all = await api("memberrequests")
+    const list = Object.entries(all || {}).map(([uid, r]) => ({uid, ...r})).filter(r => r.status === "pending").sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+    window.__MEMBER_REQS = list
+    return list
+  }catch(err){ return [] }
+}
+
+async function refreshRequestsBadge(){
+  const btn = document.getElementById("sidebarMembers"); if(!btn) return
+  const n = (await loadMemberRequests()).length
+  btn.querySelector(".req-badge")?.remove()
+  if(n) btn.insertAdjacentHTML("beforeend", `<span class="req-badge" style="margin-left:auto;background:#ff3b30;color:#fff;border-radius:999px;font-size:11px;font-weight:600;padding:1px 7px">${n}</span>`)
+}
+
+function openMemberRequest(uid){
+  const r = (window.__MEMBER_REQS || []).find(x => x.uid === uid); if(!r) return
+  document.getElementById("reqModal")?.remove()
+  const voices = ["", "1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+  const row = (label, value) => `<div style="margin-bottom:10px"><div class="small">${label}</div><div style="overflow-wrap:anywhere">${value ? escapeHtml(value) : "—"}</div></div>`
+  const birth = /^(\d{4})-(\d{2})-(\d{2})$/.test(r.birth || "") ? r.birth.split("-").reverse().map(Number).join(". ") : r.birth
+  const inp = (id, label, value, type) => `<label style="display:block;margin-bottom:12px">${label}<br><input id="${id}" type="${type || "text"}" value="${escapeHtml(value || "")}" style="margin-top:4px"></label>`
+  const d = document.createElement("div")
+  d.id = "reqModal"; d.className = "modal"
+  d.innerHTML = `<div class="modal-backdrop" onclick="document.getElementById('reqModal').remove()"></div>
+    <div class="modal-content" style="padding:20px;max-height:90vh;overflow:auto">
+      <div class="modal-header">Žádost o členství</div>
+      ${row("E-mail (ověřený Googlem)", r.email)}${row("Datum narození", birth)}${row("Adresa", r.address)}${row("Číslo účtu", r.bank)}${row("Poznámka žadatele", r.note)}
+      <div class="small" style="margin:0 0 14px">Souhlas s podmínkami členství udělen ${escapeHtml(new Date(r.termsAcceptedAt || r.createdAt).toLocaleString("cs-CZ"))} (verze ${escapeHtml(r.termsVersion || "")}).</div>
+      ${inp("rqName", "Jméno", r.name)}${inp("rqPhone", "Telefon", r.phone, "tel")}
+      <label style="display:block;margin-bottom:12px">Hlas<br><select id="rqVoice" style="margin-top:4px">${voices.map(v => `<option value="${v}" ${v === (r.voice || "") ? "selected" : ""}>${v || "neuvedeno"}</option>`).join("")}</select></label>
+      ${inp("rqDiscord", "Discord ID", r.discord_id)}${inp("rqSince", "V 10men působí od", new Date().toISOString().slice(0, 10), "date")}
+      <div class="small" style="margin-bottom:6px">Po schválení vznikne člen s rolí MEMBER a žadatel se hned dostane do aplikace.</div>
+      <div class="btn-group" style="margin-top:12px"><button id="rqOk" class="ar-primary" style="background:#d4f5e2;color:#1a7a3a">Schválit jako člena</button><button id="rqNo" class="btn-danger">Zamítnout</button><button id="rqClose">Zavřít</button></div>
+    </div>`
+  document.body.appendChild(d)
+  const v = id => document.getElementById(id).value.trim()
+  const run = async (body, okMsg) => {
+    try{
+      d.remove(); showSaving()
+      await api("memberrequestdecide", {uid, ...body})
+      invalidateCache("members")
+      hideSaving(okMsg)
+      renderMembers(); refreshRequestsBadge()
+    }catch(err){
+      hideSaving("Chyba ✗"); alert("Chyba: " + err.message)
+    }
+  }
+  document.getElementById("rqClose").onclick = () => d.remove()
+  document.getElementById("rqOk").onclick = () => {
+    if(v("rqName").length < 2) return alert("Zadej jméno")
+    if(v("rqDiscord") && !/^\d{17,20}$/.test(v("rqDiscord"))) return alert("Discord ID má mít 17 až 20 číslic, nebo pole nech prázdné.")
+    run({action: "approve", edits: {name: v("rqName"), phone: v("rqPhone"), voice: v("rqVoice"), discord_id: v("rqDiscord"), since: v("rqSince")}}, "Člen přidán ✓")
+  }
+  document.getElementById("rqNo").onclick = () => {
+    const reason = prompt("Důvod zamítnutí (nepovinné, žadatel ho uvidí):")
+    if(reason === null) return
+    run({action: "reject", reason}, "Žádost zamítnuta")
+  }
+}
+
 async function openEditMember(id){
   const members = await api("members")
   const m = members.find(m => m.ID === id)
@@ -4884,6 +4949,19 @@ async function renderMembers(){
     html += `<div class="btn-group" style="margin-bottom:16px">
       <button onclick="openAddMember()">+ Přidat člena</button>
     </div>`
+
+    const reqs = await loadMemberRequests()
+    if(reqs.length){
+      html += `<h3 class="season-title">Žádosti o členství <span style="background:#ff3b30;color:#fff;border-radius:999px;font-size:12px;font-weight:600;padding:2px 8px;margin-left:6px">${reqs.length}</span></h3><div class="card" style="padding:0">`
+      reqs.forEach((r, i) => {
+        const border = i < reqs.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
+        html += `<div onclick="openMemberRequest('${escapeHtml(r.uid)}')" role="button" tabindex="0" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;${border}">
+          <div style="min-width:0"><div style="font-weight:600;font-size:15px">${escapeHtml(r.name)}</div>
+          <div class="small">${escapeHtml(r.voice || "hlas neuveden")} · ${escapeHtml(new Date(r.createdAt).toLocaleDateString("cs-CZ"))}</div></div>
+          <span class="small" style="color:#007aff;font-weight:600;white-space:nowrap">Zkontrolovat ›</span></div>`
+      })
+      html += `</div>`
+    }
 
     const voiceGroups = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
     voiceGroups.forEach(voice => {
@@ -7609,6 +7687,7 @@ window.openDeleteEventModal = openDeleteEventModal
 window.saveEntireSeries     = saveEntireSeries
 window.renderGuestView      = renderGuestView
 window.openAddMember        = openAddMember
+window.openMemberRequest    = openMemberRequest
 window.openEditMember       = openEditMember
 window.deleteMemberItem     = deleteMemberItem
 window.renderMembers        = renderMembers
