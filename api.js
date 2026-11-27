@@ -527,9 +527,9 @@ async function addEvent(params){
 
     // Discord oznámení
       if(!params.silent){
-        const config = await dbGet("/config")
-        const roleId = config?.discord_role_id
-          ? String(config.discord_role_id).replace(/"/g, '').trim()
+        const roleRaw = await dbGet("/config/discord_role_id")
+        const roleId = roleRaw
+          ? String(roleRaw).replace(/"/g, '').trim()
           : null
         const rolePing = roleId ? ('<@&' + roleId + '>') : ''
 
@@ -609,9 +609,9 @@ async function updateEvent(params){
   if((old?.date_end    || "") !== (params.date_end    || "")) zmeny.push("- **Datum konce:** ~~" + (old?.date_end ? formatDateSimple(old.date_end) : "—") + "~~ → " + (params.date_end ? formatDateSimple(params.date_end) : "—"))
 
   if(!params.silent && zmeny.length > 0){
-    const config = await dbGet("/config")
-    const roleId = config?.discord_role_id
-      ? String(config.discord_role_id).replace(/"/g, '').trim()
+    const roleRaw = await dbGet("/config/discord_role_id")
+    const roleId = roleRaw
+      ? String(roleRaw).replace(/"/g, '').trim()
       : null
     const rolePing = roleId ? ('<@&' + roleId + '>') : ''
 
@@ -674,9 +674,9 @@ async function deleteEvent(id, silent = false){
 
   // Discord
   if(!silent){
-    const config = await dbGet("/config")
-    const roleId = config?.discord_role_id
-      ? String(config.discord_role_id).replace(/"/g, '').trim()
+    const roleRaw = await dbGet("/config/discord_role_id")
+    const roleId = roleRaw
+      ? String(roleRaw).replace(/"/g, '').trim()
       : null
     const rolePing = roleId ? ('<@&' + roleId + '>') : ''
 
@@ -731,9 +731,9 @@ async function setProgram(params){
 
     // Discord oznámení
       const akceData = await dbGet("/akce/" + id)
-      const config = await dbGet("/config")
-      const roleId = config?.discord_role_id
-        ? String(config.discord_role_id).replace(/"/g, '').trim()
+      const roleRaw = await dbGet("/config/discord_role_id")
+      const roleId = roleRaw
+        ? String(roleRaw).replace(/"/g, '').trim()
         : null
       const rolePing = roleId ? ('<@&' + roleId + '>') : ''
     
@@ -963,7 +963,7 @@ async function getPayments(email){
   const vybery  = await dbGet("/vybery")
   const platby  = await dbGet("/platby")
   const members = await dbGet("/members")
-  const config  = await dbGet("/config")
+  const config  = await getPublicConfig()
 
   const active = objToArray(vybery).filter(v => v.active === "YES")
 
@@ -1427,36 +1427,38 @@ async function deleteMember(id){
 }
 
 // ===============================
-// NOTIFIKACE ONESIGNAL
+// NOTIFIKACE ONESIGNAL (přes server)
 // ===============================
 
-async function sendPush(title, message){
-  try{
-    const config = await dbGet("/config")
-    const apiKey = config?.onesignal_api_key
-    const appId  = "01477d89-1329-43f6-91f2-bb597d5a681e"
-    if(!apiKey){ console.log("Chybí API key"); return {error: "no key"} }
+// odeslání jde přes server (functions/notify.js): REST klíč OneSignalu a webhook Discordu klienti číst nesmějí
+const NOTIFY_URL = "https://us-central1-base-39f52.cloudfunctions.net/sendNotify"
 
-    console.log("Sending push notification...")
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+async function notifyServer(body){
+  try{
+    const token = await auth.currentUser.getIdToken()
+    const res = await fetch(NOTIFY_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Key " + apiKey
-      },
-      body: JSON.stringify({
-        app_id: appId,
-        included_segments: ["All"],
-        headings: {en: title, cs: title},
-        contents: {en: message, cs: message}
-      })
+      headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+      body: JSON.stringify(body)
     })
-    console.log("Response status:", response.status)
-    return {status: response.ok ? "sent" : "error"}
+    return await res.json().catch(() => ({error: "Chyba serveru"}))
   }catch(err){
-    console.error("sendPush error:", err)
+    console.error("notify error:", err)
     return {error: err.message}
   }
+}
+
+// /config obsahuje i tajemství (webhook, API klíče), která pravidla DB klientům nedají; čtou se jen tyto klíče
+const PUBLIC_CONFIG_KEYS = ["payment_account", "payment_iban", "payment_instructions", "payment_qr_url", "discord_role_id", "todo_sablony"]
+async function getPublicConfig(){
+  const vals = await Promise.all(PUBLIC_CONFIG_KEYS.map(k => dbGet("/config/" + k)))
+  const out = {}
+  PUBLIC_CONFIG_KEYS.forEach((k, i) => { if(vals[i] != null) out[k] = vals[i] })
+  return out
+}
+
+async function sendPush(title, message){
+  return await notifyServer({type: "push", title, message})
 }
 
 // ===============================
@@ -1464,29 +1466,7 @@ async function sendPush(title, message){
 // ===============================
 
 async function sendDiscordMessage(params){
-  const config = await dbGet("/config")
-  const webhookUrl = config?.discord_webhook
-  if(!webhookUrl) return {error: "Discord webhook není nastaven"}
-
-  const threadId = config?.discord_thread_id 
-  ? String(config.discord_thread_id).replace(/"/g, "").trim()
-  : null
-  const url = threadId ? `${webhookUrl}?thread_id=${threadId}` : webhookUrl
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: "10base",
-      content: params.message
-    })
-  })
-
-  console.log("Discord response status:", response.status)
-  const text = await response.text()
-  console.log("Discord response:", text)
-
-  return {status: response.ok ? "sent" : "error"}
+  return await notifyServer({type: "discord", message: params.message})
 }
 
 // ===============================
@@ -1769,7 +1749,7 @@ async function api(action, params = {}){
     case "deletemember":     return await deleteMember(params.id)
     case "sendpush":         return await sendPush(params.title, params.message)
     case "discord":          return await sendDiscordMessage(params)
-    case "getconfig":        return await dbGet("/config")
+    case "getconfig":        return await getPublicConfig()
     case "toggleridertodoo": return await toggleRiderTodo(params)
 
     default: throw new Error("Unknown action: " + action)

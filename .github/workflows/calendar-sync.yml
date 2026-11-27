@@ -6,12 +6,15 @@ on:
     - cron: '*/15 * * * *'  # každých 15 minut
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: npm install jsonwebtoken
+        run: npm install jsonwebtoken@9.0.2
 
       - name: Sync Google Calendar
         env:

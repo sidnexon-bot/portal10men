@@ -241,6 +241,23 @@ function escapeHtml(str){
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;")
+}
+
+// hodnota do řetězce v inline handleru (onclick="f('${jsArg(x)}')"): všechny znaky mimo [A-Za-z0-9 _.@-] jako \xNN,
+// takže se nedá vyskočit z řetězce ani z atributu (entity se v atributu dekódují ještě před JS, proto samotný escapeHtml nestačí)
+function jsArg(v){
+  return String(v == null ? "" : v).replace(/[^\w .@-]/g, c => {
+    const n = c.charCodeAt(0)
+    return n < 256 ? "\\x" + n.toString(16).padStart(2,"0") : "\\u" + n.toString(16).padStart(4,"0")
+  })
+}
+
+// odkaz z databáze smí být jen http(s) (jinak by šlo vložit javascript:)
+function safeUrl(u){
+  const t = String(u || "").trim()
+  return /^https?:\/\//i.test(t) ? t : ""
 }
 
 function formatDate(d){
@@ -631,7 +648,7 @@ function renderMultiDayHarmonogram(){
             `
           }).join("")}
         </div>
-        <button type="button" onclick="addHarmonogramRowForDay('${day}')" style="width:100%;margin-top:4px">+ Přidat položku</button>
+        <button type="button" onclick="addHarmonogramRowForDay('${jsArg(day)}')" style="width:100%;margin-top:4px">+ Přidat položku</button>
       </div>
     `
   }).join("")
@@ -1120,7 +1137,7 @@ async function renderDashboard(){
 
     // pomocná funkce pro kartu nejbližší akce
     const nearestEventHtml = upcoming ? `
-      <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${escapeHtml(upcoming.ID)}')">
+      <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${jsArg(upcoming.ID)}')">
         <div class="event-label">Nejbližší akce</div>
         <b style="font-size:18px;display:block;margin-bottom:8px">${escapeHtml(upcoming.NAME)}</b>
         <div class="info-row">
@@ -1142,7 +1159,7 @@ async function renderDashboard(){
         ${(upcoming.PLACE || upcoming.CALL_URL) ? `
           <div class="btn-group" style="margin-bottom:16px">
             ${upcoming.PLACE ? `
-              <a class="ar-btn" href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank"
+              <a class="ar-btn" href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank" rel="noopener noreferrer"
                 onclick="event.stopPropagation()"
                 style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -1153,7 +1170,7 @@ async function renderDashboard(){
               </a>
             ` : ""}
             ${upcoming.CALL_URL ? `
-              <a class="ar-btn" href="${escapeHtml(upcoming.CALL_URL)}" target="_blank"
+              <a class="ar-btn" href="${escapeHtml(safeUrl(upcoming.CALL_URL))}" target="_blank" rel="noopener noreferrer"
                 onclick="event.stopPropagation()"
                 style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -1184,7 +1201,7 @@ async function renderDashboard(){
             const past = todayCheck < nowCheck
             const border = i < spring.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             const countdown = !past && e.STATUS !== "Zrušená" ? dnyDo(e.DATE) : null
-            return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+            return `<div onclick="openEvent('${jsArg(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
                 <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
@@ -1210,7 +1227,7 @@ async function renderDashboard(){
             const past = todayCheck < nowCheck
             const border = i < autumn.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             const countdown = !past && e.STATUS !== "Zrušená" ? dnyDo(e.DATE) : null
-            return `<div onclick="openEvent('${escapeHtml(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
+            return `<div onclick="openEvent('${jsArg(e.ID)}')" style="padding:14px 16px;cursor:pointer;${border}opacity:${past ? "0.4" : "1"}">
               ${e.STATUS === "Zrušená" ? `<div style="font-size:11px;color:#ff3b30;font-weight:600;margin-bottom:2px;text-transform:uppercase">Zrušená</div>` : ""}
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
                 <b style="font-size:15px;display:block;${e.STATUS === "Zrušená" ? "text-decoration:line-through;color:var(--muted)" : ""}">${isToday(e.DATE) ? "DNES: " : ""}${escapeHtml(e.NAME)}</b>
@@ -1234,7 +1251,7 @@ async function renderDashboard(){
             const border = idx < aktuality.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div
               style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-              onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "')" : ""}"
+              onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + jsArg(a.id) + "')" : ""}"
             >
               <div style="display:flex;justify-content:space-between;align-items:flex-start">
                 <div style="flex:1">
@@ -1245,8 +1262,8 @@ async function renderDashboard(){
               </div>
               ${isSelected ? `
                 <div class="btn-group" style="margin-top:10px">
-                  <button class="btn-info" onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>
-                  <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')">Smazat</button>
+                  <button class="btn-info" onclick="event.stopPropagation();editAktualita('${jsArg(a.id)}','${jsArg(a.text||"")}','${jsArg(a.date||"")}')">Upravit</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${jsArg(a.id)}')">Smazat</button>
                 </div>
               ` : ""}
             </div>`
@@ -1280,7 +1297,7 @@ async function renderDashboard(){
           <div class="event-label" style="padding:16px 16px 0">Kontakty</div>
           ${sortedMembers.map((m, i) => {
             const border = i < sortedMembers.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
-            return `<div onclick="openContactModal('${escapeHtml(m.ID)}')"
+            return `<div onclick="openContactModal('${jsArg(m.ID)}')"
               style="padding:14px 16px;${border}cursor:pointer">
               <div style="display:flex;justify-content:space-between;align-items:center">
                 <div>
@@ -1411,7 +1428,7 @@ function ukolyMojeHtml(myTasks){
                        t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
           const open = t.kind === "marketing" ? `openEvent('${escapeHtml(t.akceId)}')` : ""
           return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
-            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('${t.kind}','${escapeHtml(t.akceId || "")}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
+            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('${jsArg(t.kind)}','${jsArg(t.akceId || "")}','${jsArg(t.id)}')" style="width:auto;margin-top:3px">
             <div style="flex:1;min-width:0;${open ? "cursor:pointer" : ""}" ${open ? `onclick="${open}"` : ""}>
               <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
               <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
@@ -1431,8 +1448,8 @@ function ukolyMarketingHtml(mkAll){
           const border = idx < mkAll.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
           const sub = [mkKanalyText(t), t.akceNazev, t.datum ? mkWhen(t) : ""].filter(Boolean).map(escapeHtml).join(" · ")
           return `<div style="padding:12px 16px;${border}display:flex;align-items:flex-start;gap:10px">
-            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('marketing','${escapeHtml(t.akceId)}','${escapeHtml(t.id)}')" style="width:auto;margin-top:3px">
-            <div style="flex:1;min-width:0;cursor:pointer" onclick="openEvent('${escapeHtml(t.akceId)}')">
+            <input type="checkbox" aria-label="Hotovo: ${escapeHtml(t.text)}" onchange="finishMyTask('marketing','${jsArg(t.akceId)}','${jsArg(t.id)}')" style="width:auto;margin-top:3px">
+            <div style="flex:1;min-width:0;cursor:pointer" onclick="openEvent('${jsArg(t.akceId)}')">
               <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
               <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
               ${t.assignee ? `<div class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</div>` : ""}
@@ -1450,7 +1467,7 @@ function ukolyVsechnyHtml(todos, mkAll){
             const border     = idx < todos.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div
               style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-              onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + escapeHtml(t.id) + "')" : ""}"
+              onclick="${MEMBER_ROLE === "ADMIN" ? "selectTodo('" + jsArg(t.id) + "')" : ""}"
             >
               <div style="display:flex;align-items:center;gap:10px">
                 <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${done ? "#34c759" : "#c7c7cc"};background:${done ? "#34c759" : "transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1463,9 +1480,9 @@ function ukolyVsechnyHtml(todos, mkAll){
               </div>
               ${isSelected ? `
                 <div class="btn-group" style="margin-top:10px">
-                  <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${escapeHtml(t.id)}','${escapeHtml(t.text).replaceAll("'","\\'")}','${t.deadline||""}')">Upravit</button>
-                  <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${escapeHtml(t.id)}')">Smazat</button>
-                  <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${escapeHtml(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
+                  <button class="btn-info" onclick="event.stopPropagation();editTodoItem('${jsArg(t.id)}','${jsArg(t.text)}','${jsArg(t.deadline||"")}')">Upravit</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteTodoItem('${jsArg(t.id)}')">Smazat</button>
+                  <button class="btn-success" onclick="event.stopPropagation();toggleTodo('${jsArg(t.id)}',${!done})">${done ? "Znovu otevřít" : "Vyřešeno"}</button>
                 </div>
               ` : ""}
             </div>`
@@ -1482,7 +1499,7 @@ function ukolyVsechnyHtml(todos, mkAll){
 function ukolyCardHtml(myTasks, todos, mkAll){
   const tab = ukolyTab(myTasks.length)
   const openTodos = (Array.isArray(todos) ? todos.filter(t => t.done !== true).length : 0) + (Array.isArray(mkAll) ? mkAll.length : 0)
-  const btn = (id, label, n) => `<button type="button" role="tab" data-ukoly-tab="${id}" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" onclick="setUkolyTab('${id}')">${label} <span data-ukoly-count="${id}" style="font-weight:400;opacity:.7">· ${n}</span></button>`
+  const btn = (id, label, n) => `<button type="button" role="tab" data-ukoly-tab="${id}" class="${tab === id ? "on" : ""}" aria-selected="${tab === id}" onclick="setUkolyTab('${jsArg(id)}')">${label} <span data-ukoly-count="${id}" style="font-weight:400;opacity:.7">· ${n}</span></button>`
   return `
     <div class="card dash-todos" style="padding:0;margin-top:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 0">
@@ -1546,7 +1563,7 @@ async function deleteTodoItem(id){
 
 function concertRow(e, now){
   const past = new Date(e.DATE) < now
-  return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${escapeHtml(e.ID)}')">
+  return `<div class="card concert-row${past ? " muted" : ""}" onclick="openEvent('${jsArg(e.ID)}')">
     <b>${isToday(e.DATE) ? "🔥 " : ""}${escapeHtml(e.NAME)}</b>
     <span class="small concert-date">${formatDate(e.DATE)}${e.PLACE ? " · " + escapeHtml(e.PLACE) : ""}</span>
   </div>`
@@ -1919,7 +1936,7 @@ function evSegHtml(id, options, value, onpick){
   const i = options.findIndex(o => o[0] === value)
   return `<input type="hidden" id="${id}" value="${escapeHtml(value || "")}">
     <div class="ev-seg${i < 0 ? " none" : ""}" role="radiogroup" data-ev-for="${id}">` +
-    options.map(([v, l, ic], k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-v="${escapeHtml(v)}" onclick="${onpick || "evPick"}('${id}', this)">${ic || ""}<span>${escapeHtml(l)}</span></button>`).join("") + `</div>`
+    options.map(([v, l, ic], k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-v="${escapeHtml(v)}" onclick="${onpick || "evPick"}('${jsArg(id)}', this)">${ic || ""}<span>${escapeHtml(l)}</span></button>`).join("") + `</div>`
 }
 // pilulka vybrané volby se přesouvá podle změřené polohy (volby mají různou šířku); ResizeObserver ji dopočítá, když se přepínač ukáže nebo změní velikost
 function evSegLayout(seg){
@@ -2007,9 +2024,9 @@ function evFormHtml(isEdit, id, event, dateVal){
     <div class="form-foot ev-foot">
       <div class="ev-needs-type" style="${isEdit ? "" : "display:none"}">${evSwitch("fNotify", "Poslat do Discordu", notify)}</div>
       <div class="btn-group">
-        <button type="button" class="btn-primary ev-needs-type" style="${isEdit ? "" : "display:none"}" onclick="saveEvent(${isEdit ? `'${id}'` : "null"}, evNotify())">${isEdit ? "Uložit" : "Vytvořit akci"}</button>
+        <button type="button" class="btn-primary ev-needs-type" style="${isEdit ? "" : "display:none"}" onclick="saveEvent(${isEdit ? `'${jsArg(id)}'` : "null"}, evNotify())">${isEdit ? "Uložit" : "Vytvořit akci"}</button>
         <button type="button" class="btn-secondary" onclick="guardedClose('eventFormModal')">Zrušit</button>
-        ${isEdit ? `<button type="button" class="btn-danger" onclick="evSmazat('${id}')">Smazat akci</button>` : ""}
+        ${isEdit ? `<button type="button" class="btn-danger" onclick="evSmazat('${jsArg(id)}')">Smazat akci</button>` : ""}
       </div>
     </div>
   </div>`
@@ -2017,7 +2034,7 @@ function evFormHtml(isEdit, id, event, dateVal){
 function evTypeHtml(sel){
   const i = EV_TYPES.indexOf(sel)
   return `<div class="ev-seg ev-types${i < 0 ? " none" : ""}" role="radiogroup" aria-label="Typ akce">` +
-    EV_TYPES.map((t, k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-t="${t}" onclick="evOnType('${t}', this)"><span>${t === "Jiná akce" ? "Jiná" : t}</span></button>`).join("") + `</div>`
+    EV_TYPES.map((t, k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" data-t="${t}" onclick="evOnType('${jsArg(t)}', this)"><span>${t === "Jiná akce" ? "Jiná" : t}</span></button>`).join("") + `</div>`
 }
 
 const evNotify = () => { const v = !!document.getElementById("fNotify")?.checked; try{ localStorage.setItem("tenEvNotify", v ? "1" : "0") }catch(e){} return v }
@@ -2319,15 +2336,15 @@ function renderRiderListHtml(key){
   return items.map((item, idx) => `
     <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center">
       <input type="time" value="${escapeHtml(item.cas || "")}"
-        oninput="updateRiderRow('${key}', ${idx}, 'cas', this.value)"
+        oninput="updateRiderRow('${jsArg(key)}', ${idx}, 'cas', this.value)"
         style="width:100px;flex-shrink:0">
       <input type="text" value="${escapeHtml(item.nazev || "")}" placeholder="Název"
-        oninput="updateRiderRow('${key}', ${idx}, 'nazev', this.value)"
+        oninput="updateRiderRow('${jsArg(key)}', ${idx}, 'nazev', this.value)"
         style="flex:1">
-      <button class="btn-danger" type="button" onclick="removeRiderRow('${key}', ${idx})" style="width:auto;padding:8px 10px;flex-shrink:0">✕</button>
+      <button class="btn-danger" type="button" onclick="removeRiderRow('${jsArg(key)}', ${idx})" style="width:auto;padding:8px 10px;flex-shrink:0">✕</button>
     </div>
     <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Poznámka (volitelné)"
-      oninput="updateRiderRow('${key}', ${idx}, 'poznamka', this.value)"
+      oninput="updateRiderRow('${jsArg(key)}', ${idx}, 'poznamka', this.value)"
       style="margin-bottom:10px;font-size:13px">
   `).join("")
 }
@@ -2486,9 +2503,9 @@ function renderRiderHarmonogramHtml(){
     <div class="hg${HG_PICK ? " hg-pick" : ""}">
       <div class="hg-bank" id="hgBank">
         <div class="hg-bt">Banka dílků</div>
-        <div class="hg-chips">${HG_PIECES.map(([k, l]) => `<div class="hg-chip" data-hg-src="bank-piece" data-kind="${k}"><button type="button" class="hg-grip" aria-label="Přetáhnout dílek ${l}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAdd('${k}')">${HG_IC[k]}${l}</button></div>`).join("")}</div>
+        <div class="hg-chips">${HG_PIECES.map(([k, l]) => `<div class="hg-chip" data-hg-src="bank-piece" data-kind="${k}"><button type="button" class="hg-grip" aria-label="Přetáhnout dílek ${l}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAdd('${jsArg(k)}')">${HG_IC[k]}${l}</button></div>`).join("")}</div>
         <div class="hg-bt">Skladby z programu</div>
-        <div class="hg-chips">${bank.length ? bank.map(s => `<div class="hg-chip" data-hg-src="bank-song" data-sid="${escapeHtml(String(s.song_id))}"><button type="button" class="hg-grip" aria-label="Přetáhnout skladbu ${escapeHtml(s.name)}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAddSong('${escapeHtml(String(s.song_id))}')">${escapeHtml(s.name)}</button></div>`).join("")
+        <div class="hg-chips">${bank.length ? bank.map(s => `<div class="hg-chip" data-hg-src="bank-song" data-sid="${escapeHtml(String(s.song_id))}"><button type="button" class="hg-grip" aria-label="Přetáhnout skladbu ${escapeHtml(s.name)}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAddSong('${jsArg(String(s.song_id))}')">${escapeHtml(s.name)}</button></div>`).join("")
           : `<div class="hg-hint" style="padding:0">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
       </div>
       <div class="hg-axis" id="hgAxis">${hgAxisHtml(items, out)}</div>
@@ -2707,9 +2724,9 @@ function hgSheetHtml(){
   <div class="hg-sheet" role="dialog" aria-modal="true" aria-label="Přidat do harmonogramu">
     <div class="hg-sh"><span>Přidat do harmonogramu</span><button type="button" class="hg-x" aria-label="Zavřít" onclick="hgSheetDismiss()">${HG_IC.close}</button></div>
     <div class="hg-lb">Dílky</div>
-    <div class="hg-grid">${HG_PIECES.map(([k, l]) => `<button type="button" class="hg-tile${k === "blok" ? " wide" : ""}" onclick="hgPickPiece('${k}')">${HG_IC[k]}<b>${l}</b><small>${HG_DESC[k] || ""}</small></button>`).join("")}</div>
+    <div class="hg-grid">${HG_PIECES.map(([k, l]) => `<button type="button" class="hg-tile${k === "blok" ? " wide" : ""}" onclick="hgPickPiece('${jsArg(k)}')">${HG_IC[k]}<b>${l}</b><small>${HG_DESC[k] || ""}</small></button>`).join("")}</div>
     <div class="hg-lb">Skladby z programu${n ? ` · ${n} ${n === 1 ? "volná" : n < 5 ? "volné" : "volných"}` : ""}</div>
-    <div class="hg-slist">${n ? bank.map(s => `<button type="button" class="hg-srow" onclick="hgPickSong('${escapeHtml(String(s.song_id))}')"><em>${HG_IC.plus}</em><span>${escapeHtml(s.name)}</span></button>`).join("") : `<div class="hg-hint">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
+    <div class="hg-slist">${n ? bank.map(s => `<button type="button" class="hg-srow" onclick="hgPickSong('${jsArg(String(s.song_id))}')"><em>${HG_IC.plus}</em><span>${escapeHtml(s.name)}</span></button>`).join("") : `<div class="hg-hint">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
   </div>`
 }
 function hgSheetOpen(){
@@ -2795,20 +2812,20 @@ function renderRiderTodoHtml(fazeKey){
   return mirror + items.map((item, idx) => `
     <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;padding:8px;background:var(--card);border-radius:10px">
       <input type="checkbox" ${item.done ? "checked" : ""}
-        onchange="updateRiderTodoField('${fazeKey}', ${idx}, 'done', this.checked)"
+        onchange="updateRiderTodoField('${jsArg(fazeKey)}', ${idx}, 'done', this.checked)"
         style="width:auto;margin-top:10px;flex-shrink:0">
       <div style="flex:1;display:flex;flex-direction:column;gap:6px">
         <input type="text" value="${escapeHtml(item.co || "")}" placeholder="Co je třeba"
-          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'co', this.value)"
+          oninput="updateRiderTodoField('${jsArg(fazeKey)}', ${idx}, 'co', this.value)"
           style="${item.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">
         <input type="text" value="${escapeHtml(item.kdo || "")}" placeholder="Kdo to zařídí"
-          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'kdo', this.value)"
+          oninput="updateRiderTodoField('${jsArg(fazeKey)}', ${idx}, 'kdo', this.value)"
           style="font-size:13px">
         <input type="text" value="${escapeHtml(item.poznamka || "")}" placeholder="Poznámka (volitelné)"
-          oninput="updateRiderTodoField('${fazeKey}', ${idx}, 'poznamka', this.value)"
+          oninput="updateRiderTodoField('${jsArg(fazeKey)}', ${idx}, 'poznamka', this.value)"
           style="font-size:13px">
       </div>
-      <button class="btn-danger" type="button" onclick="removeRiderTodoItem('${fazeKey}', ${idx})" style="width:auto;padding:6px 10px;flex-shrink:0">✕</button>
+      <button class="btn-danger" type="button" onclick="removeRiderTodoItem('${jsArg(fazeKey)}', ${idx})" style="width:auto;padding:6px 10px;flex-shrink:0">✕</button>
     </div>
   `).join("")
 }
@@ -3063,20 +3080,20 @@ function dopravaCardHtml(){
     return `
     <div style="padding:14px 0;border-top:1px solid rgba(128,128,128,0.1)">
       ${hlavicka(p, o, barva)}
-      ${omezene ? "" : `<label style="${lbl}">Auto<br><select onchange="dopravaAdminAuto('${r}', this.value)">${moznosti(p.ridic, p.auto_id || "", p)}</select></label>`}
+      ${omezene ? "" : `<label style="${lbl}">Auto<br><select onchange="dopravaAdminAuto('${jsArg(r)}', this.value)">${moznosti(p.ridic, p.auto_id || "", p)}</select></label>`}
       <div style="display:flex;gap:10px;align-items:flex-end">
-        ${omezene ? (p.carsharing ? `<label style="${lbl};flex:1">Volná místa<br><input type="number" min="1" max="8" step="1" inputmode="numeric" value="${Math.max(1, (Number(p.auto_mist) || 2) - 1)}" onchange="dopravaRidicVolna('${r}', this.value)"></label>` : "")
-        : `<label style="${lbl};flex:1">Míst včetně řidiče<br><input type="number" min="2" max="9" step="1" inputmode="numeric" value="${Number(p.auto_mist) || ""}" onchange="dopravaAdminMist('${r}', this.value)"></label>`}
-        <label style="${lbl};flex:1">Pro jiné než členy<br><input type="number" min="0" max="8" step="1" inputmode="numeric" value="${Number(p.auto_rezervovano) || 0}" onchange="dopravaAdminRez('${r}', this.value)"></label>
+        ${omezene ? (p.carsharing ? `<label style="${lbl};flex:1">Volná místa<br><input type="number" min="1" max="8" step="1" inputmode="numeric" value="${Math.max(1, (Number(p.auto_mist) || 2) - 1)}" onchange="dopravaRidicVolna('${jsArg(r)}', this.value)"></label>` : "")
+        : `<label style="${lbl};flex:1">Míst včetně řidiče<br><input type="number" min="2" max="9" step="1" inputmode="numeric" value="${Number(p.auto_mist) || ""}" onchange="dopravaAdminMist('${jsArg(r)}', this.value)"></label>`}
+        <label style="${lbl};flex:1">Pro jiné než členy<br><input type="number" min="0" max="8" step="1" inputmode="numeric" value="${Number(p.auto_rezervovano) || 0}" onchange="dopravaAdminRez('${jsArg(r)}', this.value)"></label>
       </div>
       <div style="${lbl}"><span class="small">Spolucestující</span>
         ${spolu.length ? spolu.map(id => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px">
           <span>${escapeHtml(jmeno(id))}</span>
-          <button type="button" class="btn-secondary" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button></div>`).join("") : `<div class="small" style="margin-top:4px">Zatím nikdo.</div>`}
-        ${bezMista.length && !omezene ? `<select style="margin-top:8px" onchange="dopravaAdminPridat('${r}', this.value)"><option value="">+ Přidat spolucestujícího…</option>
+          <button type="button" class="btn-secondary" onclick="dopravaOdebrat('${jsArg(r)}', '${jsArg(q(id))}')">Odebrat</button></div>`).join("") : `<div class="small" style="margin-top:4px">Zatím nikdo.</div>`}
+        ${bezMista.length && !omezene ? `<select style="margin-top:8px" onchange="dopravaAdminPridat('${jsArg(r)}', this.value)"><option value="">+ Přidat spolucestujícího…</option>
           ${bezMista.map(m => `<option value="${escapeHtml(m.ID || m.id)}">${escapeHtml(m.NAME || m.name)}</option>`).join("")}</select>` : ""}
       </div>
-      <div class="btn-group" style="margin-top:12px"><button type="button" class="btn-danger" onclick="dopravaZrusit('${r}')">Zrušit auto</button></div>
+      <div class="btn-group" style="margin-top:12px"><button type="button" class="btn-danger" onclick="dopravaZrusit('${jsArg(r)}')">Zrušit auto</button></div>
     </div>`
   }
 
@@ -3104,15 +3121,15 @@ function dopravaCardHtml(){
       ${spolu.length ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
         ${spolu.map(id => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span>${escapeHtml(jmeno(id))}${ja && id === ja.id ? ` <span class="small">(ty)</span>` : ""}</span>
-          ${moje ? `<button type="button" class="btn-secondary" onclick="dopravaOdebrat('${r}', '${q(id)}')">Odebrat</button>` : ""}
+          ${moje ? `<button type="button" class="btn-secondary" onclick="dopravaOdebrat('${jsArg(r)}', '${jsArg(q(id))}')">Odebrat</button>` : ""}
         </div>`).join("")}</div>` : ""}
       ${ridicRezim ? "" : `<div class="btn-group" style="margin-top:12px">
-        ${muzu && !maMisto && !plno ? `<button type="button" class="btn-primary" onclick="dopravaPridat('${r}')">Pojedu tímto autem</button>` : ""}
+        ${muzu && !maMisto && !plno ? `<button type="button" class="btn-primary" onclick="dopravaPridat('${jsArg(r)}')">Pojedu tímto autem</button>` : ""}
         ${muzu && !maMisto && plno ? `<span class="small">Auto je plné.</span>` : ""}
         ${muzu && jedu === p ? `<button type="button" class="btn-secondary" onclick="dopravaOdejit()">Nepojedu</button>` : ""}
         ${moje ? `<button type="button" class="btn-secondary" onclick="dopravaRidic(true)">Upravit</button>` : ""}
         ${moje && p.carsharing ? `<button type="button" class="btn-secondary" onclick="dopravaMista()">Změnit počet míst</button>` : ""}
-        ${moje ? `<button type="button" class="btn-danger" onclick="dopravaZrusit('${r}')">Zrušit auto</button>` : ""}
+        ${moje ? `<button type="button" class="btn-danger" onclick="dopravaZrusit('${jsArg(r)}')">Zrušit auto</button>` : ""}
       </div>`}
     </div>`
   }
@@ -3352,7 +3369,7 @@ async function openEvent(id){
           ${(event.PLACE || event.CALL_URL) ? `
             <div class="btn-group" style="margin-top:12px">
    ${event.PLACE ? `
-                <a class="ar-btn" href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank"
+                <a class="ar-btn" href="https://maps.google.com/?q=${encodeURIComponent(event.PLACE)}" target="_blank" rel="noopener noreferrer"
                   style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
@@ -3362,7 +3379,7 @@ async function openEvent(id){
                 </a>
               ` : ""}
    ${event.CALL_URL ? `
-                <a class="ar-btn" href="${escapeHtml(event.CALL_URL)}" target="_blank"
+                <a class="ar-btn" href="${escapeHtml(safeUrl(event.CALL_URL))}" target="_blank" rel="noopener noreferrer"
                   style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 14px;min-height:36px;background:var(--btn-bg);border:1px solid var(--card-border);border-radius:8px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -3425,7 +3442,7 @@ async function openEvent(id){
                   <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">${escapeHtml(item.KDO_SI_DA)}</td>
                   <td style="padding:6px 4px;border-bottom:1px solid rgba(128,128,128,0.08)">
                     ${item.ADDED_BY === MEMBER_EMAIL || MEMBER_ROLE === "ADMIN" ? `
-                      <button class="btn-danger" onclick="deleteGrilovackaItem('${item.ID}','${id}')" style="padding:4px 8px;font-size:11px;width:auto">✕</button>
+                      <button class="btn-danger" onclick="deleteGrilovackaItem('${jsArg(item.ID)}','${jsArg(id)}')" style="padding:4px 8px;font-size:11px;width:auto">✕</button>
                     ` : ""}
                   </td>
                 </tr>
@@ -3434,7 +3451,7 @@ async function openEvent(id){
           </table>
         ` : `<p class="notice" style="margin:0">Zatím nikdo nic nepřidal.</p>`}
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.1)">
-          <button onclick="openGrilovackaModal('${id}')" style="width:100%">+ Přidat položku</button>
+          <button onclick="openGrilovackaModal('${jsArg(id)}')" style="width:100%">+ Přidat položku</button>
         </div>
         </div>
       </div>`
@@ -3461,7 +3478,7 @@ async function openEvent(id){
               ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
             </div>
             <div style="display:flex;align-items:center;gap:8px">
-              ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
+              ${p.PDF ? `<a href="${escapeHtml(safeUrl(noteLink(p.PDF)))}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
             </div>
           </div>
         `).join("")}
@@ -3475,7 +3492,7 @@ async function openEvent(id){
                   ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                  ${p.PDF ? `<a href="${escapeHtml(noteLink(p.PDF))}" target="_blank" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
+                  ${p.PDF ? `<a href="${escapeHtml(safeUrl(noteLink(p.PDF)))}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
                 </div>
               </div>
             `).join("")}
@@ -3483,14 +3500,14 @@ async function openEvent(id){
         ` : ""}
         ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${id}')" style="width:100%">Upravit program</button>
+            <button onclick="openProgramEditor('${jsArg(id)}')" style="width:100%">Upravit program</button>
           </div>
         ` : ""}
       ` : `
         <p class="notice" style="margin:0">Program není k dispozici</p>
         ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${id}')" style="width:100%">Vytvořit program</button>
+            <button onclick="openProgramEditor('${jsArg(id)}')" style="width:100%">Vytvořit program</button>
           </div>
         ` : ""}
       `}
@@ -3519,7 +3536,7 @@ async function openEvent(id){
               ${mkMirrorHtml(mkTasks)}
               ${todoPred.map((t, idx) => `
                 <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${id}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${jsArg(id)}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
                     ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
@@ -3533,7 +3550,7 @@ async function openEvent(id){
               <span class="small" style="font-weight:600;display:block;margin-bottom:6px">V den koncertu</span>
               ${todoDen.map((t, idx) => `
                 <div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${id}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
+                  <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${jsArg(id)}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
                     ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
@@ -3564,7 +3581,7 @@ async function openEvent(id){
     const attAdminHtml = (MEMBER_ROLE === "ADMIN" && event.STATUS !== "Zrušená" && startedAlready) ? `
         <div class="att-admin">
           ${fin ? `<div class="small" style="margin-bottom:8px">✓ Docházka potvrzena${event.ATTENDANCE_FINAL_AT ? " " + escapeHtml(formatDate(event.ATTENDANCE_FINAL_AT)) : ""}. Do statistik se počítá skutečná účast.</div>` : `<div class="small" style="margin-bottom:8px">Označ, kdo opravdu přišel. Potvrzená docházka platí do statistik místo toho, co si členové zadali.</div>`}
-          <div class="btn-group" data-ar-skip><button class="${fin ? "" : "btn-primary"}" onclick="openAttendanceCheck('${id}')">${fin ? "Upravit docházku" : "Odškrtnout docházku"}</button></div>
+          <div class="btn-group" data-ar-skip><button class="${fin ? "" : "btn-primary"}" onclick="openAttendanceCheck('${jsArg(id)}')">${fin ? "Upravit docházku" : "Odškrtnout docházku"}</button></div>
         </div>` : ""
     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
     const statusText  = myStatus || "Nevyplněno"
@@ -3578,7 +3595,7 @@ async function openEvent(id){
       ${event.STATUS === "Zrušená" ? `
         <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
       ` : MEMBER_EMAIL ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="event.stopPropagation();toggleAttendanceAccordion('${id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="event.stopPropagation();toggleAttendanceAccordion('${jsArg(id)}')">
           <div>
             <div style="font-weight:600;color:${statusColor}">${statusText}</div>
             ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
@@ -3588,9 +3605,9 @@ async function openEvent(id){
         <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
           <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
           <div class="btn-group" data-ar-skip>
-            <button onclick="doAttendance('${id}','Přijdu')">Přijdu</button>
-            <button onclick="doAttendanceMozna('${id}')">Možná</button>
-            <button onclick="doAttendanceWithReason('${id}','Nepřijdu')">Nepřijdu</button>
+            <button onclick="doAttendance('${jsArg(id)}','Přijdu')">Přijdu</button>
+            <button onclick="doAttendanceMozna('${jsArg(id)}')">Možná</button>
+            <button onclick="doAttendanceWithReason('${jsArg(id)}','Nepřijdu')">Nepřijdu</button>
           </div>
         </div>
       ` : `<div class="muted">Vyber člena</div>`}
@@ -3623,7 +3640,7 @@ async function openEvent(id){
 
     // --- INFODOKUMENT ---
     if(event.DOC_URL){
-      html += `<a href="${escapeHtml(event.DOC_URL)}" target="_blank"
+      html += `<a href="${escapeHtml(safeUrl(event.DOC_URL))}" target="_blank" rel="noopener noreferrer"
         style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
         Otevřít infodokument
       </a>`
@@ -3636,8 +3653,8 @@ async function openEvent(id){
 
       if(MEMBER_ROLE === "ADMIN"){
         html += `<div class="btn-group">
-          <button onclick="openEditEventModal('${id}')">Upravit akci</button>
-          <button class="btn-danger" onclick="openDeleteEventModal('${id}')">Smazat</button>
+          <button onclick="openEditEventModal('${jsArg(id)}')">Upravit akci</button>
+          <button class="btn-danger" onclick="openDeleteEventModal('${jsArg(id)}')">Smazat</button>
         </div>`
       }
 
@@ -3689,8 +3706,8 @@ function openEditEventModal(id){
     <p class="small">Chceš upravit jen tuto akci, tuto a všechny následující, nebo celou sérii?</p>`
 
   btnGroup.innerHTML = `
-    <button onclick="closeFormModal();openEventForm('${id}')" style="flex:1">Jen tuto akci</button>
-    <button onclick="closeFormModal();openEditSeriesFrom('${id}')" style="flex:1;background:#e8e8ed;color:#007aff">Tuto a následující</button>`
+    <button onclick="closeFormModal();openEventForm('${jsArg(id)}')" style="flex:1">Jen tuto akci</button>
+    <button onclick="closeFormModal();openEditSeriesFrom('${jsArg(id)}')" style="flex:1;background:#e8e8ed;color:#007aff">Tuto a následující</button>`
 
   const row2 = document.createElement("div")
   row2.style.cssText = "display:flex;gap:8px;margin-top:8px;width:100%"
@@ -3808,7 +3825,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
   const done = tasks.filter(t => t.done).length, late = tasks.filter(mkLate).length
   const row = t => `
     <div data-mk-row="${escapeHtml(t.id)}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.08)">
-      <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleMarketingTask('${id}','${escapeHtml(t.id)}',this.checked)" aria-label="Hotovo: ${escapeHtml(mkTitle(t))}" style="width:auto;margin-top:3px">
+      <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleMarketingTask('${jsArg(id)}','${jsArg(t.id)}',this.checked)" aria-label="Hotovo: ${escapeHtml(mkTitle(t))}" style="width:auto;margin-top:3px">
       <div style="flex:1;min-width:0">
         <div data-mk-title style="font-weight:600;${t.done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(mkTitle(t))}</div>
         <div class="small">${escapeHtml(mkKanalyText(t))}${t.format ? " · " + escapeHtml(t.format) : ""} · ${escapeHtml(mkWhen(t))}${t.datum && t.datum < mkToday() ? ` · <span data-mk-late style="color:#ff3b30;font-weight:600;display:${t.done ? "none" : "inline"}">po termínu</span>` : ""}</div>
@@ -3817,8 +3834,8 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
         ${t.done && t.doneBy ? `<div class="small" style="color:var(--muted)">Hotovo: ${escapeHtml(t.doneBy)}${t.doneVia === "marek" ? " (schválený text z Marka)" : ""}</div>` : ""}
       </div>
       ${canEdit ? `<div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn-info" type="button" onclick="event.stopPropagation();editMarketingTask('${id}','${escapeHtml(t.id)}')" style="width:auto;padding:6px 10px">Upravit</button>
-        <button class="btn-danger" type="button" onclick="event.stopPropagation();deleteMarketingTask('${id}','${escapeHtml(t.id)}')" style="width:auto;padding:6px 10px" aria-label="Smazat úkol">✕</button>
+        <button class="btn-info" type="button" onclick="event.stopPropagation();editMarketingTask('${jsArg(id)}','${jsArg(t.id)}')" style="width:auto;padding:6px 10px">Upravit</button>
+        <button class="btn-danger" type="button" onclick="event.stopPropagation();deleteMarketingTask('${jsArg(id)}','${jsArg(t.id)}')" style="width:auto;padding:6px 10px" aria-label="Smazat úkol">✕</button>
       </div>` : ""}
     </div>`
   return `<div class="event-card" id="mkCard" style="margin-bottom:16px;padding:0">
@@ -3829,7 +3846,7 @@ function renderMarketingHtml(id, event, tasks, canEdit, access){
     <div id="accBody_marketing" style="display:none;padding:0 16px 16px">
       ${access ? `<div class="small" style="margin-top:8px"><a href="${MAREK_URL}?prehled=1" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--blue,#007aff);font-weight:600">Přehled týmu, texty a přidělování v Markovi ›</a></div>` : ""}
       ${tasks.length ? tasks.map(row).join("") : `<p class="notice" style="margin:12px 0 0">Zatím žádné úkoly. Vygeneruj plán v Markovi a převeď ho sem, nebo přidej úkol ručně.</p>`}
-      ${canEdit ? `<div class="btn-group" style="margin-top:12px"><button type="button" onclick="addMarketingTask('${id}')">+ Přidat úkol</button></div>` : ""}
+      ${canEdit ? `<div class="btn-group" style="margin-top:12px"><button type="button" onclick="addMarketingTask('${jsArg(id)}')">+ Přidat úkol</button></div>` : ""}
     </div>
   </div>`
 }
@@ -4156,7 +4173,7 @@ function renderProgSource(){
   const q = (document.getElementById("progSrcSearch")?.value || "").toLowerCase().trim()
   const rows = (window.PROG_SRC || []).filter(e => !q || `${e.NAME} ${formatDate(e.DATE)} ${e.DATE} ${e.TYPE}`.toLowerCase().includes(q)).slice(0, 60)
   list.innerHTML = rows.length ? rows.map(e => `
-    <div class="prog-src-row" role="button" tabindex="0" onclick="copyProgramFrom('${escapeHtml(e.ID)}')">
+    <div class="prog-src-row" role="button" tabindex="0" onclick="copyProgramFrom('${jsArg(e.ID)}')">
       <div class="prog-song-text">
         <b>${escapeHtml(e.NAME)}</b>
         <div class="small">${escapeHtml(formatDate(e.DATE))}${e.TYPE ? " · " + escapeHtml(e.TYPE) : ""}</div>
@@ -4282,7 +4299,7 @@ function renderProgramEditor(songs, currentIds, event){
       data-id="${escapeHtml(r.ID)}"
       data-name="${escapeHtml(r.NAME).toLowerCase()}"
       data-author="${escapeHtml(r.AUTHOR || "").toLowerCase()}"
-      onclick="toggleProgSong('${escapeHtml(r.ID)}')">
+      onclick="toggleProgSong('${jsArg(r.ID)}')">
       <div class="prog-song-text">
         <b>${escapeHtml(r.NAME)}</b>
         ${r.AUTHOR ? `<div class="small">${escapeHtml(r.AUTHOR)}</div>` : ""}
@@ -4294,7 +4311,7 @@ function renderProgramEditor(songs, currentIds, event){
   html += `</div>
 
   <div class="prog-foot btn-group">
-    <button class="btn-success ar-primary" onclick="saveProgram('${escapeHtml(window.PROG_EVENT)}')">Uložit program</button>
+    <button class="btn-success ar-primary" onclick="saveProgram('${jsArg(window.PROG_EVENT)}')">Uložit program</button>
     <button onclick="guardedClose('programEditorModal')">Zrušit</button>
   </div>`
 
@@ -4469,7 +4486,7 @@ function refreshProgSelected(){
           </button>
           <span class="prog-num">${i+1}</span>
           <span class="prog-sel-name">${escapeHtml(song.NAME)}</span>
-          <button type="button" class="prog-ico prog-del" aria-label="Odebrat" onclick="removeProgSong('${isEnc ? "encore" : "main"}',${isEnc ? encIdx : i})">✕</button>
+          <button type="button" class="prog-ico prog-del" aria-label="Odebrat" onclick="removeProgSong('${jsArg(isEnc ? "encore" : "main")}',${isEnc ? encIdx : i})">✕</button>
         </div>`
       }).join("")
     }
@@ -4955,7 +4972,7 @@ async function renderMembers(){
       html += `<h3 class="season-title">Žádosti o členství <span style="background:#ff3b30;color:#fff;border-radius:999px;font-size:12px;font-weight:600;padding:2px 8px;margin-left:6px">${reqs.length}</span></h3><div class="card" style="padding:0">`
       reqs.forEach((r, i) => {
         const border = i < reqs.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
-        html += `<div onclick="openMemberRequest('${escapeHtml(r.uid)}')" role="button" tabindex="0" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;${border}">
+        html += `<div onclick="openMemberRequest('${jsArg(r.uid)}')" role="button" tabindex="0" style="padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;${border}">
           <div style="min-width:0"><div style="font-weight:600;font-size:15px">${escapeHtml(r.name)}</div>
           <div class="small">${escapeHtml(r.voice || "hlas neuveden")} · ${escapeHtml(new Date(r.createdAt).toLocaleDateString("cs-CZ"))}</div></div>
           <span class="small" style="color:#007aff;font-weight:600;white-space:nowrap">Zkontrolovat ›</span></div>`
@@ -4981,8 +4998,8 @@ async function renderMembers(){
               <div class="small" style="margin-top:4px;font-weight:600;color:#007aff">${escapeHtml(m.ROLE)}</div>
             </div>
             <div style="display:flex;gap:8px">
-              <button class="btn-info" onclick="openEditMember('${escapeHtml(m.ID)}')" style="padding:8px 12px;font-size:13px">Upravit</button>
-              <button class="btn-danger" onclick="deleteMemberItem('${escapeHtml(m.ID)}')" style="padding:8px 12px;font-size:13px">Smazat</button>
+              <button class="btn-info" onclick="openEditMember('${jsArg(m.ID)}')" style="padding:8px 12px;font-size:13px">Upravit</button>
+              <button class="btn-danger" onclick="deleteMemberItem('${jsArg(m.ID)}')" style="padding:8px 12px;font-size:13px">Smazat</button>
             </div>
           </div>
         </div>`
@@ -5426,7 +5443,7 @@ async function renderPayments(){
         const statusText  = isPaid ? "Zaplaceno" : "Nezaplaceno"
 
         html += `
-        <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollection('${escapeHtml(v.id)}')">
+        <div class="card" style="margin-bottom:12px;cursor:pointer" onclick="toggleCollection('${jsArg(v.id)}')">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <b style="font-size:16px">${escapeHtml(v.name)}</b>
@@ -5463,7 +5480,7 @@ async function renderPayments(){
             ${MEMBER_ROLE === "ADMIN" ? `
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
                 <div class="btn-group" style="margin-bottom:12px">
-                  <button class="btn-danger" onclick="event.stopPropagation();deleteCollection('${escapeHtml(v.id)}')">Smazat výběr</button>
+                  <button class="btn-danger" onclick="event.stopPropagation();deleteCollection('${jsArg(v.id)}')">Smazat výběr</button>
                 </div>
                 <div class="small" style="font-weight:600;margin-bottom:8px">Zaznamenat platbu</div>
                 <div class="btn-group">
@@ -5471,7 +5488,7 @@ async function renderPayments(){
                     ${v.members.map(m => `<option value="${escapeHtml(m.email)}">${escapeHtml(m.name)}</option>`).join("")}
                   </select>
                   <input id="payAmount_${escapeHtml(v.id)}" type="number" placeholder="Kč" style="width:80px;flex:1" value="${v.amount}" onclick="event.stopPropagation()">
-                  <button class="btn-success" onclick="event.stopPropagation();recordPayment('${escapeHtml(v.id)}')">Uložit</button>
+                  <button class="btn-success" onclick="event.stopPropagation();recordPayment('${jsArg(v.id)}')">Uložit</button>
                 </div>
               </div>
             ` : ""}
@@ -5641,7 +5658,7 @@ async function renderEnergy(){
         html += `<div
           class="card energy-row"
           data-id="${escapeHtml(r.ID)}"
-          onclick="selectEnergyRow('${escapeHtml(r.ID)}')"
+          onclick="selectEnergyRow('${jsArg(r.ID)}')"
           style="margin-bottom:8px;cursor:pointer;${isSelected ? "border:2px solid #007aff;background:var(--card-selected, #f0f6ff)" : ""}"
         >
           <div style="display:flex;justify-content:space-between;align-items:center">
@@ -5655,8 +5672,8 @@ async function renderEnergy(){
           </div>
           ${isSelected ? `
             <div class="btn-group" style="margin-top:10px">
-              <button class="btn-info" onclick="event.stopPropagation();editEnergyRow('${escapeHtml(r.ID)}',${r.START},${r.END||""})">Upravit</button>
-              <button class="btn-danger" onclick="event.stopPropagation();deleteEnergyRow('${escapeHtml(r.ID)}')">Smazat</button>
+              <button class="btn-info" onclick="event.stopPropagation();editEnergyRow('${jsArg(r.ID)}',${r.START},${r.END||""})">Upravit</button>
+              <button class="btn-danger" onclick="event.stopPropagation();deleteEnergyRow('${jsArg(r.ID)}')">Smazat</button>
             </div>
           ` : ""}
         </div>`
@@ -6211,7 +6228,7 @@ function renderAkordyTab(){
       <div class="small" style="font-weight:600;margin-bottom:6px;text-align:center">Tónina</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">
         ${CHROMATIC_NOTES.map(n => `
-          <button onclick="setAkordRoot('${n}')" style="width:auto;padding:8px 12px;font-size:13px;${AKORD_ROOT === n ? 'background:#007aff;color:#fff' : ''}">
+          <button onclick="setAkordRoot('${jsArg(n)}')" style="width:auto;padding:8px 12px;font-size:13px;${AKORD_ROOT === n ? 'background:#007aff;color:#fff' : ''}">
             ${NOTE_DISPLAY[n]}
           </button>
         `).join("")}
@@ -6227,10 +6244,10 @@ function renderAkordyTab(){
         <button
           class="akord-pad"
           style="aspect-ratio:1;background:#2c2c2e;color:#fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;cursor:pointer;font-size:18px;font-weight:600;user-select:none"
-          onmousedown="akordPadDown(this,'${c.root}','${c.quality}')"
+          onmousedown="akordPadDown(this,'${jsArg(c.root)}','${jsArg(c.quality)}')"
           onmouseup="akordPadUp(this)"
           onmouseleave="akordPadUp(this)"
-          ontouchstart="akordPadDown(this,'${c.root}','${c.quality}',event)"
+          ontouchstart="akordPadDown(this,'${jsArg(c.root)}','${jsArg(c.quality)}',event)"
           ontouchend="akordPadUp(this,event)"
         >
           <span>${c.label}</span>
@@ -6667,7 +6684,7 @@ function renderCvtTab(){
     const isOpen = CVT_SECTION_OPEN === section.id
     html += `
       <div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">
-        <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCvtSection('${section.id}')">
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCvtSection('${jsArg(section.id)}')">
           <span style="font-weight:600">${section.title}</span>
           <span class="acc-chev" id="cvtChev_${section.id}" data-acc="${isOpen ? "open" : "closed"}"></span>
         </div>
@@ -6744,7 +6761,7 @@ function hmCounts(e, members, lookup){
 }
 
 function hmClick(e, m){
-  return `onclick="heatmapDetail('${escapeHtml(e.ID)}','${escapeHtml(m.EMAIL)}')"`
+  return `onclick="heatmapDetail('${jsArg(e.ID)}','${jsArg(m.EMAIL)}')"`
 }
 
 function hmIsPast(e){
@@ -6761,8 +6778,8 @@ function hmDateChip(e){
 function hmTitle(e){
   const cancelled = e.STATUS === "Zrušená"
   return `<div class="hm-title">
-    <a class="${cancelled ? "hm-cancel" : ""}" onclick="setActiveTab('events');openEvent('${escapeHtml(e.ID)}')">${escapeHtml(e.NAME)}</a>
-    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}${hmIsPast(e) ? " · proběhlo" : ""}${e.FINAL ? " · docházka potvrzena" : hmIsPast(e) && MEMBER_ROLE === "ADMIN" ? ` · <span class="hm-link" onclick="openAttendanceCheck('${escapeHtml(e.ID)}')">odškrtnout docházku</span>` : ""}</small>`}
+    <a class="${cancelled ? "hm-cancel" : ""}" onclick="setActiveTab('events');openEvent('${jsArg(e.ID)}')">${escapeHtml(e.NAME)}</a>
+    ${cancelled ? `<small class="hm-badge">Zrušená</small>` : `<small>${formatDate(e.DATE)}${e.DATE_END ? " – " + formatDate(e.DATE_END) : ""}${hmIsPast(e) ? " · proběhlo" : ""}${e.FINAL ? " · docházka potvrzena" : hmIsPast(e) && MEMBER_ROLE === "ADMIN" ? ` · <span class="hm-link" onclick="openAttendanceCheck('${jsArg(e.ID)}')">odškrtnout docházku</span>` : ""}</small>`}
   </div>`
 }
 
@@ -6926,7 +6943,7 @@ function attRender(){
     return `<div class="att-group"><div class="att-gh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${here}<small>/${g.list.length}</small></b></div>
       ${g.list.map(a => {
         const on = c.checked.has(a.EMAIL)
-        return `<button type="button" class="att-row ${on ? "on" : ""}" data-email="${escapeHtml(a.EMAIL)}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${escapeHtml(a.EMAIL)}')">
+        return `<button type="button" class="att-row ${on ? "on" : ""}" data-email="${escapeHtml(a.EMAIL)}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${jsArg(a.EMAIL)}')">
           <span class="att-box" aria-hidden="true">${on ? "✓" : ""}</span>
           <span class="att-name">${escapeHtml(a.NAME)}</span>
           <small class="att-decl">${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small>
@@ -7153,7 +7170,7 @@ async function openContactModal(id){
     <div style="display:flex;flex-direction:column;gap:8px">
       ${m.PHONE ? `<a href="tel:${escapeHtml(m.PHONE)}" style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#d4f5e2;border-radius:8px;font-weight:600;font-size:14px;color:#1a7a3a;text-decoration:none">📞 Zavolat</a>` : ""}
       ${m.EMAIL ? `<a href="mailto:${escapeHtml(m.EMAIL)}" style="display:flex;align-items:center;justify-content:center;padding:6px 14px;min-height:36px;background:#e8f0fe;border-radius:8px;font-weight:600;font-size:14px;color:#007aff;text-decoration:none">✉️ Napsat e-mail</a>` : ""}
-      ${canEdit ? `<button onclick="closeContactModal();openEditMember('${escapeHtml(m.ID)}')" style="width:100%">Upravit kontakt</button>` : ""}
+      ${canEdit ? `<button onclick="closeContactModal();openEditMember('${jsArg(m.ID)}')" style="width:100%">Upravit kontakt</button>` : ""}
       <button onclick="closeContactModal()" style="width:100%;background:#e8e8ed;color:#6b6b70">Zavřít</button>
     </div>
   `
@@ -7432,7 +7449,7 @@ async function updateDashboardAktuality(){
       const border = idx < aktuality.length - 1 ? "border-bottom:1px solid rgba(128,128,128,0.1);" : ""
       return `<div
         style="padding:14px 16px;${border}cursor:${MEMBER_ROLE === "ADMIN" ? "pointer" : "default"}${isSelected ? ";background:var(--card-selected)" : ""}"
-onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "')" : ""}"
+onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + jsArg(a.id) + "')" : ""}"
       >
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1">
@@ -7443,8 +7460,8 @@ onclick="${MEMBER_ROLE === "ADMIN" ? "selectAktualita('" + escapeHtml(a.id) + "'
         </div>
         ${isSelected ? `
           <div class="btn-group" style="margin-top:10px">
-            <button class="btn-info" onclick="event.stopPropagation();editAktualita('${escapeHtml(a.id)}','${escapeHtml(a.text||"").replaceAll("'","\\'")}','${a.date||""}')">Upravit</button>
-            <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${escapeHtml(a.id)}')">Smazat</button>
+            <button class="btn-info" onclick="event.stopPropagation();editAktualita('${jsArg(a.id)}','${jsArg(a.text||"")}','${jsArg(a.date||"")}')">Upravit</button>
+            <button class="btn-danger" onclick="event.stopPropagation();deleteAktualita('${jsArg(a.id)}')">Smazat</button>
           </div>
         ` : ""}
       </div>`

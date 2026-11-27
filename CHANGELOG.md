@@ -3,6 +3,12 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.20.2 (27. 11. 2026)
+- Zabezpečení: hodnoty z databáze (názvy a id akcí, texty aktualit a úkolů) se do tlačítek vkládají bezpečně, takže je nelze použít k vložení cizího kódu do stránky ostatních členů; odkazy na hovor a dokument musí začínat https://.
+- Zabezpečení: Discord a push se odesílají přes server (funkce sendNotify). Webhook Discordu a klíč OneSignalu už aplikace ani členové nečtou; nastavení v databázi (/config) čtou členové jen u plateb a šablon úkolů a zapisují jen šablony.
+- Pravidla databáze: platby a výběry zapisuje jen administrátor, klíče záznamů smí obsahovat jen písmena, číslice, _ a -.
+- Workflowy: nejnižší oprávnění a pevná verze balíčku jsonwebtoken.
+
 ## 4.20.1 (27. 11. 2026)
 - Žádost o členství: v posledním kroku je nad podmínkami odkaz na Stanovy spolku (soubor stanovy.pdf, otevře se v novém okně), aby si je nový člen mohl přečíst, než je potvrdí.
 
