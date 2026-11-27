@@ -1615,3 +1615,138 @@ body.hg-active { user-select: none; -webkit-user-select: none; cursor: grabbing;
   .hg-bank .hg-bt { margin: 0 0 6px; }
   .hg-bank .hg-bt:not(:first-child) { margin-top: 8px; }
 }
+
+/* ===== Harmonogram na telefonu a dotykových zařízeních: bez tažení =====
+   Tlačítko + otevře panel s dílky a skladbami, vybraný dílek se vloží klepnutím na pruh „Vložit sem“; položky se posouvají tlačítky ↑ ↓.
+   Pravidla jako jinde v aplikaci: dotykový cíl aspoň 44 px, stupnice písma 11/12/13/14/16/20/24/28, zaoblení 8/14/20/26/34/pilulka,
+   časování z motion.css (--m-fast / --m-base / --m-slow), okno bez držátka (jen křížek), Apple sklo a Android Material 3. */
+.hg-t, .hg-fab, .hg-pickbar, .hg-root { display: none; }
+.hg, .hg-ui { --hg-ease: cubic-bezier(0.32, 0.72, 0, 1); --hg-spring: var(--m-spring, cubic-bezier(0.2, 1.2, 0.3, 1)); --hg-d2: var(--m-base, 0.22s); --hg-d3: var(--m-slow, 0.34s);
+  --hg-tint: var(--ten-tint, var(--accent, var(--ev-acc))); }
+.hg-ui svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.hg-flash { animation: hgFlash var(--hg-d3) var(--hg-ease) 2; }
+@keyframes hgFlash { 0% { box-shadow: 0 0 0 3px var(--ev-acc); } 100% { box-shadow: 0 0 0 3px transparent; } }
+@media (max-width: 819px), (pointer: coarse) {
+  .hg-d { display: none !important; }
+  span.hg-t { display: inline; }
+  .hg-mv.hg-t { display: inline-flex; }
+  div.hg-tb.hg-t { display: flex; }
+  .hg { display: block; }
+  .hg-bank { display: none; }
+  .hg .hg-item .hg-grip, .hg .hg-song .hg-grip { display: none !important; }
+  .hg-axis { gap: 0; }
+  .hg-item { margin-bottom: 8px; }
+
+  /* hlavička položky: vlevo název a pod ním čas, vpravo ↑ ↓ a šipka detailu (každé 44 px) */
+  .hg-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; grid-template-rows: auto auto; align-items: center; column-gap: 4px; }
+  .hg-head > .hg-badge { grid-area: 1 / 1; align-self: end; }
+  .hg-head > .hg-time { grid-area: 2 / 1; align-self: start; margin: 0; padding: 0; }
+  .hg-head > .hg-up { grid-area: 1 / 2 / 3 / 3; }
+  .hg-head > .hg-dn { grid-area: 1 / 3 / 3 / 4; }
+  .hg-head > .hg-chv { grid-area: 1 / 4 / 3 / 5; }
+  .hg .hg-mv, .hg .hg-ib { flex: none; position: relative; width: 44px !important; height: 44px !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; box-shadow: none !important; display: inline-flex; align-items: center; justify-content: center; transition: opacity var(--hg-d2) ease, transform var(--hg-d2) var(--hg-ease); }
+  .hg .hg-mv { border-radius: 50% !important; background: rgba(120, 120, 128, 0.14) !important; color: var(--text, inherit) !important; }
+  .hg .hg-mv svg, .hg .hg-ib svg { width: 18px; height: 18px; }
+  .hg .hg-mv:disabled { opacity: 0.35; }
+  .hg .hg-mv:active:not(:disabled) { transform: scale(0.92); }
+  html[data-platform="android"] .hg .hg-mv:active { transform: none; }
+  /* skladby v bloku: dotykový cíl 44 px, vidět je kolečko 32 px */
+  .hg .hg-song .hg-mv { background: transparent !important; }
+  .hg .hg-song .hg-mv::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: rgba(120, 120, 128, 0.14); }
+  .hg .hg-song .hg-mv svg { position: relative; width: 16px; height: 16px; }
+  .hg-song { min-height: 44px; padding-left: 8px; gap: 0; border-radius: 14px; }
+
+  /* detail položky: Přesunout jinam, Odebrat */
+  .hg-tb { gap: 8px; margin-top: 10px; }
+  .hg .hg-tbb { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px !important; padding: 0 14px !important; border: 0 !important; border-radius: 999px !important; background: rgba(120, 120, 128, 0.14) !important; box-shadow: none !important; color: var(--text, inherit) !important; font-size: 14px !important; font-weight: 600 !important; transition: transform var(--hg-d2) var(--hg-ease), background-color var(--hg-d2) ease; }
+  .hg .hg-tbb:active { transform: scale(0.95); }
+  .hg .hg-tbb svg { width: 18px; height: 18px; fill: none; stroke: currentColor; }
+  .hg .hg-tbb.rm { background: rgba(255, 59, 48, 0.14) !important; color: #d70015 !important; }
+  body.dark .hg .hg-tbb.rm { background: rgba(255, 69, 58, 0.22) !important; color: #ff6961 !important; }
+  html[data-platform="android"] .hg .hg-tbb { font-weight: 500 !important; }
+  html[data-platform="android"] .hg .hg-tbb:active { transform: none; }
+  html[data-platform="android"] .hg .hg-tbb.rm { background: rgba(179, 38, 30, 0.12) !important; color: #b3261c !important; }
+  html[data-platform="android"] body.dark .hg .hg-tbb.rm { background: rgba(242, 184, 181, 0.16) !important; color: #f2b8b5 !important; }
+
+  /* vkládání: pruhy mezi položkami (jsou jen v tomto režimu) */
+  .hg-picked { outline: 2px solid var(--ev-acc); outline-offset: -2px; }
+  .hg-pick { padding-bottom: 76px; }                                      /* poslední pruh nesmí zůstat pod lištou */
+  .hg-pick .hg-item { opacity: 0.55; }
+  .hg-pick .hg-picked { opacity: 1; }
+  .hg-slot { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px !important; margin: 0 0 8px !important; padding: 0 12px !important; border: 2px dashed var(--ev-acc) !important; border-radius: 14px !important; background: color-mix(in srgb, var(--ev-acc) 9%, transparent) !important; box-shadow: none !important; color: var(--ev-acc) !important; font-size: 13px !important; font-weight: 600 !important; animation: hgSlotIn var(--hg-d2) var(--hg-ease) both; transition: transform var(--hg-d2) var(--hg-ease), background-color var(--hg-d2) ease; }
+  .hg-slot:active { transform: scale(0.98); background: color-mix(in srgb, var(--ev-acc) 18%, transparent) !important; }
+  .hg-slot svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .hg-slot.in { margin: 2px 0 !important; }
+  html[data-platform="android"] .hg-slot { border-radius: 20px !important; font-size: 14px !important; font-weight: 500 !important; }
+  html[data-platform="android"] .hg-slot:active { transform: none; }
+  @keyframes hgSlotIn { from { opacity: 0; transform: scaleY(0.5); } }
+  .hg-songs { gap: 0; }
+
+  /* plovoucí tlačítko +: Apple tónované sklo v barvě aplikace (jako primární tlačítko), Android tonální FAB Material 3 */
+  .hg-fab { display: grid; place-items: center; position: fixed; right: 18px; bottom: 16px; z-index: 10040; width: 58px; height: 58px; padding: 0 !important; min-height: 0 !important; border: 0 !important; border-radius: 50% !important; color: #fff !important;
+    background-color: var(--hg-tint) !important; background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 55%) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.10), 0 6px 18px color-mix(in srgb, var(--hg-tint) 34%, transparent), 0 8px 22px rgba(0, 0, 0, 0.16) !important;
+    opacity: 0; transform: scale(0.4) translateY(30px); pointer-events: none; transition: transform var(--hg-d3) var(--hg-spring), opacity var(--hg-d2) ease; }
+  .hg-fab.on { opacity: 1; transform: none; pointer-events: auto; }
+  .hg-fab.on:active { transform: scale(0.94); transition-duration: var(--hg-d2); }
+  .hg-fab svg { width: 28px; height: 28px; stroke-width: 2.2; }
+  html[data-platform="android"] .hg-fab { width: 56px; height: 56px; border-radius: 20px !important; background-color: var(--and-tonal) !important; background-image: none !important; color: var(--and-accent) !important; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.2) !important; }
+  html[data-platform="android"] .hg-fab.on:active { transform: none; filter: brightness(0.94); }
+
+  /* panel s dílky: okno jako ostatní sheety (bez držátka, jen křížek), Apple 34, Android 28 */
+  .hg-root { display: block; position: fixed; inset: 0; z-index: 10050; pointer-events: none; }
+  .hg-root.on { pointer-events: auto; }
+  .hg-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.32); opacity: 0; transition: opacity var(--hg-d2) ease; touch-action: none; }
+  .hg-root.on .hg-dim { opacity: 1; }
+  .hg-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: min(82vh, calc(100dvh - 28px)); overflow-y: auto; overscroll-behavior: contain; padding: 20px 16px max(20px, env(safe-area-inset-bottom)); border-radius: 34px 34px 0 0; background: var(--card, #fff); color: var(--text, inherit); box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18); transform: translateY(105%); transition: transform var(--hg-d3) var(--hg-ease); }
+  html[data-platform="android"] .hg-sheet { border-radius: 28px 28px 0 0; box-shadow: none; background: #ffffff; color: var(--and-text, inherit); }
+  html[data-platform="android"] body.dark .hg-sheet { background: #2b2d30; }
+  .hg-root.on .hg-sheet { transform: none; }
+  .hg-sh { display: flex; align-items: center; margin: 0 0 12px; font-size: 20px; line-height: 25px; font-weight: 600; }
+  html[data-platform="android"] .hg-sh { font-size: 24px; line-height: 32px; font-weight: 400; }
+  .hg-sh .hg-x { position: relative; margin: -8px -8px -8px auto; width: 44px; height: 44px; min-height: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 50% !important; background: transparent !important; box-shadow: none !important; color: var(--text, inherit) !important; display: grid; place-items: center; transition: transform var(--hg-d2) var(--hg-ease); }
+  .hg-sh .hg-x::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: color-mix(in srgb, currentColor 8%, rgba(255, 255, 255, 0.55)); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); box-shadow: 0 1px 8px rgba(0, 0, 0, 0.14), inset 0 0 0 0.5px rgba(255, 255, 255, 0.6); }
+  body.dark .hg-sh .hg-x::before { background: rgba(120, 120, 128, 0.32); box-shadow: 0 1px 8px rgba(0, 0, 0, 0.4), inset 0 0 0 0.5px rgba(255, 255, 255, 0.14); }
+  html[data-platform="android"] .hg-sh .hg-x { color: var(--and-muted) !important; }
+  html[data-platform="android"] .hg-sh .hg-x::before { inset: 2px; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .hg-sh .hg-x:active { transform: scale(0.92); }
+  .hg-sh .hg-x svg { position: relative; width: 14px; height: 14px; stroke-width: 2.2; }
+  .hg-lb { margin: 14px 2px 6px; font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  html[data-platform="android"] .hg-lb { font-weight: 500; letter-spacing: 0.01em; text-transform: none; }
+  .hg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hg-tile { display: grid; grid-template-columns: 26px 1fr; column-gap: 10px; align-items: center; min-height: 54px !important; padding: 8px 12px !important; border: 0 !important; border-radius: 14px !important; background: rgba(120, 120, 128, 0.14) !important; box-shadow: none !important; color: var(--text, inherit) !important; text-align: left; }
+  html[data-platform="android"] .hg-tile { border-radius: 20px !important; }
+  .hg-tile.wide { grid-column: 1 / -1; }
+  .hg-tile svg { grid-row: 1 / 3; width: 22px; height: 22px; color: var(--ev-acc); }
+  .hg-tile b { align-self: end; font-size: 14px; font-weight: 600; line-height: 1.2; }
+  html[data-platform="android"] .hg-tile b { font-weight: 500; }
+  .hg-tile small { align-self: start; font-size: 12px; font-weight: 400; color: var(--muted); line-height: 16px; }
+  .hg-slist { display: flex; flex-direction: column; }
+  .hg-srow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px !important; padding: 0 !important; border: 0 !important; border-top: 1px solid var(--card-border, rgba(60, 60, 67, 0.14)) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--text, inherit) !important; font-size: 16px !important; font-weight: 400 !important; text-align: left; }
+  .hg-srow em { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--ev-acc) 14%, transparent); color: var(--ev-acc); }
+  .hg-srow em svg { width: 15px; height: 15px; stroke-width: 2.4; }
+  .hg-srow span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hg-tile, .hg-srow { opacity: 0; transform: translateY(14px); transition: opacity var(--hg-d2) var(--hg-ease), transform var(--hg-d3) var(--hg-ease); }
+  .hg-root.on .hg-tile, .hg-root.on .hg-srow { opacity: 1; transform: none; }
+  .hg-root.on .hg-tile:nth-child(1) { transition-delay: 0.06s; } .hg-root.on .hg-tile:nth-child(2) { transition-delay: 0.09s; }
+  .hg-root.on .hg-tile:nth-child(3) { transition-delay: 0.12s; } .hg-root.on .hg-tile:nth-child(4) { transition-delay: 0.15s; } .hg-root.on .hg-tile:nth-child(5) { transition-delay: 0.18s; }
+  .hg-root.on .hg-srow:nth-child(1) { transition-delay: 0.2s; } .hg-root.on .hg-srow:nth-child(2) { transition-delay: 0.23s; } .hg-root.on .hg-srow:nth-child(3) { transition-delay: 0.26s; } .hg-root.on .hg-srow:nth-child(n+4) { transition-delay: 0.29s; }
+
+  /* lišta s vybraným dílkem: Apple sklo jako spodní lišta, Android plná lišta */
+  .hg-pickbar { display: flex; align-items: center; gap: 10px; position: fixed; left: 10px; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 10060; padding: 8px 8px 8px 10px; border-radius: 999px; color: var(--text, inherit);
+    background: rgba(255, 255, 255, 0.72); -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 0.5px rgba(255, 255, 255, 0.55), 0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.18);
+    transform: translateY(140%); transition: transform var(--hg-d3) var(--hg-ease); }
+  body.dark .hg-pickbar { background: rgba(44, 44, 46, 0.72); box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.28), inset 0 0 0 0.5px rgba(255, 255, 255, 0.08), 0 10px 30px rgba(0, 0, 0, 0.5); }
+  html[data-platform="android"] .hg-pickbar { border-radius: 28px; background: var(--and-bar); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18); }
+  .hg-pickbar.on { transform: none; }
+  .hg-pc { flex: none; max-width: 48%; padding: 0 16px; min-height: 36px; display: inline-flex; align-items: center; border-radius: 999px; background-color: var(--hg-tint); background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 55%); color: #fff; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  html[data-platform="android"] .hg-pc { background-color: var(--and-accent); background-image: none; font-size: 14px; font-weight: 500; }
+  html[data-platform="android"] body.dark .hg-pc { color: #062e6f; }                     /* text na světle modré (on-primary Material 3) */
+  .hg-ph { flex: 1; min-width: 0; font-size: 12px; line-height: 16px; color: var(--muted); }
+  .hg-pickbar .hg-pcancel { flex: none; min-height: 44px !important; padding: 0 14px !important; border: 0 !important; border-radius: 999px !important; background: transparent !important; box-shadow: none !important; color: var(--hg-tint) !important; font-size: 14px !important; font-weight: 600 !important; transition: opacity var(--hg-d2) ease; }
+  html[data-platform="android"] .hg-pickbar .hg-pcancel { color: var(--and-accent) !important; font-weight: 500 !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hg-ui, .hg-ui *, .hg-slot, .hg-flash { transition-duration: 0.01s !important; transition-delay: 0s !important; animation-duration: 0.01s !important; }
+}

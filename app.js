@@ -2391,7 +2391,11 @@ const HG_IC = {
   pribeh:   hgSvg('<path d="M4 9h13M13 5l4 4-4 4M20 15H7M11 11l-4 4 4 4"/>'),
   spolecna: hgSvg('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 6 1.5 6 5"/>'),
   chev:     hgSvg('<path d="M9 6l6 6-6 6"/>'),
-  close:    hgSvg('<path d="M6 6l12 12M18 6L6 18"/>')
+  close:    hgSvg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  plus:     hgSvg('<path d="M12 5v14M5 12h14"/>'),
+  up:       hgSvg('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+  down:     hgSvg('<path d="M12 5v14M6 13l6 6 6-6"/>'),
+  move:     hgSvg('<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>')
 }
 const HG_LABEL = { blok: "Blok skladeb", moderace: "Moderace", prichod: "Příchod", odchod: "Odchod", pribeh: "Příchod / odchod", spolecna: "Společná skladba" }
 const HG_PIECES = [["prichod", "Příchod"], ["odchod", "Odchod"], ["moderace", "Moderace"], ["spolecna", "Společná skladba"], ["blok", "Prázdný blok"]]
@@ -2440,6 +2444,8 @@ function hgSongHtml(s, bi, si){
   return `<div class="hg-song" data-hg-src="song" data-bidx="${bi}" data-sidx="${si}">
     <button type="button" class="hg-grip" aria-label="Přesunout skladbu ${escapeHtml(s.name)} (tažením nebo šipkami)">${HG_IC.grip}</button>
     <span class="hg-sname">${escapeHtml(s.name)}</span>
+    <button type="button" class="hg-mv hg-t" aria-label="Posunout skladbu nahoru" onclick="hgMoveSong(${bi}, ${si}, -1)"${si === 0 ? " disabled" : ""}>${HG_IC.up}</button>
+    <button type="button" class="hg-mv hg-t" aria-label="Posunout skladbu dolů" onclick="hgMoveSong(${bi}, ${si}, 1)"${si >= (hgArr()[bi]?.skladby || []).length - 1 ? " disabled" : ""}>${HG_IC.down}</button>
     <button type="button" class="hg-ib" aria-label="Vrátit ${escapeHtml(s.name)} do banky" onclick="hgRemoveSong(${bi}, ${si})">${HG_IC.close}</button></div>`
 }
 function hgItemHtml(it, idx, times){
@@ -2447,20 +2453,27 @@ function hgItemHtml(it, idx, times){
   const members = (window.MEMBERS || []).filter(m => (m.ROLE || m.role || "").toUpperCase() !== "GUEST")
   const detail = open ? `<div class="hg-detail">
       ${k === "moderace" ? `<label>Moderuje<select onchange="hgField(${idx}, 'moderator', this.value)"><option value="">Nevybráno</option>${members.map(m => `<option value="${escapeHtml(m.ID || m.id)}" ${it.moderator === (m.ID || m.id) ? "selected" : ""}>${escapeHtml(m.NAME || m.name)}</option>`).join("")}</select></label>` : ""}
-      <label>Poznámka<input type="text" value="${escapeHtml(it.poznamka || "")}" oninput="hgField(${idx}, 'poznamka', this.value)"></label></div>` : ""
-  const songs = k === "blok" ? `<div class="hg-songs" data-bidx="${idx}">${(it.skladby || []).map((s, si) => hgSongHtml(s, idx, si)).join("")}${(it.skladby || []).length ? "" : `<div class="hg-hint">Přetáhni sem skladby z banky</div>`}</div>` : ""
-  return `<div class="hg-item hg-${k}" data-hg-src="item" data-idx="${idx}">
+      <label>Poznámka<input type="text" value="${escapeHtml(it.poznamka || "")}" oninput="hgField(${idx}, 'poznamka', this.value)"></label>
+      <div class="hg-tb hg-t"><button type="button" class="hg-tbb" onclick="hgPickItem(${idx})">${HG_IC.move}Přesunout jinam</button><button type="button" class="hg-tbb rm" onclick="hgRemoveItem(${idx})">${HG_IC.close}Odebrat</button></div></div>` : ""
+  const songs = k === "blok" ? `<div class="hg-songs" data-bidx="${idx}">${(it.skladby || []).map((s, si) => hgSlotHtml("block", idx, si) + hgSongHtml(s, idx, si)).join("")}${hgSlotHtml("block", idx, (it.skladby || []).length)}${(it.skladby || []).length ? "" : `<div class="hg-hint"><span class="hg-d">Přetáhni sem skladby z banky</span><span class="hg-t">Skladby přidáte tlačítkem +</span></div>`}</div>` : ""
+  return `<div class="hg-item hg-${k}${HG_PICK?.kind === "item" && HG_PICK.idx === idx ? " hg-picked" : ""}" data-hg-src="item" data-idx="${idx}">
     <div class="hg-head">
       <button type="button" class="hg-grip" aria-label="Přesunout: ${escapeHtml(HG_LABEL[k] || "položka")} (tažením nebo šipkami)">${HG_IC.grip}</button>
       <span class="hg-badge">${HG_IC[k] || HG_IC.blok}${HG_LABEL[k] || "Položka"}</span>
       <span class="hg-time">${escapeHtml(times[idx] || "")}</span>
-      <button type="button" class="hg-ib${open ? " on" : ""}" aria-label="Detail" aria-expanded="${open}" onclick="hgToggle(${idx})">${HG_IC.chev}</button>
-      <button type="button" class="hg-ib" aria-label="Odebrat" onclick="hgRemoveItem(${idx})">${HG_IC.close}</button>
+      <button type="button" class="hg-mv hg-t hg-up" aria-label="Posunout nahoru" onclick="hgMoveItem(${idx}, -1)"${idx === 0 ? " disabled" : ""}>${HG_IC.up}</button>
+      <button type="button" class="hg-mv hg-t hg-dn" aria-label="Posunout dolů" onclick="hgMoveItem(${idx}, 1)"${idx >= hgArr().length - 1 ? " disabled" : ""}>${HG_IC.down}</button>
+      <button type="button" class="hg-ib hg-chv${open ? " on" : ""}" aria-label="Detail" aria-expanded="${open}" onclick="hgToggle(${idx})">${HG_IC.chev}</button>
+      <button type="button" class="hg-ib hg-d" aria-label="Odebrat" onclick="hgRemoveItem(${idx})">${HG_IC.close}</button>
     </div>
     <div class="hg-fields">
       <input type="text" class="hg-name" value="${escapeHtml(it.nazev || "")}" placeholder="Název" oninput="hgField(${idx}, 'nazev', this.value)">
       <label class="hg-min"><input type="number" min="0" max="240" inputmode="numeric" value="${escapeHtml(it.stopaz_min ?? "")}" placeholder="min" aria-label="Stopáž v minutách" oninput="hgField(${idx}, 'stopaz_min', this.value);hgUpdateSummary()"></label>
     </div>${detail}${songs}</div>`
+}
+function hgAxisHtml(items, out){
+  if(!items.length) return hgSlotHtml("axis", 0) + `<div class="hg-empty"><span class="hg-d">Klepni na dílek v bance nebo ho přetáhni sem.</span><span class="hg-t">Dílky přidáte tlačítkem + dole vpravo.</span></div>`
+  return items.map((it, i) => hgSlotHtml("axis", i) + hgItemHtml(it, i, out)).join("") + hgSlotHtml("axis", items.length)
 }
 function renderRiderHarmonogramHtml(){
   const items = hgArr(), r = getRiderData(), { out } = hgTimes()
@@ -2469,7 +2482,7 @@ function renderRiderHarmonogramHtml(){
   const startVal = r.harmonogram_start || ""
   return `
     <div class="hg-bar"><label>Začátek programu<input type="time" value="${escapeHtml(startVal)}" placeholder="${escapeHtml(document.getElementById("fStart")?.value || "")}" oninput="hgStart(this.value)"></label><div class="hg-sum" id="hgSum">${hgSummaryHtml()}</div></div>
-    <div class="hg">
+    <div class="hg${HG_PICK ? " hg-pick" : ""}">
       <div class="hg-bank" id="hgBank">
         <div class="hg-bt">Banka dílků</div>
         <div class="hg-chips">${HG_PIECES.map(([k, l]) => `<div class="hg-chip" data-hg-src="bank-piece" data-kind="${k}"><button type="button" class="hg-grip" aria-label="Přetáhnout dílek ${l}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAdd('${k}')">${HG_IC[k]}${l}</button></div>`).join("")}</div>
@@ -2477,7 +2490,7 @@ function renderRiderHarmonogramHtml(){
         <div class="hg-chips">${bank.length ? bank.map(s => `<div class="hg-chip" data-hg-src="bank-song" data-sid="${escapeHtml(String(s.song_id))}"><button type="button" class="hg-grip" aria-label="Přetáhnout skladbu ${escapeHtml(s.name)}">${HG_IC.grip}</button><button type="button" class="hg-add" onclick="hgAddSong('${escapeHtml(String(s.song_id))}')">${escapeHtml(s.name)}</button></div>`).join("")
           : `<div class="hg-hint" style="padding:0">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
       </div>
-      <div class="hg-axis" id="hgAxis">${items.map((it, i) => hgItemHtml(it, i, out)).join("") || `<div class="hg-empty">Klepni na dílek v bance nebo ho přetáhni sem.</div>`}</div>
+      <div class="hg-axis" id="hgAxis">${hgAxisHtml(items, out)}</div>
     </div>`
 }
 // na telefonu je banka dílků přilepená dole nad zápatím formuláře, takže je při tažení pořád po ruce (výšku zápatí zná jen skript)
@@ -2485,6 +2498,7 @@ function hgPinBank(){
   const wrap = document.getElementById("riderHarmonogramList"); if(!wrap) return
   const f = document.querySelector("#eventFormModalBody .form-foot")
   wrap.style.setProperty("--hg-bottom", (f && getComputedStyle(f).position === "sticky" ? f.offsetHeight : 0) + "px")
+  hgUiEnsure()
 }
 window.addEventListener("resize", hgPinBank)
 function refreshRiderHarmonogram(focus){
@@ -2542,13 +2556,19 @@ function hgDragStart(d){
     if(!HG.d) return
     const sc = d.scroller || (d.scroller = (() => { let n = document.getElementById("hgAxis"); while(n && n !== document.body){ const o = getComputedStyle(n).overflowY; if((o === "auto" || o === "scroll") && n.scrollHeight > n.clientHeight) return n; n = n.parentElement } return document.scrollingElement })())
     const r = sc === document.scrollingElement ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect()
-    let bottom = r.bottom                                        // dolní okraj oblasti, kde se posouvá: nad přilepenou bankou a zápatím
-    const bank = document.getElementById("hgBank"), foot = document.querySelector("#eventFormModalBody .form-foot")
-    if(bank && getComputedStyle(bank).position === "sticky") bottom = Math.min(bottom, bank.getBoundingClientRect().top)
+    let bottom = r.bottom                                        // dolní okraj oblasti, kde se posouvá: nad přilepeným zápatím formuláře
+    const foot = document.querySelector("#eventFormModalBody .form-foot")
     if(foot && getComputedStyle(foot).position === "sticky") bottom = Math.min(bottom, foot.getBoundingClientRect().top)
-    const zone = 90, sp = 26                                     // čím blíž okraji, tím rychleji
-    if(d.y < r.top + zone) sc.scrollBy(0, -Math.ceil(Math.min(1, (r.top + zone - d.y) / zone) * sp))
-    else if(d.y > bottom - zone) sc.scrollBy(0, Math.ceil(Math.min(1, (d.y - (bottom - zone)) / zone) * sp))
+    const zone = 56, sp = 12, wait = 300                         // posouvá se až po chvíli držení u okraje a jen mírně
+    const inTop = d.y < r.top + zone, inBot = d.y > bottom - zone
+    if(!inTop && !inBot) d.edgeSince = 0
+    else{
+      d.edgeSince = d.edgeSince || performance.now()
+      if(performance.now() - d.edgeSince >= wait){
+        if(inTop) sc.scrollBy(0, -Math.ceil(Math.min(1, (r.top + zone - d.y) / zone) * sp))
+        else sc.scrollBy(0, Math.ceil(Math.min(1, (d.y - (bottom - zone)) / zone) * sp))
+      }
+    }
     d.raf = requestAnimationFrame(loop)
   }
   d.raf = requestAnimationFrame(loop)
@@ -2599,7 +2619,7 @@ function hgDragEnd(e, cancel){
   if(!cancel && d.target){ hgCommit(d, d.target); refreshRiderHarmonogram(); hgChanged() }
 }
 document.addEventListener("pointerdown", e => {
-  const g = e.target.closest && e.target.closest("#riderHarmonogramList .hg-grip"); if(!g || e.button) return
+  const g = e.target.closest && e.target.closest("#riderHarmonogramList .hg-grip"); if(!g || e.button || hgMobile()) return
   const src = g.closest("[data-hg-src]"); if(!src) return
   e.preventDefault()
   HG.d = { src, kind: src.dataset.hgSrc, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, moved: false, pid: e.pointerId, grip: g }
@@ -2620,13 +2640,136 @@ document.addEventListener("keydown", e => {
   e.preventDefault()
   if(src.dataset.hgSrc === "item"){
     const i = +src.dataset.idx, j = i + dir; if(j < 0 || j >= a.length) return
-    ;[a[i], a[j]] = [a[j], a[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item:nth-child(${j + 1}) .hg-grip`); hgChanged()
+    ;[a[i], a[j]] = [a[j], a[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item[data-idx="${j}"] .hg-grip`); hgChanged()
   }else if(src.dataset.hgSrc === "song"){
     const b = a[+src.dataset.bidx]?.skladby, i = +src.dataset.sidx, j = i + dir; if(!b || j < 0 || j >= b.length) return
-    ;[b[i], b[j]] = [b[j], b[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item:nth-child(${+src.dataset.bidx + 1}) .hg-song:nth-child(${j + 1}) .hg-grip`); hgChanged()
+    ;[b[i], b[j]] = [b[j], b[i]]; refreshRiderHarmonogram(`#hgAxis > .hg-item[data-idx="${src.dataset.bidx}"] .hg-song[data-sidx="${j}"] .hg-grip`); hgChanged()
   }
 })
-Object.assign(window, { hgField, hgStart, hgToggle, hgAdd, hgAddSong, hgRemoveItem, hgRemoveSong, hgUpdateSummary })
+// ===== Harmonogram na telefonu: bez tažení =====
+// Tlačítko + otevře panel s dílky a skladbami; vybraný dílek se vloží klepnutím na pruh „Vložit sem“. Položky se posouvají tlačítky ↑ ↓.
+const HG_DESC = { prichod: "nástup na pódium", odchod: "sestup z pódia", moderace: "mluvené slovo", spolecna: "s druhým sborem", blok: "skladby doplníte později" }
+const hgMobile = () => matchMedia("(max-width: 819px), (pointer: coarse)").matches
+const hgPieceLabel = k => (HG_PIECES.find(p => p[0] === k) || [])[1] || k
+let HG_PICK = null          // co se právě vkládá: { kind: "piece", piece } | { kind: "song", sid } | { kind: "item", idx }
+let HG_IO = null, HG_VIS = false
+
+const hgNoBlock = () => !!HG_PICK && (HG_PICK.kind === "piece" ? HG_PICK.piece === "blok" : HG_PICK.kind === "item" && hgArr()[HG_PICK.idx]?.typ === "blok")   // blok se do bloku vložit nedá
+function hgSlotHtml(mode, a, b){
+  const p = HG_PICK; if(!p) return ""
+  const items = hgArr()
+  if(mode === "axis"){
+    if(p.kind === "item" && (a === p.idx || a === p.idx + 1)) return ""             // vložení na místo, kde už položka je
+    const n = items.length, lbl = !n ? "Vložit sem" : a === 0 ? "Vložit na začátek" : a === n ? "Vložit na konec" : "Vložit sem"
+    return `<button type="button" class="hg-slot" onclick="hgPlace('axis', ${a})">${HG_IC.plus}${lbl}</button>`
+  }
+  if(hgNoBlock() || p.kind === "item" && items[p.idx]?.typ === "blok") return ""
+  const sk = items[a]?.skladby || []
+  const lbl = !sk.length ? "Vložit do bloku" : b === 0 ? "Na začátek bloku" : b === sk.length ? "Na konec bloku" : `Mezi skladby ${b} a ${b + 1}`
+  return `<button type="button" class="hg-slot in" onclick="hgPlace('block', ${a}, ${b})">${HG_IC.plus}${lbl}</button>`
+}
+
+function hgUiEnsure(){
+  if(!document.getElementById("hgFab")) document.body.insertAdjacentHTML("beforeend",
+    `<button type="button" id="hgFab" class="hg-ui hg-fab" aria-label="Přidat dílek do harmonogramu" aria-haspopup="dialog" onclick="hgSheetOpen()">${HG_IC.plus}</button><div id="hgPickBar" class="hg-ui hg-pickbar" role="status"></div>`)
+  const f = document.querySelector("#eventFormModalBody .form-foot")
+  document.getElementById("hgFab").style.bottom = ((f && getComputedStyle(f).position === "sticky" ? f.offsetHeight : 0) + 16) + "px"   // nad přilepeným zápatím formuláře
+  if(!HG_IO) HG_IO = new IntersectionObserver(es => {
+    const w = document.getElementById("riderHarmonogramList")
+    HG_VIS = !!es[es.length - 1].isIntersecting
+    if(!w || !w.offsetParent){ HG_PICK = null; HG_VIS = false; hgSheetClose(true); hgPickBarSet() }   // formulář je zavřený
+    hgFabSync()
+  })
+  HG_IO.disconnect()
+  const wrap = document.getElementById("riderHarmonogramList"); if(wrap) HG_IO.observe(wrap)
+  hgFabSync()
+}
+function hgFabSync(){
+  document.getElementById("hgFab")?.classList.toggle("on", HG_VIS && hgMobile() && !HG_PICK && !document.getElementById("hgSheetRoot"))
+}
+
+function hgSheetHtml(){
+  const placed = new Set(); hgArr().forEach(it => (it.skladby || []).forEach(s => placed.add(String(s.song_id))))
+  const bank = hgSongs().filter(s => !placed.has(String(s.song_id))), n = bank.length
+  return `<div class="hg-dim" onclick="hgSheetDismiss()"></div>
+  <div class="hg-sheet" role="dialog" aria-modal="true" aria-label="Přidat do harmonogramu">
+    <div class="hg-sh"><span>Přidat do harmonogramu</span><button type="button" class="hg-x" aria-label="Zavřít" onclick="hgSheetDismiss()">${HG_IC.close}</button></div>
+    <div class="hg-lb">Dílky</div>
+    <div class="hg-grid">${HG_PIECES.map(([k, l]) => `<button type="button" class="hg-tile${k === "blok" ? " wide" : ""}" onclick="hgPickPiece('${k}')">${HG_IC[k]}<b>${l}</b><small>${HG_DESC[k] || ""}</small></button>`).join("")}</div>
+    <div class="hg-lb">Skladby z programu${n ? ` · ${n} ${n === 1 ? "volná" : n < 5 ? "volné" : "volných"}` : ""}</div>
+    <div class="hg-slist">${n ? bank.map(s => `<button type="button" class="hg-srow" onclick="hgPickSong('${escapeHtml(String(s.song_id))}')"><em>${HG_IC.plus}</em><span>${escapeHtml(s.name)}</span></button>`).join("") : `<div class="hg-hint">${hgSongs().length ? "Všechny skladby jsou na ose." : "Program akce je zatím prázdný."}</div>`}</div>
+  </div>`
+}
+function hgSheetOpen(){
+  if(document.getElementById("hgSheetRoot")) return
+  const r = document.createElement("div"); r.id = "hgSheetRoot"; r.className = "hg-ui hg-root"; r.innerHTML = hgSheetHtml()
+  document.body.appendChild(r)
+  r.getBoundingClientRect()                                          // vynutí přepočet, aby se spustila animace
+  requestAnimationFrame(() => { r.classList.add("on"); r.querySelector(".hg-x")?.focus({ preventScroll: true }) })
+  hgFabSync()
+}
+function hgSheetDismiss(){ hgSheetClose(); document.getElementById("hgFab")?.focus({ preventScroll: true }) }      // zavření bez výběru vrátí zaměření na tlačítko +
+function hgSheetClose(now){
+  const r = document.getElementById("hgSheetRoot"); if(!r) return
+  r.removeAttribute("id"); r.classList.remove("on")                  // bez id se dá hned otevřít nový panel, starý dojede animaci
+  if(now) r.remove(); else setTimeout(() => r.remove(), 560)
+  hgFabSync()
+}
+
+function hgPickBarSet(){
+  const b = document.getElementById("hgPickBar"); if(!b) return
+  const p = HG_PICK
+  if(!p){ b.classList.remove("on"); return }
+  const it = p.kind === "item" ? hgArr()[p.idx] : null
+  const name = p.kind === "piece" ? hgPieceLabel(p.piece)
+    : p.kind === "song" ? (hgSongs().find(s => String(s.song_id) === String(p.sid))?.name || "Skladba")
+    : (it?.nazev || HG_LABEL[hgKind(it || {})] || "Položka")
+  b.innerHTML = `<span class="hg-pc">${escapeHtml(name)}</span><span class="hg-ph">Klepněte na pruh, kam patří</span><button type="button" class="hg-pcancel" onclick="hgPickCancel()">Zrušit</button>`
+  b.classList.add("on")
+}
+function hgPickStart(p){
+  HG_PICK = p
+  hgSheetClose()
+  refreshRiderHarmonogram(); hgPickBarSet(); hgFabSync()
+}
+const hgPickPiece = k => hgPickStart({ kind: "piece", piece: k })
+const hgPickSong = sid => hgPickStart({ kind: "song", sid })
+const hgPickItem = idx => hgPickStart({ kind: "item", idx })
+function hgPickCancel(){ HG_PICK = null; hgPickBarSet(); refreshRiderHarmonogram(); hgFabSync() }
+
+function hgFlash(sel){
+  const el = document.querySelector(sel); if(!el) return
+  el.classList.add("hg-flash"); el.scrollIntoView({ block: "nearest", behavior: "smooth" })
+  setTimeout(() => el.classList.remove("hg-flash"), 1300)
+}
+// vložení = stejná logika jako při puštění tažené položky (hgCommit), jen cíl je daný pruhem
+function hgPlace(mode, a, b){
+  const p = HG_PICK; if(!p) return
+  const d = p.kind === "piece" ? { kind: "bank-piece", src: { dataset: { kind: p.piece } } }
+    : p.kind === "song" ? { kind: "bank-song", src: { dataset: { sid: String(p.sid) } } }
+    : { kind: "item", src: { dataset: { idx: String(p.idx) } } }
+  const t = mode === "axis" ? { mode: "axis", index: p.kind === "item" && a > p.idx ? a - 1 : a } : { mode: "block", bidx: a, index: b }
+  hgCommit(d, t)
+  HG_PICK = null; hgPickBarSet(); hgFabSync()
+  refreshRiderHarmonogram(); hgChanged()
+  if(t.mode === "axis") hgFlash(`#hgAxis > .hg-item[data-idx="${t.index}"]`)
+}
+function hgMoveItem(idx, dir){
+  const a = hgArr(), j = idx + dir; if(j < 0 || j >= a.length) return
+  ;[a[idx], a[j]] = [a[j], a[idx]]
+  refreshRiderHarmonogram(); hgChanged(); hgFlash(`#hgAxis > .hg-item[data-idx="${j}"]`)
+}
+function hgMoveSong(bi, si, dir){
+  const s = hgArr()[bi]?.skladby, j = si + dir; if(!s || j < 0 || j >= s.length) return
+  ;[s[si], s[j]] = [s[j], s[si]]
+  refreshRiderHarmonogram(); hgChanged(); hgFlash(`#hgAxis > .hg-item[data-idx="${bi}"] .hg-song[data-sidx="${j}"]`)
+}
+document.addEventListener("keydown", e => {
+  if(e.key !== "Escape") return
+  if(document.getElementById("hgSheetRoot")){ e.stopImmediatePropagation(); hgSheetDismiss() }
+  else if(HG_PICK){ e.stopImmediatePropagation(); hgPickCancel() }
+}, true)
+Object.assign(window, { hgField, hgStart, hgToggle, hgAdd, hgAddSong, hgRemoveItem, hgRemoveSong, hgUpdateSummary, hgSheetOpen, hgSheetClose, hgSheetDismiss, hgPickPiece, hgPickSong, hgPickItem, hgPickCancel, hgPlace, hgMoveItem, hgMoveSong })
 // HG_END
 
 // =============================================
