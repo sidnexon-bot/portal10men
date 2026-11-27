@@ -1,4 +1,5 @@
 /* 10base – Nastavení člena (stránka z profilového menu), skrytí bočního panelu.
+   Stránka je rozcestník (profil, skupiny s ikonami a šipkami) a podstránky Vzhled, Přehled, Moje auta, Šablony úkolů, Osobní údaje; podstránka se zapisuje do historie (tlačítko Zpět).
    • Přizpůsobit: výchozí režim (světlý / tmavý / podle systému) a karty Přehledu (zobrazit, odebrat, pořadí přetahováním),
    • Osobní údaje: jen pro čtení (jméno, datum narození, adresa, hlas, role, číslo účtu).
    Nastavení: /userActivity/{e-mail}/settings10base (smí jen sám člen) + localStorage.
@@ -23,7 +24,8 @@ const card = id => CARDS.find(c => c.id === id)
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))
 const mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null
 let S = { theme: "light", dashboard: { order: ids.slice(), hidden: [] } }
-let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}, auta = null, autaMsg = {}, autoEdit = null
+let started = false, saveTimer = 0, area = null, priv = null, sablony = null, sablonyMsg = {}, auta = null, autaMsg = {}, autoEdit = null, VIEW = null
+const VIEWS = { vzhled: "Vzhled", prehled: "Přehled", auta: "Moje auta", sablony: "Šablony úkolů", osobni: "Osobní údaje" }
 
 const user = () => { try { return JSON.parse(localStorage.getItem("10base_user") || "null") } catch (e) { return null } }
 const keyOf = email => String(email || "").replace(/\./g, "_").replace(/@/g, "_")
@@ -192,8 +194,7 @@ function autoKarta(a) {
 function autaHtml() {
   if (auta === null) return ""
   const karty = auta.map(a => autoEdit === a.id ? autoForm(a) : autoKarta(a)).join("")
-  return `<h3 class="st-h">Moje auta</h3>
-    <div class="card st-card"><p class="st-hint" style="margin-top:0">Až budeš na akci s dopravou „Auta“ brát auto (tlačítko „Vezmu auto“), vybereš si jedno odsud a ostatní uvidí, kolik v něm zbývá míst. Palivo a spotřeba se předvyplní při proplácení paliva v 10korun. Klepnutím na auto ho upravíš nebo smažeš.</p></div>
+  return `<div class="card st-card"><p class="st-hint" style="margin-top:0">Až budeš na akci s dopravou „Auta“ brát auto (tlačítko „Vezmu auto“), vybereš si jedno odsud a ostatní uvidí, kolik v něm zbývá míst. Palivo a spotřeba se předvyplní při proplácení paliva v 10korun. Klepnutím na auto ho upravíš nebo smažeš.</p></div>
     ${autoEdit === "new" ? autoForm(null) : ""}${karty}
     ${autoEdit !== null ? "" : `<div class="st-foot" style="margin-top:12px"><button type="button" class="btn-primary st-add" data-au-new="1">${ICON.plus}<span>Přidat auto</span></button></div>`}`
 }
@@ -227,7 +228,13 @@ const ICON = {
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>',
   minus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>',
   chev: '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg>',
+  car: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3l2-5h12l2 5v3zM4 15v3M20 15v3M7 12h10"/></svg>',
+  tick: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>',
+  user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></svg>'
 }
 function infoRow(label, value) {
   return `<div class="st-row st-info"><div class="st-name">${esc(label)}</div><div class="st-val">${value ? esc(value) : '<span class="st-empty-v">nevyplněno</span>'}</div></div>`
@@ -247,42 +254,77 @@ function sablonyHtml() {
       <div class="st-acts" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button type="button" class="st-add" data-sb-add="${esc(id)}">${ICON.plus}<span>Přidat úkol</span></button><button type="button" class="st-add" data-sb-save="${esc(id)}"><span>Uložit šablonu</span></button>${isNew ? "" : `<button type="button" class="st-add" data-sb-del="${esc(id)}"><span>Smazat</span></button>`}<span class="st-hint" role="status" style="margin:0">${esc(msg || "")}</span></div></div>`
   }
   const list = (sablony || []).map(sb => card(sb, false)).join("")
-  return `<h3 class="st-h">Šablony úkolů</h3>
-    <div class="card st-card"><p class="st-hint" style="margin-top:0">Vlastní seznamy úkolů ke koncertům. V podkladech akce (To-do před koncertem i v den koncertu) vybereš šablonu a tlačítkem „Přidat šablonu“ se úkoly přidají k akci. Úpravy šablony se u akcí, kam už byla přidána, neprojeví.</p>${sablony === null ? '<p class="st-hint">Načítám…</p>' : ""}</div>
+  return `<div class="card st-card"><p class="st-hint" style="margin-top:0">Vlastní seznamy úkolů ke koncertům. V podkladech akce (To-do před koncertem i v den koncertu) vybereš šablonu a tlačítkem „Přidat šablonu“ se úkoly přidají k akci. Úpravy šablony se u akcí, kam už byla přidána, neprojeví.</p>${sablony === null ? '<p class="st-hint">Načítám…</p>' : ""}</div>
     ${list}${sablony === null ? "" : card(null, true)}`
 }
-function aboutHtml() {
-  const V = globalThis.TEN_VERSION || {}
-  return `<div class="card st-card"><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">10base ${esc(V.version || "")}</div><div class="st-desc">Vydáno ${esc(V.date || "")}. Aplikace sama nabídne obnovení, jakmile vyjde novější verze.</div></div><div class="st-acts"><button type="button" class="st-add" data-check-update="1"><span id="st-upd-label">Zkontrolovat aktualizace</span></button></div></div></div>`
+const cz = (n, a, b, c) => n === 1 ? a : n >= 2 && n <= 4 ? b : c
+const ROLE_SHORT = { ADMIN: "Administrátor", OWNER: "Vlastník", MEMBER: "Člen", ART: "Umělecký vedoucí", GUEST: "Host" }
+function navRow(go, icon, color, label, value, below) {
+  return `<button type="button" class="st-nav${below ? " st-below" : ""}" data-go="${go}"><span class="st-nic" style="background:${color}" aria-hidden="true">${ICON[icon]}</span><span class="st-nl">${esc(label)}${value ? `<span class="st-nsub">${esc(value)}</span>` : ""}</span>${value && !below ? `<span class="st-nv" aria-hidden="true">${esc(value)}</span>` : ""}<span class="st-nchev" aria-hidden="true">${ICON.chev}</span></button>`
 }
-function pageHtml() {
-  const vis = dashboardCards(), hidden = S.dashboard.hidden
-  const shown = vis.length ? `<div class="st-list" id="st-list">${vis.map(id => { const c = card(id); return `<div class="st-row" data-card="${id}"><button type="button" class="st-grip" data-grip="${id}" aria-label="Přesunout kartu ${esc(c.title)} (šipky nahoru a dolů)" title="Přetáhni">${ICON.grip}</button><div class="st-t"><div class="st-name">${esc(c.title)}</div><div class="st-desc">${esc(c.desc)}</div></div><div class="st-acts"><button type="button" class="st-ic" data-hide="${id}" aria-label="Odebrat z Přehledu: ${esc(c.title)}" title="Odebrat">${ICON.minus}</button></div></div>` }).join("")}</div>` : `<div class="st-empty">Přehled je prázdný. Přidej karty níže.</div>`
-  const more = hidden.map(id => { const c = card(id); return `<div class="st-row" data-card="${id}"><div class="st-t"><div class="st-name">${esc(c.title)}</div><div class="st-desc">${esc(c.desc)}</div></div><div class="st-acts"><button type="button" class="st-add" data-show="${id}">${ICON.plus}<span>Přidat</span></button></div></div>` }).join("")
-  const seg = THEMES.map(t => `<button type="button" role="radio" aria-checked="${S.theme === t[0]}" class="${S.theme === t[0] ? "on" : ""}" data-theme="${t[0]}">${t[1]}</button>`).join("")
-  const isDefault = JSON.stringify(S.dashboard) === JSON.stringify(cleanDash(null))
-  const m = me()
-  const p = priv
-  const personal = `<div class="card st-card"><p class="st-hint" style="margin-top:0">Údaje jsou jen pro čtení. Změnu nebo doplnění ti udělá administrátor.</p>
+function hubHtml() {
+  const m = me(), vis = dashboardCards(), nTheme = (THEMES.find(t => t[0] === S.theme) || THEMES[2])[1]
+  const ini = String(m.name || "?").trim().split(/\s+/).filter(Boolean).map(w => w[0]).filter((c, k, a) => k === 0 || k === a.length - 1).join("").toUpperCase() || "?"
+  const sub = [m.voice, ROLE_SHORT[m.role]].filter(Boolean).join(" · ")
+  const V = globalThis.TEN_VERSION || {}
+  return `<button type="button" class="card st-grp st-prof" data-go="osobni"><span class="st-av" aria-hidden="true">${esc(ini)}</span><span class="st-nl"><b>${esc(m.name || "Můj profil")}</b>${sub ? `<span class="st-nsub" style="display:block">${esc(sub)}</span>` : ""}</span><span class="st-nchev" aria-hidden="true">${ICON.chev}</span></button>
+    <h3 class="st-sec">Přizpůsobit</h3>
+    <div class="card st-grp">${navRow("vzhled", "sun", "#5856d6", "Vzhled", nTheme)}${navRow("prehled", "grid", "#007aff", "Přehled", vis.length + " " + cz(vis.length, "karta", "karty", "karet"))}</div>
+    <h3 class="st-sec">Akce a doprava</h3>
+    <div class="card st-grp">${navRow("auta", "car", "#34c759", "Moje auta", auta === null ? "" : auta.length + " " + cz(auta.length, "auto", "auta", "aut"))}${canEditSablony() ? navRow("sablony", "tick", "#ff9500", "Šablony úkolů", sablony === null ? "" : String(sablony.length)) : ""}</div>
+    <h3 class="st-sec">Účet</h3>
+    <div class="card st-grp">${navRow("osobni", "user", "#8e8e93", "Osobní údaje", "Jméno, adresa, číslo účtu", true)}</div>
+    <h3 class="st-sec">O aplikaci</h3>
+    <div class="card st-grp"><div class="st-nav st-static"><span class="st-nic" style="background:#ee220c" aria-hidden="true">${ICON.down}</span><span class="st-nl">10base ${esc(V.version || "")}<span class="st-nsub" style="display:block">Vydáno ${esc(V.date ? V.date.split("-").reverse().map(Number).join(". ") : "")}</span></span><button type="button" class="st-add" data-check-update="1"><span id="st-upd-label">Zkontrolovat</span></button></div></div>`
+}
+function viewHtml(v) {
+  if (v === "vzhled") {
+    const seg = THEMES.map(t => `<button type="button" role="radio" aria-checked="${S.theme === t[0]}" class="${S.theme === t[0] ? "on" : ""}" data-theme="${t[0]}">${t[1]}</button>`).join("")
+    return `<div class="card st-card"><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">Výchozí režim</div><div class="st-desc">Světlý, tmavý, nebo podle nastavení telefonu či počítače. Platí na všech tvých zařízeních.</div></div><div class="st-seg" role="radiogroup" aria-label="Výchozí režim">${seg}</div></div></div>`
+  }
+  if (v === "prehled") {
+    const vis = dashboardCards(), hidden = S.dashboard.hidden
+    const shown = vis.length ? `<div class="st-list" id="st-list">${vis.map(id => { const c = card(id); return `<div class="st-row" data-card="${id}"><button type="button" class="st-grip" data-grip="${id}" aria-label="Přesunout kartu ${esc(c.title)} (šipky nahoru a dolů)" title="Přetáhni">${ICON.grip}</button><div class="st-t"><div class="st-name">${esc(c.title)}</div><div class="st-desc">${esc(c.desc)}</div></div><div class="st-acts"><button type="button" class="st-ic" data-hide="${id}" aria-label="Odebrat z Přehledu: ${esc(c.title)}" title="Odebrat">${ICON.minus}</button></div></div>` }).join("")}</div>` : `<div class="st-empty">Přehled je prázdný. Přidej karty níže.</div>`
+    const more = hidden.map(id => { const c = card(id); return `<div class="st-row" data-card="${id}"><div class="st-t"><div class="st-name">${esc(c.title)}</div><div class="st-desc">${esc(c.desc)}</div></div><div class="st-acts"><button type="button" class="st-add" data-show="${id}">${ICON.plus}<span>Přidat</span></button></div></div>` }).join("")
+    const isDefault = JSON.stringify(S.dashboard) === JSON.stringify(cleanDash(null))
+    return `<p class="st-hint st-lead">Vyber, které karty se na Přehledu zobrazují, a přetažením změň jejich pořadí.</p>
+      <h3 class="st-sec">Zobrazené karty</h3><div class="card st-card">${shown}</div>
+      ${more ? `<h3 class="st-sec">Skryté karty</h3><div class="card st-card">${more}</div>` : ""}
+      <div class="st-foot"><button type="button" class="st-add" data-reset="1" ${isDefault ? "disabled" : ""}><span>Obnovit výchozí Přehled</span></button></div>`
+  }
+  if (v === "auta") return autaHtml()
+  if (v === "sablony") return sablonyHtml()
+  const m = me(), p = priv
+  return `<div class="card st-card"><p class="st-hint" style="margin-top:0">Údaje jsou jen pro čtení. Změnu nebo doplnění ti udělá administrátor.</p>
     ${infoRow("Jméno a příjmení", m.name)}${infoRow("Datum narození", p ? fmtBirth(p.birth) : "")}${infoRow("Adresa", p ? p.address : "")}${infoRow("Hlas", m.voice)}${infoRow("V 10men působí od", m.since ? fmtBirth(m.since) : "")}${infoRow("Uživatelská role", ROLE_CS[m.role] || m.role)}
     <div class="st-sub">Platební údaje</div>${infoRow("Číslo účtu", p ? p.bank : "")}</div>`
-  return `<div class="st-wrap"><button type="button" class="st-back" data-back="1">${ICON.back}<span>Zpět</span></button><h2 class="st-title">Nastavení</h2><h3 class="st-h">Přizpůsobit</h3>
-    <div class="card st-card"><div class="event-label">Vzhled</div><div class="st-row st-row-seg"><div class="st-t"><div class="st-name">Výchozí režim</div><div class="st-desc">Světlý, tmavý, nebo podle nastavení telefonu či počítače. Platí na všech tvých zařízeních.</div></div><div class="st-seg" role="radiogroup" aria-label="Výchozí režim">${seg}</div></div></div>
-    <div class="card st-card"><div class="event-label">Přehled</div><p class="st-hint">Vyber, které karty se na Přehledu zobrazují, a přetažením změň jejich pořadí.</p>${shown}</div>
-    ${more ? `<div class="card st-card"><div class="event-label">Další karty</div>${more}</div>` : ""}
-    <div class="st-foot"><button type="button" class="st-add" data-reset="1" ${isDefault ? "disabled" : ""}><span>Obnovit výchozí Přehled</span></button></div>
-    ${sablonyHtml()}
-    ${autaHtml()}
-    <h3 class="st-h">Osobní údaje</h3>${personal}
-    <h3 class="st-h">O aplikaci</h3>${aboutHtml()}</div>`
 }
+function pageHtml() {
+  if (VIEW === "sablony" && !canEditSablony()) VIEW = null
+  const sub = VIEW && VIEWS[VIEW]
+  return `<div class="st-wrap${sub ? " st-sub-view" : ""}"><button type="button" class="st-back" data-back="1">${ICON.back}<span>${sub ? "Nastavení" : "Zpět"}</span></button>
+    ${sub ? `<h2 class="st-ptitle" tabindex="-1">${esc(VIEWS[VIEW])}</h2>${viewHtml(VIEW)}` : `<h2 class="st-title">Nastavení</h2>${hubHtml()}`}</div>`
+}
+function go(v, push) {   // rozcestník ↔ podstránka; podstránka se zapíše do historie, ať tlačítko Zpět (i na Androidu) vrací na rozcestník
+  VIEW = v && VIEWS[v] ? v : null
+  if (push && VIEW) { try { history.pushState({ stView: VIEW }, "") } catch (e) { /* bez historie */ } }
+  if (!area || !area.isConnected) return
+  area.innerHTML = pageHtml(); window.scrollTo(0, 0)
+  const w = area.querySelector(".st-wrap"); if (w) w.classList.add("st-anim")
+  const h = area.querySelector(".st-ptitle"); if (h) h.focus({ preventScroll: true })
+}
+window.addEventListener("popstate", e => {
+  if (!area || !area.isConnected || !area.querySelector(".st-wrap")) return
+  const v = e.state && e.state.stView || null; if (v === VIEW) return
+  go(v, false)
+})
 function refresh() {
   if (!area || !area.isConnected || !area.querySelector(".st-wrap")) return
   const y = window.scrollY; area.innerHTML = pageHtml(); window.scrollTo(0, y)
 }
 function back() { if (typeof window.__tenSettingsBack === "function") window.__tenSettingsBack() }
 function onClick(e) {
-  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del],[data-au-open],[data-au-new],[data-au-cancel],[data-au-pal],[data-au-step]")
+  const t = e.target.closest && e.target.closest("[data-theme],[data-hide],[data-show],[data-reset],[data-back],[data-check-update],[data-sb-save],[data-sb-del],[data-sb-add],[data-sb-rm],[data-au-save],[data-au-del],[data-au-open],[data-go],[data-au-new],[data-au-cancel],[data-au-pal],[data-au-step]")
   if (!t || !area || !area.contains(t)) return
   if (t.dataset.auPal != null) {   // palivo: volba se dá zrušit druhým klepnutím; posuvník spotřeby dostane rozsah podle paliva
     const box = t.closest("[data-auto]"), on = t.classList.contains("on")
@@ -315,7 +357,8 @@ function onClick(e) {
     const lb = document.getElementById("st-upd-label"); if (lb) lb.textContent = "Kontroluji…"
     return (window.tenVersionCheck ? window.tenVersionCheck(true) : Promise.resolve(null)).then(r => { const l2 = document.getElementById("st-upd-label"); if (l2) l2.textContent = r === false ? "Máte nejnovější verzi" : r === null ? "Nepodařilo se zjistit" : "Nová verze " + r })
   }
-  if (t.dataset.back) return back()
+  if (t.dataset.go) return go(t.dataset.go, true)
+  if (t.dataset.back) { if (!VIEW) return back(); if (history.state && history.state.stView) return history.back(); return go(null, false) }
   if (t.dataset.hide) return hide(t.dataset.hide)
   if (t.dataset.show) return show(t.dataset.show)
   if (t.dataset.reset) return setDash(null)
@@ -396,7 +439,7 @@ function onInput(e) {   // živé úpravy karty auta: nic se nepřekresluje, mě
   else if (t.matches("[data-au-spotreba]")) { const v = Number(String(t.value).replace(",", ".")); if (v > 0) box.querySelector("[data-au-sslider]").value = v; auSync(box) }
 }
 async function render(el) {
-  area = el; area.innerHTML = pageHtml()
+  area = el; VIEW = null; autoEdit = null; area.innerHTML = pageHtml()
   if (!area.__stBound) {
     area.__stBound = true; area.addEventListener("click", onClick); area.addEventListener("keydown", onKey); area.addEventListener("input", onInput)
     area.addEventListener("pointerdown", dragStart); area.addEventListener("pointermove", dragMove); area.addEventListener("pointerup", dragEnd); area.addEventListener("pointercancel", dragEnd)

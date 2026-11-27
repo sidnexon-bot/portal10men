@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.19.0 (27. 11. 2026)
+- Nastavení je rozcestník místo jedné dlouhé stránky: nahoře profil (iniciály, jméno, hlas a role, proklik na Osobní údaje), pod ním skupiny Přizpůsobit (Vzhled, Přehled), Akce a doprava (Moje auta, Šablony úkolů pro ty, kdo je smějí upravovat), Účet (Osobní údaje) a O aplikaci (verze a kontrola aktualizací). Řádky mají barevnou ikonu, aktuální hodnotu (režim, počet karet, počet aut) a šipku. Každá položka otevře vlastní podstránku s tlačítkem „Nastavení“ a nadpisem; podstránka se zapisuje do historie, takže tlačítko Zpět (i na Androidu) vrací na rozcestník. Obsah a ukládání jsou beze změny. Vzhled podle platformy: iPhone seskupené bloky s ikonami v barevných čtvercích, Android Material 3 s tonálními kolečky a hodnotou pod názvem.
+
 ## 4.18.3 (27. 11. 2026)
 - Nastavení, přidání auta: popisky „Jak se auto jmenuje?“ → „Název“ a „Čím jezdí“ → „Vyber palivo“.
 
