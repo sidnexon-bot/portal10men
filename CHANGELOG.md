@@ -3,6 +3,9 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.22.0 (28. 11. 2026)
+- Profilová kolečka členů s iniciálami (křestní jméno a příjmení) v barvě aplikace: u jmen v docházce detailu akce, v okně Odškrtnout docházku, u zodpovědných osob v úkolech a v Kontaktech. Profilové fotografie z Google účtu zatím nejsou.
+
 ## 4.21.0 (28. 11. 2026)
 - Přehled: nová karta Nejbližší akce. Nahoře název a odpočet dnů, pod tím termín a místo, kruh docházky s počty (potvrzeno, možná, nepřijdou, čekáme) a přepínač Přijdu / Možná / Nepřijdu přímo na kartě. Tlačítka Navigovat a Připojit se zůstávají.
 - Detail akce je rozdělený do záložek Info, Program, Doprava (jen když je doprava „Auta“), Docházka a Úkoly (jen administrátor a ART). Odpověď „Vaše odpověď“ je v záložkách Info a Docházka. Zůstává tlačítko Upravit akci a Smazat pod záložkami.

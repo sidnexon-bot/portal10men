@@ -231,6 +231,13 @@ function getInitials(name){
   return name.split(" ").map(n => n[0]).join("").toUpperCase()
 }
 
+// profilové kolečko člena: iniciály křestního jména a příjmení, velikost s (24) / m (32) / l (40) / xl (64)
+function avHtml(name, size = "m"){
+  const w = String(name || "").trim().split(/\s+/).filter(Boolean)
+  const ini = w.length ? (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase() : "?"
+  return `<span class="av av-${size}" aria-hidden="true">${escapeHtml(ini)}</span>`
+}
+
 function currentMember(){
   return MEMBER_EMAIL
 }
@@ -1285,8 +1292,9 @@ async function renderDashboard(){
             const border = i < sortedMembers.length - 1 ? "border-bottom:1px solid var(--card-border);" : ""
             return `<div onclick="openContactModal('${jsArg(m.ID)}')"
               style="padding:14px 16px;${border}cursor:pointer">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                ${avHtml(m.NAME, "l")}
+                <div style="flex:1;min-width:0">
                   <div style="font-weight:600;font-size:15px">${escapeHtml(m.NAME)}</div>
                   <div class="small">${escapeHtml(m.VOICE)}</div>
                 </div>
@@ -1439,7 +1447,7 @@ function ukolyMarketingHtml(mkAll){
             <div style="flex:1;min-width:0;cursor:pointer" onclick="openEvent('${jsArg(t.akceId)}')">
               <div style="font-size:14px;font-weight:600">${escapeHtml(t.text)}</div>
               <div class="small">${sub}${late ? ` · <span style="color:#ff3b30;font-weight:600">po termínu</span>` : ""}</div>
-              ${t.assignee ? `<div class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</div>` : ""}
+              ${t.assignee ? `<div class="small av-line" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${avHtml(t.assignee.name, "s")}${escapeHtml(assigneeLabel(t.assignee))}</div>` : ""}
             </div>
           </div>`
         }).join("")}
@@ -1461,7 +1469,7 @@ function ukolyVsechnyHtml(todos, mkAll){
                   ${done ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3"><path d="M5 13l4 4L19 7"/></svg>` : ""}
                 </div>
                 <span style="flex:1;font-size:14px;${done ? "text-decoration:line-through;color:var(--muted)" : ""}">${escapeHtml(t.text)}</span>
-                ${t.assignee ? `<span class="small" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${escapeHtml(assigneeLabel(t.assignee))}</span>` : ""}
+                ${t.assignee ? `<span class="small av-line" style="${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${avHtml(t.assignee.name, "s")}${escapeHtml(assigneeLabel(t.assignee))}</span>` : ""}
                 ${t.deadline ? `<span class="small">${formatDate(t.deadline)}</span>` : ""}
                 ${isSelected ? `<div style="color:#007aff;font-size:20px">✓</div>` : ""}
               </div>
@@ -3550,7 +3558,7 @@ async function openEvent(id){
                   <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${jsArg(id)}','todo_pred',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
-                    ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
+                    ${t.kdo ? `<div class="small av-line">${avHtml(t.kdo, "s")}<span>${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</span></div>` : ""}
                   </div>
                 </div>
               `).join("")}
@@ -3564,7 +3572,7 @@ async function openEvent(id){
                   <input type="checkbox" ${t.done ? "checked" : ""} onchange="event.stopPropagation();toggleRiderTodoDetail('${jsArg(id)}','todo_den',${idx},this.checked)" style="width:auto;margin-top:3px">
                   <div style="flex:1">
                     <div style="${t.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${escapeHtml(t.co)}</div>
-                    ${t.kdo ? `<div class="small">${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</div>` : ""}
+                    ${t.kdo ? `<div class="small av-line">${avHtml(t.kdo, "s")}<span>${escapeHtml(t.kdo)}${t.poznamka ? ' · ' + escapeHtml(t.poznamka) : ''}</span></div>` : ""}
                   </div>
                 </div>
               `).join("")}
@@ -3621,7 +3629,7 @@ async function openEvent(id){
         <div class="evd-open${isOpen ? " on" : ""}"><div>${g.list.map(a => {
           const [cls, txt] = evdStat(a)
           const sub = [fin && a.STATUS && a.STATUS !== eff(a) ? "přihlášen(a): " + a.STATUS : "", a.REASON || ""].filter(Boolean).join(" · ")
-          return `<div class="evd-who"><div><b>${escapeHtml(a.NAME)}</b>${sub ? `<div class="small">${escapeHtml(sub)}</div>` : ""}</div><span class="evd-st ${cls}">${txt}</span></div>`
+          return `<div class="evd-who">${avHtml(a.NAME)}<div><b>${escapeHtml(a.NAME)}</b>${sub ? `<div class="small">${escapeHtml(sub)}</div>` : ""}</div><span class="evd-st ${cls}">${txt}</span></div>`
         }).join("")}</div></div>
       </div>`
     }
@@ -3842,7 +3850,7 @@ function mkMirrorHtml(tasks){
 
 function mkAssigneeHtml(t){
   if(!t.assignee) return ""
-  return `<div class="small" style="margin-top:2px;${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">Zodpovídá: ${escapeHtml(assigneeLabel(t.assignee))}</div>`
+  return `<div class="small av-line" style="margin-top:2px;${isMine(t.assignee) ? "color:var(--blue,#007aff);font-weight:600" : ""}">${avHtml(t.assignee.name, "s")}Zodpovídá: ${escapeHtml(assigneeLabel(t.assignee))}</div>`
 }
 
 function renderMarketingHtml(id, event, tasks, canEdit, access){
@@ -6977,7 +6985,7 @@ function attRender(){
   const groups = ATT_VOICES.map(v => ({ voice: v, list: c.att.filter(a => a.VOICE === v) })).filter(g => g.list.length)
   const rows = groups.map(g => `<div class="att-group"><div class="att-gh" data-voice="${escapeHtml(g.voice)}"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b></b></div>
       ${g.list.map(a => `<label class="att-row">
-          <span class="att-who"><span class="att-name">${escapeHtml(a.NAME)}</span><small class="att-decl">Odpověď: ${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small></span>
+          ${avHtml(a.NAME)}<span class="att-who"><span class="att-name">${escapeHtml(a.NAME)}</span><small class="att-decl">Odpověď: ${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small></span>
           <input type="checkbox" class="ev-swin" data-email="${escapeHtml(a.EMAIL)}" aria-label="Přišel(a): ${escapeHtml(a.NAME)}" ${c.checked.has(a.EMAIL) ? "checked" : ""} onchange="toggleAttendanceRow('${jsArg(a.EMAIL)}', this.checked)">
         </label>`).join("")}</div>`).join("")
   // rychlé volby překreslí okno; polohu rolování seznamu (i okna) je potřeba zachovat, jinak skočí nahoru
@@ -7176,9 +7184,7 @@ async function openContactModal(id){
 
   document.getElementById("contactModalContent").innerHTML = `
     <div style="text-align:center;margin-bottom:20px">
-      <div style="width:64px;height:64px;border-radius:50%;background:#e5e5ea;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 12px">
-        ${getInitials(m.NAME)}
-      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:12px">${avHtml(m.NAME, "xl")}</div>
       <div style="font-size:20px;font-weight:700">${escapeHtml(m.NAME)}</div>
       <div class="small">${escapeHtml(m.VOICE)}</div>
       <div style="font-size:11px;font-weight:600;color:#007aff;margin-top:4px;text-transform:uppercase">${escapeHtml(m.ROLE)}</div>
