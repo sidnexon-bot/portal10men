@@ -3,6 +3,13 @@
 Verze se označují MAJOR.MINOR.PATCH. Číslo je v `version.js`, vydání se označí tagem `vX.Y.Z`.
 Postup vydání: zvýšit číslo a datum ve `version.js`, doplnit tento soubor, nasadit, `git tag -a vX.Y.Z -m "…"` a `git push --tags`.
 
+## 4.21.0 (28. 11. 2026)
+- Přehled: nová karta Nejbližší akce. Nahoře název a odpočet dnů, pod tím termín a místo, kruh docházky s počty (potvrzeno, možná, nepřijdou, čekáme) a přepínač Přijdu / Možná / Nepřijdu přímo na kartě. Tlačítka Navigovat a Připojit se zůstávají.
+- Detail akce je rozdělený do záložek Info, Program, Doprava (jen když je doprava „Auta“), Docházka a Úkoly (jen administrátor a ART). Odpověď „Vaše odpověď“ je v záložkách Info a Docházka. Zůstává tlačítko Upravit akci a Smazat pod záložkami.
+- Docházka: souhrn „Přijde X z N“, pruhy po hlasech, po klepnutí na hlas jména členů se stavem a důvodem; po potvrzení administrátorem „Přišlo X z N“ s označením Potvrzeno. Okno Odškrtnout docházku má u každého člena přepínač „Přišel(a)“ a jeho původní odpověď, nahoře počet „Přišlo X z N“, rychlé volby Podle odpovědí a Nikdo a tlačítko Potvrdit docházku (u potvrzené Uložit změny a Zrušit potvrzení docházky); počty se přepisují bez překreslení okna.
+- Program bez odkazů na noty. Prázdný program ukáže „Sem Kája doplní program“ (administrátor a ART mají dál tlačítko Vytvořit program).
+- Nové styly jsou v redesign.css (kruh docházky, pruhy po hlasech, záložky z přepínače voleb .ev-seg).
+
 ## 4.20.2 (27. 11. 2026)
 - Zabezpečení: hodnoty z databáze (názvy a id akcí, texty aktualit a úkolů) se do tlačítek vkládají bezpečně, takže je nelze použít k vložení cizího kódu do stránky ostatních členů; odkazy na hovor a dokument musí začínat https://.
 - Zabezpečení: Discord a push se odesílají přes server (funkce sendNotify). Webhook Discordu a klíč OneSignalu už aplikace ani členové nečtou; nastavení v databázi (/config) čtou členové jen u plateb a šablon úkolů a zapisují jen šablony.

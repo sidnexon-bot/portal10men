@@ -1119,45 +1119,35 @@ async function renderDashboard(){
 
     // --- NEJBLIŽŠÍ AKCE data ---
     let myStatus = ""
-    let attendanceCount = 0
+    let nxAttendance = []
 
     if(upcoming && MEMBER_EMAIL){
       try{
         const detail = await cachedApi("eventdetail", {id: upcoming.ID})
         const myRow  = (detail.attendance || []).find(a => a.EMAIL === MEMBER_EMAIL)
-        myStatus        = myRow?.STATUS || ""
-        attendanceCount = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
+        myStatus     = myRow?.STATUS || ""
+        nxAttendance = detail.attendance || []
       }catch(e){ console.error("eventdetail fail", e) }
     }
-
-    const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-    const statusText  = myStatus || "Nevyplněno"
 
     // --- HTML sestavení ---
 
     // pomocná funkce pro kartu nejbližší akce
+    const nxEnd = upcoming && upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""
+    const nxTime = upcoming && upcoming.START ? " · " + formatTime(upcoming.START) + (upcoming.END ? " – " + formatTime(upcoming.END) : "") : ""
+    const nxCountdown = upcoming && upcoming.STATUS !== "Zrušená" ? dnyDo(upcoming.DATE) : null
     const nearestEventHtml = upcoming ? `
-      <div class="card" style="cursor:pointer" onclick="setActiveTab('events');openEvent('${jsArg(upcoming.ID)}')">
+      <div class="card nx evd" onclick="setActiveTab('events');openEvent('${jsArg(upcoming.ID)}')">
         <div class="event-label">Nejbližší akce</div>
-        <b style="font-size:18px;display:block;margin-bottom:8px">${escapeHtml(upcoming.NAME)}</b>
-        <div class="info-row">
-          <span class="info-label">Datum</span>
-          <span class="info-value">${formatDate(upcoming.DATE)}${upcoming.DATE_END ? " – " + formatDate(upcoming.DATE_END) : ""}</span>
+        <div class="nx-head">
+          <b class="nx-name">${escapeHtml(upcoming.NAME)}</b>
+          ${nxCountdown ? `<span class="days-badge">${nxCountdown}</span>` : ""}
         </div>
-        <div class="info-row">
-          <span class="info-label">Čas</span>
-          <span class="info-value">${upcoming.START ? formatTime(upcoming.START) : "—"}${upcoming.END ? " – " + formatTime(upcoming.END) : ""}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Místo</span>
-          <span class="info-value">${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "—")}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Typ akce</span>
-          <span class="info-value">${escapeHtml(upcoming.TYPE) || "Zkouška"}</span>
-        </div>
+        <div class="small nx-when">${formatDate(upcoming.DATE)}${nxEnd}${nxTime}<br>${escapeHtml(upcoming.PLACE) || (upcoming.CALL_URL ? "Online" : "")}</div>
+        <div class="nx-att" id="nxAtt">${nxAttHtml(nxAttendance, upcoming.ATTENDANCE_FINAL === true)}</div>
+        ${MEMBER_EMAIL && upcoming.STATUS !== "Zrušená" ? `<div id="nxRsvp">${evdRsvpSeg(upcoming.ID, myStatus)}</div>` : ""}
         ${(upcoming.PLACE || upcoming.CALL_URL) ? `
-          <div class="btn-group" style="margin-bottom:16px">
+          <div class="btn-group">
             ${upcoming.PLACE ? `
               <a class="ar-btn" href="https://maps.google.com/?q=${encodeURIComponent(upcoming.PLACE)}" target="_blank" rel="noopener noreferrer"
                 onclick="event.stopPropagation()"
@@ -1181,10 +1171,6 @@ async function renderDashboard(){
             ` : ""}
           </div>
         ` : ""}
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(128,128,128,0.15)">
-          <span style="font-size:13px;font-weight:700;color:${statusColor}">${statusText}</span>
-          <span class="small dash-attendance-count">✓ Přijdu: <b>${attendanceCount}</b></span>
-        </div>
       </div>
     ` : ""
 
@@ -1351,6 +1337,7 @@ async function renderDashboard(){
    }
 
    container().innerHTML = html
+   evSegObserve(container())
    restoreScroll(scroll)
 
   }catch(err){
@@ -3299,6 +3286,68 @@ function toggleObleceniSoustredeniDetail(val){
   if(el) el.style.display = val === "Ano" ? "block" : "none"
 }
 
+/* ════════════════════════════════════════════════════════════════════
+   Karta Nejbližší akce (Přehled) a detail akce v záložkách
+   Přepínač voleb je stávající .ev-seg; odpověď volá stejné funkce jako dřív (doAttendance…).
+   ════════════════════════════════════════════════════════════════════ */
+const EVD_RSVP = [["Přijdu", "Přijdu"], ["Možná", "Možná"], ["Nepřijdu", "Nepřijdu"]]
+const EVD_CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`
+
+function evdSegHtml(options, cur, onpick, extra = ""){
+  const i = options.findIndex(o => o[0] === cur)
+  return `<div class="ev-seg${extra ? " " + extra : ""}${i < 0 ? " none" : ""}" role="radiogroup">` +
+    options.map(([v, l], k) => `<button type="button" role="radio" class="ev-segb${k === i ? " on" : ""}" aria-checked="${k === i}" onclick="${onpick(v)}"><span>${escapeHtml(l)}</span></button>`).join("") + `</div>`
+}
+function evdRsvpSeg(id, status){
+  return evdSegHtml(EVD_RSVP, status, v => `event.stopPropagation();evdRsvp('${jsArg(id)}','${jsArg(v)}')`)
+}
+function evdRsvp(id, v){
+  if(v === "Přijdu") doAttendance(id, v)
+  else if(v === "Možná") doAttendanceMozna(id)
+  else doAttendanceWithReason(id, v)
+}
+function evdTab(key, btn){
+  window.EVD_TAB = key
+  document.querySelectorAll(".evd-pane").forEach(p => p.classList.toggle("on", p.dataset.k === key))
+  const seg = btn.closest(".ev-seg")
+  evSegSet(seg, btn)
+  seg.scrollTo?.({ left: Math.max(0, btn.offsetLeft - seg.clientWidth / 2 + btn.offsetWidth / 2), behavior: "smooth" })
+}
+function evdVoice(btn, voice){
+  const open = btn.getAttribute("aria-expanded") !== "true"
+  btn.setAttribute("aria-expanded", String(open))
+  btn.nextElementSibling.classList.toggle("on", open)
+  window.EVD_OPEN = window.EVD_OPEN || {}
+  window.EVD_OPEN[voice] = open
+}
+
+// počty odpovědí a kruh docházky na kartě Nejbližší akce
+function nxAttHtml(attendance, fin){
+  const eff = a => fin ? (a.ACTUAL === "yes" ? "Přijdu" : "Nepřijdu") : a.STATUS
+  const total = attendance.length
+  const yes = attendance.filter(a => eff(a) === "Přijdu").length
+  const maybe = attendance.filter(a => eff(a) === "Možná").length
+  const no = attendance.filter(a => eff(a) === "Nepřijdu").length
+  const wait = total - yes - maybe - no
+  if(!total) return ""
+  const off = (163.4 * (1 - yes / total)).toFixed(1)
+  return `<div class="nx-ring"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="bg" cx="32" cy="32" r="26"/><circle class="fg" cx="32" cy="32" r="26" stroke-dasharray="163.4" stroke-dashoffset="${off}"/></svg><b>${yes}</b></div>
+    <div class="nx-att-txt"><b>${yes} potvrzeno z ${total}</b><div class="small">${maybe} možná · ${no} nepřijdou · ${wait} čekáme</div></div>`
+}
+function nxUpdate(detail){
+  const att = document.getElementById("nxAtt")
+  if(!att) return
+  const rows = detail.attendance || []
+  att.innerHTML = nxAttHtml(rows, detail.event?.ATTENDANCE_FINAL === true)
+  const mine = rows.find(a => a.EMAIL === MEMBER_EMAIL)
+  const seg = document.querySelector("#nxRsvp .ev-seg")
+  if(seg){
+    const st = mine?.STATUS || ""
+    seg.querySelectorAll(".ev-segb").forEach((b, k) => { const on = EVD_RSVP[k][0] === st; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)) })
+    evSegLayout(seg)
+  }
+}
+
 async function openEvent(id){
   window.ACTIVE_EVENT_ID = id
 
@@ -3336,7 +3385,7 @@ async function openEvent(id){
    <button onclick="renderEvents()" style="margin-bottom:16px">← Zpět</button>
      <h2 style="margin-bottom:4px">${escapeHtml(event.NAME)}</h2>
    ${event.TEMPLATE_ID ? `<div style="font-size:11px;color:#8e8e93;margin-bottom:8px;letter-spacing:0.05em">Opakující se akce</div>` : ""}
-        <div class="card" style="margin-bottom:16px">
+        <!--evd-split--><div class="card" style="margin-bottom:16px">
           <div class="info-row">
             <span class="info-label">Typ akce</span>
             <span class="info-value">${escapeHtml(event.TYPE) || "Zkouška"}</span>
@@ -3392,9 +3441,11 @@ async function openEvent(id){
         </div>`
 
     // --- DOPRAVA (interaktivní karta: kdo vezme auto a s kým kdo jede) ---
+    html += "\u0001car\u0001"
     if(event.DOPRAVA === "Auta") html += renderDopravaCard(id, event)
 
     // --- DALŠÍ INFORMACE ---
+    html += "\u0001info\u0001"
     if(event.SRAZ || event.OBLECENI || event.DOPRAVA || event.HARMONOGRAM || event.HOSPODA || event.SPACAKY || event.STRAVA || event.OBLECENI_S){
       html += `<div class="event-card" style="margin-bottom:16px;padding:0">
         <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('info')">
@@ -3458,63 +3509,23 @@ async function openEvent(id){
     }
 
     // --- PROGRAM ---
+    html += "\u0001prog\u0001"
     const mainProgram   = program.filter(p => !p.ENCORE)
     const encoreProgram = program.filter(p => p.ENCORE)
     const programSummary = mainProgram.length
       ? mainProgram.length + " skladeb" + (encoreProgram.length ? " + " + encoreProgram.length + " přídavek" : "")
-      : "Program není k dispozici"
-
-    html += `<div class="event-card" style="margin-bottom:16px;padding:0">
-      <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('program')">
-        <span>Program <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted)">· ${programSummary}</span></span>
-        <span id="accChevron_program" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
-      </div>
-      <div id="accBody_program" style="display:none;padding:0 16px 16px">
-      ${mainProgram.length ? `
-        ${mainProgram.map((p, i) => `
-          <div class="event-row">
-            <div>
-              <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-              ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              ${p.PDF ? `<a href="${escapeHtml(safeUrl(noteLink(p.PDF)))}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
-            </div>
-          </div>
-        `).join("")}
-        ${encoreProgram.length ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <div class="event-label" style="margin-bottom:6px">Přídavky</div>
-            ${encoreProgram.map((p, i) => `
-              <div class="event-row">
-                <div>
-                  <b>${i+1}. ${escapeHtml(p.NAME)}</b>
-                  ${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}
-                </div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  ${p.PDF ? `<a href="${escapeHtml(safeUrl(noteLink(p.PDF)))}" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:#007aff;text-decoration:none;white-space:nowrap">Noty</a>` : ""}
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        ` : ""}
-        ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${jsArg(id)}')" style="width:100%">Upravit program</button>
-          </div>
-        ` : ""}
-      ` : `
-        <p class="notice" style="margin:0">Program není k dispozici</p>
-        ${(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") ? `
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f2f2f7">
-            <button onclick="openProgramEditor('${jsArg(id)}')" style="width:100%">Vytvořit program</button>
-          </div>
-        ` : ""}
-      `}
-      </div>
+      : ""
+    const evdSong = (p, i) => `<div class="evd-song"><div><b>${i + 1}. ${escapeHtml(p.NAME)}</b>${p.AUTHOR ? `<div class="small">${escapeHtml(p.AUTHOR)}</div>` : ""}</div></div>`
+    const canEditProgram = MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"
+    html += `<div class="card">
+      <div class="evd-title"><div class="event-label">Program</div>${programSummary ? `<span class="evd-count">${programSummary}</span>` : ""}</div>
+      ${mainProgram.length ? mainProgram.map(evdSong).join("") : `<div class="evd-empty">Sem Kája doplní program</div>`}
+      ${encoreProgram.length ? `<div class="event-label" style="margin:14px 0 4px">Přídavky</div>${encoreProgram.map(evdSong).join("")}` : ""}
+      ${canEditProgram ? `<div class="btn-group" data-ar-skip style="margin-top:12px"><button onclick="openProgramEditor('${jsArg(id)}')" style="width:100%">${mainProgram.length ? "Upravit program" : "Vytvořit program"}</button></div>` : ""}
     </div>`
 
    // --- TO-DO LIST (rider) ---
+    html += "\u0001todo\u0001"
     if((MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && (event.RIDER || mkTasks.length)){
       let riderData = {}
       try{ riderData = event.RIDER ? JSON.parse(event.RIDER) : {} }catch(e){ riderData = {} }
@@ -3586,59 +3597,52 @@ async function openEvent(id){
     const statusColor = myStatus === "Přijdu" ? "#34c759" : myStatus === "Možná" ? "#ff9f0a" : myStatus === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
     const statusText  = myStatus || "Nevyplněno"
 
-    html += `<div class="event-card" style="margin-bottom:16px;padding:0">
-      <div class="event-label" style="padding:16px 16px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleDetailAccordion('attendance')">
-        <span>Docházka <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:${statusColor}">· ${statusText}</span></span>
-        <span id="accChevron_attendance" style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal">›</span>
+    html += "\u0001att\u0001"
+    const evdStat = a => {
+      const st = eff(a)
+      return st === "Přijdu" ? ["y", fin ? "Přišel" : "Přijde"] : st === "Možná" ? ["m", "Možná"] : st === "Nepřijdu" ? ["n", fin ? "Nepřišel" : "Nepřijde"] : ["", "Bez odpovědi"]
+    }
+    const evdCancelled = event.STATUS === "Zrušená"
+    const evdOpenState = window.EVD_OPEN || {}
+    const evdGroups = [...HM_VOICES, ""].map(v => ({ voice: v, list: attendance.filter(a => (HM_VOICES.includes(a.VOICE) ? a.VOICE : "") === v) })).filter(g => g.list.length)
+    const evdTotal = attendance.length
+    const evdPct = evdTotal ? Math.round(yes / evdTotal * 100) : 0
+    const evdGroupHtml = g => {
+      const n = g.list.length
+      const cnt = st => g.list.filter(a => eff(a) === st).length
+      const gy = cnt("Přijdu"), gm = cnt("Možná"), gn = cnt("Nepřijdu")
+      const isOpen = !!evdOpenState[g.voice]
+      return `<div class="evd-vg">
+        <button type="button" class="evd-vbtn" aria-expanded="${isOpen}" onclick="evdVoice(this,'${jsArg(g.voice)}')">
+          <span>${escapeHtml(g.voice ? hmVoiceName(g.voice) : "Bez hlasu")}</span>
+          <div class="evd-track"><i class="y" style="width:${gy / n * 100}%"></i><i class="m" style="width:${gm / n * 100}%"></i><i class="n" style="width:${gn / n * 100}%"></i></div>
+          <b>${gy}/${n}</b>${EVD_CHEV}
+        </button>
+        <div class="evd-open${isOpen ? " on" : ""}"><div>${g.list.map(a => {
+          const [cls, txt] = evdStat(a)
+          const sub = [fin && a.STATUS && a.STATUS !== eff(a) ? "přihlášen(a): " + a.STATUS : "", a.REASON || ""].filter(Boolean).join(" · ")
+          return `<div class="evd-who"><div><b>${escapeHtml(a.NAME)}</b>${sub ? `<div class="small">${escapeHtml(sub)}</div>` : ""}</div><span class="evd-st ${cls}">${txt}</span></div>`
+        }).join("")}</div></div>
+      </div>`
+    }
+    const rsvpCard = evdCancelled
+      ? `<div class="card"><b style="color:#ff3b30">Akce byla zrušena</b></div>`
+      : MEMBER_EMAIL
+        ? `<div class="card"><div class="event-label">Vaše odpověď${myStatus ? ` <span style="text-transform:none;letter-spacing:normal;font-weight:400;color:${statusColor}">· ${statusText}</span>` : ""}</div>${evdRsvpSeg(id, myStatus)}${myReason ? `<div class="small" style="margin-top:8px">${escapeHtml(myReason)}</div>` : ""}</div>`
+        : `<div class="card"><div class="muted">Vyber člena</div></div>`
+    html += `${evdCancelled ? "" : rsvpCard}
+      <div class="card">
+        <div class="evd-sum"><b>${fin ? "Přišlo" : "Přijde"} ${yes} z ${evdTotal}</b><span class="evd-st${fin ? " y" : ""}">${fin ? "Potvrzeno" : evdPct + " %"}</span></div>
+        <div class="small">${fin
+          ? `Docházka potvrzena${event.ATTENDANCE_FINAL_AT ? " " + escapeHtml(formatDate(event.ATTENDANCE_FINAL_AT)) : ""}. Do statistik se počítá skutečná účast.`
+          : (open ? `Chybí odpověď: ${open} ${open === 1 ? "člen" : open < 5 ? "členové" : "členů"}. ` : "Všichni odpověděli. ") + "Klepnutím na hlas uvidíte jména."}</div>
+        <div style="margin-top:8px">${evdGroups.map(evdGroupHtml).join("")}</div>
       </div>
-      <div id="accBody_attendance" style="display:none;padding:0 16px 16px">
-      ${event.STATUS === "Zrušená" ? `
-        <div style="padding:10px 0;color:#ff3b30;font-weight:600">Akce byla zrušena</div>
-      ` : MEMBER_EMAIL ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding-bottom:12px;border-bottom:1px solid rgba(128,128,128,0.1)" onclick="event.stopPropagation();toggleAttendanceAccordion('${jsArg(id)}')">
-          <div>
-            <div style="font-weight:600;color:${statusColor}">${statusText}</div>
-            ${myReason ? `<div class="small" style="margin-top:2px">${escapeHtml(myReason)}</div>` : ""}
-          </div>
-          <span style="color:var(--muted);font-size:18px" id="chevronAttendance_${id}">›</span>
-        </div>
-        <div id="attendanceDetail_${id}" style="display:none;padding:12px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-          <div class="small" style="font-weight:600;margin-bottom:8px">Změnit účast</div>
-          <div class="btn-group" data-ar-skip>
-            <button onclick="doAttendance('${jsArg(id)}','Přijdu')">Přijdu</button>
-            <button onclick="doAttendanceMozna('${jsArg(id)}')">Možná</button>
-            <button onclick="doAttendanceWithReason('${jsArg(id)}','Nepřijdu')">Nepřijdu</button>
-          </div>
-        </div>
-      ` : `<div class="muted">Vyber člena</div>`}
-      <div style="margin-top:12px">
-        ${attAdminHtml}
-        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-          <span class="small">✓ ${fin ? "Přišlo" : "Přijdu"}: <b>${yes}</b></span>
-          ${fin ? "" : `<span class="small">? Možná: <b>${maybe}</b></span>`}
-          <span class="small">✗ ${fin ? "Nepřišlo" : "Nepřijdu"}: <b>${no}</b></span>
-          ${fin ? "" : `<span class="small">— Nevyplněno: <b>${open}</b></span>`}
-        </div>
-        ${attendance.map(a => {
-          const st    = eff(a)
-          const icon  = st === "Přijdu"   ? iconCheck() :
-                        st === "Možná"    ? iconMaybe() :
-                        st === "Nepřijdu" ? iconClose() : iconQuestion()
-          const color = st === "Přijdu"   ? "#34c759" :
-                        st === "Možná"    ? "#ff9f0a" :
-                        st === "Nepřijdu" ? "#ff3b30" : "#8e8e93"
-          return `<div class="small" style="padding:4px 0;color:${color};border-bottom:1px solid rgba(128,128,128,0.08)">
-            <span class="icon" style="color:${color}">${icon}</span>
-            ${escapeHtml(a.NAME)}
-            ${fin && a.STATUS && a.STATUS !== st ? `<span style="color:#999"> · přihlášen(a): ${escapeHtml(a.STATUS)}</span>` : ""}
-            ${a.REASON ? `<span style="color:#999"> · ${escapeHtml(a.REASON)}</span>` : ""}
-          </div>`
-        }).join("")}
-      </div>
-      </div>
-    </div>`
+      ${attAdminHtml ? `<div class="card"><div class="event-label">Skutečná docházka</div>${attAdminHtml}</div>` : ""}
+      ${evdCancelled ? rsvpCard : ""}`
 
     // --- INFODOKUMENT ---
+    html += "\u0001doc\u0001"
     if(event.DOC_URL){
       html += `<a href="${escapeHtml(safeUrl(event.DOC_URL))}" target="_blank" rel="noopener noreferrer"
         style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#f2f2f7;border-radius:12px;font-size:14px;font-weight:600;color:#007aff;text-decoration:none;margin-bottom:12px">
@@ -3647,6 +3651,7 @@ async function openEvent(id){
     }
 
     // --- ADMIN PANEL ---
+    html += "\u0001admin\u0001"
     if(MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART"){
       html += `<hr>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">`
@@ -3661,8 +3666,29 @@ async function openEvent(id){
       html += `</div>`
     }
 
-        if(isDesktop) html += `</div>`  
+        if(isDesktop) html += `</div>`
+        {
+          // rozdělení vygenerovaných částí do záložek (části jsou označené \u0001název\u0001)
+          const parts = { head: "" }
+          let key = "head"
+          html.split(/\u0001(\w+)\u0001/).forEach((chunk, n) => { if(n % 2) key = chunk; else parts[key] = (parts[key] || "") + chunk })
+          const [headHtml, infoCard] = (parts.head || "").split("<!--evd-split-->")
+          // části, které se z pole „info“ vracejí ke značce „doc“, patří do stejné záložky
+          const panes = [
+            ["info", "Info", `${infoCard || ""}${parts.info || ""}${parts.doc || ""}`, true],
+            ["prog", "Program", parts.prog || "", true],
+            ["car", "Doprava", parts.car || "", event.DOPRAVA === "Auta"],
+            ["att", "Docházka", parts.att || "", true],
+            ["todo", "Úkoly", parts.todo || "", (MEMBER_ROLE === "ADMIN" || MEMBER_ROLE === "ART") && /\S/.test(parts.todo || "")]
+          ].filter(p => p[3])
+          if(window.EVD_ID !== id){ window.EVD_ID = id; window.EVD_TAB = "info"; window.EVD_OPEN = {} }
+          if(!panes.some(p => p[0] === window.EVD_TAB)) window.EVD_TAB = "info"
+          const tabs = `<div class="ev-seg evd-tabs" role="tablist">${panes.map(p => `<button type="button" role="tab" class="ev-segb${p[0] === window.EVD_TAB ? " on" : ""}" aria-selected="${p[0] === window.EVD_TAB}" onclick="evdTab('${p[0]}', this)"><span>${p[1]}</span></button>`).join("")}</div>`
+          const paneHtml = panes.map(p => `<div class="evd-pane${p[0] === window.EVD_TAB ? " on" : ""}" data-k="${p[0]}">${p[0] === "info" ? rsvpCard : ""}${p[2]}</div>`).join("")
+          html = `${headHtml || ""}<div class="evd">${tabs}${paneHtml}</div>${parts.admin || ""}`
+        }
         container().innerHTML = html
+        evSegObserve(container())
 
     if(refreshing){
       keepOpen.forEach(key => {
@@ -6929,49 +6955,51 @@ function ensureAttModal(){
   return m
 }
 
-const ATT_DECLARED = { "Přijdu": "slíbil(a)", "Možná": "možná", "Nepřijdu": "nepřijde" }
+const ATT_DECLARED = { "Přijdu": "přijde", "Možná": "možná", "Nepřijdu": "nepřijde" }
+const ATT_VOICES = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
+
+// počítadla v okně (celkem a po hlasech) se po přepnutí jen přepíšou, okno se nepřekresluje, ať přepínač plynule dojede
+function attCounts(){
+  const c = window.ATT_CHECK, body = document.getElementById("attModalBody")
+  if(!c || !body) return
+  const list = c.att.filter(a => ATT_VOICES.includes(a.VOICE))
+  const sum = body.querySelector(".att-sumtxt")
+  if(sum) sum.textContent = `Přišlo ${list.filter(a => c.checked.has(a.EMAIL)).length} z ${list.length}`
+  body.querySelectorAll(".att-gh").forEach(h => {
+    const l = list.filter(a => a.VOICE === h.dataset.voice)
+    h.querySelector("b").innerHTML = `${l.filter(a => c.checked.has(a.EMAIL)).length}<small>/${l.length}</small>`
+  })
+}
 
 function attRender(){
   const c = window.ATT_CHECK
   if(!c) return
-  const voiceOrder = ["1. TENOR", "2. TENOR", "1. BAS", "2. BAS"]
-  const groups = voiceOrder.map(v => ({ voice: v, list: c.att.filter(a => a.VOICE === v) })).filter(g => g.list.length)
-  const total = groups.reduce((n, g) => n + g.list.length, 0)
-  const present = groups.reduce((n, g) => n + g.list.filter(a => c.checked.has(a.EMAIL)).length, 0)
-  const rows = groups.map(g => {
-    const here = g.list.filter(a => c.checked.has(a.EMAIL)).length
-    return `<div class="att-group"><div class="att-gh"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b>${here}<small>/${g.list.length}</small></b></div>
-      ${g.list.map(a => {
-        const on = c.checked.has(a.EMAIL)
-        return `<button type="button" class="att-row ${on ? "on" : ""}" data-email="${escapeHtml(a.EMAIL)}" role="checkbox" aria-checked="${on}" onclick="toggleAttendanceRow('${jsArg(a.EMAIL)}')">
-          <span class="att-box" aria-hidden="true">${on ? "✓" : ""}</span>
-          <span class="att-name">${escapeHtml(a.NAME)}</span>
-          <small class="att-decl">${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small>
-        </button>`
-      }).join("")}</div>`
-  }).join("")
-  // zaškrtnutí překreslí celé okno; polohu rolování seznamu (i okna) a zaměřený řádek je potřeba zachovat, jinak skočí nahoru
+  const groups = ATT_VOICES.map(v => ({ voice: v, list: c.att.filter(a => a.VOICE === v) })).filter(g => g.list.length)
+  const rows = groups.map(g => `<div class="att-group"><div class="att-gh" data-voice="${escapeHtml(g.voice)}"><span>${escapeHtml(hmVoiceName(g.voice))}</span><b></b></div>
+      ${g.list.map(a => `<label class="att-row">
+          <span class="att-who"><span class="att-name">${escapeHtml(a.NAME)}</span><small class="att-decl">Odpověď: ${escapeHtml(ATT_DECLARED[a.STATUS] || "bez odpovědi")}</small></span>
+          <input type="checkbox" class="ev-swin" data-email="${escapeHtml(a.EMAIL)}" aria-label="Přišel(a): ${escapeHtml(a.NAME)}" ${c.checked.has(a.EMAIL) ? "checked" : ""} onchange="toggleAttendanceRow('${jsArg(a.EMAIL)}', this.checked)">
+        </label>`).join("")}</div>`).join("")
+  // rychlé volby překreslí okno; polohu rolování seznamu (i okna) je potřeba zachovat, jinak skočí nahoru
   const body = document.getElementById("attModalBody"), card = body.closest(".att-content")
   const listTop = body.querySelector(".att-scroll")?.scrollTop || 0, cardTop = card ? card.scrollTop : 0
-  const focused = document.activeElement?.closest?.(".att-row")?.dataset.email
   body.innerHTML = `
     <div class="att-head">
       <div class="hm-dlg-name">Odškrtnout docházku<small>${escapeHtml(c.event.NAME)} · ${escapeHtml(formatDate(c.event.DATE))}</small></div>
-      <div class="att-sum"><b>${present}</b><small>/${total} přišlo</small>
-        <span class="att-quick"><button type="button" onclick="attMark('promised')">Podle slibů</button><button type="button" onclick="attMark('none')">Nikdo</button></span></div>
+      <div class="att-sum"><b class="att-sumtxt"></b>
+        <span class="att-quick"><button type="button" onclick="attMark('promised')">Podle odpovědí</button><button type="button" onclick="attMark('none')">Nikdo</button></span></div>
     </div>
     <div class="att-scroll">${rows}</div>
     <div class="att-foot">
       <div class="btn-group" data-ar-skip>
-        <button class="btn-primary" onclick="saveAttendanceCheck()">Uložit jako finální</button>
-        <button onclick="closeAttendanceCheck()">Zrušit</button>
+        <button class="btn-primary" style="width:100%" onclick="saveAttendanceCheck()">${c.event.ATTENDANCE_FINAL ? "Uložit změny" : "Potvrdit docházku"}</button>
       </div>
-      ${c.event.ATTENDANCE_FINAL ? `<div class="btn-group" data-ar-skip style="margin-top:8px"><button class="btn-danger" onclick="reopenAttendanceCheck()">Zrušit potvrzení docházky</button></div>` : ""}
+      ${c.event.ATTENDANCE_FINAL ? `<div class="btn-group" data-ar-skip style="margin-top:8px"><button class="btn-danger" style="width:100%" onclick="reopenAttendanceCheck()">Zrušit potvrzení docházky</button></div>` : ""}
     </div>`
+  attCounts()
   const list = body.querySelector(".att-scroll")
   if(list) list.scrollTop = listTop
   if(card) card.scrollTop = cardTop
-  if(focused) [...body.querySelectorAll(".att-row")].find(r => r.dataset.email === focused)?.focus({preventScroll: true})
 }
 
 async function openAttendanceCheck(id){
@@ -6992,11 +7020,11 @@ async function openAttendanceCheck(id){
   }
 }
 
-function toggleAttendanceRow(email){
+function toggleAttendanceRow(email, on){
   const c = window.ATT_CHECK
   if(!c) return
-  c.checked.has(email) ? c.checked.delete(email) : c.checked.add(email)
-  attRender()
+  on ? c.checked.add(email) : c.checked.delete(email)
+  attCounts()
 }
 
 function attMark(mode){
@@ -7511,10 +7539,8 @@ async function updateDashboardAttendance(){
     const detail = await api("eventdetail", {id: upcoming.ID})
     lsSet("detail_" + upcoming.ID, detail)
 
-    // aktualizuj počet přítomných
-    const count   = (detail.attendance || []).filter(a => a.STATUS === "Přijdu").length
-    const countEl = document.querySelector(".dash-attendance-count")
-    if(countEl) countEl.textContent = `✓ Přijdu: ${count}`
+    // aktualizuj kartu Nejbližší akce (počty, kruh docházky, vybraná odpověď)
+    nxUpdate(detail)
 
     // aktualizuj heatmapu
     lsDel("heatmap")
@@ -7644,6 +7670,7 @@ window.renderEnergy         = renderEnergy
 window.renderRepertoar      = renderRepertoar
 window.toggleFav            = toggleFav
 window.doAttendance         = doAttendance
+Object.assign(window, { evdRsvp, evdTab, evdVoice })
 window.doAttendanceMozna    = doAttendanceMozna
 window.doAttendanceWithReason = doAttendanceWithReason
 window.toggleAttendanceAccordion = toggleAttendanceAccordion
